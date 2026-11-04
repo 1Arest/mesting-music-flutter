@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -94,7 +95,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
         if (widget.immersive) {
           return ListView.builder(
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: const EdgeInsets.symmetric(vertical: 225, horizontal: 12),
             itemExtent: 48,
             itemCount: document.lines.length,

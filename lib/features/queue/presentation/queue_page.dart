@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -170,7 +171,9 @@ class QueuePage extends ConsumerWidget {
                   ? const PlaybackQueueEmptyState()
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ArtworkFrontierPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
                       cacheExtent: playbackQueueRowHeight * 4,
                       itemCount: rows.length + (grouped ? 1 : 0),
                       itemBuilder: (context, index) {

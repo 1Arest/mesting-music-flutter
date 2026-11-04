@@ -20,6 +20,7 @@ class ActualListeningCounter {
   final ListeningClock clock;
   int _last;
   int _heard = 0;
+  double _mediaHeard = 0;
   bool _playing = false, _ready = false, _seeking = false;
   double _speed = 1;
 
@@ -37,8 +38,18 @@ class ActualListeningCounter {
   int sample() {
     final current = clock.elapsedMicroseconds;
     final elapsed = current - _last;
-    if (audible && elapsed > 0) _heard += elapsed;
+    if (audible && elapsed > 0) {
+      _heard += elapsed;
+      _mediaHeard += elapsed * _speed;
+    }
     _last = current;
     return _heard ~/ 1000;
+  }
+
+  /// Official play logs distinguish audible wall time from the corresponding
+  /// speed-weighted media interval. Seeking still contributes to neither.
+  int sampleMediaMilliseconds() {
+    sample();
+    return _mediaHeard ~/ 1000;
   }
 }

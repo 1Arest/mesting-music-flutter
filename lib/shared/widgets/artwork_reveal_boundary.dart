@@ -3,6 +3,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 
 import '../../core/platform/distribution_channel.dart';
+import 'artwork_scroll_frontier.dart';
+import 'beta_content_insets.dart';
 
 /// A live content viewport, not a screenshot or an eager image preload. Lazy
 /// lists keep laying out their normal cache extent while unresolved rows stay
@@ -22,6 +24,24 @@ class ArtworkRevealBoundary extends StatefulWidget {
 
 class _ArtworkRevealBoundaryState extends State<ArtworkRevealBoundary> {
   final controller = ArtworkRevealController();
+  ScrollBehavior? _baseBehavior;
+  late ScrollBehavior _behavior;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final base = ScrollConfiguration.of(context);
+    if (identical(base, _baseBehavior)) return;
+    _baseBehavior = base;
+    // Stable behavior identity prevents unrelated data rebuilds from replacing
+    // live ScrollPositions, including a PageView's active drag/animation.
+    _behavior = base.copyWith(
+      physics: ArtworkFrontierPhysics(
+        frontier: controller.frontier,
+        parent: base.getScrollPhysics(context),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     controller.dispose();
@@ -49,8 +69,9 @@ class _ArtworkRevealBoundaryState extends State<ArtworkRevealBoundary> {
           child: _ArtworkViewport(
             controller: controller,
             background: Theme.of(context).colorScheme.surface,
+            footerClearance: BetaContentInsets.bottomOf(context) + 64,
             children: [
-              widget.child,
+              ScrollConfiguration(behavior: _behavior, child: widget.child),
               ValueListenableBuilder<bool>(
                 valueListenable: controller.pending,
                 builder: (_, active, child) =>
@@ -129,7 +150,10 @@ class _ArtworkPendingContentState extends State<ArtworkPendingContent> {
   @override
   Widget build(BuildContext context) => _controller == null
       ? widget.child
-      : TickerMode(enabled: false, child: widget.child);
+      : Opacity(
+          opacity: 0,
+          child: TickerMode(enabled: false, child: widget.child),
+        );
 }
 
 class ArtworkRevealEntry {
@@ -151,6 +175,7 @@ class ArtworkRevealEntry {
 /// Image state reports readiness directly to painting/semantics. It does not
 /// rebuild every list or attach providers to playback-position/animation ticks.
 class ArtworkRevealController {
+  final frontier = ArtworkScrollFrontier();
   final entries = <ArtworkRevealEntry>{};
   final pending = ValueNotifier(true);
   final _refreshes = <Object, RenderBox? Function()?>{};
@@ -210,6 +235,7 @@ class ArtworkRevealController {
     repaint = null;
     entries.clear();
     _refreshes.clear();
+    frontier.clear();
     pending.dispose();
   }
 }
@@ -226,19 +252,22 @@ class _ArtworkViewport extends MultiChildRenderObjectWidget {
   const _ArtworkViewport({
     required this.controller,
     required this.background,
+    required this.footerClearance,
     required super.children,
   });
   final ArtworkRevealController controller;
   final Color background;
+  final double footerClearance;
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderArtworkViewport(controller, background);
+      _RenderArtworkViewport(controller, background, footerClearance);
   @override
   void updateRenderObject(
     BuildContext context,
     _RenderArtworkViewport renderObject,
   ) {
     renderObject.background = background;
+    renderObject.footerClearance = footerClearance;
   }
 }
 
@@ -248,8 +277,13 @@ class _RenderArtworkViewport extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ArtworkParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _ArtworkParentData> {
-  _RenderArtworkViewport(this.controller, this._background);
+  _RenderArtworkViewport(
+    this.controller,
+    this._background,
+    this.footerClearance,
+  );
   final ArtworkRevealController controller;
+  double footerClearance;
   Color _background;
   set background(Color value) {
     if (value == _background) return;
@@ -306,7 +340,7 @@ class _RenderArtworkViewport extends RenderBox
 
   /// Prefer the complete song row/card, including text above its cover. Never
   /// lift the anchor to an entire long Column or to another reveal viewport.
-  Rect? _visibleRow(ArtworkRevealEntry entry) {
+  Rect? _visibleRow(ArtworkRevealEntry entry, {bool visibleOnly = true}) {
     if (!entry.enabled) return null;
     final box = entry.box();
     if (box == null || !box.attached || !box.hasSize || box.size.isEmpty) {
@@ -327,11 +361,55 @@ class _RenderArtworkViewport extends RenderBox
       box.getTransformTo(this),
       Offset.zero & box.size,
     );
-    if (!imageRect.overlaps(Offset.zero & size)) return null;
+    if (imageRect.right <= 0 ||
+        imageRect.left >= size.width ||
+        visibleOnly && !imageRect.overlaps(Offset.zero & size)) {
+      return null;
+    }
     return MatrixUtils.transformRect(
       anchor.getTransformTo(this),
       Offset.zero & anchor.size,
     );
+  }
+
+  /// Include lazy cache children, not just painted rows. This establishes the
+  /// boundary before a fast gesture can move the first pending row on screen.
+  void _updateFrontiers() {
+    final rows = <ScrollPosition, List<(Rect, bool)>>{};
+    for (final entry in controller.entries) {
+      final rect = _visibleRow(entry, visibleOnly: false);
+      if (rect == null) continue;
+      for (
+        RenderObject? node = entry.box()?.parent;
+        node != null && node != this;
+        node = node.parent
+      ) {
+        if (node is RenderViewportBase &&
+            node.axisDirection == AxisDirection.down &&
+            node.offset is ScrollPosition) {
+          final position = node.offset as ScrollPosition;
+          (rows[position] ??= []).add((rect, entry.ready));
+          break;
+        }
+      }
+    }
+    controller.frontier.retain(rows.keys.toSet());
+    for (final group in rows.entries) {
+      final position = group.key;
+      double preparedEnd = position.pixels, pendingStart = double.infinity;
+      for (final row in group.value) {
+        final start = row.$1.top + position.pixels;
+        final end = row.$1.bottom + position.pixels;
+        if (row.$2 && end > preparedEnd) preparedEnd = end;
+        if (!row.$2 && start < pendingStart) pendingStart = start;
+      }
+      controller.frontier.update(
+        position,
+        preparedEnd: preparedEnd,
+        pendingStart: pendingStart.isFinite ? pendingStart : null,
+        footer: footerClearance,
+      );
+    }
   }
 
   double _refreshTop() {
@@ -356,6 +434,7 @@ class _RenderArtworkViewport extends RenderBox
 
   @override
   void paint(PaintingContext context, Offset offset) {
+    _updateFrontiers();
     var pendingTop = size.height;
     var visible = false, blocked = false;
     var batchTop = size.height;

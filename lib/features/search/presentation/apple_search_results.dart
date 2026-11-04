@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
@@ -52,7 +53,7 @@ class AppleSearchResults extends ConsumerWidget {
       child: CustomScrollView(
         key: PageStorageKey('search-results-${state.query}'),
         controller: controller,
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
           if (state.errorMessage != null)
             SliverToBoxAdapter(

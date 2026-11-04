@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
@@ -76,7 +77,9 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
         body: SafeArea(
           bottom: false,
           child: ListView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: BetaContentInsets.musicPaddingOf(
               context,

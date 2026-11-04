@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +29,7 @@ class DiscoverPage extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),

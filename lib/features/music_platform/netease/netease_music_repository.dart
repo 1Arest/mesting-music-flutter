@@ -7,6 +7,8 @@ import '../data/platform_search_repository.dart';
 import '../domain/platform_audio_quality.dart';
 import 'netease_api.dart';
 import '../domain/platform_search_user.dart';
+import 'netease_playback_log.dart';
+import 'netease_footprint.dart';
 
 /// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
 /// the same Track / catalogue models as Kugou, with provider-qualified IDs.
@@ -17,38 +19,39 @@ class NeteaseMusicRepository {
 
   /// `startplay` updates recent plays; the separate `play` event carries only
   /// actual elapsed seconds. A 200 response is receipt, not proof of indexing.
-  /// Contract evidence: api-enhanced issue 167 and Kumone's recent-play fix.
+  /// Real/media clocks and original timestamps were checked against official
+  /// Android 9.6.15. The existing weblog transport remains request-local.
   Future<Map<String, dynamic>> reportPlayback({
     required String id,
     required bool started,
     int seconds = 0,
     String sourceId = '0',
+    int? realSeconds,
+    DateTime? startedAt,
   }) => api.request(
     '/api/feedback/weblog',
     {
       'logs': jsonEncode([
-        {
-          'action': started ? 'startplay' : 'play',
-          'json': {
-            'id': id,
-            'type': 'song',
-            'mainsite': '1',
-            'mainsiteWeb': '1',
-            'content': 'id=$sourceId',
-            if (!started) ...{
-              'time': seconds,
-              'end': 'playend',
-              'wifi': 0,
-              'download': 0,
-              'source': 'list',
-              'sourceId': sourceId,
-            },
-          },
-        },
+        neteasePlaybackLog(
+          id: id,
+          started: started,
+          mediaSeconds: seconds,
+          realSeconds: realSeconds ?? seconds,
+          startedAt: startedAt ?? DateTime.now(),
+          sourceId: sourceId,
+        ),
       ]),
     },
     playbackLog: true,
     expectedCredential: credential,
+  );
+
+  Future<NeteaseFootprint?> footprint() async => NeteaseFootprint.parse(
+    await api.request(
+      '/api/music/multi/terminal/widget/listen/data',
+      const {},
+      expectedCredential: credential,
+    ),
   );
 
   Future<Map<String, dynamic>> call(

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'package:flutter/material.dart';
 
@@ -119,7 +120,9 @@ class _SocialStatusPickerState extends State<_SocialStatusPicker> {
           Divider(height: 1, color: Theme.of(context).dividerColor),
           Expanded(
             child: ListView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ArtworkFrontierPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               padding: EdgeInsets.fromLTRB(
                 18,
                 16,

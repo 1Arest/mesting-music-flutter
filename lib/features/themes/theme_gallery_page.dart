@@ -1,3 +1,4 @@
+import '../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import '../../shared/widgets/music_activity_indicator.dart';
 import 'dart:async';
@@ -204,7 +205,9 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
         children: [
           Positioned.fill(
             child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
+              physics: const ArtworkFrontierPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
@@ -815,7 +818,7 @@ class _BrandStylePicker extends StatelessWidget {
       height: 164,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         child: Row(
           children: [
             for (final style in AppBrandStyle.values) ...[
@@ -970,7 +973,7 @@ class _PlayerStylePicker extends StatelessWidget {
       height: 202,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         child: Row(
           children: [
             for (final style in PlayerVisualStyle.values) ...[

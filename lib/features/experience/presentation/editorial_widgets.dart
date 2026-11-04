@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
@@ -42,8 +43,8 @@ class EditorialScroll extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scroll = ListView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(
+        parent: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       ),
       padding: EdgeInsets.only(
         top: MediaQuery.paddingOf(context).top + 14,

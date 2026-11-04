@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_swipe_pages.dart';
@@ -226,7 +227,7 @@ class _HistoryList extends ConsumerWidget {
       key: ValueKey(
         ranking ? 'listening-ranking-list' : 'recent-playback-list',
       ),
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       padding: BetaContentInsets.musicPaddingOf(
         context,
         EdgeInsets.fromLTRB(16, 6, 16, 170),

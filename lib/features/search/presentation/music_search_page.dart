@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'beta_category_search_results.dart';
 import '../../../shared/widgets/beta_edge_back.dart';
@@ -479,7 +480,7 @@ class _SearchLandingState extends ConsumerState<_SearchLanding> {
       _RankingType.personal => '荐',
     };
     return ListView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       padding: BetaContentInsets.musicPaddingOf(
         context,
         EdgeInsets.fromLTRB(18, 22, 0, 96),
@@ -1097,7 +1098,7 @@ class _SearchInputPreview extends ConsumerWidget {
 
     return SingleChildScrollView(
       key: const ValueKey('search-input-preview-scroll'),
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       padding: BetaContentInsets.musicPaddingOf(
         context,
         EdgeInsets.fromLTRB(18, 10, 18, 96),
@@ -1177,7 +1178,9 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
           child: ListView(
             key: const ValueKey('search-results-scroll'),
             controller: _scroll,
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: BetaContentInsets.musicPaddingOf(
               context,
               EdgeInsets.fromLTRB(18, 14, 18, 96),

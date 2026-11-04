@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -173,7 +174,7 @@ class ProfilePage extends ConsumerWidget {
 
     return CustomScrollView(
       key: const PageStorageKey('profile-page'),
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         SliverToBoxAdapter(
           child: user == null

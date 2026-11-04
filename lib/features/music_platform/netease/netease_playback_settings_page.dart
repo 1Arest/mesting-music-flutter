@@ -11,11 +11,23 @@ import 'netease_fallback.dart';
 import 'netease_listening_reporter.dart';
 import 'netease_source_settings_panel.dart';
 import 'netease_account_source_info.dart';
+import '../../../shared/widgets/beta_glass_controls.dart';
+import 'netease_footprint.dart';
 
-class NeteasePlaybackSettingsPage extends ConsumerWidget {
+class NeteasePlaybackSettingsPage extends ConsumerStatefulWidget {
   const NeteasePlaybackSettingsPage({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NeteasePlaybackSettingsPage> createState() =>
+      _PlaybackSettingsState();
+}
+
+class _PlaybackSettingsState
+    extends ConsumerState<NeteasePlaybackSettingsPage> {
+  // Visiting source settings does not implicitly query account listening data.
+  // A deliberate refresh enables this route-bound, separately labelled read.
+  bool _loadFootprint = false;
+  @override
+  Widget build(BuildContext context) {
     if (!ref.watch(usesNeteaseProvider)) {
       return const PlatformPageFrame(
         title: '网易云播放设置',
@@ -40,6 +52,17 @@ class NeteasePlaybackSettingsPage extends ConsumerWidget {
               r.payload['cloudConfirmed'] == true,
         )
         .length;
+    final pendingSeconds = rows
+        .where(
+          (r) =>
+              r.kind == 'netease-scrobble' &&
+              (r.state == ListeningSyncState.queued ||
+                  r.state == ListeningSyncState.open),
+        )
+        .fold<int>(0, (sum, r) => sum + (r.number('heardMs') ~/ 1000));
+    final footprint = _loadFootprint
+        ? ref.watch(neteaseFootprintProvider)
+        : const AsyncData<NeteaseFootprint?>(null);
     return PlatformPageFrame(
       title: '网易云播放与同步',
       child: ListView(
@@ -88,6 +111,47 @@ class NeteasePlaybackSettingsPage extends ConsumerWidget {
             child: Text(
               '接口已接收 $accepted 条 · 云端最近播放已确认 $confirmed 条 · 请求结果未确认 $uncertain 条\n云端记录可能延迟；累计听歌时长以网易云处理为准。未确认的写入不会自动重复发送。',
             ),
+          ),
+          ListTile(
+            title: const Text('云村听歌足迹'),
+            subtitle: Text(
+              footprint.when(
+                data: (value) => value == null
+                    ? _loadFootprint
+                          ? '官方足迹时长暂未获取'
+                          : '点击刷新读取官方足迹'
+                    : '${value.month} · 官方返回 ${value.label}',
+                loading: () => '正在读取官方足迹',
+                error: (_, _) => '官方足迹暂时无法读取，请重试',
+              ),
+            ),
+            trailing: BetaGlassButton(
+              onPressed: () {
+                setState(() => _loadFootprint = true);
+                ref.invalidate(neteaseFootprintProvider);
+              },
+              child: const Text('刷新'),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              '待结束或待发送的真实收听约 ${pendingSeconds ~/ 60} 分钟。仅补发确定未发送的记录，已接收或结果未确认的不会重复发送。历史月份能否补回以网易云处理为准；本机统计继续保留。',
+            ),
+          ),
+          BetaGlassButton(
+            onPressed: !ref.watch(neteaseListeningEnabledProvider)
+                ? null
+                : () async {
+                    await ref
+                        .read(neteaseListeningReporterProvider)
+                        ?.recoverPending();
+                    if (context.mounted) {
+                      setState(() => _loadFootprint = true);
+                      ref.invalidate(neteaseFootprintProvider);
+                    }
+                  },
+            child: const Text('同步确定未发送的记录'),
           ),
           for (final feed in [
             NeteaseFeed.recentSongs,

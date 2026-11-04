@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,7 @@ class LegalDocumentsPage extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
     final tokens = context.musicThemeTokens;
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         SliverPadding(
           padding: EdgeInsets.fromLTRB(
@@ -87,7 +88,7 @@ class LegalDocumentPage extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
     final tokens = context.musicThemeTokens;
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         SliverPadding(
           padding: EdgeInsets.fromLTRB(

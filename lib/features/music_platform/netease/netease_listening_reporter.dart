@@ -13,6 +13,14 @@ import '../listening_sync/listening_sync_providers.dart';
 import '../music_platform_providers.dart';
 import '../platform_backend_providers.dart';
 import 'netease_music_repository.dart';
+import 'netease_footprint.dart';
+
+final neteaseFootprintProvider = FutureProvider.autoDispose<NeteaseFootprint?>((
+  ref,
+) async {
+  if (!ref.watch(usesNeteaseProvider)) return null;
+  return ref.watch(neteaseMusicRepositoryProvider).footprint();
+}, retry: (_, _) => null);
 
 /// A platform-specific reporter shares the monotonic counter and durable
 /// journal, never Kugou's endpoints. Every playback instance sends at most one
@@ -69,6 +77,7 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
   Track? _song;
   ActualListeningCounter? _counter;
   String? _event;
+  DateTime? _startedAt;
   Future<void> _tail = Future.value();
   bool _disposed = false;
   bool _started = false;
@@ -90,6 +99,7 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     _event =
         'netease-play:${clock.now.microsecondsSinceEpoch}:${song.platformSongId}';
     _started = false;
+    _startedAt = null;
     _counter = ActualListeningCounter(clock)
       ..update(
         playing: feed.currentState.playing,
@@ -116,6 +126,8 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
       return;
     }
     _started = true;
+    _startedAt = clock.now;
+    final startedAt = _startedAt!;
     _schedule(() async {
       if (!current()) return;
       await store.put(
@@ -125,6 +137,8 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
         payload: {
           'id': NeteaseMusicRepository.songId(song.id),
           'title': song.title,
+          'startlogtime': startedAt.millisecondsSinceEpoch ~/ 1000,
+          'protocolVersion': 2,
         },
         now: clock.now,
         state: ListeningSyncState.queued,
@@ -137,8 +151,10 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     final song = _song, event = _event, counter = _counter;
     if (song == null || event == null || counter == null) return;
     final heard = counter.sample();
+    final mediaMs = counter.sampleMediaMilliseconds();
+    final startedAt = _startedAt;
     _schedule(() async {
-      await _save(event, song, heard, close: false);
+      await _save(event, song, heard, mediaMs, startedAt, close: false);
       if (current()) await _verifyRecent();
     });
   }
@@ -149,8 +165,10 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     _event = null;
     if (song == null || event == null || counter == null) return;
     final heard = counter.sample();
+    final mediaMs = counter.sampleMediaMilliseconds();
+    final startedAt = _startedAt;
     _schedule(() async {
-      await _save(event, song, heard, close: true);
+      await _save(event, song, heard, mediaMs, startedAt, close: true);
       if (current()) await _sendQueued();
     });
   }
@@ -158,13 +176,22 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
   Future<void> _save(
     String event,
     Track song,
-    int heard, {
+    int heard,
+    int mediaMs,
+    DateTime? startedAt, {
+    // Kept positional in the call sites so each queued save captures the
+    // timestamp and durations before a later track changes controller state.
     required bool close,
   }) async {
     if (heard < 1000 || owner.isEmpty) return;
     final payload = <String, Object?>{
       'id': NeteaseMusicRepository.songId(song.id),
-      'time': heard ~/ 1000,
+      'time': mediaMs ~/ 1000,
+      'realtime': heard ~/ 1000,
+      if (startedAt != null)
+        'startlogtime': startedAt.millisecondsSinceEpoch ~/ 1000,
+      'mediaHeardMs': mediaMs,
+      'protocolVersion': 2,
       'heardMs': heard,
       'sourceid': 0,
       'title': song.title,
@@ -226,11 +253,25 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
         continue;
       }
       try {
+        final epoch = RegExp(r'^netease-play:(\d+):').firstMatch(row.id);
+        final originalStart = row.number('startlogtime') > 0
+            ? DateTime.fromMillisecondsSinceEpoch(
+                row.number('startlogtime') * 1000,
+              )
+            : epoch != null
+            ? DateTime.fromMicrosecondsSinceEpoch(int.parse(epoch[1]!))
+            : row.createdAt;
         await music.reportPlayback(
           id: '${row.payload['id']}',
           started: row.kind == 'netease-startplay',
           seconds: row.number('time'),
           sourceId: '${row.payload['sourceid'] ?? 0}',
+          realSeconds: row.payload.containsKey('realtime')
+              ? row.number('realtime')
+              : row.number('heardMs') > 0
+              ? row.number('heardMs') ~/ 1000
+              : row.number('time'),
+          startedAt: originalStart,
         );
         await store.change(
           row,
@@ -305,6 +346,15 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) => checkpoint();
   Future<void> settle() => _tail;
+
+  /// Only journal rows known never to have been dispatched are eligible.
+  /// Accepted/rejected/unknown rows and date-only daily aggregates are not
+  /// converted into new events. The active track stays open until it ends.
+  Future<void> recoverPending() {
+    _schedule(_recover);
+    return _tail;
+  }
+
   void dispose() {
     _finish();
     _disposed = true;

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,7 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
         ],
       ),
       data: (profile) => CustomScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
           SliverPadding(
             padding: BetaContentInsets.musicPaddingOf(

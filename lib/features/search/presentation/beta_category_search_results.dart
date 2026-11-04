@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -207,7 +208,7 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
       child: CustomScrollView(
         controller: _scroll,
         key: PageStorageKey('category-$query-${widget.kind.name}'),
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
           if (slice.total != null)
             SliverToBoxAdapter(

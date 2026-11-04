@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
@@ -63,7 +64,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               child: SizedBox(
                 width: double.infinity,
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ArtworkFrontierPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   padding: EdgeInsets.fromLTRB(18, topInset + 12, 18, 28),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,

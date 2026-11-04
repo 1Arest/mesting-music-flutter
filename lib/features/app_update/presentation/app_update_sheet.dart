@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -105,7 +106,9 @@ class AppUpdateSheet extends ConsumerWidget {
             maxHeight: MediaQuery.sizeOf(context).height * .84,
           ),
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: EdgeInsets.fromLTRB(20, 14, 20, bottomInset + 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

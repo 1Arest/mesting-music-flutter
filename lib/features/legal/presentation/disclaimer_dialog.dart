@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
@@ -484,7 +485,9 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
         Flexible(
           fit: FlexFit.loose,
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,7 +592,9 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
         Divider(height: 1, color: tokens.border),
         Flexible(
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ArtworkFrontierPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
             child: LegalDocumentContent(document: document),
           ),
@@ -823,7 +828,9 @@ class _DisclaimerCard extends StatelessWidget {
               Divider(height: 1, color: tokens.border),
               Flexible(
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ArtworkFrontierPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 13),
                   child: Column(
                     children: const [

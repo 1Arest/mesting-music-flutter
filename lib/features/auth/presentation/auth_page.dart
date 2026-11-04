@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
@@ -193,7 +194,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                   child: SizedBox(
                     width: double.infinity,
                     child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
+                      physics: const ArtworkFrontierPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
                       padding: EdgeInsets.fromLTRB(20, topInset + 12, 20, 28),
                       child: Form(
                         key: _formKey,

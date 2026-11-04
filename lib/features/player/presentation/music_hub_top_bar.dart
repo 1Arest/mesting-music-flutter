@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'package:flutter/material.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -379,7 +380,9 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                 const SizedBox(height: 26),
                 Expanded(
                   child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ArtworkFrontierPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

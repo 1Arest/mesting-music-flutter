@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -149,7 +150,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       24,
                       constraints.maxHeight * .7,
                     ),
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ArtworkFrontierPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                     itemCount: document.lines.length,
                     itemBuilder: (context, index) => GestureDetector(
                       behavior: HitTestBehavior.opaque,

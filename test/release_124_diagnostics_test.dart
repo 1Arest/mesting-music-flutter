@@ -373,13 +373,15 @@ Future<T> _pump<T>(WidgetTester tester, Future<T> future) async {
   var done = false;
   T? result;
   Object? failure;
+  StackTrace? failureStack;
   future.then(
     (value) {
       result = value;
       done = true;
     },
-    onError: (Object error) {
+    onError: (Object error, StackTrace stack) {
       failure = error;
+      failureStack = stack;
       done = true;
     },
   );
@@ -394,6 +396,6 @@ Future<T> _pump<T>(WidgetTester tester, Future<T> future) async {
     true,
     reason: 'Production adapter must finish within a bounded viewport action',
   );
-  if (failure != null) throw failure!;
+  if (failure != null) Error.throwWithStackTrace(failure!, failureStack!);
   return result as T;
 }

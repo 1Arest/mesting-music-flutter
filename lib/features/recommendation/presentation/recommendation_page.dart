@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -120,7 +121,7 @@ class _RecommendationPageState extends ConsumerState<RecommendationPage>
 
     return CustomScrollView(
       key: const PageStorageKey('recommendation-page'),
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         SliverPadding(
           padding: EdgeInsets.fromLTRB(
@@ -1283,7 +1284,7 @@ class _TrackRail extends StatelessWidget {
       child: ListView.separated(
         clipBehavior: Clip.none,
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
+        physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         itemCount: tracks.length,
         separatorBuilder: (_, _) => const SizedBox(width: 11),
         itemBuilder: (context, index) {

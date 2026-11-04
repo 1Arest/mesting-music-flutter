@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:io';
@@ -135,7 +136,9 @@ class _MusicHomePageState extends ConsumerState<MusicHomePage>
     return Stack(
       children: [
         CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const ArtworkFrontierPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           slivers: [
             SliverPadding(
               padding: EdgeInsets.fromLTRB(
@@ -349,7 +352,9 @@ class _PlaylistSection extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 primary: false,
                 clipBehavior: Clip.none,
-                physics: const BouncingScrollPhysics(),
+                physics: const ArtworkFrontierPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
                 padding: const EdgeInsets.only(right: 18),
                 itemCount: playlists.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 10),
@@ -500,7 +505,9 @@ class _PopularMusicSection extends ConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   primary: false,
                   clipBehavior: Clip.none,
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ArtworkFrontierPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
                   padding: const EdgeInsets.only(right: 18),
                   itemCount: columnCount,
                   separatorBuilder: (_, _) => const SizedBox(width: 12),

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../music_platform/presentation/platform_account_page.dart';
 import '../../music_platform/presentation/platform_login_options_page.dart';
 import '../../auth/presentation/beta_login_navigation.dart';
@@ -49,7 +50,7 @@ class SettingsPage extends ConsumerWidget {
     final topInset = MediaQuery.paddingOf(context).top;
 
     return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
+      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         SliverPadding(
           padding: EdgeInsets.fromLTRB(

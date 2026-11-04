@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:ui';
 
@@ -330,7 +331,9 @@ class _PlaylistDetailContent extends StatelessWidget {
                     ? _PlaylistEmptyState(onAddTracks: onAddTracks)
                     : ReorderableListView.builder(
                         padding: const EdgeInsets.only(top: 2, bottom: 12),
-                        physics: const BouncingScrollPhysics(),
+                        physics: const ArtworkFrontierPhysics(
+                          parent: BouncingScrollPhysics(),
+                        ),
                         buildDefaultDragHandles: false,
                         itemCount: trackItems.length,
                         onReorder: (oldIndex, newIndex) =>

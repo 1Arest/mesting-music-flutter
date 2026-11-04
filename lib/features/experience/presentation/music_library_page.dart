@@ -1,3 +1,4 @@
+import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/music_platform_providers.dart';
@@ -55,8 +56,10 @@ class MusicLibraryPage extends ConsumerWidget {
                   editorialBottomClearance,
                 ),
               ),
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
+              physics: const ArtworkFrontierPhysics(
+                parent: AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
               ),
               itemCount: tracks.length + 2,
               itemBuilder: (context, index) {

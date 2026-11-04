@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.35': [
+    '列表快速下滑时停在已加载内容末尾，下一批文字与封面就绪后再继续滚动，统一末尾加载动画并保留向上回看与重试。',
+    '网易云播放上报补充真实收听秒数和原始开始时间，区分倍速媒体时长，补发确定未发送的逐次记录且避免重复计数。',
+    '网易云播放与同步页增加官方云村听歌足迹汇总读取，明确区分接口接收、最近播放确认和官方累计统计。',
+  ],
   '1.0.34': [
     '修正网易云一起听累计查询缺少当前账号的问题，按双方账号读取每位好友的官方累计时长。',
     '恢复应用或重新进入房间时重新获取官方累计，替换旧快照，避免将本次时长重复相加。',
