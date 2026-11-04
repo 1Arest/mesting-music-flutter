@@ -8,10 +8,10 @@ import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/keyboard_overlay_layout.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../library/library_providers.dart';
 import '../../library/data/favorite_track_window.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
-import '../../music_platform/presentation/platform_design.dart';
 import '../../music_platform/presentation/platform_comment_composer.dart';
 import 'editorial_widgets.dart';
 
@@ -180,6 +180,7 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
               MusicRefreshIndicator(
                 onRefresh: widget.onRefresh,
                 child: AutomaticSongPaging(
+                  songListId: 'favorites:${_query.trim().toLowerCase()}',
                   enabled: more && !loading && error == null,
                   onLoadMore: loadMore,
                   child: ListView.builder(
@@ -226,7 +227,15 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                       if (index == 1) return widget.header;
                       if (index == tracks.length + 2) {
                         if (loading) {
-                          return const PlatformFeedbackState(loading: true);
+                          // This is inline progress inside an existing list.
+                          // A panel background remains visible when the shared
+                          // readiness gate hides its child during a query.
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: MusicActivityIndicator(independent: true),
+                            ),
+                          );
                         }
                         if (error != null) {
                           return TextButton(

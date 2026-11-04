@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -7,6 +8,7 @@ import '../netease/fallback/netease_source_picker.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/song_list_tools.dart';
 import '../platform_browse_cache.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -167,76 +169,81 @@ class _TrackList extends ConsumerWidget {
   final bool sliver;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    Widget row(Track track) => ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 6),
-      titleTextStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-        color: context.musicThemeTokens.textPrimary,
-        fontSize: 15,
-        fontWeight: FontWeight.w800,
-      ),
-      subtitleTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: context.musicThemeTokens.textSecondary,
-        fontSize: 12,
-        height: 1.6,
-      ),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: TrackArtwork(track: track, width: 48, height: 48),
-      ),
-      title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: DownloadedTrackSubtitle(track: track),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FavoriteToggleButton(track: track, compact: true),
-          BetaPopupMenuButton<String>(
-            tooltip: '歌曲操作',
-            icon: const Icon(Icons.more_horiz),
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'add', child: Text('加入歌单')),
-              if (track.source == TrackSource.netease && !track.hasLocalAudio)
-                const PopupMenuItem(value: 'source', child: Text('选择音乐来源')),
-              if (ref.read(showPlatformFeaturesProvider))
-                const PopupMenuItem(value: 'comments', child: Text('酷狗歌曲评论')),
-              if (playlistId != null)
-                const PopupMenuItem(value: 'remove', child: Text('从云端歌单移除')),
-            ],
-            onSelected: (action) async {
-              if (!context.mounted) return;
-              if (action == 'source') {
-                await showNeteaseTrackSources(context, ref, track);
-                return;
-              }
-              if (action == 'add') {
-                await showAddToPlaylistSheet(context, ref, track);
-              }
-              if (action == 'comments' && context.mounted) {
-                await openPlatformSongComments(context, ref, track);
-              }
-              if (action == 'remove' && playlistId != null) {
-                try {
-                  await ref
-                      .read(libraryRepositoryProvider)
-                      .removeTrackFromPlaylist(playlistId!, track.id);
-                } catch (error) {
-                  if (context.mounted) {
-                    showPlatformFailure(context, error);
+    Widget row(Track track) => SongListEntry(
+      track: track,
+      tracks: tracks,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 6),
+        titleTextStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: context.musicThemeTokens.textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+        ),
+        subtitleTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: context.musicThemeTokens.textSecondary,
+          fontSize: 12,
+          height: 1.6,
+        ),
+        leading: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: TrackArtwork(track: track, width: 48, height: 48),
+        ),
+        title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: DownloadedTrackSubtitle(track: track),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FavoriteToggleButton(track: track, compact: true),
+            BetaPopupMenuButton<String>(
+              tooltip: '歌曲操作',
+              icon: const Icon(Icons.more_horiz),
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'add', child: Text('加入歌单')),
+                if (track.source == TrackSource.netease && !track.hasLocalAudio)
+                  const PopupMenuItem(value: 'source', child: Text('选择音乐来源')),
+                if (ref.read(showPlatformFeaturesProvider))
+                  const PopupMenuItem(value: 'comments', child: Text('酷狗歌曲评论')),
+                if (playlistId != null)
+                  const PopupMenuItem(value: 'remove', child: Text('从云端歌单移除')),
+              ],
+              onSelected: (action) async {
+                if (!context.mounted) return;
+                if (action == 'source') {
+                  await showNeteaseTrackSources(context, ref, track);
+                  return;
+                }
+                if (action == 'add') {
+                  await showAddToPlaylistSheet(context, ref, track);
+                }
+                if (action == 'comments' && context.mounted) {
+                  await openPlatformSongComments(context, ref, track);
+                }
+                if (action == 'remove' && playlistId != null) {
+                  try {
+                    await ref
+                        .read(libraryRepositoryProvider)
+                        .removeTrackFromPlaylist(playlistId!, track.id);
+                  } catch (error) {
+                    if (context.mounted) {
+                      showPlatformFailure(context, error);
+                    }
                   }
                 }
-              }
-            },
-          ),
-        ],
-      ),
-      onTap: () async {
-        try {
-          await playBetaSelection(context, ref, track);
-        } catch (error) {
-          if (context.mounted) {
-            showPlatformFailure(context, error);
+              },
+            ),
+          ],
+        ),
+        onTap: () async {
+          try {
+            SongListTools.remember(context, track);
+            await playBetaSelection(context, ref, track);
+          } catch (error) {
+            if (context.mounted) {
+              showPlatformFailure(context, error);
+            }
           }
-        }
-      },
+        },
+      ),
     );
     const padding = EdgeInsets.symmetric(horizontal: 22, vertical: 4);
     return sliver
@@ -301,7 +308,7 @@ class _FeaturedPlaylists extends ConsumerWidget {
               subtitle: const Text('酷狗概念版'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                MestingPageRoute<void>(
                   builder: (_) => PlatformPublicPlaylistPage(
                     id: '${row['global_collection_id'] ?? row['gid']}',
                     name: '${row['name'] ?? row['specialname'] ?? '精选歌单'}',

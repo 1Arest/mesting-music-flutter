@@ -214,6 +214,8 @@ class _PlatformCatalogDetailPageState
     return PlatformPageFrame(
       title: widget.hit.title,
       child: AutomaticSongPaging(
+        songListId:
+            'catalog:${widget.hit.kind.name}:${widget.hit.globalId.isEmpty ? widget.hit.id : widget.hit.globalId}',
         enabled: _more && !_busy && !_playingAll && _error == null,
         onLoadMore: _load,
         child: ListView.builder(

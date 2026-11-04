@@ -1,3 +1,4 @@
+import '../../../shared/widgets/song_list_tools.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -356,6 +357,7 @@ class _PlaylistDetailContent extends StatelessWidget {
                           return _PlaylistTrackRow(
                             key: ValueKey(track.id),
                             track: track,
+                            contextTracks: trackItems,
                             index: index,
                             onTap: () => onPlayTrack(track),
                             onAdd: () => onAddTrack(track),
@@ -929,6 +931,7 @@ class _CircleActionButton extends StatelessWidget {
 class _PlaylistTrackRow extends StatelessWidget {
   const _PlaylistTrackRow({
     required this.track,
+    required this.contextTracks,
     required this.index,
     required this.onTap,
     required this.onAdd,
@@ -937,6 +940,7 @@ class _PlaylistTrackRow extends StatelessWidget {
   });
 
   final Track track;
+  final List<Track> contextTracks;
   final int index;
   final VoidCallback onTap;
   final Future<void> Function() onAdd;
@@ -946,123 +950,135 @@ class _PlaylistTrackRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.musicThemeTokens;
     final radius = BorderRadius.circular(22);
-    return ReorderableDelayedDragStartListener(
-      index: index,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            boxShadow: [
-              BoxShadow(
-                color: tokens.shadow.withValues(alpha: .42),
-                blurRadius: 16,
-                offset: const Offset(0, 7),
-              ),
-            ],
-          ),
-          child: Material(
-            key: ValueKey('playlist-track-surface-${track.id}'),
-            color: tokens.glassStrong.withValues(alpha: .86),
-            shape: RoundedRectangleBorder(
+    return SongListEntry(
+      track: track,
+      tracks: contextTracks,
+      child: ReorderableDelayedDragStartListener(
+        index: index,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
               borderRadius: radius,
-              side: BorderSide(color: tokens.borderStrong),
+              boxShadow: [
+                BoxShadow(
+                  color: tokens.shadow.withValues(alpha: .42),
+                  blurRadius: 16,
+                  offset: const Offset(0, 7),
+                ),
+              ],
             ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: radius,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 9, 10),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 54,
-                      height: 54,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: ArtworkImage(
-                              uri: track.coverAsset,
-                              width: 54,
-                              height: 54,
-                            ),
-                          ),
-                          Positioned(
-                            left: -3,
-                            bottom: -3,
-                            child: Container(
-                              width: 21,
-                              height: 21,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: tokens.glassStrong,
-                                border: Border.all(color: tokens.borderStrong),
+            child: Material(
+              key: ValueKey('playlist-track-surface-${track.id}'),
+              color: tokens.glassStrong.withValues(alpha: .86),
+              shape: RoundedRectangleBorder(
+                borderRadius: radius,
+                side: BorderSide(color: tokens.borderStrong),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () {
+                  SongListTools.remember(context, track);
+                  onTap();
+                },
+                borderRadius: radius,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 9, 10),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 54,
+                        height: 54,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: ArtworkImage(
+                                uri: track.coverAsset,
+                                width: 54,
+                                height: 54,
                               ),
-                              child: Text(
-                                '${index + 1}'.padLeft(2, '0'),
-                                style: TextStyle(
-                                  color: tokens.textSecondary,
-                                  fontSize: 7.5,
-                                  fontWeight: FontWeight.w900,
+                            ),
+                            Positioned(
+                              left: -3,
+                              bottom: -3,
+                              child: Container(
+                                width: 21,
+                                height: 21,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: tokens.glassStrong,
+                                  border: Border.all(
+                                    color: tokens.borderStrong,
+                                  ),
+                                ),
+                                child: Text(
+                                  '${index + 1}'.padLeft(2, '0'),
+                                  style: TextStyle(
+                                    color: tokens.textSecondary,
+                                    fontSize: 7.5,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: tokens.textPrimary,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              track.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: tokens.textPrimary,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${track.artist}  ·  ${formatDuration(track.duration)}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: tokens.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: 4),
+                            Text(
+                              '${track.artist}  ·  ${formatDuration(track.duration)}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: tokens.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 38,
-                      height: 38,
-                      child: FavoriteToggleButton(track: track, compact: true),
-                    ),
-                    const SizedBox(width: 5),
-                    _TrackActionButton(
-                      tooltip: '从歌单移除',
-                      icon: Icons.remove_rounded,
-                      onTap: onRemove,
-                    ),
-                    const SizedBox(width: 5),
-                    _TrackActionButton(
-                      tooltip: '添加至播放列表',
-                      icon: Icons.add_rounded,
-                      onTap: onAdd,
-                      positive: true,
-                    ),
-                  ],
+                      SizedBox(
+                        width: 38,
+                        height: 38,
+                        child: FavoriteToggleButton(
+                          track: track,
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      _TrackActionButton(
+                        tooltip: '从歌单移除',
+                        icon: Icons.remove_rounded,
+                        onTap: onRemove,
+                      ),
+                      const SizedBox(width: 5),
+                      _TrackActionButton(
+                        tooltip: '添加至播放列表',
+                        icon: Icons.add_rounded,
+                        onTap: onAdd,
+                        positive: true,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

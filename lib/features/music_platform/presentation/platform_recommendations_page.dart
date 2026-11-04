@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -64,7 +65,7 @@ class PlatformFmSection extends ConsumerWidget {
         EditorialSection(
           '私人 FM',
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
+            MestingPageRoute<void>(
               builder: (_) => const PlatformRecommendationDetail(
                 kind: PlatformRecommendationKind.fm,
                 title: '私人 FM',
@@ -136,7 +137,7 @@ class PlatformRecommendedSection extends ConsumerWidget {
           EditorialSection(
             title,
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => PlatformRecommendationDetail(
                   kind: kind,
                   title: title,
@@ -419,6 +420,7 @@ class _PlatformRecommendationDetailState
               await ref.read(provider.future);
             },
             child: AutomaticSongPaging(
+              songListId: 'recommendations:${widget.kind?.name ?? 'daily'}:${widget.newSongs}',
               fillInitialViewport: widget.kind != PlatformRecommendationKind.fm,
               enabled: widget.kind == null
                   ? visibleCount < tracks.length

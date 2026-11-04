@@ -140,7 +140,7 @@ class MusicHubDestinationTransition extends StatelessWidget {
         curve: musicHubDestinationTransitionCurve,
       ),
       reverseCurve: Interval(
-        1 - handoffProgress,
+        handoffProgress,
         1,
         curve: musicHubDestinationReverseTransitionCurve,
       ),
@@ -237,14 +237,14 @@ bool musicPageLayerIsVisible({
     return primaryValue >= handoffProgress;
   }
   if (primaryStatus == AnimationStatus.reverse) {
-    return primaryValue > 1 - handoffProgress;
+    return primaryValue > handoffProgress;
   }
   if (secondaryStatus == AnimationStatus.dismissed) return true;
   if (secondaryStatus == AnimationStatus.forward) {
     return secondaryValue < handoffProgress;
   }
   if (secondaryStatus == AnimationStatus.reverse) {
-    return secondaryValue <= 1 - handoffProgress;
+    return secondaryValue <= handoffProgress;
   }
   return false;
 }
@@ -266,8 +266,8 @@ double musicPageLayerOpacity({
             musicPageMotionCurve.transform(progress);
   }
   if (primaryStatus == AnimationStatus.reverse) {
-    if (primaryValue <= 1 - handoffProgress) return 0;
-    final progress = ((primaryValue - (1 - handoffProgress)) / handoffProgress)
+    if (primaryValue <= handoffProgress) return 0;
+    final progress = ((primaryValue - handoffProgress) / (1 - handoffProgress))
         .clamp(0.0, 1.0);
     return musicPageLayerOpacityFloor +
         (1 - musicPageLayerOpacityFloor) *
@@ -282,7 +282,7 @@ double musicPageLayerOpacity({
             (1 - musicPageMotionCurve.transform(progress));
   }
   if (secondaryStatus == AnimationStatus.reverse) {
-    final reverseHandoff = 1 - handoffProgress;
+    final reverseHandoff = handoffProgress;
     if (secondaryValue > reverseHandoff) return 0;
     final progress = (1 - secondaryValue / reverseHandoff).clamp(0.0, 1.0);
     return musicPageLayerOpacityFloor +

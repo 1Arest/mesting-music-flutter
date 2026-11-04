@@ -185,6 +185,7 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
         child: ListenableBuilder(
           listenable: window ?? const AlwaysStoppedAnimation(0),
           builder: (context, _) => AutomaticSongPaging(
+            songListId: 'cloud-playlist:$id',
             enabled:
                 window != null &&
                 window.hasMore &&

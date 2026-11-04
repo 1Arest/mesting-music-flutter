@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/route_settled_content.dart';
@@ -244,7 +245,7 @@ class _ExploreSection extends ConsumerWidget {
                                         item.id.isEmpty
                                     ? null
                                     : () => Navigator.of(context).push(
-                                        MaterialPageRoute<void>(
+                                        MestingPageRoute<void>(
                                           builder: (_) =>
                                               PlatformExploreSongsPage(
                                                 item: item,
@@ -434,6 +435,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
     return PlatformPageFrame(
       title: widget.item.title,
       child: AutomaticSongPaging(
+        songListId: 'explore:${widget.item.kind.name}:${widget.item.id}',
         enabled: _more && !_busy && _error == null,
         onLoadMore: _load,
         child: ListView.builder(
@@ -539,7 +541,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                       ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+                  MestingPageRoute<void>(
                     builder: (_) => PlatformExploreSongsPage(item: collection),
                   ),
                 ),

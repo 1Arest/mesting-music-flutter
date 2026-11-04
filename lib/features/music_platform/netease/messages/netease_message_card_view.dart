@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class NeteaseMessageCardView extends StatelessWidget {
 
   void _open(BuildContext context) =>
       Navigator.of(context, rootNavigator: true).push<void>(
-        MaterialPageRoute<void>(
+        MestingPageRoute<void>(
           builder: (_) {
             if (card.togetherRecord && card.togetherRoomId.isNotEmpty) {
               return NeteaseTogetherRecordPage(
@@ -232,7 +233,7 @@ class _MessageCardDetailState
             key: const ValueKey('together-legacy-all-records'),
             height: 44,
             onPressed: () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => const NeteaseTogetherHistoryPage(),
               ),
             ),
@@ -279,7 +280,7 @@ class _MessageCardDetailState
             BetaGlassButton(
               blue: true,
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                MestingPageRoute<void>(
                   builder: (_) => _OfficialMessagePage(url: card.detailUrl!),
                 ),
               ),

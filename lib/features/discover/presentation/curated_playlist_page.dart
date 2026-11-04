@@ -1,3 +1,4 @@
+import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -360,66 +361,80 @@ class _CuratedTrackList extends ConsumerWidget {
         itemBuilder: (context, index) {
           final track = tracks[index];
           final active = currentId == track.id;
-          return ListTile(
-            onTap: () =>
-                handler.playSingleTrack(track, playbackContext: tracks),
-            tileColor: active ? favoriteAccent.withValues(alpha: 0.085) : null,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(13),
-              child: ArtworkImage(uri: track.coverAsset, width: 52, height: 52),
-            ),
-            title: Text(
-              track.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                color: active ? favoriteAccent : null,
+          return SongListEntry(
+            track: track,
+            tracks: tracks,
+            child: ListTile(
+              onTap: () {
+                SongListTools.remember(context, track);
+                handler.playSingleTrack(track, playbackContext: tracks);
+              },
+              tileColor: active
+                  ? favoriteAccent.withValues(alpha: 0.085)
+                  : null,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            subtitle: Text(
-              '${track.artist} · ${formatDuration(track.duration)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FavoriteToggleButton(track: track, compact: true),
-                if (active)
-                  PlayingEqualizer(
-                    key: ValueKey(
-                      'curated-playlist-playing-equalizer-${track.id}',
-                    ),
-                    animate: playing,
-                    color: favoriteAccent,
-                    size: 22,
-                  )
-                else
-                  Semantics(
-                    button: true,
-                    label: '将${track.title}添加至播放列表',
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => _appendTrack(context, ref, track),
-                      child: SizedBox(
-                        key: ValueKey('curated-playlist-queue-add-${track.id}'),
-                        width: 40,
-                        height: 40,
-                        child: Center(
-                          child: Icon(
-                            Icons.add_rounded,
-                            size: 25,
-                            color: tokens.textMuted,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: ArtworkImage(
+                  uri: track.coverAsset,
+                  width: 52,
+                  height: 52,
+                ),
+              ),
+              title: Text(
+                track.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: active ? favoriteAccent : null,
+                ),
+              ),
+              subtitle: Text(
+                '${track.artist} · ${formatDuration(track.duration)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FavoriteToggleButton(track: track, compact: true),
+                  if (active)
+                    PlayingEqualizer(
+                      key: ValueKey(
+                        'curated-playlist-playing-equalizer-${track.id}',
+                      ),
+                      animate: playing,
+                      color: favoriteAccent,
+                      size: 22,
+                    )
+                  else
+                    Semantics(
+                      button: true,
+                      label: '将${track.title}添加至播放列表',
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _appendTrack(context, ref, track),
+                        child: SizedBox(
+                          key: ValueKey(
+                            'curated-playlist-queue-add-${track.id}',
+                          ),
+                          width: 40,
+                          height: 40,
+                          child: Center(
+                            child: Icon(
+                              Icons.add_rounded,
+                              size: 25,
+                              color: tokens.textMuted,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           );
         },

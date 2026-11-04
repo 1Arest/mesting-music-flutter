@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'song_list_tools.dart';
 
 /// Prefetch near the end and fill an initially short viewport. The owning
 /// repository/controller still owns pagination, errors and account generations.
@@ -8,11 +9,15 @@ class AutomaticSongPaging extends StatefulWidget {
     required this.onLoadMore,
     required this.child,
     this.fillInitialViewport = true,
+    this.songListId,
+    this.songListBottom,
     super.key,
   });
   final bool enabled;
   final Future<void> Function() onLoadMore;
   final Widget child;
+  final String? songListId;
+  final double? songListBottom;
 
   /// Detail pages that prepare a complete first screen can wait for an actual
   /// scroll before requesting another batch. Existing catalogue behavior is
@@ -58,28 +63,33 @@ class _AutomaticSongPagingState extends State<AutomaticSongPaging> {
   // and accidentally request another page before the new extent is measured.
 
   @override
-  Widget build(BuildContext context) =>
-      NotificationListener<ScrollMetricsNotification>(
+  Widget build(BuildContext context) => SongListTools(
+    listId: widget.songListId,
+    bottom: widget.songListBottom,
+    loadMore: widget.onLoadMore,
+    hasMore: widget.enabled,
+    child: NotificationListener<ScrollMetricsNotification>(
+      onNotification: (event) {
+        if (event.depth == 0 && event.metrics.axis == Axis.vertical) {
+          _metrics = event.metrics;
+          if (widget.fillInitialViewport) _schedule();
+        }
+        return false;
+      },
+      child: NotificationListener<ScrollNotification>(
         onNotification: (event) {
           if (event.depth == 0 && event.metrics.axis == Axis.vertical) {
             _metrics = event.metrics;
-            if (widget.fillInitialViewport) _schedule();
+            if (widget.fillInitialViewport ||
+                event is ScrollUpdateNotification &&
+                    (event.scrollDelta ?? 0) > 0) {
+              _schedule();
+            }
           }
           return false;
         },
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (event) {
-            if (event.depth == 0 && event.metrics.axis == Axis.vertical) {
-              _metrics = event.metrics;
-              if (widget.fillInitialViewport ||
-                  event is ScrollUpdateNotification &&
-                      (event.scrollDelta ?? 0) > 0) {
-                _schedule();
-              }
-            }
-            return false;
-          },
-          child: widget.child,
-        ),
-      );
+        child: widget.child,
+      ),
+    ),
+  );
 }

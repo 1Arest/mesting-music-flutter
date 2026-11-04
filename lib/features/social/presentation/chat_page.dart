@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
@@ -3258,7 +3259,7 @@ class _ChatImagePreview extends StatelessWidget {
       onTap: url.isEmpty
           ? null
           : () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute<void>(builder: (_) => _ImageViewer(url: url)),
+              MestingPageRoute<void>(builder: (_) => _ImageViewer(url: url)),
             ),
       borderRadius: BorderRadius.circular(15),
       child: ClipRRect(
@@ -3754,7 +3755,7 @@ class _SocialVideoMessageState extends State<SocialVideoMessage> {
       }
       if (!mounted) return;
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(
+        MestingPageRoute<void>(
           builder: (context) => _VideoViewer(url: source),
         ),
       );

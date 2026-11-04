@@ -304,7 +304,10 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
                 const Divider(indent: 22, endIndent: 22),
               ],
               if (_error != null) _MessageFeedback(_error!, retry: _load),
-              if (_busy)
+              // Returning from chat refreshes read receipts in place. Inserting
+              // a loading header would shift every retained conversation while
+              // the pop animation is still revealing the inbox.
+              if (_busy && _conversations.isEmpty)
                 const MusicLoadingPlaceholder(
                   child: Padding(
                     padding: EdgeInsets.all(20),
@@ -1107,7 +1110,7 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                       : () async {
                           final picked = await Navigator.of(context)
                               .push<NeteasePickedEntity>(
-                                MaterialPageRoute(
+                                MestingPageRoute(
                                   builder: (_) => const NeteaseEntityPicker(
                                     kind: 'song',
                                     includeDetails: true,

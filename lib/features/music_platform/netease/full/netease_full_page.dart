@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/beta_page_motion.dart';
+import '../../../../shared/widgets/song_list_tools.dart';
 import '../../presentation/platform_lazy_list.dart';
 import '../../../../shared/widgets/beta_choice_field.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
@@ -215,7 +217,7 @@ IconData _categoryIcon(String category) => switch (category) {
   _ => CupertinoIcons.compass,
 };
 Future<void> _push(BuildContext context, Widget page) async =>
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.of(context).push(MestingPageRoute<void>(builder: (_) => page));
 
 class NeteaseFullHubPage extends ConsumerStatefulWidget {
   const NeteaseFullHubPage({
@@ -853,148 +855,155 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
     return _searchLayout(
       PlatformPageFrame(
         title: neteaseTaskTitle(e),
-        child: buildPlatformLazyList(
-          padding: EdgeInsets.fromLTRB(
-            22,
-            10,
-            22,
-            BetaContentInsets.bottomOf(context, 40),
-          ),
-          header: [
-            if (!e.write &&
-                _params.any(
-                  (p) =>
-                      !p.required &&
-                      p.key != _searchKey &&
-                      !widget.seed.containsKey(p.key) &&
-                      !{'uid', 'userId'}.contains(p.key),
-                ))
-              Align(
-                alignment: Alignment.centerRight,
-                child: BetaGlassButton(
-                  onPressed: () => setState(() => _showFilters = !_showFilters),
-                  child: Text(_showFilters ? '收起筛选' : '筛选'),
+        child: SongListTools(
+          listId:
+              'netease-task:${e.route}:${widget.seed["id"] ?? widget.seed["ids"] ?? widget.seed["uid"] ?? ""}:${_query()[_searchKey] ?? ""}',
+          hasMore: _more && !_busy,
+          loadMore: () => _load(next: true),
+          child: buildPlatformLazyList(
+            padding: EdgeInsets.fromLTRB(
+              22,
+              10,
+              22,
+              BetaContentInsets.bottomOf(context, 40),
+            ),
+            header: [
+              if (!e.write &&
+                  _params.any(
+                    (p) =>
+                        !p.required &&
+                        p.key != _searchKey &&
+                        !widget.seed.containsKey(p.key) &&
+                        !{'uid', 'userId'}.contains(p.key),
+                  ))
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: BetaGlassButton(
+                    onPressed: () =>
+                        setState(() => _showFilters = !_showFilters),
+                    child: Text(_showFilters ? '收起筛选' : '筛选'),
+                  ),
                 ),
-              ),
-            if (e.route == '/audio/match')
-              NeteaseRecognitionCapture(
-                isCurrent: () => mounted && _current,
-                onFingerprint: (fp, duration) {
-                  _files['audioFP'] = fp;
-                  _files['duration'] = duration;
-                  _load();
-                },
-              ),
-            Form(
-              key: _form,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final p in visibleParams)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _input(p),
-                    ),
-                  if (e.route == '/batch')
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      child: Text('一起查看当前账号资料、等级和收藏数量。'),
-                    ),
-                  if (_fileWorkflow) ...[
-                    BetaGlassButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _pick(
-                              e.route == '/avatar/upload' ||
-                                  e.route == '/playlist/cover/update',
-                            ),
-                      child: Text(_files.isEmpty ? '选择文件' : '重新选择文件'),
-                    ),
-                    if (_files.isNotEmpty)
+              if (e.route == '/audio/match')
+                NeteaseRecognitionCapture(
+                  isCurrent: () => mounted && _current,
+                  onFingerprint: (fp, duration) {
+                    _files['audioFP'] = fp;
+                    _files['duration'] = duration;
+                    _load();
+                  },
+                ),
+              Form(
+                key: _form,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final p in visibleParams)
                       Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Text(
-                          _files['songFile'] is Map
-                              ? '${(_files['songFile'] as Map)['name']}'
-                              : '图片已选择',
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _input(p),
+                      ),
+                    if (e.route == '/batch')
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Text('一起查看当前账号资料、等级和收藏数量。'),
+                      ),
+                    if (_fileWorkflow) ...[
+                      BetaGlassButton(
+                        onPressed: _busy
+                            ? null
+                            : () => _pick(
+                                e.route == '/avatar/upload' ||
+                                    e.route == '/playlist/cover/update',
+                              ),
+                        child: Text(_files.isEmpty ? '选择文件' : '重新选择文件'),
+                      ),
+                      if (_files.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Text(
+                            _files['songFile'] is Map
+                                ? '${(_files['songFile'] as Map)['name']}'
+                                : '图片已选择',
+                          ),
+                        ),
+                    ],
+                    if (e.route != '/audio/match' &&
+                        _searchKey == null &&
+                        (e.write ||
+                            visibleParams.isNotEmpty ||
+                            e.route == '/batch'))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: BetaGlassButton(
+                          onPressed: _busy ? null : _submit,
+                          loading: _busy,
+                          blue: e.write,
+                          child: Text(e.write ? neteaseTaskTitle(e) : '打开内容'),
                         ),
                       ),
                   ],
-                  if (e.route != '/audio/match' &&
-                      _searchKey == null &&
-                      (e.write ||
-                          visibleParams.isNotEmpty ||
-                          e.route == '/batch'))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: BetaGlassButton(
-                        onPressed: _busy ? null : _submit,
-                        loading: _busy,
-                        blue: e.write,
-                        child: Text(e.write ? neteaseTaskTitle(e) : '打开内容'),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            if (_busy)
-              const Padding(
-                padding: EdgeInsets.all(22),
-                child: Center(child: BetaActivityIndicator()),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Column(
-                  children: [
-                    Text(_error!),
-                    const SizedBox(height: 12),
-                    if (!e.write)
-                      BetaGlassButton(
-                        onPressed: _busy ? null : _submit,
-                        child: const Text('重新加载'),
-                      ),
-                  ],
                 ),
               ),
-            if (_notice != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Text(_notice!),
-              ),
-            if (_videoUrl != null)
-              NeteaseVideoView(
-                key: ValueKey(_videoUrl),
-                url: _videoUrl!,
-                isCurrent: () => mounted && _current,
-              ),
-            if (e.route == '/style/detail')
-              BetaGlassButton(
-                onPressed: () => _push(
-                  context,
-                  NeteaseFullHubPage(
-                    entityKind: 'style',
-                    seed: {'tagId': _query()['tagId']},
+              if (_busy)
+                const Padding(
+                  padding: EdgeInsets.all(22),
+                  child: Center(child: BetaActivityIndicator()),
+                ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Column(
+                    children: [
+                      Text(_error!),
+                      const SizedBox(height: 12),
+                      if (!e.write)
+                        BetaGlassButton(
+                          onPressed: _busy ? null : _submit,
+                          child: const Text('重新加载'),
+                        ),
+                    ],
                   ),
                 ),
-                child: const Text('查看此曲风的歌曲、专辑与歌单'),
-              ),
-          ],
-          itemCount: _factRows.length + _rows.length,
-          itemBuilder: (context, index) => index < _factRows.length
-              ? _factRow(context, _factRows[index])
-              : _contentRow(context, _rows[index - _factRows.length], tracks),
-          footer: [
-            if (_more)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: BetaGlassButton(
-                  onPressed: _busy ? null : () => _load(next: true),
-                  loading: _busy,
-                  child: const Text('加载更多'),
+              if (_notice != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Text(_notice!),
                 ),
-              ),
-          ],
+              if (_videoUrl != null)
+                NeteaseVideoView(
+                  key: ValueKey(_videoUrl),
+                  url: _videoUrl!,
+                  isCurrent: () => mounted && _current,
+                ),
+              if (e.route == '/style/detail')
+                BetaGlassButton(
+                  onPressed: () => _push(
+                    context,
+                    NeteaseFullHubPage(
+                      entityKind: 'style',
+                      seed: {'tagId': _query()['tagId']},
+                    ),
+                  ),
+                  child: const Text('查看此曲风的歌曲、专辑与歌单'),
+                ),
+            ],
+            itemCount: _factRows.length + _rows.length,
+            itemBuilder: (context, index) => index < _factRows.length
+                ? _factRow(context, _factRows[index])
+                : _contentRow(context, _rows[index - _factRows.length], tracks),
+            footer: [
+              if (_more)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: BetaGlassButton(
+                    onPressed: _busy ? null : () => _load(next: true),
+                    loading: _busy,
+                    child: const Text('加载更多'),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1349,7 +1358,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
     final kind = _pickerKind(p);
     if (kind == null || !_current) return;
     final picked = await Navigator.of(context).push<NeteasePickedEntity>(
-      MaterialPageRoute(
+      MestingPageRoute(
         builder: (_) => NeteaseEntityPicker(kind: kind, includeDetails: true),
       ),
     );

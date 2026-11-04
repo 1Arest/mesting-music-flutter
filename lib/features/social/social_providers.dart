@@ -186,11 +186,26 @@ final socialUserSearchProvider = FutureProvider.autoDispose
       );
     }, retry: _disableSocialRetry);
 
-final socialConversationsProvider = FutureProvider.autoDispose(
-  (ref) =>
-      _readSocial(ref, ref.watch(socialRepositoryProvider).listConversations()),
-  retry: _disableSocialRetry,
-);
+final socialConversationsProvider = FutureProvider.autoDispose((ref) {
+  // The repository reads credentials lazily and may be the same instance
+  // after login changes. The cached request must still belong to one owner.
+  ref.watch(currentUserProvider.select((user) => user?.uid));
+  return _readSocial(
+    ref,
+    ref.watch(socialRepositoryProvider).listConversations(),
+  );
+}, retry: _disableSocialRetry);
+
+/// A refresh may replace the repository/Future while a chat route is closing.
+/// Retain that owner's last conversation value through the reload. A distinct
+/// family key prevents the previous account's conversations being reused.
+final socialConversationsByOwnerProvider = FutureProvider.autoDispose
+    .family<List<SocialConversation>, String?>((ref, owner) {
+      if (ref.watch(currentUserProvider)?.uid != owner) {
+        return Future.value(const []);
+      }
+      return ref.watch(socialConversationsProvider.future);
+    }, retry: _disableSocialRetry);
 
 final socialMessagesProvider = FutureProvider.autoDispose
     .family<List<SocialMessage>, String>(

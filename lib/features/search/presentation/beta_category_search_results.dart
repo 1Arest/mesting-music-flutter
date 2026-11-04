@@ -1,3 +1,5 @@
+import '../../../shared/widgets/song_list_tools.dart';
+import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
@@ -203,6 +205,7 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
           : const SizedBox.shrink(),
     );
     return AutomaticSongPaging(
+      songListId: 'search:${widget.kind.name}:${query.trim().toLowerCase()}',
       enabled: active && slice.more && !slice.loading && slice.error == null,
       onLoadMore: ref.read(categorySearchProvider.notifier).loadMore,
       child: CustomScrollView(
@@ -319,16 +322,19 @@ class _ResultTile extends StatelessWidget {
 class _ResultRow extends ConsumerWidget {
   const _ResultRow({required this.hit});
   final PlatformSearchHit hit;
+  void _play(BuildContext context, WidgetRef ref) {
+    SongListTools.remember(context, hit.track!);
+    playBetaSelection(context, ref, hit.track!);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final artist = hit.kind == PlatformSearchKind.artists;
     final portrait = artist && hit.cover.isEmpty
         ? ref.watch(artistPortraitProvider(hit.id)).value ?? ''
         : hit.cover;
-    return InkWell(
-      onTap: () => artist
-          ? _open(context, hit)
-          : playBetaSelection(context, ref, hit.track!),
+    final row = InkWell(
+      onTap: () => artist ? _open(context, hit) : _play(context, ref),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 10, 14, 10),
         child: Row(
@@ -369,5 +375,18 @@ class _ResultRow extends ConsumerWidget {
         ),
       ),
     );
+    return hit.track == null
+        ? row
+        : SongListEntry(
+            track: hit.track!,
+            tracks: ref
+                .watch(categorySearchProvider)
+                .current
+                .items
+                .map((item) => item.track)
+                .whereType<Track>()
+                .toList(),
+            child: row,
+          );
   }
 }

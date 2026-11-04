@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/song_list_tools.dart';
+import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_swipe_pages.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter, lerpDouble;
@@ -274,61 +276,64 @@ class _ListeningFootprintPageState
       // The active-page marker changes on a swipe. A stable identity below it
       // retains the actual scroll element/position instead of detaching and
       // recreating that page at offset zero when its marker changes.
-      child: CustomScrollView(
-        key: _scrollPageKeys[index],
-        controller: _scrolls[index],
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        slivers: [
-          // A transparent spacer preserves the original report/scroll geometry
-          // while the real header is painted once above all horizontal pages.
-          SliverToBoxAdapter(child: SizedBox(height: headerExtent)),
-          if (detail == null)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(child: Text('请返回并选择网易云账号')),
-            )
-          else ...[
-            SliverToBoxAdapter(child: _periodNavigation(page!)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
-                child: pageScale == FootprintScale.year
-                    ? _yearReport(page)
-                    : _dailyReport(page),
-              ),
-            ),
-            ..._todaySlivers(page),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  22,
-                  26,
-                  22,
-                  BetaContentInsets.musicBottomOf(context, 32),
+      child: SongListTools(
+        listId: 'footprint-today:$index:$_query',
+        child: CustomScrollView(
+          key: _scrollPageKeys[index],
+          controller: _scrolls[index],
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            // A transparent spacer preserves the original report/scroll geometry
+            // while the real header is painted once above all horizontal pages.
+            SliverToBoxAdapter(child: SizedBox(height: headerExtent)),
+            if (detail == null)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: Text('请返回并选择网易云账号')),
+              )
+            else ...[
+              SliverToBoxAdapter(child: _periodNavigation(page!)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+                  child: pageScale == FootprintScale.year
+                      ? _yearReport(page)
+                      : _dailyReport(page),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const _Footnote('网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。'),
-                    const SizedBox(height: 18),
-                    BetaGlassButton(
-                      key: const ValueKey('footprint-open-diagnostics'),
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const OfficialFootprintPage(),
+              ),
+              ..._todaySlivers(page),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    22,
+                    26,
+                    22,
+                    BetaContentInsets.musicBottomOf(context, 32),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _Footnote('网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。'),
+                      const SizedBox(height: 18),
+                      BetaGlassButton(
+                        key: const ValueKey('footprint-open-diagnostics'),
+                        onPressed: () => Navigator.of(context).push(
+                          MestingPageRoute<void>(
+                            builder: (_) => const OfficialFootprintPage(),
+                          ),
                         ),
+                        child: const Text('统计与本机记录核对'),
                       ),
-                      child: const Text('统计与本机记录核对'),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -516,6 +521,23 @@ class _ListeningFootprintPageState
                   .contains(_query),
         )
         .toList();
+    final tracks = songs
+        .map(
+          (song) => Track(
+            id: 'netease_${song.id}',
+            title: song.title,
+            artist: song.artists.join(' / '),
+            album: '',
+            duration: Duration.zero,
+            audioAsset: 'mesting-platform://netease/${song.id}',
+            coverAsset: song.cover,
+            lyricsAsset: '',
+            source: TrackSource.netease,
+            provider: '网易云音乐',
+            platformSongId: song.id,
+          ),
+        )
+        .toList();
     final todayBlock = oldDay ? null : reader.todayListening;
     final covers =
         (todayBlock?.covers.isNotEmpty == true
@@ -609,34 +631,23 @@ class _ListeningFootprintPageState
       ),
       SliverList.builder(
         itemCount: songs.length,
-        itemBuilder: (context, index) => _TodaySongRow(
-          song: songs[index],
-          onTap: () async {
-            // A retained prior-day row remains an honest song entry. Selecting
-            // it starts only that song via the app's normal playback owner.
-            final song = songs[index];
-            if (widget.onSongSelected != null) {
-              await widget.onSongSelected!(song);
-            } else {
-              await playBetaSelection(
-                context,
-                ref,
-                Track(
-                  id: 'netease_${song.id}',
-                  title: song.title,
-                  artist: song.artists.join(' / '),
-                  album: '',
-                  duration: Duration.zero,
-                  audioAsset: 'mesting-platform://netease/${song.id}',
-                  coverAsset: song.cover,
-                  lyricsAsset: '',
-                  source: TrackSource.netease,
-                  provider: '网易云音乐',
-                  platformSongId: song.id,
-                ),
-              );
-            }
-          },
+        itemBuilder: (context, index) => SongListEntry(
+          track: tracks[index],
+          tracks: tracks,
+          child: _TodaySongRow(
+            song: songs[index],
+            onTap: () async {
+              // A retained prior-day row remains an honest song entry. Selecting
+              // it starts only that song via the app's normal playback owner.
+              final song = songs[index];
+              SongListTools.remember(context, tracks[index]);
+              if (widget.onSongSelected != null) {
+                await widget.onSongSelected!(song);
+              } else {
+                await playBetaSelection(context, ref, tracks[index]);
+              }
+            },
+          ),
         ),
       ),
     ];

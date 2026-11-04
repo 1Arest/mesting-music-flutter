@@ -9,6 +9,7 @@ import 'dart:ui';
 import '../../shared/widgets/beta_edge_back.dart';
 
 import 'package:flutter/material.dart';
+import '../../shared/widgets/song_list_tools.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/platform/sensitive_screen.dart';
@@ -578,16 +579,19 @@ Page<void> _musicSlidePage({
     if (tabIndex != null || child is MusicSearchPage) {
       return NoTransitionPage<void>(
         key: state.pageKey,
-        child: tabIndex != null ? BetaEdgeBack(child: child) : child,
+        child: SongListTools(
+          listId: state.uri.toString(),
+          child: tabIndex != null ? BetaEdgeBack(child: child) : child,
+        ),
       );
     }
-    return CustomTransitionPage<void>(
+    return BetaContentTransitionPage<void>(
       key: state.pageKey,
-      transitionDuration: const Duration(milliseconds: 360),
-      reverseTransitionDuration: const Duration(milliseconds: 320),
-      child: child is MusicSearchPage ? child : BetaEdgeBack(child: child),
-      transitionsBuilder: (context, animation, secondary, child) =>
-          BetaPageMotion(animation: animation, child: child),
+      name: state.uri.toString(),
+      child: SongListTools(
+        listId: state.uri.toString(),
+        child: child is MusicSearchPage ? child : BetaEdgeBack(child: child),
+      ),
     );
   }
   final intent = state.extra is MusicPageTransitionIntent
@@ -639,6 +643,16 @@ Page<void> _messagesTransitionPage({
   required GoRouterState state,
   required Widget child,
 }) {
+  // Beta message and chat routes must share a reversible full-width path.
+  // Mixing the old single-layer visibility handoff with a sliding child hid
+  // the message list until the last pop frame and produced a visible flash.
+  if (DistributionChannel.isBeta) {
+    return BetaContentTransitionPage<void>(
+      key: state.pageKey,
+      name: state.uri.toString(),
+      child: BetaEdgeBack(child: child),
+    );
+  }
   if (DistributionChannel.isBeta) child = BetaEdgeBack(child: child);
   final intent = state.extra is MusicPageTransitionIntent
       ? state.extra! as MusicPageTransitionIntent
@@ -815,11 +829,7 @@ class _SequencedMusicTransitionPage extends Page<void> {
         final movement = CurvedAnimation(
           parent: animation,
           curve: Interval(handoffProgress, 1, curve: musicPageMotionCurve),
-          reverseCurve: Interval(
-            1 - handoffProgress,
-            1,
-            curve: reverseMotionCurve,
-          ),
+          reverseCurve: Interval(handoffProgress, 1, curve: reverseMotionCurve),
         );
         final position = Tween<Offset>(
           begin: enterOffset,

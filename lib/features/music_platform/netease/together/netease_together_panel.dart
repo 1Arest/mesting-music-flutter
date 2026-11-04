@@ -84,7 +84,7 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
 
   Future<void> _chooseFriend(NeteaseTogetherController controller) async {
     final peer = await Navigator.of(context).push<NeteasePerson>(
-      MaterialPageRoute(builder: (_) => const NeteaseFriendsPage()),
+      MestingPageRoute(builder: (_) => const NeteaseFriendsPage()),
     );
     if (peer != null && mounted) await controller.invite(peer);
   }

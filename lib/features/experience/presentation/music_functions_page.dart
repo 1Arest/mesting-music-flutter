@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +31,7 @@ class MusicFunctionsPage extends ConsumerWidget {
     final netease = ref.watch(usesNeteaseProvider);
     void page(Widget child) => Navigator.of(
       context,
-    ).push(MaterialPageRoute<void>(builder: (_) => child));
+    ).push(MestingPageRoute<void>(builder: (_) => child));
     final entries = <_FunctionEntry>[
       _FunctionEntry(
         '私人 FM',

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -158,7 +159,7 @@ void openNeteaseFeed(
   String? title,
 }) {
   Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MestingPageRoute<void>(
       builder: (_) => NeteaseFeaturesPage(feed: feed, id: id, title: title),
     ),
   );
@@ -252,7 +253,7 @@ void openNeteaseItem(BuildContext context, NeteaseItem item) {
     case NeteaseEntity.song:
       return;
   }
-  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
+  Navigator.of(context).push(MestingPageRoute<void>(builder: (_) => page));
 }
 
 /// Each page owns its pagination and the account epoch from which it opened.
@@ -294,7 +295,10 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
     final account = ref.read(platformAccountProvider).value;
     _owner = account?.ownerId;
     _token = account?.token;
-    Future.microtask(() => _load(reset: true));
+    // Opening a detail page is a cache read, not an account-wide refresh.
+    // Invalidating every live browse query here also rebuilt the parent page
+    // behind the route and made a return gesture reveal a changing list.
+    Future.microtask(() => _load(reset: true, revalidate: false));
   }
 
   @override
@@ -304,11 +308,11 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
     super.dispose();
   }
 
-  Future<void> _load({bool reset = false}) async {
+  Future<void> _load({bool reset = false, bool revalidate = true}) async {
     if (!_current || (_busy && !reset) || (!_more && !reset)) return;
     final generation = reset ? ++_generation : _generation;
     if (reset) _browse.reset();
-    if (reset) revalidateBrowse(ref);
+    if (reset && revalidate) revalidateBrowse(ref);
     setState(() {
       _busy = true;
       _error = null;
@@ -316,7 +320,8 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
         _page = 0;
         _cursor = 0;
         _more = true;
-        _items.clear();
+        // Keep a usable snapshot while refreshing. The first replacement
+        // batch is committed only after its request succeeds.
       }
     });
     try {
@@ -351,6 +356,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
       );
       if (!mounted || generation != _generation || !_current) return;
       setState(() {
+        if (reset) _items.clear();
         final ids = _items.map((i) => '${i.kind}:${i.id}').toSet();
         final added = batch.items
             .where((i) => i.id.isNotEmpty && ids.add('${i.kind}:${i.id}'))
@@ -465,6 +471,8 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
           : MusicRefreshIndicator(
               onRefresh: () => _load(reset: true),
               child: AutomaticSongPaging(
+                songListId:
+                    'netease-feed:${widget.feed.name}:${widget.id}:$_area:$_artistArea',
                 enabled: _more && !_busy && !_playingAll && _error == null,
                 onLoadMore: _load,
                 child: ListView.builder(
@@ -662,7 +670,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                                     context,
                                     rootNavigator: true,
                                   ).push(
-                                    MaterialPageRoute<void>(
+                                    MestingPageRoute<void>(
                                       builder: (_) => PlatformCommentsPage(
                                         resource: PlatformCommentResource(
                                           kind: PlatformCommentKind.podcast,
@@ -804,7 +812,7 @@ class NeteaseLibraryLinks extends StatelessWidget {
             ),
             trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => const NeteasePlaylistImportPage(),
               ),
             ),
@@ -861,7 +869,7 @@ class _NeteaseAccountPanelState extends ConsumerState<NeteaseAccountPanel> {
       children: [
         BetaGlassButton(
           onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
+            MestingPageRoute<void>(
               builder: (_) => const NeteaseMembershipPage(),
             ),
           ),
@@ -964,7 +972,7 @@ class _NeteaseResourceActionsState
   }
 
   void _more() => Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MestingPageRoute<void>(
       builder: (_) => NeteaseFullHubPage(
         entityKind: widget.item.kind.name,
         seed: {
@@ -980,7 +988,7 @@ class _NeteaseResourceActionsState
     final account = ref.read(platformAccountProvider).value;
     if (account == null || !_current) return;
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MestingPageRoute<void>(
         builder: (_) => PlatformCommentsPage(
           resource: PlatformCommentResource(
             kind: widget.item.kind == NeteaseEntity.mv

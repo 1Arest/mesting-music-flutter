@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/music_list_footer.dart';
@@ -26,6 +27,7 @@ import '../../music_platform/presentation/platform_avatar.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../../shared/widgets/song_list_tools.dart';
 
 /// THESIS: Cover art leads a personal listening space with editorial pacing.
 /// OWN-WORLD: Large Chinese system type, generous space, theme-aware neutrals,
@@ -77,9 +79,12 @@ class EditorialScroll extends StatelessWidget {
         ),
       ],
     );
-    return onRefresh == null
+    final content = onRefresh == null
         ? scroll
         : MusicRefreshIndicator(onRefresh: onRefresh!, child: scroll);
+    return SongListTools.contains(context)
+        ? content
+        : SongListTools(child: content);
   }
 }
 
@@ -387,109 +392,119 @@ class EditorialTrackRow extends ConsumerWidget {
   final List<Track> contextTracks;
   final int? rank;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => InkWell(
-    onLongPress: track.isRemote
-        ? () => showCupertinoModalPopup<void>(
-            context: context,
-            builder: (c) => CupertinoActionSheet(
-              title: Text(track.title),
-              actions: [
-                if (track.source == TrackSource.netease)
+  Widget build(BuildContext context, WidgetRef ref) => SongListEntry(
+    track: track,
+    tracks: contextTracks,
+    child: InkWell(
+      onLongPress: track.isRemote
+          ? () => showCupertinoModalPopup<void>(
+              context: context,
+              builder: (c) => CupertinoActionSheet(
+                title: Text(track.title),
+                actions: [
+                  if (track.source == TrackSource.netease)
+                    CupertinoActionSheetAction(
+                      onPressed: () {
+                        Navigator.pop(c);
+                        showNeteaseTrackSources(context, ref, track);
+                      },
+                      child: const Text('选择音乐来源'),
+                    ),
                   CupertinoActionSheetAction(
                     onPressed: () {
                       Navigator.pop(c);
-                      showNeteaseTrackSources(context, ref, track);
+                      enqueueAudioDownload(context, ref, track);
                     },
-                    child: const Text('选择音乐来源'),
+                    child: const Text('下载音乐'),
                   ),
-                CupertinoActionSheetAction(
-                  onPressed: () {
-                    Navigator.pop(c);
-                    enqueueAudioDownload(context, ref, track);
-                  },
-                  child: const Text('下载音乐'),
-                ),
-                if (track.source == TrackSource.netease)
-                  CupertinoActionSheetAction(
-                    onPressed: () {
-                      Navigator.pop(c);
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => NeteaseFullHubPage(
-                            entityKind: 'song',
-                            seed: {
-                              'id': track.platformSongId,
-                              'ids': track.platformSongId,
-                            },
+                  if (track.source == TrackSource.netease)
+                    CupertinoActionSheetAction(
+                      onPressed: () {
+                        Navigator.pop(c);
+                        Navigator.of(context).push(
+                          MestingPageRoute<void>(
+                            builder: (_) => NeteaseFullHubPage(
+                              entityKind: 'song',
+                              seed: {
+                                'id': track.platformSongId,
+                                'ids': track.platformSongId,
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: const Text('网易云相关功能'),
-                  ),
-              ],
-              cancelButton: CupertinoActionSheetAction(
-                onPressed: () => Navigator.pop(c),
-                child: const Text('取消'),
-              ),
-            ),
-          )
-        : null,
-    onTap:
-        onPlay ?? () => playEditorialTrack(context, ref, track, contextTracks),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 9),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(9),
-            child: TrackArtwork(track: track, width: 52, height: 52),
-          ),
-          if (rank != null)
-            SizedBox(
-              width: 28,
-              child: Text(
-                '$rank',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: context.musicThemeTokens.textSecondary,
-                  fontWeight: FontWeight.w700,
+                        );
+                      },
+                      child: const Text('网易云相关功能'),
+                    ),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  onPressed: () => Navigator.pop(c),
+                  child: const Text('取消'),
                 ),
               ),
+            )
+          : null,
+      onTap: () {
+        SongListTools.remember(context, track);
+        if (onPlay != null) {
+          onPlay!();
+        } else {
+          playEditorialTrack(context, ref, track, contextTracks);
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 9),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(9),
+              child: TrackArtwork(track: track, width: 52, height: 52),
             ),
-          if (rank == null) const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  track.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: context.musicThemeTokens.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                DownloadedTrackSubtitle(
-                  track: track,
+            if (rank != null)
+              SizedBox(
+                width: 28,
+                child: Text(
+                  '$rank',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: context.musicThemeTokens.textSecondary,
-                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
+              ),
+            if (rank == null) const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    track.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: context.musicThemeTokens.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  DownloadedTrackSubtitle(
+                    track: track,
+                    style: TextStyle(
+                      color: context.musicThemeTokens.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          FavoriteToggleButton(track: track, compact: true),
-          IconButton(
-            tooltip: '加入歌单',
-            onPressed: () => showAddToPlaylistSheet(context, ref, track),
-            icon: const Icon(Icons.playlist_add_rounded, size: 22),
-          ),
-        ],
+            FavoriteToggleButton(track: track, compact: true),
+            IconButton(
+              tooltip: '加入歌单',
+              onPressed: () => showAddToPlaylistSheet(context, ref, track),
+              icon: const Icon(Icons.playlist_add_rounded, size: 22),
+            ),
+          ],
+        ),
       ),
     ),
   );

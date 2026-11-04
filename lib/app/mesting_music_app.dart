@@ -7,6 +7,7 @@ import '../features/music_platform/netease/together/netease_together_controller.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../features/music_platform/presentation/song_list_tools_host.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -173,7 +174,9 @@ class MestingMusicApp extends ConsumerWidget {
                 navigatorKey: appRootNavigatorKey,
                 child: SocialAttentionCoordinator(
                   child: LyricsOverlayCoordinator(
-                    child: child ?? const SizedBox.shrink(),
+                    child: SongListToolsHost(
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),

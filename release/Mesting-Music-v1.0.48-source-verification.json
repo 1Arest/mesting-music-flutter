@@ -1,0 +1,21 @@
+{
+  "version": "1.0.48",
+  "androidVersionCode": 69,
+  "sourceZipName": "Mesting-Music-v1.0.48-source.zip",
+  "sourceZipSize": 62877696,
+  "sourceZipSha256": "10e8fd6748ab459d47749f044c50e80987a86f164bc105e1a6ebc9f913c8f5b5",
+  "sourceFileCount": 2324,
+  "frozenEntryCount": 2326,
+  "zipCrcVerified": true,
+  "allFrozenEntriesByteIdentical": true,
+  "includesPinnedNativeEngineAndCompleteLicense": true,
+  "signingMaterialIncluded": false,
+  "privateDeviceAndOfficialReferenceArtifactsExcluded": true,
+  "buildCachesExcluded": true,
+  "manifestInsideZip": "SOURCE-SNAPSHOT.json",
+  "previousSnapshotMetadataPreservedAs": "SOURCE-SNAPSHOT-v1.0.24-BASELINE.json",
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false
+}

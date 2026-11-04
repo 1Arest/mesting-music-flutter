@@ -72,6 +72,7 @@ class MusicLibraryPage extends ConsumerWidget {
               : ListenableBuilder(
                   listenable: recentWindow ?? const AlwaysStoppedAnimation(0),
                   builder: (context, _) => AutomaticSongPaging(
+                    songListId: 'library:$view',
                     enabled:
                         recentWindow != null &&
                         recentWindow.hasMore &&

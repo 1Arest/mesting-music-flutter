@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
@@ -303,7 +304,7 @@ class _TimedDisclaimerSheetState extends State<_TimedDisclaimerSheet> {
 
   Future<void> _openDocument(LegalDocumentType type) async {
     await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
+      MestingPageRoute<void>(
         builder: (_) => Material(
           color: Theme.of(context).colorScheme.surface,
           child: LegalDocumentPage(documentType: type),

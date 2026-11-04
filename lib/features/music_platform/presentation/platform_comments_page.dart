@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import 'platform_lazy_list.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
@@ -44,7 +45,7 @@ Future<void> openPlatformSongComments(
   // The source can live inside the library's nested navigator. Comments own
   // their composer and must cover the shell's persistent navigation/player.
   await Navigator.of(context, rootNavigator: true).push(
-    MaterialPageRoute<void>(
+    MestingPageRoute<void>(
       builder: (_) =>
           PlatformSongCommentsPage(track: track, repository: repository),
     ),
@@ -132,7 +133,7 @@ void openPlatformPlaylistComments(
         )
       : PlatformCommentsRepository(ref.read(musicPlatformApiProvider), session);
   Navigator.of(context, rootNavigator: true).push(
-    MaterialPageRoute<void>(
+    MestingPageRoute<void>(
       builder: (_) => PlatformCommentsPage(
         resource: PlatformCommentResource(
           kind: PlatformCommentKind.playlist,
@@ -410,7 +411,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
       comment: comment,
       onHug: widget.repository is NeteaseCommentsRepository && !_writing
           ? () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => NeteaseCommentHugsPage(
                   repository: widget.repository as NeteaseCommentsRepository,
                   resource: widget.resource,
@@ -448,7 +449,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
           : null,
       onThread: widget.thread == null
           ? () => Navigator.of(context, rootNavigator: true).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => PlatformCommentsPage(
                   resource: widget.resource,
                   repository: widget.repository,

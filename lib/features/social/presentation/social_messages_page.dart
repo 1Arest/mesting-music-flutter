@@ -8,6 +8,7 @@ import '../domain/social_models.dart';
 import '../domain/listen_together.dart';
 import '../domain/track_share.dart';
 import '../social_providers.dart';
+import '../../auth/auth_providers.dart';
 import '../../player/presentation/music_page_transition.dart';
 import 'social_widgets.dart';
 
@@ -17,7 +18,8 @@ class SocialMessagesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final top = MediaQuery.paddingOf(context).top;
-    final conversations = ref.watch(socialConversationsProvider);
+    final owner = ref.watch(currentUserProvider)?.uid;
+    final conversations = ref.watch(socialConversationsByOwnerProvider(owner));
     return Column(
       children: [
         SizedBox(height: top + 12),
@@ -36,6 +38,11 @@ class SocialMessagesPage extends ConsumerWidget {
         const SizedBox(height: 17),
         Expanded(
           child: conversations.when(
+            // Riverpod retains the last account-owned value during a refresh.
+            // Invalidation from chat must update unread counts in place rather
+            // than replace the conversation list while the route is popping.
+            skipLoadingOnReload: true,
+            skipLoadingOnRefresh: true,
             loading: () => const SocialLoadingState(message: '正在加载会话与未读消息'),
             error: (error, stackTrace) => ListView(
               padding: BetaContentInsets.musicPaddingOf(

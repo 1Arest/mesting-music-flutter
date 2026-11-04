@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _NeteaseCommentEntryPageState
 
   Future<void> _choose() async {
     final picked = await Navigator.of(context).push<NeteasePickedEntity>(
-      MaterialPageRoute(
+      MestingPageRoute(
         builder: (_) => NeteaseEntityPicker(
           kind: _kind == PlatformCommentKind.podcast ? 'program' : _kind.name,
           includeDetails: true,

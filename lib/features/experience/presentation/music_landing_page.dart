@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/material.dart';
 import '../../music_platform/platform_browse_cache.dart';
 import '../../music_platform/presentation/retained_platform_snapshot.dart';
@@ -219,7 +220,7 @@ class MusicLandingPage extends ConsumerWidget {
             EditorialSection(
               '新歌首发',
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                MestingPageRoute<void>(
                   builder: (_) => const PlatformRecommendationDetail(
                     title: '新歌首发',
                     newSongs: true,
@@ -269,7 +270,7 @@ class MusicLandingPage extends ConsumerWidget {
                       title: '${row['name'] ?? row['specialname'] ?? '精选歌单'}',
                       width: 174,
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
+                        MestingPageRoute<void>(
                           builder: (_) => PlatformPublicPlaylistPage(
                             id: '${row['global_collection_id'] ?? row['gid']}',
                             cover:

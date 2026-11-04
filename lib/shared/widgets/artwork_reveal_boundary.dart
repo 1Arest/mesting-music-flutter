@@ -253,10 +253,21 @@ class ArtworkRevealController {
 
 class _ArtworkRevealScope extends InheritedWidget {
   const _ArtworkRevealScope({required this.controller, required super.child});
-  final ArtworkRevealController controller;
+  final ArtworkRevealController? controller;
   @override
   bool updateShouldNotify(_ArtworkRevealScope old) =>
       old.controller != controller;
+}
+
+/// Retrying an already displayed, failed image must not re-enter the page's
+/// initial-content gate. The existing row stays usable while only its cover
+/// changes. This scope does not disable image retries or cached-frame reuse.
+class ArtworkRevealExclusion extends StatelessWidget {
+  const ArtworkRevealExclusion({required this.child, super.key});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) =>
+      _ArtworkRevealScope(controller: null, child: child);
 }
 
 class _ArtworkViewport extends MultiChildRenderObjectWidget {

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
@@ -48,6 +49,7 @@ class AppleSearchResults extends ConsumerWidget {
       ),
     );
     return AutomaticSongPaging(
+      songListId: 'search:songs:${state.query.trim().toLowerCase()}',
       enabled: state.hasMore && !state.isLoadingMore && state.moreError == null,
       onLoadMore: ref.read(musicSearchControllerProvider.notifier).loadMore,
       child: CustomScrollView(
@@ -133,144 +135,160 @@ class _SearchSongRow extends ConsumerWidget {
       currentTrackProvider.select((current) => current.id == track.id),
     );
     final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          try {
-            await playBetaSelection(context, ref, track);
-          } catch (error) {
-            if (context.mounted) showPlatformFailure(context, error);
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.only(left: 22, right: 10),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(9),
-                child: TrackArtwork(track: track, width: 52, height: 52),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 76),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: theme.dividerColor.withValues(alpha: .16),
-                        width: .5,
+    return SongListEntry(
+      track: track,
+      tracks: contextTracks,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            try {
+              SongListTools.remember(context, track);
+              await playBetaSelection(context, ref, track);
+            } catch (error) {
+              if (context.mounted) showPlatformFailure(context, error);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(left: 22, right: 10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(9),
+                  child: TrackArtwork(track: track, width: 52, height: 52),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 76),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.dividerColor.withValues(alpha: .16),
+                          width: .5,
+                        ),
                       ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: active
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                [
-                                  track.artist,
-                                  track.album,
-                                ].where((s) => s.isNotEmpty).join(' · '),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      FavoriteToggleButton(track: track, compact: true),
-                      BetaPopupMenuButton<String>(
-                        tooltip: '歌曲操作',
-                        icon: Icon(
-                          CupertinoIcons.ellipsis,
-                          size: 21,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        onSelected: (action) async {
-                          if (action == 'source') {
-                            await showNeteaseTrackSources(context, ref, track);
-                            return;
-                          }
-                          if (action == 'comments') {
-                            await openPlatformSongComments(context, ref, track);
-                            return;
-                          }
-                          try {
-                            final added = await ref
-                                .read(audioHandlerProvider)
-                                .appendToUpcomingQueue(track);
-                            if (context.mounted) {
-                              showMusicNotice(
-                                context,
-                                icon: CupertinoIcons.text_badge_plus,
-                                title: added ? '已加入播放队列' : '已在播放队列',
-                                message: '',
-                              );
-                            }
-                          } catch (error) {
-                            if (context.mounted) {
-                              showPlatformFailure(context, error);
-                            }
-                          }
-                        },
-                        itemBuilder: (_) => [
-                          if (track.source == TrackSource.netease)
-                            const PopupMenuItem(
-                              value: 'source',
-                              child: Text('选择音乐来源'),
-                            ),
-                          if (ref.read(showPlatformFeaturesProvider) &&
-                              track.source == TrackSource.kugou)
-                            const PopupMenuItem(
-                              value: 'comments',
-                              child: Row(
-                                children: [
-                                  Icon(CupertinoIcons.text_bubble, size: 20),
-                                  SizedBox(width: 12),
-                                  Text('歌曲评论'),
-                                ],
-                              ),
-                            ),
-                          const PopupMenuItem(
-                            value: 'queue',
-                            child: Row(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(CupertinoIcons.text_badge_plus, size: 20),
-                                SizedBox(width: 12),
-                                Text('加入播放队列'),
+                                Text(
+                                  track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: active
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurface,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  [
+                                    track.artist,
+                                    track.album,
+                                  ].where((s) => s.isNotEmpty).join(' · '),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        FavoriteToggleButton(track: track, compact: true),
+                        BetaPopupMenuButton<String>(
+                          tooltip: '歌曲操作',
+                          icon: Icon(
+                            CupertinoIcons.ellipsis,
+                            size: 21,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          onSelected: (action) async {
+                            if (action == 'source') {
+                              await showNeteaseTrackSources(
+                                context,
+                                ref,
+                                track,
+                              );
+                              return;
+                            }
+                            if (action == 'comments') {
+                              await openPlatformSongComments(
+                                context,
+                                ref,
+                                track,
+                              );
+                              return;
+                            }
+                            try {
+                              final added = await ref
+                                  .read(audioHandlerProvider)
+                                  .appendToUpcomingQueue(track);
+                              if (context.mounted) {
+                                showMusicNotice(
+                                  context,
+                                  icon: CupertinoIcons.text_badge_plus,
+                                  title: added ? '已加入播放队列' : '已在播放队列',
+                                  message: '',
+                                );
+                              }
+                            } catch (error) {
+                              if (context.mounted) {
+                                showPlatformFailure(context, error);
+                              }
+                            }
+                          },
+                          itemBuilder: (_) => [
+                            if (track.source == TrackSource.netease)
+                              const PopupMenuItem(
+                                value: 'source',
+                                child: Text('选择音乐来源'),
+                              ),
+                            if (ref.read(showPlatformFeaturesProvider) &&
+                                track.source == TrackSource.kugou)
+                              const PopupMenuItem(
+                                value: 'comments',
+                                child: Row(
+                                  children: [
+                                    Icon(CupertinoIcons.text_bubble, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('歌曲评论'),
+                                  ],
+                                ),
+                              ),
+                            const PopupMenuItem(
+                              value: 'queue',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.text_badge_plus,
+                                    size: 20,
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text('加入播放队列'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

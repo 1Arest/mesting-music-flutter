@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../presentation/platform_lazy_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ NeteasePerson _person(NeteaseTogetherProfile profile) =>
 Future<T?> _open<T>(BuildContext context, Widget page) => Navigator.of(
   context,
   rootNavigator: true,
-).push<T>(MaterialPageRoute(builder: (_) => page));
+).push<T>(MestingPageRoute(builder: (_) => page));
 
 class NeteaseTogetherRecordPage extends ConsumerStatefulWidget {
   const NeteaseTogetherRecordPage({

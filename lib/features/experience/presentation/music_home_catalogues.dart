@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,14 +40,14 @@ String musicHomeCatalogueTitle(PlatformExploreKind kind) => switch (kind) {
 
 void openMusicHomeCatalogue(BuildContext context, PlatformExploreKind kind) =>
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MestingPageRoute<void>(
         builder: (_) => MusicHomeCataloguePage(kind: kind),
       ),
     );
 
 void _openCollection(BuildContext context, PlatformExploreItem item) =>
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MestingPageRoute<void>(
         builder: (_) => PlatformExploreSongsPage(item: item),
       ),
     );

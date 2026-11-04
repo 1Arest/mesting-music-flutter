@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../../shared/widgets/beta_edge_back.dart';
 import '../../../shared/widgets/beta_secondary_music_layout.dart';
@@ -247,7 +248,10 @@ class PlatformPageFrame extends StatelessWidget {
                   Expanded(
                     child: ColoredBox(
                       color: Theme.of(context).colorScheme.surface,
-                      child: ArtworkRevealBoundary(child: child),
+                      child: SongListTools(
+                        listId: 'platform-frame:$title:${pageKey ?? ''}',
+                        child: ArtworkRevealBoundary(child: child),
+                      ),
                     ),
                   ),
                 ],

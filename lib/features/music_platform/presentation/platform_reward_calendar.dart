@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class PlatformRewardEntry extends ConsumerWidget {
         ),
         onTap: () {
           Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute<void>(builder: (_) => const UnifiedRewardPage()),
+            MestingPageRoute<void>(builder: (_) => const UnifiedRewardPage()),
           );
         },
       ),

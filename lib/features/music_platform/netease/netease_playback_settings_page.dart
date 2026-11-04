@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,7 +126,7 @@ class _PlaybackSettingsState
             subtitle: const Text('官方今日、当前月及历史总时长 · 历史月报核对'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => const OfficialFootprintPage(),
               ),
             ),
@@ -156,7 +157,7 @@ class _PlaybackSettingsState
           BetaGlassButton(
             key: const ValueKey('netease-monthly-audit'),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              MestingPageRoute<void>(
                 builder: (_) => const NeteaseListeningAuditPage(),
               ),
             ),

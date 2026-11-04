@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
@@ -1085,7 +1086,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   Future<void> _openMusicPlatform() async {
     final success = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const PlatformAccountPage()),
+      MestingPageRoute(builder: (_) => const PlatformAccountPage()),
     );
     // Completing onboarding does not fabricate a Mesting account/session.
     if (success == true && mounted) _experienceNow();

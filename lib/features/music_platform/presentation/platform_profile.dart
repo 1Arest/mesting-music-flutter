@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import 'beta_personal_profile.dart';
 import '../../auth/presentation/beta_account_card.dart';
 import '../../../core/platform/distribution_channel.dart';
@@ -50,7 +51,7 @@ class PlatformAccountTile extends ConsumerWidget {
         subtitle: const Text('已登录酷狗 · 账号管理与退出'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const PlatformAccountPage()),
+          MestingPageRoute<void>(builder: (_) => const PlatformAccountPage()),
         ),
       ),
     );

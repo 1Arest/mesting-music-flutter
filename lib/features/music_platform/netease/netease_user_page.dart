@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -18,7 +19,7 @@ import 'netease_user_repository.dart';
 
 void openNeteaseUser(BuildContext context, PlatformSearchUser user) =>
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      MestingPageRoute<void>(
         builder: (_) => NeteaseUserProfilePage(user: user),
       ),
     );
@@ -385,7 +386,7 @@ class _NeteaseUserProfilePageState
   }
 
   void _connections(bool followers) => Navigator.of(context).push(
-    MaterialPageRoute<void>(
+    MestingPageRoute<void>(
       builder: (_) =>
           NeteaseUserConnectionsPage(user: user, followers: followers),
     ),

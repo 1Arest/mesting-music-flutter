@@ -4,6 +4,7 @@ import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/beta_swipe_pages.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../core/platform/distribution_channel.dart';
@@ -226,12 +227,14 @@ class _HistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final tracks = items.map((item) => item.track).toList(growable: false);
     final window = ref.exists(historyTrackWindowProvider(ranking))
         ? ref.watch(historyTrackWindowProvider(ranking))
         : null;
     return ListenableBuilder(
       listenable: window ?? const AlwaysStoppedAnimation(0),
       builder: (context, _) => AutomaticSongPaging(
+        songListId: 'listening-history:$ranking',
         enabled:
             window != null &&
             window.hasMore &&
@@ -267,17 +270,24 @@ class _HistoryList extends ConsumerWidget {
                   : const MusicListEnd();
             }
             final item = items[index];
-            return _HistoryTrackRow(
-              item: item,
-              rank: ranking ? index + 1 : null,
-              onTap: () => DistributionChannel.isBeta
-                  ? playBetaSelection(context, ref, item.track)
-                  : ref
-                        .read(audioHandlerProvider)
-                        .playSingleTrack(
-                          item.track,
-                          playbackContext: items.map((item) => item.track),
-                        ),
+            return SongListEntry(
+              track: item.track,
+              tracks: tracks,
+              child: _HistoryTrackRow(
+                item: item,
+                rank: ranking ? index + 1 : null,
+                onTap: () {
+                  SongListTools.remember(context, item.track);
+                  DistributionChannel.isBeta
+                      ? playBetaSelection(context, ref, item.track)
+                      : ref
+                            .read(audioHandlerProvider)
+                            .playSingleTrack(
+                              item.track,
+                              playbackContext: items.map((item) => item.track),
+                            );
+                },
+              ),
             );
           },
         ),

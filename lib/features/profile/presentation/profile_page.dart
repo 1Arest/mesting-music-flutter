@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -256,7 +257,7 @@ Widget _musicPlatformEntry(BuildContext context) => ListTile(
   trailing: const Icon(Icons.chevron_right),
   onTap: () => Navigator.of(
     context,
-  ).push(MaterialPageRoute<void>(builder: (_) => const PlatformAccountPage())),
+  ).push(MestingPageRoute<void>(builder: (_) => const PlatformAccountPage())),
 );
 
 Future<void> _changeStatus(

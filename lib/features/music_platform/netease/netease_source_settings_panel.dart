@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_choice_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,7 +53,7 @@ class _NeteaseSourceSettingsPanelState
               const SizedBox(height: 12),
               BetaGlassButton(
                 onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+                  MestingPageRoute<void>(
                     builder: (_) => const NeteaseMembershipPage(),
                   ),
                 ),
