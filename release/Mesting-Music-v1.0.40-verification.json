@@ -1,0 +1,272 @@
+{
+  "version": "1.0.40",
+  "androidVersionCode": 61,
+  "packageName": "com.mesting.music.beta",
+  "appName": "Mesting Music",
+  "file": "Mesting-Music-v1.0.40.apk",
+  "fileSize": 108107470,
+  "sha256": "9077d373cde638837c122dc516220ae4bdee4bb1cb5fdb77f34f7686c6dcacc1",
+  "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+  "v2Signature": true,
+  "v3Signature": true,
+  "debuggable": false,
+  "minSdk": 24,
+  "targetSdk": 36,
+  "abis": [
+    "arm64-v8a",
+    "armeabi-v7a"
+  ],
+  "zipCrcVerified": true,
+  "zipAlignment16KiB": true,
+  "arm64ElfAlignment16KiB": true,
+  "arm32ElfAlignment4KiB": true,
+  "nativeLibraries": [
+    {
+      "path": "lib/arm64-v8a/libapp.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        65536,
+        65536,
+        65536
+      ]
+    },
+    {
+      "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/arm64-v8a/libflutter.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        65536,
+        65536,
+        65536
+      ]
+    },
+    {
+      "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/arm64-v8a/libkugou_server.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/arm64-v8a/libsqlite3.so",
+      "bits": 64,
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libapp.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        16384,
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        16384,
+        16384
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libflutter.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        65536,
+        65536,
+        65536
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        4096,
+        4096,
+        4096
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libkugou_server.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        4096,
+        4096,
+        4096,
+        4096
+      ]
+    },
+    {
+      "path": "lib/armeabi-v7a/libsqlite3.so",
+      "bits": 32,
+      "loadSegmentAlignments": [
+        4096,
+        4096,
+        4096
+      ]
+    }
+  ],
+  "appPayloadsChangedFromV136": [
+    {
+      "path": "lib/arm64-v8a/libapp.so",
+      "sha256": "a87d9ae348e5c98798c29234172f0f989cbca995dde21d77553a42b420610013",
+      "previousV136Sha256": "fe93055920f3ab61c399929eae79df1032dbfa19c6acd298a935f51ed98890ba",
+      "changedFromV136": true
+    },
+    {
+      "path": "lib/armeabi-v7a/libapp.so",
+      "sha256": "ddcb669bf642b120149e49d1cd113f78d3a71b9a9a1ae14f5848ce0d92268e92",
+      "previousV136Sha256": "35dbf582583a5a68cec7d1ab8623a3faca622fb446b5ba98aa4b580c7c11b9cb",
+      "changedFromV136": true
+    }
+  ],
+  "bundledNotesMatchVersion": true,
+  "bundledNotesCount": 5,
+  "packagedAssetsByteIdenticalToSource": [
+    "assets/data/release-notes.json",
+    "assets/data/netease-full-catalog.json",
+    "third_party/netease_protocol/LICENSE",
+    "third_party/netease_protocol/NOTICE.md",
+    "third_party/netease_protocol/afp/afp.js",
+    "third_party/netease_protocol/afp/afp.wasm.js",
+    "third_party/netease_protocol/afp/LICENSE",
+    "third_party/unblock_netease/COPYING",
+    "third_party/unblock_netease/COPYING.LESSER",
+    "third_party/unblock_netease/NOTICE.md"
+  ],
+  "pinnedCustomReleaseEngine": {
+    "flutterVersion": "3.41.9",
+    "frameworkCommit": "00b0c91f06209d9e4a41f71b7a512d6eb3b9c694",
+    "upstreamEngineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+    "runtimeMode": "release",
+    "dartRevision": "c70f78e7d682c158c15ca0c26c729b3ccb932284",
+    "dependencySnapshotSha256": "204c7c2dd50b6d39aefa4f9e2dfd795bfbadfd23f130459f365b5aab00d1cbe9",
+    "compilerOptimization": "release",
+    "linkTimeOptimization": false,
+    "patchSha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66",
+    "createdAt": "2026-10-30T18:48:18.283417+00:00",
+    "licensesSha256": "1d531df6b9d1142fa3f6abc518cfab21adc6570ae11631c40a7ba366c93d2eaa",
+    "files": [
+      {
+        "abi": "arm64-v8a",
+        "jar": "arm64-v8a-release.jar",
+        "jarSha256": "4d2a41dec39c412a3d947237f32fb260541d60c9d08bbba3e886564f2acd70f9",
+        "nativeSha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3",
+        "nativeBytes": 12805608,
+        "nativeBuildId": "7f9d8a668f14166c413851535d650d072dc0053e",
+        "symbolsStripped": true,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ],
+        "gnArgsSha256": "7823581ec4cecfcd8dac6b4556ad6be7292f51633ed916f92274e3767323b85a"
+      },
+      {
+        "abi": "armeabi-v7a",
+        "jar": "armeabi-v7a-release.jar",
+        "jarSha256": "bceb78dc0ba83367111a5abc848b044501f80c85580dfd8de1b264681f5518e9",
+        "nativeSha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767",
+        "nativeBytes": 8646952,
+        "nativeBuildId": "0f533f57422a3749c262e36ed443c583a9cbce11",
+        "symbolsStripped": true,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ],
+        "gnArgsSha256": "eab3aff58453427ddfbc39b60f1599ff0902115f4c4638e588cb0574478da1af"
+      }
+    ]
+  },
+  "engineBytesMatchPinnedManifest": true,
+  "loginArtworkAssetAbsent": true,
+  "glassShadersComparedByteIdenticalAgainstLocalV136": [
+    "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+    "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+    "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+    "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_render.frag",
+    "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+    "assets/flutter_assets/shaders/ink_sparkle.frag",
+    "assets/flutter_assets/shaders/stretch_effect.frag"
+  ],
+  "sdkLibrariesComparedByteIdenticalAgainstLocalV136": [
+    "lib/arm64-v8a/libdatastore_shared_counter.so",
+    "lib/arm64-v8a/libjingle_peerconnection_so.so",
+    "lib/arm64-v8a/libkugou_server.so",
+    "lib/arm64-v8a/libsqlite3.so",
+    "lib/armeabi-v7a/libdatastore_shared_counter.so",
+    "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+    "lib/armeabi-v7a/libkugou_server.so",
+    "lib/armeabi-v7a/libsqlite3.so"
+  ],
+  "licensePayloadsPresent": [
+    "assets/flutter_assets/NOTICES.Z",
+    "assets/flutter_assets/third_party/audio_glyphs/LICENSE",
+    "assets/flutter_assets/third_party/liquid_glass_widgets/LICENSE",
+    "assets/flutter_assets/third_party/md3music/LICENSE",
+    "assets/flutter_assets/third_party/netease_protocol/LICENSE",
+    "assets/flutter_assets/third_party/netease_protocol/afp/LICENSE",
+    "assets/flutter_assets/third_party/region_data/LICENSE",
+    "META-INF/androidx/annotation/annotation/LICENSE.txt",
+    "assets/LICENSE.flutter-engine.txt"
+  ],
+  "qaFontsAbsent": true,
+  "integrationTestPluginAbsent": true,
+  "privateDiagnosticsDisabled": true,
+  "experimentalNativePlaybackDisabled": true,
+  "newPlaybackUsesLegacyWeblog": true,
+  "oldNativeJournalHeldWithoutReplay": true,
+  "nativePluginsAndDiagnosticsBridgePresent": {
+    "RingDownloadPlugin": true,
+    "FlutterWebRTCPlugin": true,
+    "getRecentAppExits": true,
+    "getHistoricalProcessExitReasons": true,
+    "getTraceInputStream": true,
+    "chooseDirectory": true,
+    "openDirectory": true
+  },
+  "backgroundLocationPermission": false,
+  "flutterVersion": "3.41.9",
+  "dartVersion": "3.11.5",
+  "javaVersion": "Temurin 17.0.20.1+1",
+  "androidBuildTools": "35.0.0",
+  "ndkVersion": "28.2.13676358",
+  "pubspecLockSha256": "6316dd4a0989c4a89b32d2a9a82bf603203743175909b52395a2d97cc4f2b5cc",
+  "inputApkSha256": "a1f459d9275fbe0a2a3d8bdd7e507967442e44fac9c7c421ae383da39c1b6f1a",
+  "upgradeIdentityVerified": true,
+  "physicalUpgradeTestPerformed": false,
+  "releaseStage": "local_original_signed_release_pending_user_device_acceptance",
+  "deviceAccess": false,
+  "realAccountAccess": false,
+  "backendAccess": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false
+}

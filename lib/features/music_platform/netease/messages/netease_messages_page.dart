@@ -26,6 +26,7 @@ import 'netease_messages_repository.dart';
 import 'netease_emojis.dart';
 import 'netease_message_card_view.dart';
 import 'netease_message_diagnostic_action.dart';
+import 'netease_unread.dart';
 import '../../../../shared/widgets/beta_popup_menu_button.dart';
 
 Future<T?> _open<T>(BuildContext context, Widget page) => Navigator.of(
@@ -335,12 +336,15 @@ class _UnreadBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
     decoration: BoxDecoration(
-      color: const Color(0xFFFF445B),
+      color: NeteaseUnreadColors.background,
       borderRadius: BorderRadius.circular(12),
     ),
     child: Text(
       count > 99 ? '99+' : '$count',
-      style: const TextStyle(color: Colors.white, fontSize: 12),
+      style: const TextStyle(
+        color: NeteaseUnreadColors.foreground,
+        fontSize: 12,
+      ),
     ),
   );
 }
@@ -813,9 +817,13 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                                 constraints: const BoxConstraints(
                                   maxWidth: 300,
                                 ),
-                                padding: const EdgeInsets.all(12),
+                                padding: message.card?.togetherRecord == true
+                                    ? EdgeInsets.zero
+                                    : const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: mine
+                                  color: message.card?.togetherRecord == true
+                                      ? Colors.transparent
+                                      : mine
                                       ? Theme.of(
                                           context,
                                         ).colorScheme.primaryContainer
@@ -831,6 +839,10 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                                       NeteaseMessageCardView(
                                         card: message.card!,
                                         time: message.time,
+                                        peer: widget.peer,
+                                        self: message.from.id == repository.self
+                                            ? message.from
+                                            : message.to,
                                       )
                                     else if (message.image.isNotEmpty)
                                       GestureDetector(

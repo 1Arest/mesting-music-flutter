@@ -5,20 +5,31 @@ import 'package:flutter/material.dart';
 class BetaTabVisibility extends InheritedWidget {
   const BetaTabVisibility({
     required this.visible,
+    this.motionSettled = true,
     this.location,
     required super.child,
     super.key,
   });
   final bool visible;
+  final bool motionSettled;
   final String? location;
   static bool of(BuildContext context) =>
       context
           .dependOnInheritedWidgetOfExactType<BetaTabVisibility>()
           ?.visible ??
       true;
+  static bool settledOf(BuildContext context) {
+    final visibility = context
+        .dependOnInheritedWidgetOfExactType<BetaTabVisibility>();
+    return visibility == null ||
+        (visibility.visible && visibility.motionSettled);
+  }
+
   @override
   bool updateShouldNotify(BetaTabVisibility oldWidget) =>
-      visible != oldWidget.visible;
+      visible != oldWidget.visible ||
+      motionSettled != oldWidget.motionSettled ||
+      location != oldWidget.location;
 }
 
 /// Retargets from the actual scroll position. PageController cancels the old
@@ -41,6 +52,8 @@ class BetaRootTabViewport extends StatefulWidget {
 class _BetaRootTabViewportState extends State<BetaRootTabViewport> {
   late final _controller = PageController(initialPage: widget.index);
   bool _scheduled = false;
+  bool _moving = false;
+  int _movement = 0;
   @override
   void didUpdateWidget(covariant BetaRootTabViewport oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -53,18 +66,27 @@ class _BetaRootTabViewportState extends State<BetaRootTabViewport> {
       _scheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scheduled = false;
-        if (mounted) _move();
+        if (mounted) setState(_move);
       });
       return;
     }
     if (MediaQuery.disableAnimationsOf(context)) {
+      _moving = false;
       _controller.jumpToPage(widget.index);
     } else {
-      _controller.animateToPage(
-        widget.index,
-        duration: const Duration(milliseconds: 360),
-        curve: Curves.easeInOutCubic,
-      );
+      final movement = ++_movement;
+      _moving = true;
+      _controller
+          .animateToPage(
+            widget.index,
+            duration: const Duration(milliseconds: 360),
+            curve: Curves.easeInOutCubic,
+          )
+          .whenComplete(() {
+            if (mounted && movement == _movement) {
+              setState(() => _moving = false);
+            }
+          });
     }
   }
 
@@ -86,6 +108,7 @@ class _BetaRootTabViewportState extends State<BetaRootTabViewport> {
           _RetainedTab(
             key: ValueKey(i),
             visible: current && widget.index == i,
+            motionSettled: !_moving,
             location: widget.locations?[i],
             child: widget.children[i],
           ),
@@ -97,11 +120,13 @@ class _BetaRootTabViewportState extends State<BetaRootTabViewport> {
 class _RetainedTab extends StatefulWidget {
   const _RetainedTab({
     required this.visible,
+    required this.motionSettled,
     required this.child,
     this.location,
     super.key,
   });
   final bool visible;
+  final bool motionSettled;
   final Widget child;
   final String? location;
   @override
@@ -117,6 +142,7 @@ class _RetainedTabState extends State<_RetainedTab>
     super.build(context);
     return BetaTabVisibility(
       visible: widget.visible,
+      motionSettled: widget.motionSettled,
       location: widget.location,
       child: TickerMode(enabled: widget.visible, child: widget.child),
     );

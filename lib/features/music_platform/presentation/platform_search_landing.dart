@@ -1,4 +1,5 @@
 import '../../../shared/widgets/beta_content_insets.dart';
+import '../../../shared/widgets/route_settled_content.dart';
 import 'dart:convert';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
@@ -159,13 +160,22 @@ class _PlatformSearchLandingState extends ConsumerState<PlatformSearchLanding> {
               : AppleHotSearchBoards(boards: items, onSearch: widget.onSearch),
         ),
         const SizedBox(height: 28),
-        for (final kind in PlatformExploreKind.values.where(
-          (k) =>
-              !ref.watch(usesNeteaseProvider) ||
-              (k != PlatformExploreKind.scene &&
-                  k != PlatformExploreKind.theme),
-        ))
-          _ExploreSection(kind: kind),
+        RouteSettledContent(
+          // History/hot keywords stay immediately available. Cold optional
+          // shelves start only after the enclosing search slide has landed.
+          builder: (_) => Column(
+            children: [
+              for (final kind in PlatformExploreKind.values.where(
+                (k) =>
+                    !ref.watch(usesNeteaseProvider) ||
+                    (k != PlatformExploreKind.scene &&
+                        k != PlatformExploreKind.theme),
+              ))
+                _ExploreSection(kind: kind),
+            ],
+          ),
+          placeholder: const SizedBox(height: 182),
+        ),
       ],
     );
   }

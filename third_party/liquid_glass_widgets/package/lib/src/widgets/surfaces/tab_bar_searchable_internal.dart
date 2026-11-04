@@ -828,6 +828,9 @@ class SearchPill extends StatefulWidget {
 }
 
 class SearchPillState extends State<SearchPill> {
+  // The field moves between the collapsed offstage slot and the expanded
+  // optical surface. Retain its editing/selection state across that reparent.
+  final _fieldKey = GlobalKey();
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _ownsController = false;
@@ -939,6 +942,28 @@ class SearchPillState extends State<SearchPill> {
     if (hasFocus != _hasFocus) {
       setState(() => _hasFocus = hasFocus);
       widget.onFocusChanged?.call(hasFocus);
+    }
+  }
+
+  void _requestKeyboard() {
+    // Android can hide the IME while its FocusNode remains focused. A padding
+    // tap must ask the live editor to reopen the input connection as well;
+    // requestFocus alone is a no-op in that state.
+    EditableTextState? editor;
+    void visit(Element element) {
+      if (element is StatefulElement && element.state is EditableTextState) {
+        editor = element.state as EditableTextState;
+        return;
+      }
+      if (editor == null) element.visitChildElements(visit);
+    }
+
+    final fieldContext = _fieldKey.currentContext;
+    if (fieldContext is Element) visit(fieldContext);
+    if (editor != null) {
+      editor!.requestKeyboard();
+    } else {
+      _focusNode.requestFocus();
     }
   }
 
@@ -1149,7 +1174,7 @@ class SearchPillState extends State<SearchPill> {
             // Only widens the pointer target to the padding; the text field
             // inside is the control screen readers use.
             excludeFromSemantics: true,
-            onTap: _focusNode.requestFocus,
+            onTap: _requestKeyboard,
             child: AdaptiveGlass.grouped(
               shape: shape,
               quality: widget.quality,
@@ -1283,6 +1308,7 @@ class SearchPillState extends State<SearchPill> {
           const SizedBox(width: 8),
           Expanded(
             child: CupertinoTextField(
+              key: _fieldKey,
               controller: _controller,
               focusNode: _focusNode,
               autofocus: false,

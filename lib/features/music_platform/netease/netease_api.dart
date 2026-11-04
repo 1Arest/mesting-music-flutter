@@ -18,10 +18,18 @@ import 'messages/netease_message_protocol.dart';
 /// no loopback process, external API deployment, or JavaScript runtime is used.
 /// Route/payload contracts are pinned to @neteaseapireborn/api 4.29.7 (MIT).
 class NeteaseApi {
-  NeteaseApi(this.client, {String? deviceId, BrowseResponseCache? browseCache})
-    : deviceId = deviceId ?? newDeviceId(),
-      browseCache = browseCache ?? browseResponseCache;
+  NeteaseApi(
+    this.client, {
+    String? deviceId,
+    BrowseResponseCache? browseCache,
+    Map<String, String> Function(Map<String, Object?>)? weapiEncoder,
+  }) : deviceId = deviceId ?? newDeviceId(),
+       browseCache = browseCache ?? browseResponseCache,
+       _weapiEncoder = weapiEncoder ?? NeteaseCrypto.weapi;
   final BrowseResponseCache browseCache;
+  // A deterministic encoder lets protocol tests decrypt the real wire request.
+  // Production keeps the original cryptographic encoder and its secure entropy.
+  final Map<String, String> Function(Map<String, Object?>) _weapiEncoder;
   final http.Client client;
   String deviceId;
   NeteaseSession? _session;
@@ -616,7 +624,7 @@ class NeteaseApi {
         ? {...data, 'csrf_token': csrf}
         : {...data, 'header': header, 'e_r': false};
     final encoded = weapi
-        ? NeteaseCrypto.weapi(payload)
+        ? _weapiEncoder(payload)
         : NeteaseCrypto.eapi(path, payload);
     final uri = Uri.https(
       playbackLog

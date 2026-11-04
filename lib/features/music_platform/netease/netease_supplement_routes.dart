@@ -84,6 +84,14 @@ NeteaseRoute? neteaseSupplementRoute(String route, Map<String, Object?> query) {
         'limit': q('limit', 30),
         'startTimestamp': q('before', DateTime.now().millisecondsSinceEpoch),
       });
+    case '/follow':
+      // Search/profile relationship writes use this lightweight route table,
+      // not the separately generated full-catalogue contracts. Keep both paths
+      // on the same confirmed weapi endpoint; never retry a relationship write.
+      return make(
+        '/api/user/${'${q('t')}' == '1' ? 'follow' : 'delfollow'}/${q('id')}',
+        {},
+      );
     case '/user/follows':
       return make('/api/user/getfollows/${q('uid')}', {...page, 'order': true});
     case '/user/followeds':

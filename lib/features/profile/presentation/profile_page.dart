@@ -3,6 +3,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/route_settled_content.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,7 +57,14 @@ class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Beta owns one account presentation for guests and either restored identity.
-    if (DistributionChannel.isBeta) return const PlatformProfile();
+    if (DistributionChannel.isBeta) {
+      return RouteSettledContent(
+        // Keep the first cold profile's glass/metadata work out of the tab's
+        // moving frames. Once mounted, the complete page is retained normally.
+        builder: (_) => const PlatformProfile(),
+        placeholder: const Center(child: MusicActivityIndicator()),
+      );
+    }
     final auth = ref.watch(authControllerProvider);
     final user = auth.value?.user;
     final topInset = MediaQuery.paddingOf(context).top;

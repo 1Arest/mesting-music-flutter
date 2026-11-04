@@ -105,7 +105,9 @@ class NeteaseChatMessage {
       link: '${content['url'] ?? content['linkUrl'] ?? ''}',
       resource: res,
       card: card,
-      diagnostics: card == null && NeteaseMessageCard.isCompatibilityText(text)
+      diagnostics:
+          card == null &&
+              (NeteaseMessageCard.isCompatibilityText(text) || text == '[分享内容]')
           ? NeteaseMessageDiagnostics.fromRow(row)
           : null,
       time: DateTime.fromMillisecondsSinceEpoch(

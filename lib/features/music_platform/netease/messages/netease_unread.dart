@@ -87,6 +87,14 @@ class _UnreadResumeObserver extends WidgetsBindingObserver {
   }
 }
 
+/// Notification red is independent of Material's error palette: that palette
+/// intentionally becomes pale red in dark mode. White text on this red remains
+/// legible at badge sizes and matches every NetEase unread entry.
+abstract final class NeteaseUnreadColors {
+  static const background = Color(0xFFD92436);
+  static const foreground = Colors.white;
+}
+
 class NeteaseUnreadBadge extends StatelessWidget {
   const NeteaseUnreadBadge(this.count, {super.key});
   final int count;
@@ -100,14 +108,14 @@ class NeteaseUnreadBadge extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.error,
+              color: NeteaseUnreadColors.background,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
               count > 99 ? '99+' : '$count',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onError,
+              style: const TextStyle(
+                color: NeteaseUnreadColors.foreground,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

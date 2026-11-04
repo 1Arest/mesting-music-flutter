@@ -526,12 +526,17 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
     required this.width,
     this.gap = betaMenuAnchorGap,
     this.fromInnerEdge = false,
+    this.viewportOrigin = Offset.zero,
   });
   final Rect anchor;
   final MediaQueryData media;
   final double width;
   final double gap;
   final bool fromInnerEdge;
+
+  /// Text-selection toolbars live under a moving CompositedTransformFollower.
+  /// Their visible screen rectangle can start outside that follower's origin.
+  final Offset viewportOrigin;
 
   /// The source stays inside the trigger's lens, on the side facing the menu.
   /// Selection toolbars retain their original centre-based geometry.
@@ -559,8 +564,9 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
     );
   }
 
-  double get top => media.padding.top + 12;
+  double get top => viewportOrigin.dy + media.padding.top + 12;
   double get bottom =>
+      viewportOrigin.dy +
       media.size.height -
       math.max(media.viewInsets.bottom, media.padding.bottom) -
       12;
@@ -571,8 +577,8 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
   Alignment get motionOrigin {
     final menuWidth = math.max(1.0, math.min(width, media.size.width - 24));
     final left = (anchor.center.dx - menuWidth / 2).clamp(
-      12.0,
-      math.max(12.0, media.size.width - menuWidth - 12),
+      viewportOrigin.dx + 12.0,
+      viewportOrigin.dx + math.max(12.0, media.size.width - menuWidth - 12),
     );
     return Alignment(
       ((anchor.center.dx - left) / menuWidth * 2 - 1).clamp(-1.0, 1.0),
@@ -583,17 +589,23 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) =>
       BoxConstraints(
-        maxWidth: math.min(width, constraints.maxWidth - 24),
+        maxWidth: math.max(0, math.min(width, constraints.maxWidth - 24)),
         maxHeight: math.max(
-          48,
-          above ? anchor.top - top - gap : bottom - anchor.bottom - gap,
+          0,
+          math.min(
+            math.max(0, bottom - top),
+            math.max(
+              48,
+              above ? anchor.top - top - gap : bottom - anchor.bottom - gap,
+            ),
+          ),
         ),
       );
   @override
   Offset getPositionForChild(Size size, Size childSize) => Offset(
     (anchor.center.dx - childSize.width / 2).clamp(
-      12.0,
-      math.max(12, size.width - childSize.width - 12),
+      viewportOrigin.dx + 12.0,
+      viewportOrigin.dx + math.max(12, media.size.width - childSize.width - 12),
     ),
     (above ? anchor.top - childSize.height - gap : anchor.bottom + gap).clamp(
       top,
@@ -606,5 +618,6 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
       media != old.media ||
       width != old.width ||
       gap != old.gap ||
-      fromInnerEdge != old.fromInnerEdge;
+      fromInnerEdge != old.fromInnerEdge ||
+      viewportOrigin != old.viewportOrigin;
 }

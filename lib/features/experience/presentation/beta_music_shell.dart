@@ -7,6 +7,8 @@ import '../../../shared/widgets/beta_edge_back.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/beta_bottom_search.dart';
+import '../../../shared/widgets/beta_music_chrome_scope.dart';
+import '../../../shared/widgets/beta_entrance_readiness.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_tab_navigation.dart';
 import '../../../shared/widgets/beta_scroll_chrome.dart';
@@ -55,6 +57,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
   final _resultsKey = GlobalKey<MusicSearchResultsBodyState>();
   final _searchText = TextEditingController();
   final _focus = FocusNode();
+  final _chrome = BetaMusicChromeController();
   final _positions = <String, ScrollPosition>{};
   final _compact = BetaScrollChrome();
   bool get _mini => _compact.value;
@@ -66,6 +69,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
   bool _compactScheduled = false;
   bool? _pendingCompact;
   bool _searching = false;
+  bool _searchFocused = false;
   bool _hasOpenedSearch = false;
   final _backHistory = BetaSearchBackHistory();
   final _pageBackHistory = BetaPageBackHistory();
@@ -171,6 +175,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     _searchMotion.dispose();
     _searchText.dispose();
     _focus.dispose();
+    _chrome.dispose();
     super.dispose();
   }
 
@@ -258,12 +263,26 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     }
     setState(() {
       _searching = active;
-      if (!active) _mini = false;
+      // A compact scrolling accessory must leave its inline slot before the
+      // real input expands into that same horizontal space.
+      _mini = false;
       if (active) _hasOpenedSearch = true;
     });
     _searching ? _searchMotion.forward() : _searchMotion.reverse();
     if (!active) _focus.unfocus();
     _scheduleBackHistory();
+  }
+
+  void _searchFocusChanged(bool focused) {
+    if (!mounted || _searchFocused == focused) return;
+    // Focus changes may be published while a persistent field is being
+    // rebound to another page. Apply chrome visibility outside that build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _searchFocused != focused) {
+        setState(() => _searchFocused = focused);
+      }
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   void _scheduleBackHistory() {
@@ -452,11 +471,14 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                                         bottom: inset,
                                         top: MediaQuery.paddingOf(context).top,
                                       ),
-                                      child: BetaEdgeBack(
-                                        onBack: _backSearch,
-                                        child: MusicSearchResultsBody(
-                                          key: _resultsKey,
-                                          onSearch: _submit,
+                                      child: BetaEntranceReadiness(
+                                        ready: _searchMotion.isCompleted,
+                                        child: BetaEdgeBack(
+                                          onBack: _backSearch,
+                                          child: MusicSearchResultsBody(
+                                            key: _resultsKey,
+                                            onSearch: _submit,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -492,7 +514,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                   accessory: hasTrack
                       ? FloatingPlaybackPill(compact: compact && !searching)
                       : null,
-                  accessoryEnabled: inset == 0,
+                  accessoryEnabled: inset == 0 && !_searchFocused,
                   onTabSelected: (index) {
                     appHaptic(context, AppHapticEvent.selection);
                     if (index == selected &&
@@ -521,6 +543,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                     focusNode: pageSearch?.focus ?? _focus,
                     textInputAction: TextInputAction.search,
                     autoFocusOnExpand: false,
+                    onSearchFocusChanged: _searchFocusChanged,
                     showsCancelButton: true,
                     expandWhenActive: !compact || searching,
                     hintText: pageSearch?.hintText ?? '搜索歌曲、歌手',
@@ -551,28 +574,33 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
               ),
             ),
           ),
-          builder: (context, reveal, child) => IgnorePointer(
-            ignoring: !widget.chromeVisible,
-            child: AnimatedOpacity(
-              // Only the player may reveal chrome while it is dismissing.
-              // Its retained value must not expose inert bars on other routes.
-              opacity: widget.chromeVisible
-                  ? 1
-                  : playerRoute
-                  ? reveal
-                  : 0,
-              duration: widget.location == '/player'
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              child: Transform.translate(
-                offset: Offset(
-                  0,
-                  widget.chromeVisible
-                      ? 0
-                      : (1 - (playerRoute ? reveal : 0)) * 12,
+          builder: (context, reveal, child) => BetaMusicChromeGate(
+            controller: _chrome,
+            playerReveal: ref.read(playerChromeRevealProvider),
+            revealHandledByRoute: playerRoute,
+            child: IgnorePointer(
+              ignoring: !widget.chromeVisible,
+              child: AnimatedOpacity(
+                // Only the player may reveal chrome while it is dismissing.
+                // Its retained value must not expose inert bars on other routes.
+                opacity: widget.chromeVisible
+                    ? 1
+                    : playerRoute
+                    ? reveal
+                    : 0,
+                duration: widget.location == '/player'
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                child: Transform.translate(
+                  offset: Offset(
+                    0,
+                    widget.chromeVisible
+                        ? 0
+                        : (1 - (playerRoute ? reveal : 0)) * 12,
+                  ),
+                  child: child,
                 ),
-                child: child,
               ),
             ),
           ),
@@ -584,11 +612,14 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     // before the nested navigator attempts to leave its root page.
     final scopedShell = BetaBottomSearchScope(
       host: _pageSearchHost,
-      child: BetaContentInsets(
-        bottom: widget.chromeVisible
-            ? BetaContentInsets.musicChromeBottomOf(context)
-            : 0,
-        child: shell,
+      child: BetaMusicChromeScope(
+        controller: _chrome,
+        child: BetaContentInsets(
+          bottom: widget.chromeVisible
+              ? BetaContentInsets.musicChromeBottomOf(context)
+              : 0,
+          child: shell,
+        ),
       ),
     );
     if (Router.maybeOf(context) == null) return scopedShell;

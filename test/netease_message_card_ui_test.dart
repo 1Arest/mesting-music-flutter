@@ -216,8 +216,12 @@ void main() {
           compact: compact,
         );
         expect(find.textContaining('不支持'), findsNothing);
-        expect(find.text('本次一起听记录'), findsOneWidget);
-        expect(find.text('一起听时长 · 12 分钟 0 秒'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('netease-together-message-card')),
+          findsOneWidget,
+        );
+        expect(find.text('我们一起听了'), findsOneWidget);
+        expect(find.text('12 分钟 0 秒 ›'), findsOneWidget);
         final action = find.byKey(
           const ValueKey('netease-message-card-detail'),
         );

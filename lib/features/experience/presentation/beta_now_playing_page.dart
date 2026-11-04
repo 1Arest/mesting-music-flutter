@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../shared/widgets/music_notice.dart';
+import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/track_artwork.dart';
 import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
@@ -190,271 +191,276 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         ),
       ),
     );
-    return Theme(
-      data: darkTheme,
-      child: Builder(
-        builder: (context) => PlayerPullToDismiss(
-          onDismiss: _dismissPlayer,
-          onProgress: (value) =>
-              ref.read(playerChromeRevealProvider).value = value,
-          child: PopScope(
-            canPop: !detail,
-            onPopInvokedWithResult: (didPop, _) {
-              if (didPop) _routeExitRequested = true;
-              if (!didPop) _close();
-            },
-            child: Scaffold(
-              backgroundColor: const Color(0xFF17191F),
-              body: Stack(
-                children: [
-                  Positioned.fill(
-                    child: classic
-                        ? const ColoredBox(color: Color(0xFFAAA9AA))
-                        : RepaintBoundary(
-                            child: ImageFiltered(
-                              imageFilter: ImageFilter.blur(
-                                sigmaX: 65,
-                                sigmaY: 65,
-                              ),
-                              child: Transform.scale(
-                                scale: 1.4,
-                                child: TrackArtwork(
-                                  track: track,
-                                  width: 1000,
-                                  height: 1400,
-                                  fit: BoxFit.cover,
+    return BetaMusicChromeCover(
+      player: true,
+      child: Theme(
+        data: darkTheme,
+        child: Builder(
+          builder: (context) => PlayerPullToDismiss(
+            onDismiss: _dismissPlayer,
+            onProgress: (value) =>
+                ref.read(playerChromeRevealProvider).value = value,
+            child: PopScope(
+              canPop: !detail,
+              onPopInvokedWithResult: (didPop, _) {
+                if (didPop) _routeExitRequested = true;
+                if (!didPop) _close();
+              },
+              child: Scaffold(
+                backgroundColor: const Color(0xFF17191F),
+                body: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: classic
+                          ? const ColoredBox(color: Color(0xFFAAA9AA))
+                          : RepaintBoundary(
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 65,
+                                  sigmaY: 65,
+                                ),
+                                child: Transform.scale(
+                                  scale: 1.4,
+                                  child: TrackArtwork(
+                                    track: track,
+                                    width: 1000,
+                                    height: 1400,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
+                    ),
+                    if (style != PlayerVisualStyle.cover && !classic && !detail)
+                      Positioned.fill(
+                        child: PlayerStyleAtmosphere(style: style),
+                      ),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: classic
+                                ? const [
+                                    Color(0x08000000),
+                                    Color(0x66000000),
+                                    Color(0xE817191D),
+                                  ]
+                                : [
+                                    Color(
+                                      _togetherActive ? 0x9916191B : 0x6616191B,
+                                    ),
+                                    const Color(0x8816191B),
+                                    const Color(0xF216191D),
+                                  ],
+                            stops: const [0, .58, 1],
                           ),
-                  ),
-                  if (style != PlayerVisualStyle.cover && !classic && !detail)
-                    Positioned.fill(child: PlayerStyleAtmosphere(style: style)),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: classic
-                              ? const [
-                                  Color(0x08000000),
-                                  Color(0x66000000),
-                                  Color(0xE817191D),
-                                ]
-                              : [
-                                  Color(
-                                    _togetherActive ? 0x9916191B : 0x6616191B,
-                                  ),
-                                  const Color(0x8816191B),
-                                  const Color(0xF216191D),
-                                ],
-                          stops: const [0, .58, 1],
                         ),
                       ),
                     ),
-                  ),
-                  SafeArea(
-                    child: LayoutBuilder(
-                      builder: (context, bounds) {
-                        final scaled =
-                            (MediaQuery.textScalerOf(context).scale(24) - 24)
-                                .clamp(0.0, 96.0);
-                        final minimum =
-                            700.0 +
-                            scaled * 2 +
-                            (_togetherActive && !detail ? 140 : 0);
-                        final content = Center(
-                          child: SizedBox(
-                            width: 560,
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                PlayerDismissHandle(onTap: _dismissPlayer),
-                                if (!detail)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        PlayerGlassButton(
-                                          key: const ValueKey(
-                                            'player-dismiss-glass',
+                    SafeArea(
+                      child: LayoutBuilder(
+                        builder: (context, bounds) {
+                          final scaled =
+                              (MediaQuery.textScalerOf(context).scale(24) - 24)
+                                  .clamp(0.0, 96.0);
+                          final minimum =
+                              700.0 +
+                              scaled * 2 +
+                              (_togetherActive && !detail ? 140 : 0);
+                          final content = Center(
+                            child: SizedBox(
+                              width: 560,
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 8),
+                                  PlayerDismissHandle(onTap: _dismissPlayer),
+                                  if (!detail)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          PlayerGlassButton(
+                                            key: const ValueKey(
+                                              'player-dismiss-glass',
+                                            ),
+                                            label: _lyrics ? '返回封面' : '收起播放器',
+                                            onPressed: _close,
+                                            icon: CupertinoIcons.chevron_down,
                                           ),
-                                          label: _lyrics ? '返回封面' : '收起播放器',
-                                          onPressed: _close,
-                                          icon: CupertinoIcons.chevron_down,
-                                        ),
-                                        const Spacer(),
-                                        _more(context),
-                                      ],
+                                          const Spacer(),
+                                          _more(context),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 320),
-                                  reverseDuration: const Duration(
-                                    milliseconds: 260,
-                                  ),
-                                  curve: Curves.easeInOutCubic,
-                                  child: !detail
-                                      ? const SizedBox.shrink()
-                                      : Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                            26,
-                                            7,
-                                            26,
-                                            4,
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 320),
+                                    reverseDuration: const Duration(
+                                      milliseconds: 260,
+                                    ),
+                                    curve: Curves.easeInOutCubic,
+                                    child: !detail
+                                        ? const SizedBox.shrink()
+                                        : Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              26,
+                                              7,
+                                              26,
+                                              4,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Semantics(
+                                                  button: true,
+                                                  label: '返回封面',
+                                                  child: GestureDetector(
+                                                    onTap: () =>
+                                                        _showLyrics(false),
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                      child: TrackArtwork(
+                                                        track: track,
+                                                        width: 58,
+                                                        height: 58,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 14),
+                                                Expanded(
+                                                  child: _Identity(
+                                                    title: track.title,
+                                                    artist: track.artist,
+                                                    direction: _direction,
+                                                    small: true,
+                                                  ),
+                                                ),
+                                                FavoriteToggleButton(
+                                                  track: track,
+                                                  star: true,
+                                                  compact: true,
+                                                ),
+                                                _more(context),
+                                              ],
+                                            ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Semantics(
-                                                button: true,
-                                                label: '返回封面',
-                                                child: GestureDetector(
-                                                  onTap: () =>
-                                                      _showLyrics(false),
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                    child: TrackArtwork(
+                                  ),
+                                  if (!detail)
+                                    NeteaseTogetherPlayerHeader(
+                                      foreground: classic
+                                          ? const Color(0xFF17191F)
+                                          : Colors.white,
+                                      onManage: () =>
+                                          showNeteaseTogetherPanel(context),
+                                    ),
+                                  Expanded(
+                                    child: ArtworkRevealBoundary(
+                                      child: PlayerContentTransition(
+                                        direction: _direction,
+                                        child: _queue
+                                            ? const PlayerQueuePanel(
+                                                key: ValueKey(
+                                                  'player-queue-panel',
+                                                ),
+                                              )
+                                            : _lyrics
+                                            ? ImmersiveLyrics(
+                                                referenceDesign: true,
+                                                key: ValueKey(
+                                                  'immersive-lyrics-${track.id}',
+                                                ),
+                                              )
+                                            : Padding(
+                                                key: ValueKey(
+                                                  'immersive-cover-${track.id}-${style.id}',
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.fromLTRB(
+                                                      26,
+                                                      12,
+                                                      26,
+                                                      20,
+                                                    ),
+                                                child: Semantics(
+                                                  button: true,
+                                                  label: '查看歌词',
+                                                  child: GestureDetector(
+                                                    onTap: () =>
+                                                        _showLyrics(true),
+                                                    child: PlayerArtworkStage(
+                                                      style: style,
                                                       track: track,
-                                                      width: 58,
-                                                      height: 58,
+                                                      playing: playing,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                              const SizedBox(width: 14),
-                                              Expanded(
-                                                child: _Identity(
-                                                  title: track.title,
-                                                  artist: track.artist,
-                                                  direction: _direction,
-                                                  small: true,
-                                                ),
-                                              ),
-                                              FavoriteToggleButton(
-                                                track: track,
-                                                star: true,
-                                                compact: true,
-                                              ),
-                                              _more(context),
-                                            ],
-                                          ),
-                                        ),
-                                ),
-                                if (!detail)
-                                  NeteaseTogetherPlayerHeader(
-                                    foreground: classic
-                                        ? const Color(0xFF17191F)
-                                        : Colors.white,
-                                    onManage: () =>
-                                        showNeteaseTogetherPanel(context),
-                                  ),
-                                Expanded(
-                                  child: ArtworkRevealBoundary(
-                                    child: PlayerContentTransition(
-                                      direction: _direction,
-                                      child: _queue
-                                          ? const PlayerQueuePanel(
-                                              key: ValueKey(
-                                                'player-queue-panel',
-                                              ),
-                                            )
-                                          : _lyrics
-                                          ? ImmersiveLyrics(
-                                              referenceDesign: true,
-                                              key: ValueKey(
-                                                'immersive-lyrics-${track.id}',
-                                              ),
-                                            )
-                                          : Padding(
-                                              key: ValueKey(
-                                                'immersive-cover-${track.id}-${style.id}',
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.fromLTRB(
-                                                    26,
-                                                    12,
-                                                    26,
-                                                    20,
-                                                  ),
-                                              child: Semantics(
-                                                button: true,
-                                                label: '查看歌词',
-                                                child: GestureDetector(
-                                                  onTap: () =>
-                                                      _showLyrics(true),
-                                                  child: PlayerArtworkStage(
-                                                    style: style,
-                                                    track: track,
-                                                    playing: playing,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                AnimatedSize(
-                                  duration: const Duration(milliseconds: 320),
-                                  reverseDuration: const Duration(
-                                    milliseconds: 260,
-                                  ),
-                                  curve: Curves.easeInOutCubic,
-                                  child: detail
-                                      ? const SizedBox.shrink()
-                                      : Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                            26,
-                                            0,
-                                            26,
-                                            5,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: _Identity(
-                                                  title: track.title,
-                                                  artist: track.artist,
-                                                  direction: _direction,
+                                  AnimatedSize(
+                                    duration: const Duration(milliseconds: 320),
+                                    reverseDuration: const Duration(
+                                      milliseconds: 260,
+                                    ),
+                                    curve: Curves.easeInOutCubic,
+                                    child: detail
+                                        ? const SizedBox.shrink()
+                                        : Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              26,
+                                              0,
+                                              26,
+                                              5,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: _Identity(
+                                                    title: track.title,
+                                                    artist: track.artist,
+                                                    direction: _direction,
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              FavoriteToggleButton(
-                                                track: track,
-                                                star: true,
-                                              ),
-                                            ],
+                                                const SizedBox(width: 12),
+                                                FavoriteToggleButton(
+                                                  track: track,
+                                                  star: true,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                ),
-                                ApplePlayerControls(
-                                  lyricsActive: _lyrics && !_queue,
-                                  queueActive: _queue,
-                                  onToggleLyrics: () =>
-                                      _showLyrics(_queue || !_lyrics),
-                                  onToggleQueue: _toggleQueue,
-                                ),
-                              ],
+                                  ),
+                                  ApplePlayerControls(
+                                    lyricsActive: _lyrics && !_queue,
+                                    queueActive: _queue,
+                                    onToggleLyrics: () =>
+                                        _showLyrics(_queue || !_lyrics),
+                                    onToggleQueue: _toggleQueue,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                        return bounds.maxHeight < minimum
-                            ? SingleChildScrollView(
-                                child: SizedBox(
-                                  height: minimum,
-                                  child: content,
-                                ),
-                              )
-                            : content;
-                      },
+                          );
+                          return bounds.maxHeight < minimum
+                              ? SingleChildScrollView(
+                                  child: SizedBox(
+                                    height: minimum,
+                                    child: content,
+                                  ),
+                                )
+                              : content;
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

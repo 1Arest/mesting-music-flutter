@@ -50,14 +50,49 @@ class _BetaEditingMenu extends StatefulWidget {
 }
 
 class _BetaEditingMenuState extends State<_BetaEditingMenu>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late final _motion = AnimationController(
     vsync: this,
     duration: betaMenuOpenDuration,
     reverseDuration: betaMenuCloseDuration,
   )..forward();
   bool _expanded = false, _closing = false;
+  late final _anchorTracking = createTicker((_) => _trackAnchor());
+  Rect? _lastAnchor;
+  Offset? _lastViewport;
+  final _menuPlane = GlobalKey();
+  int _stableAnchorFrames = 0;
   EditableTextState get e => widget.editable;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _anchorTracking.start();
+  }
+
+  @override
+  void didChangeMetrics() {
+    // The search pill moves on its own spring after each IME metric update.
+    // Track that short movement rather than freezing the menu at its old field
+    // position or rebuilding it forever while the user is reading the menu.
+    _stableAnchorFrames = 0;
+    if (!_anchorTracking.isActive) _anchorTracking.start();
+  }
+
+  void _trackAnchor() {
+    if (!mounted || !e.mounted) return;
+    final next = _fieldAnchor();
+    final viewport = _viewportOrigin();
+    if (next == _lastAnchor && viewport == _lastViewport) {
+      if (++_stableAnchorFrames >= 6) _anchorTracking.stop();
+      return;
+    }
+    _stableAnchorFrames = 0;
+    _lastAnchor = next;
+    _lastViewport = viewport;
+    setState(() {});
+  }
 
   Rect _fieldAnchor() {
     final anchors = e.contextMenuAnchors;
@@ -85,16 +120,36 @@ class _BetaEditingMenuState extends State<_BetaEditingMenu>
     // EditableText anchors sit on the selected text, inside the input padding.
     // Keep their horizontal origin, but measure the vertical gap from the whole
     // field so an expanded toolbar never rests on top of the comment capsule.
-    return Rect.fromLTRB(
+    final global = Rect.fromLTRB(
       selection.left,
       math.min(selection.top, bounds.top),
       selection.right,
       math.max(selection.bottom, bounds.bottom),
     );
+    final plane = _menuPlane.currentContext?.findRenderObject();
+    // Flutter's selection-toolbar follower retains the field offset from when
+    // it opened. A moving/expanding bottom search shifts that follower again.
+    // Both the anchor AND the viewport must use the follower's current space;
+    // subtracting only a root-overlay offset applies the field motion twice.
+    return plane is RenderBox && plane.attached && plane.hasSize
+        ? Rect.fromPoints(
+            plane.globalToLocal(global.topLeft),
+            plane.globalToLocal(global.bottomRight),
+          )
+        : global;
+  }
+
+  Offset _viewportOrigin() {
+    final plane = _menuPlane.currentContext?.findRenderObject();
+    return plane is RenderBox && plane.attached && plane.hasSize
+        ? plane.globalToLocal(Offset.zero)
+        : Offset.zero;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _anchorTracking.dispose();
     _motion.dispose();
     super.dispose();
   }
@@ -209,6 +264,7 @@ class _BetaEditingMenuState extends State<_BetaEditingMenu>
       anchor: anchor,
       media: media,
       width: _expanded ? 270 : math.min(430, media.size.width - 24),
+      viewportOrigin: _viewportOrigin(),
     );
     final actions = _actions();
     Widget button(
@@ -240,6 +296,7 @@ class _BetaEditingMenuState extends State<_BetaEditingMenu>
           : Text(label, maxLines: 1),
     );
     return BetaLiquidMenu(
+      key: _menuPlane,
       animation: _motion,
       layout: layout,
       child: TapRegion(

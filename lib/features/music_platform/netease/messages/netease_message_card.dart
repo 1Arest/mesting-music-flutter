@@ -10,12 +10,17 @@ class NeteaseMessageCard {
     this.cover = '',
     this.detailUrl,
     this.togetherRecord = false,
+    this.togetherRoomId = '',
     this.duration,
   });
 
   final String title, subtitle, cover;
   final Uri? detailUrl;
   final bool togetherRecord;
+
+  /// Only the official report's room selector is carried into the read-only
+  /// repository. Opening a historical card never reuses it as a live room.
+  final String togetherRoomId;
   final Duration? duration;
 
   String get durationLabel {
@@ -81,6 +86,13 @@ class NeteaseMessageCard {
     'record',
     'cards',
     'richMsg',
+    'commonMessage',
+    'resource',
+    'resources',
+    'resourceJson',
+    'jsonData',
+    'cardData',
+    'shareInfo',
   ];
 
   static Map<String, dynamic> messageEnvelope(Map<String, dynamic> row) => {
@@ -145,11 +157,56 @@ class NeteaseMessageCard {
           'music.163.com',
           'st.music.163.com',
           'y.music.163.com',
+          'mp.music.163.com',
         }.contains(uri.host) ||
         (uri.hasPort && uri.port != 443 && uri.port != 80)) {
       return null;
     }
     return uri.replace(scheme: 'https', port: 443);
+  }
+
+  /// The shipped official link configuration points ordinary two-person
+  /// reports at this activity, not at the separate multi-room result page.
+  /// Inspect the URL as data; never execute an orpheus/native bridge action.
+  static bool isTogetherReportUrl(Uri? uri) =>
+      uri != null &&
+      uri.host == 'mp.music.163.com' &&
+      uri.path == '/5fbcd6a217aef81f3a03eda5/ending/index.html';
+
+  static String _roomId(Uri? uri) {
+    if (!isTogetherReportUrl(uri)) return '';
+    final value = uri!.queryParameters['roomId'] ?? '';
+    return RegExp(r'^[A-Za-z0-9_-]{1,160}$').hasMatch(value) ? value : '';
+  }
+
+  /// A legacy generalMsg may carry its time only in the human-readable title
+  /// or subtitle. Read explicit units; bare numbers are not guessed as seconds.
+  static Duration? _durationText(String text) {
+    final parts = RegExp(r'(\d+)\s*(小时|分钟|秒)').allMatches(text);
+    var seconds = 0;
+    var found = false;
+    int? previousEnd;
+    for (final match in parts) {
+      if (previousEnd != null &&
+          text.substring(previousEnd, match.start).trim().isNotEmpty) {
+        break;
+      }
+      if (match.start > 0 && text[match.start - 1] == '-') return null;
+      final amount = int.tryParse(match.group(1)!);
+      if (amount == null) return null;
+      seconds +=
+          amount *
+          switch (match.group(2)) {
+            '小时' => 3600,
+            '分钟' => 60,
+            _ => 1,
+          };
+      found = true;
+      previousEnd = match.end;
+    }
+    return found && seconds <= 366 * 86400 * 100
+        ? Duration(seconds: seconds)
+        : null;
   }
 
   /// Traversal is limited to message-content fields, never peer profiles. This
@@ -212,7 +269,8 @@ class NeteaseMessageCard {
               url.path.contains('/listen-together/multishare'));
       final record =
           !invitation &&
-          ((labels.contains('一起听') &&
+          (isTogetherReportUrl(url) ||
+              (labels.contains('一起听') &&
                   RegExp('记录|报告|结束|时长|听了|共同听过').hasMatch(labels)) ||
               RegExp(
                 r'listen[-/]?together.*(record|report|history)',
@@ -227,16 +285,24 @@ class NeteaseMessageCard {
           (url != null && subtitle.isNotEmpty);
       if (structured && (title.isNotEmpty || record)) {
         Duration? duration;
-        for (final field in [
-          'totalConnectionTime',
-          'currentConnectionTime',
-          'durationSeconds',
-        ]) {
+        for (final field in ['currentConnectionTime', 'durationSeconds']) {
           final seconds = int.tryParse('${value[field]}');
           if (seconds != null && seconds >= 0 && seconds <= 366 * 86400 * 100) {
             duration = Duration(seconds: seconds);
             break;
           }
+        }
+        // A report's session value and its all-time relationship total are
+        // separate statistics. Retain the old generic-card interpretation only
+        // for messages that are not recognized as an ended together session.
+        if (!record && duration == null) {
+          final total = int.tryParse('${value['totalConnectionTime']}');
+          if (total != null && total >= 0 && total <= 366 * 86400 * 100) {
+            duration = Duration(seconds: total);
+          }
+        }
+        if (record) {
+          duration ??= _durationText(subtitle) ?? _durationText(title);
         }
         final cover =
             '${value['coverUrl'] ?? value['coverImgUrl'] ?? value['cover'] ?? value['picUrl'] ?? ''}';
@@ -245,6 +311,7 @@ class NeteaseMessageCard {
           title: title.isEmpty ? '本次一起听记录' : title,
           subtitle: subtitle,
           togetherRecord: record,
+          togetherRoomId: record ? _roomId(url) : '',
           detailUrl: url,
           duration: duration,
           cover:
