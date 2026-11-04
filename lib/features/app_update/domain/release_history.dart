@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.32': [
+    '搜索结果支持左右滑动切换分类，与顶部分类点击同步，保留各分类内容、滚动位置和封面缓存。',
+    '升级后首次进入主界面展示一次本次更新说明，关闭后不重复弹出，不依赖联网检查结果。',
+    '设置新增独立的更新说明入口，可离线查看当前及历史版本，补齐最近版本说明的查看流程。',
+  ],
   '1.0.31': [
     '下拉刷新与页面加载统一使用 Apple 加载动画，同一次刷新共用一个动画并保留已有内容。',
     '音乐库按常用音乐、收藏与订阅、播放足迹和我的歌单重新分组，保留现有功能及平台账号归属。',

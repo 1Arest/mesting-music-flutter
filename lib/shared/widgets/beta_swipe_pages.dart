@@ -52,6 +52,8 @@ class BetaSwipePages extends StatefulWidget {
 class _BetaSwipePagesState extends State<BetaSwipePages> {
   late final PageController _pages;
   late int _reportedIndex;
+  int? _target;
+  int _motion = 0;
   @override
   void initState() {
     super.initState();
@@ -65,18 +67,25 @@ class _BetaSwipePagesState extends State<BetaSwipePages> {
   void didUpdateWidget(covariant BetaSwipePages oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.index != widget.index &&
-        widget.index != _reportedIndex &&
+        (widget.index != _reportedIndex || _target != null) &&
         _pages.hasClients) {
+      final motion = ++_motion;
+      _target = widget.index;
       // Re-target the same controller, including during an unfinished swipe.
       if (MediaQuery.disableAnimationsOf(context)) {
         _pages.jumpToPage(widget.index);
+        _target = null;
         return;
       }
-      _pages.animateToPage(
-        widget.index,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
-      );
+      _pages
+          .animateToPage(
+            widget.index,
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutCubic,
+          )
+          .whenComplete(() {
+            if (mounted && motion == _motion) _target = null;
+          });
     }
   }
 
@@ -87,29 +96,53 @@ class _BetaSwipePagesState extends State<BetaSwipePages> {
   }
 
   @override
-  Widget build(BuildContext context) => PageView.builder(
-    controller: _pages,
-    itemCount: widget.length,
-    onPageChanged: (index) {
-      _reportedIndex = index;
-      widget.onChanged(index);
-    },
-    itemBuilder: (context, index) => _RetainedPage(
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (notification.metrics.axis != Axis.vertical) return false;
-          if (index == widget.index && notification.depth == 0) {
-            BetaActivePageScrollNotification(notification).dispatch(context);
+  Widget build(BuildContext context) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: (event) {
+          if (event.depth != 0 || event.metrics.axis != Axis.horizontal) {
+            return false;
           }
-          return true;
+          if (event is ScrollStartNotification && event.dragDetails != null) {
+            // A finger takes ownership immediately, including midway through a
+            // multi-page click animation. Intermediate programmatic pages never
+            // replace the user's selected destination or start their searches.
+            ++_motion;
+            _target = null;
+          }
+          if (event is ScrollEndNotification && _target == null) {
+            final settled = _pages.page?.round();
+            if (settled != null && settled != widget.index) {
+              widget.onChanged(settled);
+            }
+          }
+          return false;
         },
-        child: TickerMode(
-          enabled: index == widget.index,
-          child: widget.itemBuilder(context, index),
+        child: PageView.builder(
+          controller: _pages,
+          itemCount: widget.length,
+          onPageChanged: (index) {
+            _reportedIndex = index;
+            if (_target == null) widget.onChanged(index);
+          },
+          itemBuilder: (context, index) => _RetainedPage(
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification.metrics.axis != Axis.vertical) return false;
+                if (index == widget.index && notification.depth == 0) {
+                  BetaActivePageScrollNotification(
+                    notification,
+                  ).dispatch(context);
+                }
+                return true;
+              },
+              child: TickerMode(
+                enabled: index == widget.index,
+                child: widget.itemBuilder(context, index),
+              ),
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
 }
 
 class _RetainedPage extends StatefulWidget {

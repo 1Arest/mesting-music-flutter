@@ -167,6 +167,7 @@ class MestingMusicApp extends ConsumerWidget {
             betaBackDispatcher: appRouter.backButtonDispatcher,
             onBetaLogout: () => appRouter.go('/music/recommend'),
             child: AppUpdateCoordinator(
+              navigatorKey: appRootNavigatorKey,
               child: SocialAttentionCoordinator(
                 child: LyricsOverlayCoordinator(
                   child: child ?? const SizedBox.shrink(),

@@ -14,6 +14,7 @@ import '../../auth/domain/auth_models.dart';
 import '../../app_update/app_update_providers.dart';
 import '../../app_update/domain/app_update_models.dart';
 import '../../app_update/presentation/app_update_sheet.dart';
+import '../../app_update/presentation/release_history_page.dart';
 import '../../app_update/presentation/java_mysql_test_channel_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../themes/theme_gallery_page.dart';
@@ -276,6 +277,19 @@ class SettingsPage extends ConsumerWidget {
                           : () => _checkForUpdates(context, ref),
                     ),
                     const _SettingsDivider(),
+                    if (DistributionChannel.isBeta) ...[
+                      _SettingsTile(
+                        key: const ValueKey('settings-release-history'),
+                        icon: Icons.history_rounded,
+                        iconColor: const Color(0xFF4A86D8),
+                        title: '更新说明',
+                        subtitle: '查看本次更新与历史版本内容',
+                        onTap: () => Navigator.of(context).push(
+                          betaEntryRoute<void>(const MusicReleaseHistoryPage()),
+                        ),
+                      ),
+                      const _SettingsDivider(),
+                    ],
                     if (DistributionChannel.isBeta)
                       _SettingsTile(
                         key: const ValueKey('settings-guide'),

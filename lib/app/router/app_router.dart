@@ -56,7 +56,10 @@ import '../../features/music_platform/platform_capabilities.dart';
 /// Music routes live inside [MusicShell] so bottom navigation and the mini
 /// player survive child-page transitions. Authentication stays outside the
 /// shell because it is a sensitive, full-screen flow with its own back stack.
+final appRootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouter = GoRouter(
+  navigatorKey: appRootNavigatorKey,
   initialLocation: '/music/recommend',
   routes: [
     ..._musicShellRoutes(),

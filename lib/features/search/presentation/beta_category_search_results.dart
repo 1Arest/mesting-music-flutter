@@ -5,7 +5,7 @@ import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
-import '../../experience/presentation/player_content_transition.dart';
+import '../../../shared/widgets/beta_swipe_pages.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../themes/beta_appearance.dart';
@@ -29,7 +29,6 @@ class BetaCategorySearchResults extends ConsumerStatefulWidget {
 
 class _BetaCategorySearchResultsState
     extends ConsumerState<BetaCategorySearchResults> {
-  double _direction = 1;
   // A query-empty landing removes this result surface. A new search therefore
   // gets a fresh bucket even for the same text, while category/temporary route
   // changes retain offsets in this still-mounted session.
@@ -39,6 +38,15 @@ class _BetaCategorySearchResultsState
     final selected = ref.watch(
       categorySearchProvider.select((s) => s.selected),
     );
+    final netease = ref.watch(usesNeteaseProvider);
+    final query = ref.watch(
+      musicSearchControllerProvider.select((s) => s.query),
+    );
+    final kinds = [
+      for (final kind in PlatformSearchKind.values)
+        if (kind != PlatformSearchKind.users || netease) kind,
+    ];
+    final selectedIndex = kinds.indexOf(selected);
     final ink = Theme.of(context).colorScheme.onSurface;
     final accent = BetaAppearance.accent(Theme.of(context).brightness);
     return PageStorage(
@@ -49,68 +57,69 @@ class _BetaCategorySearchResultsState
             color: Theme.of(context).colorScheme.surface,
             child: Row(
               children: [
-                for (final kind in PlatformSearchKind.values)
-                  if (kind != PlatformSearchKind.users ||
-                      ref.watch(usesNeteaseProvider))
-                    Expanded(
-                      child: Semantics(
-                        selected: selected == kind,
-                        button: true,
-                        child: InkWell(
-                          key: ValueKey('search-kind-${kind.name}'),
-                          onTap: () {
-                            setState(
-                              () => _direction = kind.index >= selected.index
-                                  ? 1
-                                  : -1,
-                            );
-                            ref
-                                .read(categorySearchProvider.notifier)
-                                .select(kind);
-                          },
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                height: 48,
-                                child: Center(
-                                  child: Text(
-                                    kind.label,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: selected == kind
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: selected == kind
-                                          ? accent
-                                          : ink.withValues(alpha: .8),
-                                    ),
+                for (final kind in kinds)
+                  Expanded(
+                    child: Semantics(
+                      selected: selected == kind,
+                      button: true,
+                      child: InkWell(
+                        key: ValueKey('search-kind-${kind.name}'),
+                        onTap: () {
+                          ref
+                              .read(categorySearchProvider.notifier)
+                              .select(kind);
+                        },
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 48,
+                              child: Center(
+                                child: Text(
+                                  kind.label,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: selected == kind
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: selected == kind
+                                        ? accent
+                                        : ink.withValues(alpha: .8),
                                   ),
                                 ),
                               ),
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 220),
-                                height: 3,
-                                width: selected == kind ? 28 : 0,
-                                decoration: BoxDecoration(
-                                  color: accent,
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                            ),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 220),
+                              height: 3,
+                              width: selected == kind ? 28 : 0,
+                              decoration: BoxDecoration(
+                                color: accent,
+                                borderRadius: BorderRadius.circular(3),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                  ),
               ],
             ),
           ),
           const Divider(height: 1, thickness: .5),
           Expanded(
-            child: PlayerContentTransition(
-              direction: _direction,
-              child: ArtworkRevealBoundary(
-                key: ValueKey(selected.name),
-                child: _CategoryPane(kind: selected),
+            // Share the download viewport: one retained pane per visited
+            // category, with swipe/click selection and active-scroll ownership.
+            // A new query/platform owns fresh controllers and reveal gates.
+            child: BetaSwipePages(
+              key: ValueKey(('search-pages', query, netease)),
+              index: selectedIndex < 0 ? 0 : selectedIndex,
+              length: kinds.length,
+              onChanged: (index) => ref
+                  .read(categorySearchProvider.notifier)
+                  .select(kinds[index]),
+              itemBuilder: (_, index) => ArtworkRevealBoundary(
+                key: ValueKey(kinds[index]),
+                child: _CategoryPane(kind: kinds[index]),
               ),
             ),
           ),

@@ -71,6 +71,15 @@ final autoAppUpdateChecksEnabledProvider = Provider<bool>((ref) {
   );
 });
 
+/// Installed notes work offline even when the remote update service is down.
+/// Tests opt in explicitly; release builds show each installed build once.
+final autoInstalledReleaseNotesEnabledProvider = Provider<bool>((ref) {
+  return const bool.fromEnvironment(
+    'ENABLE_RELEASE_NOTES',
+    defaultValue: kReleaseMode,
+  );
+});
+
 enum AppUpdatePhase {
   idle,
   checking,

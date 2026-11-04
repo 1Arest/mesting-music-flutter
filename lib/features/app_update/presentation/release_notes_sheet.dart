@@ -12,7 +12,11 @@ Future<void> showMusicReleaseNotes(
   useRootNavigator: true,
   isScrollControlled: true,
   useSafeArea: true,
+  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : null,
   builder: (context) => Material(
+    key: const ValueKey('release-notes-sheet'),
     type: MaterialType.transparency,
     child: ConstrainedBox(
       constraints: BoxConstraints(
@@ -59,29 +63,43 @@ Future<void> showMusicReleaseNotes(
                 '此版本暂未提供更新说明。',
                 style: TextStyle(fontSize: 16, height: 1.6),
               ),
-            for (final note in notes)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 3),
-                      child: Icon(CupertinoIcons.check_mark, size: 17),
-                    ),
-                    const SizedBox(width: 13),
-                    Expanded(
-                      child: Text(
-                        note,
-                        style: const TextStyle(fontSize: 16, height: 1.55),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            MusicReleaseNotesList(notes: notes),
           ],
         ),
       ),
     ),
   ),
 );
+
+/// Both offline history and the installed-version sheet use the same real text.
+class MusicReleaseNotesList extends StatelessWidget {
+  const MusicReleaseNotesList({required this.notes, super.key});
+  final List<String> notes;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      for (final note in notes)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 3),
+                child: Icon(CupertinoIcons.check_mark, size: 17),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Text(
+                  note,
+                  style: const TextStyle(fontSize: 16, height: 1.55),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+}
