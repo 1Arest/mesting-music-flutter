@@ -2,6 +2,7 @@ import '../../../shared/utils/media_uri.dart';
 import '../../../core/diagnostics/local_music_diagnostics.dart';
 import '../data/cloud_library_repository.dart';
 import 'dart:async';
+import '../../../core/cache/browse_response_cache.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
@@ -38,27 +39,41 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
 
   Stream<T> _watch<T>(Future<T> Function() load) => Stream<T>.multi((sink) {
     var generation = 0;
+    var active = true;
+    late final BrowseCacheWatch cacheWatch;
     Future<void> emit() async {
       final next = ++generation;
       try {
-        final value = await load();
-        if (!_closed && !sink.isClosed && next == generation) sink.add(value);
+        final value = await cacheWatch.run(load);
+        if (active && !_closed && !sink.isClosed && next == generation) {
+          sink.add(value);
+        }
       } catch (e, s) {
-        if (!_closed && !sink.isClosed && next == generation) {
+        if (active && !_closed && !sink.isClosed && next == generation) {
           sink.addError(e, s);
         }
       }
     }
 
+    cacheWatch = BrowseCacheWatch(() {
+      if (active && !_closed) unawaited(emit());
+    });
     final sub = _changes.stream.listen((_) => unawaited(emit()));
-    sink.onCancel = sub.cancel;
+    sink.onCancel = () async {
+      active = false;
+      generation++;
+      cacheWatch.dispose();
+      await sub.cancel();
+    };
     unawaited(emit());
   });
   Future<List<Map<String, dynamic>>> _loadLists() =>
-      _lists ??= _fetchLists().catchError((Object error) {
-        _lists = null;
-        throw error;
-      });
+      BrowseResponseCache.observing
+      ? _fetchLists()
+      : (_lists ??= _fetchLists().catchError((Object error) {
+          _lists = null;
+          throw error;
+        }));
   Future<List<Map<String, dynamic>>> _fetchLists() async {
     final result = <Map<String, dynamic>>[];
     final seen = <String>{};

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import '../../../../core/cache/browse_response_cache.dart';
+import '../../../../core/cache/browse_cache_routes.dart';
 import 'package:crypto/crypto.dart';
 import '../netease_api.dart';
 import '../netease_cloud_upload.dart';
@@ -24,6 +26,33 @@ class NeteaseFullRepository {
   }
 
   Future<Map<String, dynamic>> run(
+    NeteaseEndpoint endpoint,
+    Map<String, Object?> input,
+  ) async {
+    checkOwner();
+    Future<Map<String, dynamic>> load() =>
+        BrowseResponseCache.live(() => _runLive(endpoint, input));
+    if (!endpoint.write &&
+        BrowseResponseCache.observing &&
+        BrowseCacheRoutes.neteaseReads.contains(endpoint.route)) {
+      return api.browseCache.read(
+        scope: 'netease:${api.session!.userId}',
+        route: 'full:${endpoint.route}',
+        query: input,
+        load: load,
+        checkCurrent: checkOwner,
+        requestIdentity: music.credential ?? 'guest',
+      );
+    }
+    final result = await load();
+    if (endpoint.write &&
+        BrowseCacheRoutes.neteaseMutations.contains(endpoint.route)) {
+      await api.browseCache.invalidateScope('netease:${api.session!.userId}');
+    }
+    return result;
+  }
+
+  Future<Map<String, dynamic>> _runLive(
     NeteaseEndpoint endpoint,
     Map<String, Object?> input,
   ) async {

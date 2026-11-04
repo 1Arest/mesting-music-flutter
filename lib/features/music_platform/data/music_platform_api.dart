@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import '../../../core/cache/browse_response_cache.dart';
+import '../../../core/cache/browse_cache_routes.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -14,9 +16,12 @@ class MusicPlatformApi {
     required MusicServer server,
     required http.Client client,
     bool Function()? sessionCurrent,
+    BrowseResponseCache? browseCache,
   }) : _server = server,
        _client = client,
-       _sessionCurrent = sessionCurrent ?? (() => true);
+       _sessionCurrent = sessionCurrent ?? (() => true),
+       browseCache = browseCache ?? browseResponseCache;
+  final BrowseResponseCache browseCache;
 
   final MusicServer _server;
   final http.Client _client;
@@ -36,14 +41,40 @@ class MusicPlatformApi {
     bool allowBusinessError = false,
     Future<void>? abortTrigger,
     PlatformSession? expectedSession,
-  }) => _request(
-    'GET',
-    path,
-    query: query,
-    allowBusinessError: allowBusinessError,
-    abortTrigger: abortTrigger,
-    expectedSession: expectedSession,
-  );
+  }) {
+    Future<Map<String, dynamic>> load() => _request(
+      'GET',
+      path,
+      query: query,
+      allowBusinessError: allowBusinessError,
+      abortTrigger: abortTrigger,
+      expectedSession: expectedSession,
+    );
+    if (!BrowseResponseCache.observing ||
+        !BrowseCacheRoutes.kugouReads.contains(path)) {
+      return load();
+    }
+    final identity = session;
+    void check() {
+      if (!_sessionCurrent() ||
+          session?.userId != identity?.userId ||
+          session?.token != identity?.token ||
+          (expectedSession != null &&
+              (identity?.userId != expectedSession.userId ||
+                  identity?.token != expectedSession.token))) {
+        throw const MusicPlatformException('账号已变化，请重新加载页面');
+      }
+    }
+
+    return browseCache.read(
+      scope: 'kugou:${identity?.userId ?? "guest"}',
+      route: path,
+      query: query,
+      load: load,
+      checkCurrent: check,
+      requestIdentity: identity?.token ?? 'guest',
+    );
+  }
 
   /// Comment writes follow the upstream POST contract with flat query fields.
   /// Never retry here: a timed-out write may already have reached the platform.
@@ -192,6 +223,15 @@ class MusicPlatformApi {
           (session?.userId != expectedSession.userId ||
               session?.token != expectedSession.token)) {
         throw const MusicPlatformException('账号已变化，请返回后重新操作');
+      }
+      if (BrowseCacheRoutes.kugouMutations.contains(path) &&
+          response.statusCode == 200 &&
+          decoded['status']?.toString() != '0' &&
+          (decoded['error_code'] == null ||
+              decoded['error_code'].toString() == '0')) {
+        await browseCache.invalidateScope(
+          'kugou:${identity?.userId ?? "guest"}',
+        );
       }
       return decoded;
     } on http.RequestAbortedException {

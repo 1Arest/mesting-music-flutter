@@ -8,6 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// The current animation still completes at its original speed. This is not a
 /// debounce: the first tap navigates immediately and the final intent is kept.
 class BetaTabNavigation {
+  /// Route motion records the actual departure, including a coalesced tap.
+  /// Increasing tab indices move content to the right, as requested by design.
+  final motion = ValueNotifier<BetaTabMotion?>(null);
+  final progress = ValueNotifier<double>(1);
   int? _entering, _pending;
   void Function(int)? _navigate;
 
@@ -20,8 +24,7 @@ class BetaTabNavigation {
     if (_entering != null) {
       _pending = index;
     } else if (index != currentIndex) {
-      _entering = index;
-      navigate(index);
+      _begin(currentIndex, index);
     }
   }
 
@@ -31,8 +34,7 @@ class BetaTabNavigation {
     final next = _pending;
     _pending = null;
     if (next != null && next != index) {
-      _entering = next;
-      _navigate?.call(next);
+      _begin(index, next);
     }
   }
 
@@ -41,12 +43,32 @@ class BetaTabNavigation {
   void cancel() {
     _entering = _pending = null;
     _navigate = null;
+    motion.value = null;
   }
+
+  void _begin(int from, int to) {
+    _entering = to;
+    progress.value = 0;
+    motion.value = BetaTabMotion(from, to);
+    _navigate?.call(to);
+  }
+
+  void dispose() {
+    cancel();
+    motion.dispose();
+    progress.dispose();
+  }
+}
+
+class BetaTabMotion {
+  const BetaTabMotion(this.from, this.to);
+  final int from, to;
+  double get direction => to > from ? 1 : -1;
 }
 
 final betaTabNavigationProvider = Provider((ref) {
   final navigation = BetaTabNavigation();
-  ref.onDispose(navigation.cancel);
+  ref.onDispose(navigation.dispose);
   return navigation;
 });
 

@@ -561,7 +561,14 @@ Page<void> _musicSlidePage({
           ? child
           : BetaEdgeBack(child: child),
       transitionsBuilder: (context, animation, secondary, child) =>
-          BetaPageMotion(animation: animation, child: child),
+          tabIndex != null
+          ? BetaRootTabMotion(
+              index: tabIndex,
+              animation: animation,
+              secondary: secondary,
+              child: child,
+            )
+          : BetaPageMotion(animation: animation, child: child),
     );
   }
   final intent = state.extra is MusicPageTransitionIntent

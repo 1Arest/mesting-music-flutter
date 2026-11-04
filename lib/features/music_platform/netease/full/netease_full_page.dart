@@ -3,6 +3,7 @@ import '../../../../shared/widgets/beta_content_insets.dart';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -312,6 +313,7 @@ class NeteaseFullTaskPage extends ConsumerStatefulWidget {
 }
 
 class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
+  final _browse = CachedBrowseLoader();
   String? get _searchKey => e.parameters
       .where(
         (p) =>
@@ -447,6 +449,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
   @override
   void dispose() {
     _generation++;
+    _browse.dispose();
     _taskSearch.dispose();
     for (final c in _fields.values) {
       c.clear();
@@ -554,7 +557,8 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
 
   Future<void> _load({bool next = false, Map<String, Object?>? query}) async {
     if (_busy || !_current) return;
-    final epoch = ++_generation;
+    final epoch = next ? _generation : ++_generation;
+    if (!next) _browse.reset();
     final q = query ?? _query(next: next);
     setState(() {
       _busy = true;
@@ -570,7 +574,45 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
         }
         return;
       }
-      final payload = await ref.read(neteaseFullRepositoryProvider).run(e, q);
+      final repository = ref.read(neteaseFullRepositoryProvider);
+      final page = next ? _page : 1;
+      final payload = e.write
+          ? await repository.run(e, q)
+          : await _browse.load(
+              key: page,
+              request: () => repository.run(e, q),
+              onUpdate: (previous, current) {
+                if (!mounted || epoch != _generation || !_current) return;
+                final old = NeteaseContent.parse(previous, e.route);
+                final fresh = NeteaseContent.parse(current, e.route);
+                setState(() {
+                  replaceBrowsePage(
+                    _rows,
+                    old.rows,
+                    fresh.rows,
+                    (row) =>
+                        row.id.isEmpty ? row.identity : '${row.kind}:${row.id}',
+                  );
+                  for (final entry in old.facts.entries) {
+                    if (_facts[entry.key] == entry.value) {
+                      _facts.remove(entry.key);
+                    }
+                  }
+                  _facts.addAll(fresh.facts);
+                  _offset = (_offset - old.rows.length + fresh.rows.length)
+                      .clamp(0, 2147483647);
+                  if (page == _page - 1) {
+                    _cursor = fresh.cursor;
+                    _more =
+                        fresh.more ||
+                        (e.parameters.any((p) => p.key == 'offset') &&
+                            fresh.rows.length >=
+                                (int.tryParse('${q['limit']}') ?? 30));
+                  }
+                  _notice = _rows.isEmpty && _facts.isEmpty ? '暂无可展示的内容' : null;
+                });
+              },
+            );
       if (!mounted || epoch != _generation || !_current) return;
       if (e.route == '/logout') {
         await ref.read(platformAccountProvider.notifier).signOut();

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import '../../../core/cache/browse_response_cache.dart';
+import '../../../core/cache/browse_cache_routes.dart';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
@@ -14,8 +16,10 @@ import 'netease_extended_routes.dart';
 /// no loopback process, external API deployment, or JavaScript runtime is used.
 /// Route/payload contracts are pinned to @neteaseapireborn/api 4.29.7 (MIT).
 class NeteaseApi {
-  NeteaseApi(this.client, {String? deviceId})
-    : deviceId = deviceId ?? newDeviceId();
+  NeteaseApi(this.client, {String? deviceId, BrowseResponseCache? browseCache})
+    : deviceId = deviceId ?? newDeviceId(),
+      browseCache = browseCache ?? browseResponseCache;
+  final BrowseResponseCache browseCache;
   final http.Client client;
   String deviceId;
   NeteaseSession? _session;
@@ -46,6 +50,52 @@ class NeteaseApi {
   NeteaseApi loginClient() => NeteaseApi(client, deviceId: deviceId);
 
   Future<Map<String, dynamic>> call(
+    String route, {
+    Map<String, Object?> query = const {},
+    Future<void>? abortTrigger,
+    bool allowBusinessError = false,
+    String? expectedCredential,
+  }) async {
+    final generation = _generation;
+    final scope = 'netease:${_session?.userId ?? "guest"}';
+    void check() {
+      if (generation != _generation ||
+          expectedCredential != null &&
+              _session?.credentialId != expectedCredential) {
+        throw const MusicPlatformException('账号已变化，请重新加载页面');
+      }
+    }
+
+    Future<Map<String, dynamic>> load() => BrowseResponseCache.live(
+      () => _callLive(
+        route,
+        query: query,
+        abortTrigger: abortTrigger,
+        allowBusinessError: allowBusinessError,
+        expectedCredential: expectedCredential,
+      ),
+    );
+    if (BrowseResponseCache.observing &&
+        BrowseCacheRoutes.neteaseReads.contains(route)) {
+      return browseCache.read(
+        scope: scope,
+        route: route,
+        query: query,
+        load: load,
+        checkCurrent: check,
+        requestIdentity: _session?.credentialId ?? 'guest:$generation',
+      );
+    }
+    final result = await load();
+    check();
+    if (BrowseCacheRoutes.neteaseMutations.contains(route) &&
+        (result['code'] == null || '${result['code']}' == '200')) {
+      await browseCache.invalidateScope(scope);
+    }
+    return result;
+  }
+
+  Future<Map<String, dynamic>> _callLive(
     String route, {
     Map<String, Object?> query = const {},
     Future<void>? abortTrigger,
@@ -408,6 +458,53 @@ class NeteaseApi {
     String? expectedCredential,
     Map<String, String> additionalHeaders = const {},
     bool playbackLog = false,
+    bool mobileMessages = false,
+  }) {
+    final generation = _generation;
+    void check() {
+      if (generation != _generation ||
+          expectedCredential != null &&
+              _session?.credentialId != expectedCredential) {
+        throw const MusicPlatformException('账号已变化，请重新加载页面');
+      }
+    }
+
+    Future<Map<String, dynamic>> load() => _requestLive(
+      path,
+      data,
+      weapi: weapi,
+      abortTrigger: abortTrigger,
+      allowBusinessError: allowBusinessError,
+      expectedCredential: expectedCredential,
+      additionalHeaders: additionalHeaders,
+      playbackLog: playbackLog,
+      mobileMessages: mobileMessages,
+    );
+    if (!mobileMessages &&
+        BrowseResponseCache.observing &&
+        BrowseCacheRoutes.neteaseRaw(path)) {
+      return browseCache.read(
+        scope: 'netease:${_session?.userId ?? "guest"}',
+        route: path,
+        query: data,
+        load: load,
+        checkCurrent: check,
+        requestIdentity: _session?.credentialId ?? 'guest:$generation',
+      );
+    }
+    return load();
+  }
+
+  Future<Map<String, dynamic>> _requestLive(
+    String path,
+    Map<String, Object?> data, {
+    bool weapi = false,
+    Future<void>? abortTrigger,
+    bool allowBusinessError = false,
+    String? expectedCredential,
+    Map<String, String> additionalHeaders = const {},
+    bool playbackLog = false,
+    bool mobileMessages = false,
   }) async {
     if (!path.startsWith('/api/') ||
         path.contains('?') ||
@@ -417,6 +514,16 @@ class NeteaseApi {
     if (playbackLog && (path != '/api/feedback/weblog' || weapi)) {
       throw ArgumentError(
         'Playback logging requires the fixed eapi weblog path',
+      );
+    }
+    if (mobileMessages &&
+        (weapi ||
+            !{
+              '/api/msg/private/users',
+              '/api/msg/private/history',
+            }.contains(path))) {
+      throw ArgumentError(
+        'Mobile message identity is limited to private-message reads',
       );
     }
     final generation = _generation;
@@ -432,6 +539,14 @@ class NeteaseApi {
       'deviceId': deviceId,
       '__remember_me': 'true',
       ..._cookies,
+      // Desktop history can contain only a compatibility sentence for mobile
+      // cards. The existing Android client version is request-local; no login,
+      // cookie jar or send operation adopts this identity.
+      if (mobileMessages) ...{
+        'os': 'android',
+        'appver': '9.0.65',
+        'osver': '14',
+      },
       // This request-local client identity is required by the upstream vivid
       // stream contract; it never mutates the retained account cookie jar.
       if (path == '/api/song/enhance/player/url/v1' &&
@@ -450,8 +565,8 @@ class NeteaseApi {
     };
     final header = <String, String>{
       ...cookie,
-      'versioncode': '140',
-      'resolution': '1920x1080',
+      'versioncode': mobileMessages ? '9006053' : '140',
+      'resolution': mobileMessages ? '1080x2400' : '1920x1080',
       'buildver': '${DateTime.now().millisecondsSinceEpoch ~/ 1000}',
       'channel': 'netease',
       'requestId':
@@ -521,6 +636,16 @@ class NeteaseApi {
           final at = pair.indexOf('=');
           if (at > 0) {
             final key = pair.substring(0, at), value = pair.substring(at + 1);
+            if (mobileMessages &&
+                {
+                  'os',
+                  'osver',
+                  'appver',
+                  'versioncode',
+                  'resolution',
+                }.contains(key)) {
+              continue;
+            }
             if (value.isEmpty) {
               _cookies.remove(key);
             } else {

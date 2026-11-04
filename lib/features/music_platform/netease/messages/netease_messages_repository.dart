@@ -56,13 +56,32 @@ class NeteaseChatMessage {
   final Map<String, dynamic> resource;
   final NeteaseMessageCard? card;
   factory NeteaseChatMessage.parse(Map<String, dynamic> row) {
-    final content = _map(row['msg'] ?? row['lastMsg']);
+    final legacy = _map(row['msg'] ?? row['lastMsg']);
+    final content = legacy.isNotEmpty
+        ? legacy
+        : _map(row['msgBody'] ?? row['body']);
     final card = NeteaseMessageCard.parse({
+      ...content,
       // Only message envelope fields cross this boundary. Sender/recipient
       // profiles can contain arbitrary titles or links and are not messages.
-      for (final key in ['body', 'msgBody', 'json', 'nativeUrl', 'msgType'])
+      for (final key in [
+        'body',
+        'data',
+        'content',
+        'msgBody',
+        'json',
+        'nativeUrl',
+        'msgType',
+        'generalMsg',
+        'listenTogetherRecord',
+        'listenTogetherInfo',
+        'listenTogether',
+        'extInfo',
+        'extJsonInfo',
+        'card',
+        'cardInfo',
+      ])
         if (row[key] != null) key: row[key],
-      ...content,
     });
     final pic = _map(
       content['picInfo'] ?? content['picinfo'] ?? content['pic'],
@@ -263,6 +282,7 @@ class NeteaseMessagesRepository {
     String path,
     Map<String, Object?> data, {
     bool weapi = true,
+    bool mobileMessages = false,
   }) {
     check();
     return music.api.request(
@@ -270,19 +290,22 @@ class NeteaseMessagesRepository {
       data,
       weapi: weapi,
       expectedCredential: music.credential,
+      mobileMessages: mobileMessages,
     );
   }
 
   Future<List<NeteaseConversation>> conversations([int offset = 0]) async {
-    final r = await _request('/api/msg/private/users', {
-      'offset': offset,
-      'limit': 30,
-      'total': 'true',
-    });
-    final rows = NeteaseMusicRepository.rows(r['msgs'])
-        .map((row) => NeteaseConversation.parse(row, self))
-        .where((c) => c.peer.id.isNotEmpty)
-        .toList();
+    final r = await _request(
+      '/api/msg/private/users',
+      {'offset': offset, 'limit': 30, 'total': 'true'},
+      weapi: false,
+      mobileMessages: true,
+    );
+    final rows =
+        NeteaseMusicRepository.rows(r['msgs'] ?? _map(r['data'])['msgs'])
+            .map((row) => NeteaseConversation.parse(row, self))
+            .where((c) => c.peer.id.isNotEmpty)
+            .toList();
     if (offset == 0) _rawConversations.clear();
     for (final value in rows) {
       _rawConversations[value.peer.id] = value;
@@ -299,14 +322,14 @@ class NeteaseMessagesRepository {
     String peer, [
     int before = 0,
   ]) async {
-    final r = await _request('/api/msg/private/history', {
-      'userId': peer,
-      'limit': 30,
-      'time': before,
-      'total': 'true',
-    });
+    final r = await _request(
+      '/api/msg/private/history',
+      {'userId': peer, 'limit': 30, 'time': before, 'total': 'true'},
+      weapi: false,
+      mobileMessages: true,
+    );
     return NeteaseMusicRepository.rows(
-      r['msgs'],
+      r['msgs'] ?? _map(r['data'])['msgs'],
     ).map(NeteaseChatMessage.parse).toList();
   }
 

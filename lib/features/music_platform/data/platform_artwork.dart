@@ -1,4 +1,5 @@
 import 'dart:collection';
+import '../../../core/cache/browse_response_cache.dart';
 import 'dart:async';
 
 import '../../../shared/models/track.dart';
@@ -107,7 +108,7 @@ class PlatformArtworkRepository {
     }
     final hash = track.id.substring(6).toLowerCase();
     final cached = _cache.remove(hash);
-    if (cached != null) {
+    if (cached != null && !BrowseResponseCache.observing) {
       _cache[hash] = cached;
       return Future.value(cached);
     }

@@ -1,4 +1,5 @@
 import 'platform_backend_providers.dart';
+import '../../core/cache/cached_browse_provider.dart';
 import 'netease/netease_catalog_adapters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,26 +19,31 @@ final platformCatalogProvider = Provider<PlatformCatalog>((ref) {
 // change, so a former user's recommendations cannot survive a new login.
 final platformDailyProvider = FutureProvider<List<Track>>((ref) async {
   await ref.watch(platformAccountProvider.future);
-  return ref.watch(platformCatalogProvider).daily();
+  return cachedBrowse(ref, () => ref.watch(platformCatalogProvider).daily());
 });
 final platformNewSongsProvider = FutureProvider<List<Track>>((ref) async {
   await ref.watch(platformAccountProvider.future);
-  return ref.watch(platformCatalogProvider).newSongs();
+  return cachedBrowse(ref, () => ref.watch(platformCatalogProvider).newSongs());
 });
 final platformDiscoveryProvider = FutureProvider<List<Track>>((ref) async {
   await ref.watch(platformAccountProvider.future);
   final repository = ref.watch(platformRecommendationsProvider);
-  await repository.discover();
-  return repository.discoverySongs;
+  return cachedRecommendationPreview(ref, 'discovery', () async {
+    await repository.discover();
+    return repository.discoverySongs;
+  });
 });
 final platformFeaturedProvider = FutureProvider<List<Map<String, dynamic>>>((
   ref,
 ) async {
   await ref.watch(platformAccountProvider.future);
-  return ref.watch(platformCatalogProvider).featured();
+  return cachedBrowse(ref, () => ref.watch(platformCatalogProvider).featured());
 });
 final platformPublicPlaylistProvider = FutureProvider.autoDispose
     .family<List<Track>, String>((ref, id) async {
       await ref.watch(platformAccountProvider.future);
-      return ref.watch(platformCatalogProvider).publicPlaylist(id);
+      return cachedBrowse(
+        ref,
+        () => ref.watch(platformCatalogProvider).publicPlaylist(id),
+      );
     });

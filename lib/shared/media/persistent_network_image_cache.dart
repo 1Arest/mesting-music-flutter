@@ -23,6 +23,8 @@ class PersistentNetworkImageCache {
     http.Client? client,
     PersistentNetworkImageDirectoryProvider? directoryProvider,
     Duration requestTimeout = const Duration(seconds: 18),
+    this.maxBytes = 256 * 1024 * 1024,
+    this.maxFiles = 4000,
   }) : _client = client ?? http.Client(),
        _directoryProvider = directoryProvider ?? getApplicationSupportDirectory,
        _requestTimeout = requestTimeout;
@@ -32,8 +34,70 @@ class PersistentNetworkImageCache {
   final http.Client _client;
   final PersistentNetworkImageDirectoryProvider _directoryProvider;
   final Duration _requestTimeout;
+  final int maxBytes, maxFiles;
+  Future<void>? _initializing;
+  Directory? _root;
+  final _validated = <String>{};
+  final _disk = <String, ({int bytes, DateTime used})>{};
+  Future<void> _maintenance = Future.value();
   final Map<String, File> _memoryFiles = <String, File>{};
   final Map<String, Future<File?>> _pendingLoads = <String, Future<File?>>{};
+  bool get initialized => _root != null;
+
+  /// Warm the filename index alongside native startup, before cached page
+  /// data mounts its covers. Decoding remains sized to each visible widget.
+  Future<void> initialize() => _initializing ??= _initialize();
+  Future<void> _initialize() async {
+    try {
+      final base = await _directoryProvider();
+      final root = Directory(
+        '${base.path}${Platform.pathSeparator}$_directoryName',
+      );
+      await root.create(recursive: true);
+      _root = root;
+      await for (final entry in root.list(followLinks: false)) {
+        if (entry is! File) continue;
+        final name = entry.uri.pathSegments.last;
+        if (RegExp(r'^[a-f0-9]{64}\.avatar\.[0-9]+\.tmp$').hasMatch(name)) {
+          await entry.delete();
+          continue;
+        }
+        if (!RegExp(r'^[a-f0-9]{64}\.avatar$').hasMatch(name)) continue;
+        final stat = await entry.stat();
+        final key = name.substring(0, 64);
+        if (stat.size > 0 &&
+            stat.size <= maxAvatarBytes &&
+            stat.size <= maxBytes) {
+          _memoryFiles[key] = entry;
+          _disk[key] = (bytes: stat.size, used: stat.modified);
+        } else {
+          await entry.delete();
+        }
+      }
+      await _prune();
+    } on Object {
+      _root = null;
+    }
+  }
+
+  Future<void> _prune() async {
+    var bytes = _disk.values.fold<int>(0, (sum, item) => sum + item.bytes);
+    final keys = _disk.keys.toList()
+      ..sort((a, b) => _disk[a]!.used.compareTo(_disk[b]!.used));
+    for (final key in keys) {
+      if (bytes <= maxBytes && _disk.length <= maxFiles) break;
+      bytes -= _disk.remove(key)!.bytes;
+      _validated.remove(key);
+      final file = _memoryFiles.remove(key);
+      if (file != null) {
+        try {
+          await file.delete();
+        } on Object {
+          /* Disposable image. */
+        }
+      }
+    }
+  }
 
   /// Returns an already-resolved file without waiting for disk I/O.
   File? peek({required String cacheKey, required String url}) {
@@ -41,7 +105,13 @@ class PersistentNetworkImageCache {
     if (key == null) return null;
     final file = _memoryFiles[key];
     if (file == null) return null;
-    if (file.existsSync()) return file;
+    if (file.existsSync()) {
+      final metadata = _disk[key];
+      if (metadata != null) {
+        _disk[key] = (bytes: metadata.bytes, used: DateTime.now());
+      }
+      return file;
+    }
     _memoryFiles.remove(key);
     return null;
   }
@@ -51,7 +121,9 @@ class PersistentNetworkImageCache {
     final key = _cacheFileKey(cacheKey: cacheKey, url: url);
     if (key == null) return Future<File?>.value();
     final memoryFile = peek(cacheKey: cacheKey, url: url);
-    if (memoryFile != null) return Future<File?>.value(memoryFile);
+    if (memoryFile != null && _validated.contains(key)) {
+      return Future<File?>.value(memoryFile);
+    }
 
     final pending = _pendingLoads[key];
     if (pending != null) return pending;
@@ -70,6 +142,8 @@ class PersistentNetworkImageCache {
     final key = _cacheFileKey(cacheKey: cacheKey, url: url);
     if (key == null) return;
     _memoryFiles.remove(key);
+    _validated.remove(key);
+    _disk.remove(key);
     try {
       final file = await _cacheFile(key);
       if (await file.exists()) await file.delete();
@@ -87,6 +161,7 @@ class PersistentNetworkImageCache {
           try {
             await validateAvatarImage(target.path);
             _memoryFiles[cacheKey] = target;
+            _validated.add(cacheKey);
             LocalMusicDiagnostics.record(
               'artwork.disk_hit',
               LocalMusicDiagnostics.artwork(url),
@@ -115,7 +190,8 @@ class PersistentNetworkImageCache {
       if (response.statusCode < 200 ||
           response.statusCode >= 300 ||
           response.bodyBytes.isEmpty ||
-          response.bodyBytes.length > maxAvatarBytes) {
+          response.bodyBytes.length > maxAvatarBytes ||
+          response.bodyBytes.length > maxBytes) {
         return null;
       }
 
@@ -127,6 +203,14 @@ class PersistentNetworkImageCache {
       await temporary.rename(target.path);
       temporary = null;
       _memoryFiles[cacheKey] = target;
+      _validated.add(cacheKey);
+      _disk[cacheKey] = (
+        bytes: response.bodyBytes.length,
+        used: DateTime.now(),
+      );
+      final maintenance = _maintenance.then((_) => _prune());
+      _maintenance = maintenance.then<void>((_) {}, onError: (Object _) {});
+      await maintenance;
       return target;
     } on Object catch (error) {
       LocalMusicDiagnostics.record('artwork.cache_failed', {
@@ -146,12 +230,12 @@ class PersistentNetworkImageCache {
   }
 
   Future<File> _cacheFile(String key) async {
-    final root = await _directoryProvider();
-    final directory = Directory(
-      '${root.path}${Platform.pathSeparator}$_directoryName',
-    );
-    await directory.create(recursive: true);
-    return File('${directory.path}${Platform.pathSeparator}$key.avatar');
+    await initialize();
+    final root = _root;
+    if (root == null) {
+      throw const FileSystemException('Image cache unavailable');
+    }
+    return File('${root.path}${Platform.pathSeparator}$key.avatar');
   }
 
   String? _cacheFileKey({required String cacheKey, required String url}) {
@@ -166,14 +250,30 @@ class PersistentNetworkImageCache {
     if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
       return null;
     }
-    // CDN thumbnails of different sizes are different images. Keep only this
-    // stable size field; expiring signatures still do not multiply cache rows.
+    // Preserve semantic identity and thumbnail size. Only known expiring
+    // signatures are disposable; ?id=... and ?version=... remain distinct.
+    final parameters = <String, String>{
+      for (final entry in uri.queryParameters.entries)
+        if (!{
+              'token',
+              'sign',
+              'signature',
+              'expires',
+              'expire',
+              'auth_key',
+            }.contains(entry.key.toLowerCase()) &&
+            !entry.key.toLowerCase().startsWith('x-amz-'))
+          entry.key: entry.value,
+    };
+    final keys = parameters.keys.toList()..sort();
     return uri
         .replace(
-          query: uri.queryParameters['param'] == null
+          query: keys.isEmpty
               ? ''
               : Uri(
-                  queryParameters: {'param': uri.queryParameters['param']!},
+                  queryParameters: {
+                    for (final key in keys) key: parameters[key]!,
+                  },
                 ).query,
           fragment: '',
         )

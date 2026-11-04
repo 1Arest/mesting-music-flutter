@@ -1,6 +1,7 @@
 import '../platform_backend_providers.dart';
 import '../domain/platform_session.dart';
 import 'package:flutter/material.dart';
+import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_image.dart';
@@ -26,6 +27,7 @@ class PlatformCatalogDetailPage extends ConsumerStatefulWidget {
 
 class _PlatformCatalogDetailPageState
     extends ConsumerState<PlatformCatalogDetailPage> {
+  final _browse = CachedBrowseLoader();
   final _tracks = <Track>[];
   bool _busy = false, _more = true;
   int _page = 0;
@@ -57,27 +59,64 @@ class _PlatformCatalogDetailPageState
       final List<Track> fresh;
       final int rowCount;
       if (identity?.platform == MusicPlatform.netease) {
-        final all = await (_neteaseTracks ??= ref
-            .read(neteaseMusicRepositoryProvider)
-            .categoryTracks(hit));
+        final repository = ref.read(neteaseMusicRepositoryProvider);
+        final all = await (_neteaseTracks ??= _browse.load(
+          key: 'netease-tracks',
+          request: () => repository.categoryTracks(hit),
+          onUpdate: (previous, current) {
+            if (!mounted ||
+                ref.read(platformAccountProvider).value?.ownerId != _owner ||
+                ref.read(platformAccountProvider).value?.token != _token) {
+              return;
+            }
+            setState(() {
+              _neteaseTracks = Future.value(current);
+              _tracks
+                ..clear()
+                ..addAll(current.take(_page * 30));
+              _more = current.length > _tracks.length;
+            });
+          },
+        ));
         fresh = all.skip(_page * 30).take(30).toList();
         rowCount = fresh.length;
       } else {
-        final payload = await api.get(
-          switch (hit.kind) {
-            PlatformSearchKind.artists => '/artist/audios',
-            PlatformSearchKind.albums => '/album/songs',
-            _ => '/playlist/track/all',
+        final page = _page + 1;
+        final path = switch (hit.kind) {
+          PlatformSearchKind.artists => '/artist/audios',
+          PlatformSearchKind.albums => '/album/songs',
+          _ => '/playlist/track/all',
+        };
+        final query = <String, String>{
+          if (hit.kind == PlatformSearchKind.artists) 'id': hit.id,
+          if (hit.kind == PlatformSearchKind.albums) 'album_id': hit.id,
+          if (hit.kind == PlatformSearchKind.playlists)
+            'global_collection_id': hit.globalId,
+          'page': '$page',
+          'pagesize': '30',
+        };
+        final payload = await _browse.load(
+          key: page,
+          request: () => api.get(path, query: query, expectedSession: identity),
+          onUpdate: (previous, current) {
+            if (!mounted ||
+                ref.read(platformAccountProvider).value?.ownerId != _owner ||
+                ref.read(platformAccountProvider).value?.token != _token) {
+              return;
+            }
+            setState(() {
+              replaceBrowsePage(
+                _tracks,
+                PlatformCatalog.tracks(PlatformCatalog.rows(previous)),
+                PlatformCatalog.tracks(PlatformCatalog.rows(current)),
+                (track) => track.id,
+                fallbackIndex: (page - 1) * 30,
+              );
+              if (page == _page) {
+                _more = PlatformCatalog.rows(current).length >= 30;
+              }
+            });
           },
-          query: {
-            if (hit.kind == PlatformSearchKind.artists) 'id': hit.id,
-            if (hit.kind == PlatformSearchKind.albums) 'album_id': hit.id,
-            if (hit.kind == PlatformSearchKind.playlists)
-              'global_collection_id': hit.globalId,
-            'page': '${_page + 1}',
-            'pagesize': '30',
-          },
-          expectedSession: identity,
         );
         final rows = PlatformCatalog.rows(payload);
         fresh = PlatformCatalog.tracks(rows);
@@ -107,6 +146,12 @@ class _PlatformCatalogDetailPageState
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _browse.dispose();
+    super.dispose();
   }
 
   @override

@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/auth/domain/auth_models.dart';
-import 'package:mesting_music/features/auth/presentation/beta_login_artwork_frame.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
 import 'package:mesting_music/features/music_platform/data/music_platform_api.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
@@ -124,7 +123,7 @@ void main() {
       ].indexed) {
         final (index, page) = scene;
         testWidgets(
-          'full-width art and form stay separate $dark/$compact/${page.runtimeType}/$index',
+          'login form fills available space without artwork $dark/$compact/${page.runtimeType}/$index',
           (tester) async {
             await mount(
               tester,
@@ -133,14 +132,9 @@ void main() {
               size: compact ? const Size(320, 650) : const Size(390, 844),
               scale: compact ? 1.4 : 1,
             );
-            final art = tester.getRect(
-              find.byKey(BetaLoginArtworkFrame.artworkKey),
-            );
             final viewport = tester.getRect(find.byType(BetaGlassScrollBody));
-            expect(art.left, 0);
-            expect(art.right, compact ? 320 : 390);
-            expect(art.bottom, compact ? 650 : 844);
-            expect(viewport.bottom + 24, lessThanOrEqualTo(art.top));
+            expect(viewport.bottom, compact ? 650 : 844);
+            expect(find.byType(Image), findsNothing);
             if (page is PlatformAccountPage &&
                 page.platform == MusicPlatform.netease) {
               expect(find.byType(QrImageView), findsOneWidget);
@@ -152,7 +146,7 @@ void main() {
     }
   }
   for (final dark in [false, true]) {
-    testWidgets('keyboard frees art space and retains input and submit $dark', (
+    testWidgets('keyboard retains input and submit without artwork $dark', (
       tester,
     ) async {
       await mount(
@@ -168,7 +162,7 @@ void main() {
       );
       tester.view.viewInsets = const FakeViewPadding(bottom: 250);
       await tester.pump();
-      expect(find.byKey(BetaLoginArtworkFrame.artworkKey), findsNothing);
+      expect(find.byType(Image), findsNothing);
       await tester.ensureVisible(
         find.byKey(const ValueKey('beta11-phone-submit')),
       );
@@ -179,7 +173,7 @@ void main() {
       );
       tester.view.resetViewInsets();
       await tester.pump();
-      expect(find.byKey(BetaLoginArtworkFrame.artworkKey), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
       final field = tester.widget<TextField>(
         find.byKey(const ValueKey('beta11-phone-field')),
       );
@@ -193,7 +187,7 @@ void main() {
       const PlatformAccountPage(loginOnly: true),
       size: const Size(844, 390),
     );
-    expect(find.byKey(BetaLoginArtworkFrame.artworkKey), findsNothing);
+    expect(find.byType(Image), findsNothing);
     expect(
       find.byKey(const ValueKey('beta11-phone-submit')).hitTestable(),
       findsOneWidget,

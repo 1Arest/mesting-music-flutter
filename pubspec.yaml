@@ -146,8 +146,6 @@ flutter:
     - assets/branding/startup/
     - path: assets/branding/welcome/companions-atlas.png
       flavors: [beta]
-    - path: assets/branding/login/companions-bottom.png
-      flavors: [beta]
     - assets/web/verify_captcha.html
     # Retired Beta skin/brand images remain available to formal distributions.
     # Explicit progress assets below prevent an entire gallery entering Beta.

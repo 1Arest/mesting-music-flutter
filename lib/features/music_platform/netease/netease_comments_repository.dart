@@ -77,17 +77,22 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
           'threadId': _thread(resource),
           'page': page,
           'sortType': sort == PlatformCommentSort.hottest ? 2 : 3,
-          'cursor': page == 1 ? '0' : _listCursors[cursorKey] ?? '0',
+          'cursor': page == 1
+              ? '0'
+              : _listCursors['$cursorKey:${page - 1}'] ?? '0',
           if (thread != null) 'parentId': thread.id,
           if (thread != null)
-            'time': page == 1 ? -1 : _replyCursors[thread.id] ?? -1,
+            'time': page == 1
+                ? -1
+                : _replyCursors['${thread.id}:${page - 1}'] ?? -1,
         });
     final data = NeteaseMusicRepository.object(payload['data']);
     final rows = NeteaseMusicRepository.rows(data['comments']);
-    _listCursors[cursorKey] =
+    _listCursors['$cursorKey:$page'] =
         '${data['cursor'] ?? (rows.isEmpty ? '0' : rows.last['time'])}';
     if (thread != null && rows.isNotEmpty) {
-      _replyCursors[thread.id] = int.tryParse('${rows.last['time']}') ?? -1;
+      _replyCursors['${thread.id}:$page'] =
+          int.tryParse('${rows.last['time']}') ?? -1;
     }
     return PlatformCommentPage(
       rows.map(_comment).toList(),

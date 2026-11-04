@@ -1,6 +1,7 @@
 import 'platform_backend_providers.dart';
 import 'netease/netease_catalog_adapters.dart';
 import 'dart:async';
+import '../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../search/search_providers.dart';
 import 'music_platform_providers.dart';
@@ -52,6 +53,7 @@ final categorySearchProvider =
 /// Each category owns its request/page/cache. Selection does not cancel another
 /// category's valid public response; changing query/account invalidates them all.
 class CategorySearchController extends Notifier<CategorySearchState> {
+  final _browse = CachedBrowseLoader();
   var _generation = 0;
   final _abort = <PlatformSearchKind, Completer<void>>{};
   void _cancel() {
@@ -64,21 +66,23 @@ class CategorySearchController extends Notifier<CategorySearchState> {
   @override
   CategorySearchState build() {
     ref.onDispose(_cancel);
+    ref.onDispose(_browse.reset);
     ref.listen(
       musicSearchControllerProvider.select((s) => s.query),
       (_, query) => reset(query),
     );
-    ref.listen(platformAccountProvider.select((s) => s.value?.ownerId), (
-      before,
-      after,
-    ) {
-      if (before != after) reset(state.query, retainResults: false);
-    });
+    ref.listen(
+      platformAccountProvider.select((s) => (s.value?.ownerId, s.value?.token)),
+      (before, after) {
+        if (before != after) reset(state.query, retainResults: false);
+      },
+    );
     return CategorySearchState(ref.read(musicSearchControllerProvider).query);
   }
 
   void reset(String query, {bool retainResults = true}) {
     ++_generation;
+    _browse.reset();
     _cancel();
     final previous = state;
     state = CategorySearchState(
@@ -141,9 +145,43 @@ class CategorySearchController extends Notifier<CategorySearchState> {
       ),
     );
     try {
-      final result = await ref
-          .read(platformCategorySearchRepositoryProvider)
-          .search(query, kind, page: old.page + 1, abortTrigger: abort.future);
+      final repository = ref.read(platformCategorySearchRepositoryProvider);
+      final page = old.page + 1;
+      final result = await _browse.load(
+        key: (kind, page),
+        request: () => repository.search(
+          query,
+          kind,
+          page: page,
+          abortTrigger: abort.future,
+        ),
+        onUpdate: (previous, current) {
+          if (!ref.mounted ||
+              generation != _generation ||
+              state.query != query) {
+            return;
+          }
+          final slice = state.pages[kind];
+          if (slice == null || slice.stale) return;
+          final items = slice.items.toList();
+          replaceBrowsePage(
+            items,
+            previous.items,
+            current.items,
+            (item) => item.id,
+            fallbackIndex: (page - 1) * 30,
+          );
+          put(
+            CategorySearchSlice(
+              items: items,
+              page: slice.page,
+              total: current.total,
+              more: page == slice.page ? current.hasMore : slice.more,
+              loading: slice.loading,
+            ),
+          );
+        },
+      );
       final seen = retained.map((e) => e.id).toSet();
       final added = result.items.where((e) => seen.add(e.id)).toList();
       put(

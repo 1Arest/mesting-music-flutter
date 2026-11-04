@@ -2,6 +2,13 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.26': [
+    '移除手机、扫码等登录页底部插画，恢复原有登录表单布局。',
+    '网易云私信读取补充移动端消息协议，完善一起听结束记录卡片、会话预览与详情解析。',
+    '双平台浏览页面和个人音乐库增加本地缓存，重新打开先显示已保存内容，后台刷新成功后更新，失败保留已有内容。',
+    '歌曲封面等图片支持持久化缓存与启动索引恢复，复用本机已加载图片，并限制缓存容量。',
+    '底部Tab向我的页切换时页面由左向右过渡，反向切换由右向左，新旧页面同步移动。',
+  ],
   '1.0.25': [
     '网易云一起听新增退出入口与确认，退出后停止会话同步，本机继续播放当前音乐。',
     '好友聊天支持一起听记录卡片与详情，并可按消息提供的官方链接查看完整记录。',

@@ -1,4 +1,7 @@
 import 'platform_backend_providers.dart';
+import '../../core/cache/cached_browse_provider.dart';
+import '../../core/cache/browse_response_cache.dart';
+import 'data/music_platform_api.dart';
 import 'netease/netease_catalog_adapters.dart';
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
@@ -67,14 +70,62 @@ class PlatformFmStationController extends Notifier<PlatformFmStation> {
 final platformFmProvider = FutureProvider<List<Track>>((ref) async {
   await ref.watch(platformAccountProvider.future);
   final station = ref.watch(platformFmStationProvider);
-  return ref.watch(platformRecommendationsProvider).personalFm(station);
+  final repository = ref.watch(platformRecommendationsProvider);
+  return cachedRecommendationPreview(
+    ref,
+    'fm:${station.name}',
+    () => repository.personalFm(station),
+  );
 });
 final platformHotSearchProvider = FutureProvider<List<PlatformHotSearchBoard>>((
   ref,
 ) async {
   await ref.watch(platformAccountProvider.future);
-  return ref.watch(platformRecommendationsProvider).hotSearch();
+  return cachedBrowse(
+    ref,
+    () => ref.watch(platformRecommendationsProvider).hotSearch(),
+  );
 });
+
+/// Recommendation cursors/feedback are live state. Cache the typed preview as
+/// one snapshot so a revalidation cannot accidentally advance that cursor again.
+Future<List<Track>> cachedRecommendationPreview(
+  Ref ref,
+  String key,
+  Future<List<Track>> Function() load,
+) {
+  final identity = ref.watch(platformAccountProvider).value;
+  final netease = ref.watch(usesNeteaseProvider);
+  final cache = netease
+      ? ref.watch(neteaseMusicRepositoryProvider).api.browseCache
+      : ref.watch(musicPlatformApiProvider).browseCache;
+  void check() {
+    if (!ref.mounted ||
+        ref.read(platformAccountProvider).value?.ownerId != identity?.ownerId ||
+        ref.read(platformAccountProvider).value?.token != identity?.token) {
+      throw const MusicPlatformException('账号已变化，请重新加载推荐');
+    }
+  }
+
+  return cachedBrowse(ref, () async {
+    final result = await cache.read(
+      scope: '${netease ? "netease" : "kugou"}:${identity?.userId ?? "guest"}',
+      route: 'ui-recommendation-v1:$key',
+      query: const {},
+      checkCurrent: check,
+      requestIdentity: identity?.token ?? 'guest',
+      load: () => BrowseResponseCache.live(
+        () async => {
+          'tracks': (await load()).map((track) => track.toJson()).toList(),
+        },
+      ),
+    );
+    return [
+      for (final row in result['tracks'] as List? ?? const [])
+        if (row is Map) Track.fromJson(Map<String, Object?>.from(row)),
+    ];
+  });
+}
 
 /// Queue provenance owns refill and feedback. Fetching an FM preview alone
 /// never turns an ordinary song/playlist into an FM session. Account changes

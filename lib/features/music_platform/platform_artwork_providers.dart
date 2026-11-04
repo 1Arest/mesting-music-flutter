@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/cache/cached_browse_provider.dart';
 
 import '../../shared/models/track.dart';
 import 'data/platform_artwork.dart';
@@ -12,6 +13,8 @@ final platformArtworkRepositoryProvider = Provider<PlatformArtworkRepository>(
 /// never launches a metadata request for every saved song.
 final platformArtworkProvider = FutureProvider.autoDispose
     .family<String, Track>(
-      (ref, track) =>
-          ref.watch(platformArtworkRepositoryProvider).resolve(track),
+      (ref, track) => cachedBrowse(
+        ref,
+        () => ref.watch(platformArtworkRepositoryProvider).resolve(track),
+      ),
     );

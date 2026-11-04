@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../core/cache/cached_browse_provider.dart';
+import '../../core/cache/browse_response_cache.dart';
 import 'dart:collection';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'data/music_platform_api.dart';
@@ -9,7 +11,8 @@ final _artistPortraitRepository = Provider(
   (ref) => _PortraitRepository(ref.watch(musicPlatformApiProvider)),
 );
 final artistPortraitProvider = FutureProvider.family<String, String>(
-  (ref, id) => ref.watch(_artistPortraitRepository).load(id),
+  (ref, id) =>
+      cachedBrowse(ref, () => ref.watch(_artistPortraitRepository).load(id)),
 );
 
 /// Singer search returns names/IDs without portraits. Fetch visible identities
@@ -22,7 +25,9 @@ class _PortraitRepository {
   final _waiting = Queue<Completer<void>>();
   int _active = 0;
   Future<String> load(String id) {
-    if (_cache.containsKey(id)) return Future.value(_cache[id]);
+    if (!BrowseResponseCache.observing && _cache.containsKey(id)) {
+      return Future.value(_cache[id]);
+    }
     return _pending.putIfAbsent(
       id,
       () => _load(id).whenComplete(() => _pending.remove(id)),

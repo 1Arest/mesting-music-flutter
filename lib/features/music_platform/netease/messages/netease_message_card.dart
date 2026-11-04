@@ -64,6 +64,9 @@ class NeteaseMessageCard {
   /// Only exact music web hosts can be opened. Redirect/webview wrappers are
   /// decoded as data; no arbitrary scheme, script, HTML or outer URI executes.
   static Uri? officialUrl(Object? value, [int depth = 0]) {
+    if (value is Map) {
+      value = value['url'] ?? value['webUrl'] ?? value['targetUrl'];
+    }
     if (value is! String || value.length > 16384 || depth > 5) return null;
     var text = value.trim().replaceAll('&amp;', '&');
     if (RegExp(r'^(https?|orpheus)%3a', caseSensitive: false).hasMatch(text)) {
@@ -111,11 +114,24 @@ class NeteaseMessageCard {
       'listenTogether',
       'listenTogetherRecord',
       'listenTogetherInfo',
+      'msg',
+      'message',
+      'extInfo',
+      'extJsonInfo',
+      'extra',
+      'payload',
+      'card',
+      'cardInfo',
+      'report',
+      'record',
+      'cards',
+      'richMsg',
     ];
     final queue = <({Object? value, int depth, Uri? inheritedUrl})>[
       (value: envelope, depth: 0, inheritedUrl: null),
     ];
     NeteaseMessageCard? fallback;
+    var bestScore = -1;
     var visited = 0;
     while (queue.isNotEmpty && visited++ < 48) {
       final node = queue.removeAt(0);
@@ -128,6 +144,16 @@ class NeteaseMessageCard {
           continue;
         }
       }
+      if (value is List) {
+        for (final item in value.take(12)) {
+          queue.add((
+            value: item,
+            depth: node.depth + 1,
+            inheritedUrl: node.inheritedUrl,
+          ));
+        }
+        continue;
+      }
       if (value is! Map) continue;
       final title = _text(value['mainTitle'] ?? value['title'], 200);
       final subtitle = _text(
@@ -139,6 +165,9 @@ class NeteaseMessageCard {
       );
       final rawUrl =
           value['nativeUrl'] ??
+          value['actionUrl'] ??
+          value['reportUrl'] ??
+          value['recordUrl'] ??
           value['webUrl'] ??
           value['url'] ??
           value['linkUrl'] ??
@@ -177,7 +206,8 @@ class NeteaseMessageCard {
             break;
           }
         }
-        final cover = '${value['coverUrl'] ?? value['picUrl'] ?? ''}';
+        final cover =
+            '${value['coverUrl'] ?? value['coverImgUrl'] ?? value['cover'] ?? value['picUrl'] ?? ''}';
         final coverUri = Uri.tryParse(cover);
         final card = NeteaseMessageCard(
           title: title.isEmpty ? '本次一起听记录' : title,
@@ -196,8 +226,16 @@ class NeteaseMessageCard {
               : '',
         );
         // A wrapper may own the URL while its body owns the actual titles.
-        if (title.isNotEmpty) return card;
-        fallback ??= card;
+        final score =
+            (record ? 100 : 0) +
+            (title.isNotEmpty ? 10 : 0) +
+            (url != null ? 4 : 0) +
+            (subtitle.isNotEmpty ? 2 : 0) +
+            (duration != null ? 1 : 0);
+        if (score > bestScore) {
+          fallback = card;
+          bestScore = score;
+        }
       }
       for (final key in containers) {
         if (value[key] != null) {

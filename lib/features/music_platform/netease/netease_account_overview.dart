@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../../core/cache/cached_browse_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,7 +93,10 @@ Future<NeteaseAccountOverview> loadNeteaseAccountOverview(
 
 final neteaseAccountOverviewProvider = FutureProvider.autoDispose((ref) async {
   await ref.watch(platformAccountProvider.future);
-  return loadNeteaseAccountOverview(ref.watch(neteaseMusicRepositoryProvider));
+  return cachedBrowse(
+    ref,
+    () => loadNeteaseAccountOverview(ref.watch(neteaseMusicRepositoryProvider)),
+  );
 }, retry: (_, _) => null);
 
 class NeteaseAccountOverviewPage extends ConsumerWidget {

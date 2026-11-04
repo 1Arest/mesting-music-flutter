@@ -1,4 +1,5 @@
 import 'platform_backend_providers.dart';
+import '../../core/cache/cached_browse_provider.dart';
 import 'netease/netease_catalog_adapters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,5 +23,8 @@ final platformExploreProvider =
       kind,
     ) async {
       await ref.watch(platformAccountProvider.future);
-      return ref.watch(platformExploreRepositoryProvider).list(kind);
+      return cachedBrowse(
+        ref,
+        () => ref.watch(platformExploreRepositoryProvider).list(kind),
+      );
     });

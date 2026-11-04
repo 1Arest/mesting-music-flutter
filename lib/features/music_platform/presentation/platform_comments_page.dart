@@ -6,6 +6,7 @@ import '../netease/netease_comment_hugs_page.dart';
 import '../../../shared/widgets/beta_anchored_menu.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
@@ -158,6 +159,7 @@ class PlatformCommentsPage extends ConsumerStatefulWidget {
 }
 
 class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
+  final _browse = CachedBrowseLoader();
   final _text = TextEditingController();
   List<PlatformComment> _comments = [];
   int _page = 0;
@@ -199,6 +201,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
 
   @override
   void dispose() {
+    _browse.dispose();
     _generation++;
     _text.dispose();
     _scroll.dispose();
@@ -207,7 +210,8 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
 
   Future<void> _load({bool reset = false, bool silent = false}) async {
     if (!_current || (_loading && !reset)) return;
-    final generation = ++_generation;
+    final generation = reset ? ++_generation : _generation;
+    if (reset) _browse.reset();
     final page = reset ? 1 : _page + 1;
     setState(() {
       _loading = true;
@@ -220,46 +224,73 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
       var childrenId = _childrenId;
       var nativeHot = _nativeHot;
       String? sortNotice;
-      var result = widget.repository is NeteaseCommentsRepository
-          ? await (widget.repository as NeteaseCommentsRepository).loadSorted(
-              widget.resource,
-              page: page,
-              thread: widget.thread,
-              sort: requestedSort,
-            )
-          : await widget.repository.load(
-              widget.resource,
-              page: page,
-              thread: widget.thread,
-              hottestChildrenId: !reset && _nativeHot ? _childrenId : null,
-            );
-      if (reset) {
-        singers = result.singerComments;
-        childrenId = result.childrenId.isNotEmpty
-            ? result.childrenId
-            : result.comments.isNotEmpty
-            ? result.comments.first.specialId
-            : '';
-        nativeHot =
-            widget.repository is NeteaseCommentsRepository &&
-            requestedSort == PlatformCommentSort.hottest;
-        if (requestedSort == PlatformCommentSort.hottest &&
-            widget.repository is! NeteaseCommentsRepository &&
-            widget.thread == null &&
-            widget.resource.kind == PlatformCommentKind.song &&
-            childrenId.isNotEmpty) {
-          try {
-            result = await widget.repository.load(
-              widget.resource,
-              hottestChildrenId: childrenId,
-            );
-            nativeHot = true;
-          } catch (_) {
-            // Keep a usable list when the optional ranking endpoint fails.
-            sortNotice = '最热列表暂不可用，当前按已加载评论的赞数排序';
+      final hotCursor = !reset && _nativeHot ? _childrenId : null;
+      final resultPage = await _browse.load(
+        key: page,
+        request: () async {
+          var result = widget.repository is NeteaseCommentsRepository
+              ? await (widget.repository as NeteaseCommentsRepository)
+                    .loadSorted(
+                      widget.resource,
+                      page: page,
+                      thread: widget.thread,
+                      sort: requestedSort,
+                    )
+              : await widget.repository.load(
+                  widget.resource,
+                  page: page,
+                  thread: widget.thread,
+                  hottestChildrenId: hotCursor,
+                );
+          if (reset) {
+            singers = result.singerComments;
+            childrenId = result.childrenId.isNotEmpty
+                ? result.childrenId
+                : result.comments.isNotEmpty
+                ? result.comments.first.specialId
+                : '';
+            nativeHot =
+                widget.repository is NeteaseCommentsRepository &&
+                requestedSort == PlatformCommentSort.hottest;
+            if (requestedSort == PlatformCommentSort.hottest &&
+                widget.repository is! NeteaseCommentsRepository &&
+                widget.thread == null &&
+                widget.resource.kind == PlatformCommentKind.song &&
+                childrenId.isNotEmpty) {
+              try {
+                result = await widget.repository.load(
+                  widget.resource,
+                  hottestChildrenId: childrenId,
+                );
+                nativeHot = true;
+              } catch (_) {
+                sortNotice = '最热列表暂不可用，当前按已加载评论的赞数排序';
+              }
+            }
           }
-        }
-      }
+          return result;
+        },
+        onUpdate: (previous, current) {
+          if (!mounted || generation != _generation || !_current) return;
+          setState(() {
+            replaceBrowsePage(
+              _comments,
+              previous.comments,
+              current.comments,
+              (comment) => comment.id,
+              fallbackIndex: (page - 1) * 30,
+            );
+            if (page == 1) {
+              _singers = singers;
+              _childrenId = childrenId;
+              _nativeHot = nativeHot;
+              _sortNotice = sortNotice;
+            }
+            if (page == _page) _hasMore = current.hasMore;
+          });
+        },
+      );
+      final result = resultPage;
       if (!mounted || generation != _generation || !_current) return;
       setState(() {
         _singers = singers;

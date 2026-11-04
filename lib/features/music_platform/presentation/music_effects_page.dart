@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/cache/cached_browse_loader.dart';
+import '../platform_browse_cache.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/music_equalizer_providers.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -98,6 +100,7 @@ class _EffectsCatalogView extends ConsumerStatefulWidget {
 }
 
 class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
+  final _browse = CachedBrowseLoader();
   final _scroll = ScrollController();
   MusicEffectsCatalog get _catalog => widget.catalog;
   final List<MusicSoundEffect> _items = [];
@@ -113,6 +116,7 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
 
   @override
   void dispose() {
+    _browse.dispose();
     _generation++;
     _scroll.dispose();
     super.dispose();
@@ -132,6 +136,8 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
     if (ref.read(usesNeteaseProvider)) return;
     if (!mounted || (_loading && !reset)) return;
     final generation = reset ? ++_generation : _generation;
+    if (reset) _browse.reset();
+    if (reset) revalidateBrowse(ref);
     final page = reset ? 1 : _page + 1;
     setState(() {
       _loading = true;
@@ -143,9 +149,33 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
       }
     });
     try {
-      final result = await ref
-          .read(platformEffectsRepositoryProvider)
-          .list(_catalog, page: page, brandId: _brandId, newest: _newest);
+      final repository = ref.read(platformEffectsRepositoryProvider);
+      final brand = _brandId, newest = _newest, catalog = _catalog;
+      final result = await _browse.load(
+        key: page,
+        request: () => repository.list(
+          catalog,
+          page: page,
+          brandId: brand,
+          newest: newest,
+        ),
+        onUpdate: (previous, current) {
+          if (!mounted ||
+              generation != _generation ||
+              ref.read(usesNeteaseProvider)) {
+            return;
+          }
+          setState(() {
+            replaceBrowsePage(
+              _items,
+              previous.items,
+              current.items,
+              (item) => item.id,
+            );
+            if (page == _page) _more = current.hasMore;
+          });
+        },
+      );
       if (!mounted || generation != _generation) return;
       setState(() {
         final seen = _items.map((e) => e.id).toSet();

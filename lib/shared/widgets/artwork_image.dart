@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../media/persistent_network_image_cache.dart';
 import '../media/artwork_network_image.dart';
 import '../../core/diagnostics/local_music_diagnostics.dart';
+import '../../core/platform/distribution_channel.dart';
 
 const _legacyArtworkAssetAliases = <String, String>{
   'assets/branding/dress-midnight-launch.png':
@@ -272,18 +273,19 @@ class _ArtworkImageState extends State<ArtworkImage> {
 
   ({PersistentNetworkImageCache cache, String cacheKey, String uri})?
   get _persistentNetworkConfig {
-    final cacheKey = widget.persistentNetworkCacheKey?.trim();
+    final cache = widget.networkImageCache ?? persistentNetworkImageCache;
+    final cacheKey =
+        widget.persistentNetworkCacheKey?.trim() ??
+        (DistributionChannel.isBeta && cache.initialized
+            ? 'public-artwork-v1'
+            : null);
     final uri = _requestUri;
     if (cacheKey == null ||
         cacheKey.isEmpty ||
         (!uri.startsWith('http://') && !uri.startsWith('https://'))) {
       return null;
     }
-    return (
-      cache: widget.networkImageCache ?? persistentNetworkImageCache,
-      cacheKey: cacheKey,
-      uri: uri,
-    );
+    return (cache: cache, cacheKey: cacheKey, uri: uri);
   }
 
   void _resetPersistentNetworkImage() {

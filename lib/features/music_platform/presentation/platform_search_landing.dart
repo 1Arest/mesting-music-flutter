@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import 'package:flutter/material.dart';
+import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_image.dart';
@@ -271,6 +272,7 @@ class PlatformExploreSongsPage extends ConsumerStatefulWidget {
 }
 
 class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
+  final _browse = CachedBrowseLoader();
   final _tracks = <Track>[];
   final _collections = <PlatformExploreItem>[];
   int _page = 0;
@@ -297,17 +299,63 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
       if (!mounted) return;
       final owner = account?.ownerId, token = account?.token;
       final repository = ref.read(platformExploreRepositoryProvider);
-      final resolved =
-          _resolvedItem ?? await repository.resolveScene(widget.item);
+      final page = _page + 1;
+      final batch = await _browse.load(
+        key: page,
+        request: () async {
+          final resolved = await repository.resolveScene(widget.item);
+          final collectionScene =
+              resolved.kind == PlatformExploreKind.scene &&
+              resolved.sceneContent == PlatformSceneContent.collections;
+          return (
+            resolved: resolved,
+            tracks: collectionScene
+                ? <Track>[]
+                : await repository.tracks(resolved, page: page),
+            collections: collectionScene
+                ? await repository.sceneCollections(resolved, page: page)
+                : <PlatformExploreItem>[],
+          );
+        },
+        onUpdate: (previous, current) {
+          if (!mounted ||
+              ref.read(platformAccountProvider).value?.ownerId != owner ||
+              ref.read(platformAccountProvider).value?.token != token) {
+            return;
+          }
+          setState(() {
+            replaceBrowsePage(
+              _tracks,
+              previous.tracks,
+              current.tracks,
+              (track) => track.id,
+              fallbackIndex: (page - 1) * 30,
+            );
+            replaceBrowsePage(
+              _collections,
+              previous.collections,
+              current.collections,
+              (item) => item.id,
+              fallbackIndex: (page - 1) * 30,
+            );
+            _resolvedItem = current.resolved;
+            if (page == _page) {
+              _more =
+                  current.resolved.sceneContent ==
+                      PlatformSceneContent.collections
+                  ? current.collections.length >= 30
+                  : widget.item.kind != PlatformExploreKind.theme &&
+                        current.tracks.length >= 30;
+            }
+          });
+        },
+      );
+      final resolved = batch.resolved;
       final isCollectionScene =
           resolved.kind == PlatformExploreKind.scene &&
           resolved.sceneContent == PlatformSceneContent.collections;
-      final fresh = isCollectionScene
-          ? const <Track>[]
-          : await repository.tracks(resolved, page: _page + 1);
-      final collections = isCollectionScene
-          ? await repository.sceneCollections(resolved, page: _page + 1)
-          : const <PlatformExploreItem>[];
+      final fresh = batch.tracks;
+      final collections = batch.collections;
       if (!mounted ||
           ref.read(platformAccountProvider).value?.ownerId != owner ||
           ref.read(platformAccountProvider).value?.token != token) {
@@ -338,6 +386,12 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _browse.dispose();
+    super.dispose();
   }
 
   @override

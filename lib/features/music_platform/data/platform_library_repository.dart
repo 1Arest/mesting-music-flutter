@@ -1,6 +1,7 @@
 import 'cloud_library_repository.dart';
 import 'dart:async';
 import 'dart:io';
+import '../../../core/cache/browse_response_cache.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
@@ -56,22 +57,42 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   /// Subscribe before the first read so an overlapping mutation is not lost.
   Stream<T> _watch<T>(Future<T> Function() load) => Stream<T>.multi((sink) {
     var generation = 0;
+    var active = true;
+    late final BrowseCacheWatch cacheWatch;
     Future<void> emit() async {
       final requestGeneration = ++generation;
       try {
-        final value = await load();
-        if (!_closed && !sink.isClosed && generation == requestGeneration) {
+        final value = await cacheWatch.run(load);
+        if (active &&
+            !_closed &&
+            !sink.isClosed &&
+            generation == requestGeneration) {
           sink.add(value);
         }
       } catch (error, stack) {
-        if (!_closed && !sink.isClosed && generation == requestGeneration) {
+        if (active &&
+            !_closed &&
+            !sink.isClosed &&
+            generation == requestGeneration) {
           sink.addError(error, stack);
         }
       }
     }
 
+    cacheWatch = BrowseCacheWatch(() {
+      if (active && !_closed) {
+        _lists = null;
+        _trackLoads.clear();
+        unawaited(emit());
+      }
+    });
     final subscription = _changes.stream.listen((_) => unawaited(emit()));
-    sink.onCancel = subscription.cancel;
+    sink.onCancel = () async {
+      active = false;
+      generation++;
+      cacheWatch.dispose();
+      await subscription.cancel();
+    };
     unawaited(emit());
   });
 
@@ -84,10 +105,12 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }
 
   Future<List<Map<String, dynamic>>> _loadLists() =>
-      _lists ??= _fetchLists().catchError((Object error) {
-        _lists = null;
-        throw error;
-      });
+      BrowseResponseCache.observing
+      ? _fetchLists()
+      : (_lists ??= _fetchLists().catchError((Object error) {
+          _lists = null;
+          throw error;
+        }));
 
   Future<List<Map<String, dynamic>>> _fetchLists() async {
     final revision = _revision;
@@ -156,6 +179,7 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }
 
   Future<List<Track>> _loadTracks(Map<String, dynamic> row) {
+    if (BrowseResponseCache.observing) return _fetchTracks(row);
     final id = _id(row);
     return _trackLoads[id] ??= _fetchTracks(row).catchError((Object error) {
       _trackLoads.remove(id);

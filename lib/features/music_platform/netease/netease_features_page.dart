@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../core/cache/cached_browse_loader.dart';
+import '../../../core/cache/cached_browse_provider.dart';
+import '../platform_browse_cache.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
@@ -34,9 +37,13 @@ final neteaseFeaturesProvider = Provider<NeteaseFeaturesRepository>(
 );
 
 final neteaseFeedPreviewProvider = FutureProvider.autoDispose
-    .family<NeteaseBatch, NeteaseFeed>(
-      (ref, feed) => ref.watch(neteaseFeaturesProvider).load(feed),
-    );
+    .family<NeteaseBatch, NeteaseFeed>((ref, feed) async {
+      await ref.watch(platformAccountProvider.future);
+      return cachedBrowse(
+        ref,
+        () => ref.watch(neteaseFeaturesProvider).load(feed),
+      );
+    });
 
 /// A NetEase composition replaces the Kugou feed modes while retaining the
 /// incumbent row, shelf, header, artwork and navigation primitives.
@@ -46,6 +53,7 @@ class NeteaseDiscoveryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => PlatformStyle(
     child: EditorialScroll(
       onRefresh: () async {
+        revalidateBrowse(ref);
         ref.invalidate(neteaseFeedPreviewProvider);
         ref.invalidate(neteaseMusicRepositoryProvider);
       },
@@ -234,6 +242,7 @@ class NeteaseFeaturesPage extends ConsumerStatefulWidget {
 }
 
 class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
+  final _browse = CachedBrowseLoader();
   final _items = <NeteaseItem>[];
   int _page = 0, _cursor = 0, _generation = 0;
   bool _busy = false, _more = true, _writing = false;
@@ -258,13 +267,16 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
 
   @override
   void dispose() {
+    _browse.dispose();
     _generation++;
     super.dispose();
   }
 
   Future<void> _load({bool reset = false}) async {
     if (!_current || (_busy && !reset) || (!_more && !reset)) return;
-    final generation = ++_generation;
+    final generation = reset ? ++_generation : _generation;
+    if (reset) _browse.reset();
+    if (reset) revalidateBrowse(ref);
     setState(() {
       _busy = true;
       _error = null;
@@ -276,17 +288,35 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
       }
     });
     try {
-      final batch = await ref
-          .read(neteaseFeaturesProvider)
-          .load(
-            widget.feed,
-            page: _page + 1,
-            before: _cursor,
-            id: widget.id,
-            category: widget.feed == NeteaseFeed.category ? widget.id : '全部',
-            area: _area,
-            artistArea: _artistArea,
-          );
+      final page = _page + 1, before = _cursor;
+      final repository = ref.read(neteaseFeaturesProvider);
+      final batch = await _browse.load(
+        key: page,
+        request: () => repository.load(
+          widget.feed,
+          page: page,
+          before: before,
+          id: widget.id,
+          category: widget.feed == NeteaseFeed.category ? widget.id : '全部',
+          area: _area,
+          artistArea: _artistArea,
+        ),
+        onUpdate: (previous, current) {
+          if (!mounted || generation != _generation || !_current) return;
+          setState(() {
+            replaceBrowsePage(
+              _items,
+              previous.items,
+              current.items,
+              (item) => '${item.kind}:${item.id}',
+            );
+            if (page == _page) {
+              _cursor = current.cursor;
+              _more = current.more;
+            }
+          });
+        },
+      );
       if (!mounted || generation != _generation || !_current) return;
       setState(() {
         final ids = _items.map((i) => '${i.kind}:${i.id}').toSet();

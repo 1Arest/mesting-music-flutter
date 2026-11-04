@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/cache/cached_browse_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/database/app_database.dart';
@@ -180,7 +181,10 @@ final playlistProvider = FutureProvider.family<UserPlaylist?, String>((
   if (!ref.watch(isAuthenticatedProvider) && !DistributionChannel.isBeta) {
     return null;
   }
-  return ref.watch(libraryRepositoryProvider).getPlaylist(id);
+  return cachedBrowse(
+    ref,
+    () => ref.watch(libraryRepositoryProvider).getPlaylist(id),
+  );
 });
 
 final playlistTracksProvider = StreamProvider.family<List<Track>, String>((

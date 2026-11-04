@@ -1,4 +1,5 @@
 import 'platform_backend_providers.dart';
+import '../../core/cache/cached_browse_provider.dart';
 import 'netease/netease_profile_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,8 +20,10 @@ final platformProfileRepositoryProvider = Provider<PlatformProfileRepository>((
 });
 final platformEditableProfileProvider = FutureProvider.autoDispose
     .family<PlatformProfileInfo, PlatformSession>(
-      (ref, session) =>
-          ref.watch(platformProfileRepositoryProvider).fetch(session),
+      (ref, session) => cachedBrowse(
+        ref,
+        () => ref.watch(platformProfileRepositoryProvider).fetch(session),
+      ),
     );
 final musicRegionsProvider = FutureProvider<List<MusicRegion>>(
   (ref) => loadMusicRegions(),
@@ -35,7 +38,10 @@ final platformProfileProvider = FutureProvider<PlatformProfileInfo?>((
   if (session == null) return null;
   final fallback = PlatformProfileInfo(session.nickname, session.avatarUrl);
   try {
-    return await ref.watch(platformProfileRepositoryProvider).fetch(session);
+    return await cachedBrowse(
+      ref,
+      () => ref.watch(platformProfileRepositoryProvider).fetch(session),
+    );
   } catch (_) {
     return fallback;
   }

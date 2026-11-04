@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../music_platform/platform_browse_cache.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,6 +41,7 @@ class MusicLandingPage extends ConsumerWidget {
     return PlatformStyle(
       child: EditorialScroll(
         onRefresh: () async {
+          revalidateBrowse(ref);
           ref.invalidate(platformDailyProvider);
           ref.invalidate(platformNewSongsProvider);
           ref.invalidate(platformDiscoveryProvider);

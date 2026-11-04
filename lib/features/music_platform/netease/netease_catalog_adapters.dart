@@ -1,4 +1,5 @@
 import '../../../shared/models/track.dart';
+import '../../../core/cache/browse_response_cache.dart';
 import '../data/platform_catalog.dart';
 import '../data/platform_category_search.dart';
 import '../data/platform_explore.dart';
@@ -131,12 +132,14 @@ class NeteaseExploreAdapter extends PlatformExploreRepository {
   @override
   Future<List<Track>> tracks(PlatformExploreItem item, {int page = 1}) async {
     final key = '${item.kind.name}:${item.id}';
-    final values = await (_tracks[key] ??= music.exploreTracks(item).catchError(
-      (Object error) {
-        _tracks.remove(key);
-        throw error;
-      },
-    ));
+    final values = await (BrowseResponseCache.observing
+        ? music.exploreTracks(item)
+        : (_tracks[key] ??= music.exploreTracks(item).catchError((
+            Object error,
+          ) {
+            _tracks.remove(key);
+            throw error;
+          })));
     return values.skip((page - 1) * 30).take(30).toList();
   }
 

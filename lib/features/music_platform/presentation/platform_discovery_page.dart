@@ -2,6 +2,7 @@ import '../netease/fallback/netease_source_picker.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import 'package:flutter/material.dart';
+import '../platform_browse_cache.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,6 +38,7 @@ class PlatformDiscoveryPage extends ConsumerWidget {
     return PlatformStyle(
       child: RefreshIndicator(
         onRefresh: () async {
+          revalidateBrowse(ref);
           ref.invalidate(platformDailyProvider);
           ref.invalidate(platformDiscoveryProvider);
           ref.invalidate(platformFeaturedProvider);

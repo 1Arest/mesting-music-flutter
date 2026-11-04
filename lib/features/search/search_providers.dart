@@ -1,6 +1,7 @@
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/netease/netease_catalog_adapters.dart';
 import 'dart:async';
+import '../../core/cache/cached_browse_loader.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -119,6 +120,7 @@ final platformSearchRepositoryProvider = Provider<PlatformSearchRepository>((
 });
 
 class MusicSearchController extends Notifier<MusicSearchState> {
+  final _browse = CachedBrowseLoader();
   static const _legacyRecentKey = 'music_recent_searches';
   String _recentSearchesKey = _legacyRecentKey;
   static const _debounceDuration = Duration(milliseconds: 450);
@@ -140,6 +142,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
     // Rebuilding for a platform/account change invalidates in-flight pages as
     // well as their rendered rows; public search responses are owner-bound too.
     ++_generation;
+    _browse.reset();
     _scheduledQuery = null;
     _debounce?.cancel();
     _cancelPlatform();
@@ -151,6 +154,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
       _debounce?.cancel();
       repository.cancelActiveSearch();
       _cancelPlatform();
+      _browse.reset();
     });
     final preferences = ref.watch(sharedPreferencesProvider);
     if (DistributionChannel.isBeta) {
@@ -185,6 +189,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
     _debounce?.cancel();
     _scheduledQuery = composing ? null : query;
     final generation = ++_generation;
+    _browse.reset();
     _cancelPlatform();
     ref.read(musicSearchRepositoryProvider).cancelActiveSearch();
     if (composing) return;
@@ -317,9 +322,33 @@ class MusicSearchController extends Notifier<MusicSearchState> {
       state = state.copyWith(isLoadingMore: true, clearMoreError: true);
     }
     try {
-      final result = await ref
-          .read(platformSearchRepositoryProvider)
-          .search(query, page: page, abortTrigger: abort.future);
+      final repository = ref.read(platformSearchRepositoryProvider);
+      final result = await _browse.load(
+        key: page,
+        request: () =>
+            repository.search(query, page: page, abortTrigger: abort.future),
+        onUpdate: (previous, current) {
+          if (!ref.mounted ||
+              generation != _generation ||
+              state.query != query) {
+            return;
+          }
+          final items = state.onlineTracks.toList();
+          replaceBrowsePage(
+            items,
+            previous.tracks,
+            current.tracks,
+            (track) => track.id,
+            fallbackIndex: (page - 1) * 30,
+          );
+          state = state.copyWith(
+            onlineTracks: items,
+            total: current.total,
+            hasMore: page == _page ? current.hasMore : state.hasMore,
+            fromCache: false,
+          );
+        },
+      );
       if (generation != _generation) return;
       // Remove repeated file IDs only; never collapse distinct recordings by
       // title/artist or re-rank upstream results with the legacy fuzzy matcher.
