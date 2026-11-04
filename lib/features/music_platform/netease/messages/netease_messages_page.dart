@@ -21,6 +21,7 @@ import '../full/netease_together_page.dart';
 import '../full/netease_entity_picker.dart';
 import 'netease_messages_repository.dart';
 import 'netease_emojis.dart';
+import 'netease_message_card_view.dart';
 import '../../../../shared/widgets/beta_popup_menu_button.dart';
 
 Future<T?> _open<T>(BuildContext context, Widget page) => Navigator.of(
@@ -818,7 +819,12 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (message.image.isNotEmpty)
+                                    if (message.card != null)
+                                      NeteaseMessageCardView(
+                                        card: message.card!,
+                                        time: message.time,
+                                      )
+                                    else if (message.image.isNotEmpty)
                                       GestureDetector(
                                         onTap: () => _open<void>(
                                           context,

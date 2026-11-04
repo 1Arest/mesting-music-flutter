@@ -13,6 +13,7 @@ import 'package:mesting_music/features/auth/presentation/first_launch_auth_coord
 import 'package:mesting_music/features/music_platform/data/platform_session_store.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
+import 'package:mesting_music/shared/widgets/beta_glass_controls.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Keeps legacy restoration pending to reproduce an unavailable CloudBase.
@@ -60,9 +61,16 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
+      // The current Beta welcome first chooses a platform, then a method.
+      // Legacy CloudBase restoration must not gate either of these routes.
+      expect(find.text('酷狗登录'), findsOneWidget);
+      expect(find.text('网易云登录'), findsOneWidget);
+      expect(find.text('游客体验'), findsOneWidget);
+      await tester.tap(find.text('酷狗登录'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('手机号登录'), findsOneWidget);
       expect(find.text('微信扫码登录'), findsOneWidget);
-      expect(find.text('游客体验'), findsOneWidget);
 
       await tester.tap(find.text('手机号登录'));
       await tester.pump();
@@ -71,9 +79,11 @@ void main() {
       expect(find.text('酷狗扫码'), findsNothing);
       expect(find.text('微信扫码'), findsNothing);
       expect(find.text('QQ 扫码'), findsNothing);
-      await tester.tap(find.byTooltip('返回'));
+      await tester.tap(find.byType(BetaGlassBackButton));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.byType(BetaGlassBackButton));
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('音乐平台账号'), findsNothing);
       await tester.tap(find.text('游客体验'));

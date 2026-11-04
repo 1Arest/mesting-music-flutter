@@ -8,6 +8,7 @@ import '../presentation/platform_feedback.dart';
 import 'netease_fallback.dart';
 import 'netease_membership_page.dart';
 import 'netease_playback_options.dart';
+import 'netease_account_source_info.dart';
 
 /// Reuses the existing playback settings page; loading/disabled state is shared
 /// across all mutations so rapid edits cannot overwrite another saved option.
@@ -66,7 +67,9 @@ class _NeteaseSourceSettingsPanelState
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
-        const Text('官方 → 新音源 → BugPk。以下策略只作用于新音源，官方完整音频始终优先。'),
+        const Text('$neteaseAutomaticSourceOrder。以下选择策略用于其他备用音源，官方完整音频始终优先。'),
+        const SizedBox(height: 12),
+        const NeteaseAccountSourceInfo(),
         const SizedBox(height: 12),
         BetaChoiceField<NeteaseSourceStrategy>(
           initialValue: options.strategy,
@@ -115,7 +118,9 @@ class _NeteaseSourceSettingsPanelState
         for (final source in NeteasePublicSource.values)
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: Text(source.label),
+            title: Text(
+              source == NeteasePublicSource.kugou ? '酷狗（公开音源）' : source.label,
+            ),
             subtitle: Text(source.note),
             value: source.available && options.enabledSources.contains(source),
             onChanged: _busy || !source.available

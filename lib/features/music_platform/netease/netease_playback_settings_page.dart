@@ -9,6 +9,7 @@ import 'netease_features_repository.dart';
 import 'netease_fallback.dart';
 import 'netease_listening_reporter.dart';
 import 'netease_source_settings_panel.dart';
+import 'netease_account_source_info.dart';
 
 class NeteasePlaybackSettingsPage extends ConsumerWidget {
   const NeteasePlaybackSettingsPage({super.key});
@@ -60,7 +61,7 @@ class NeteasePlaybackSettingsPage extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              '优先使用当前网易云账号完整音源，再尝试新音源，最后使用 BugPk。补源仅发送歌曲信息，不发送账号凭据。实际音质以返回文件为准。',
+              '$neteaseAutomaticSourceOrder。酷狗账号补源使用独立保存的酷狗登录，公开备用音源只接收歌曲信息。实际音质以返回文件为准。',
             ),
           ),
           const NeteaseSourceSettingsPanel(),

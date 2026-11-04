@@ -18,6 +18,7 @@ import '../../../shared/widgets/music_notice.dart';
 import '../data/music_platform_api.dart';
 import '../music_platform_providers.dart';
 import '../../auth/auth_providers.dart';
+import '../../auth/presentation/beta_login_artwork_frame.dart';
 import '../platform_profile_provider.dart';
 import 'platform_avatar.dart';
 
@@ -456,246 +457,251 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
     return Scaffold(
       key: const ValueKey('platform-account-opaque-page'),
       backgroundColor: scheme.surface,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
-                  child: Row(
-                    children: [
-                      const BetaGlassBackButton(),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurface,
+      body: BetaLoginArtworkFrame(
+        enabled: !signedIn,
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+                    child: Row(
+                      children: [
+                        const BetaGlassBackButton(),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: BetaGlassScrollBody(
-                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
-                    children: [
-                      if (account.isLoading)
-                        const Center(child: BetaActivityIndicator())
-                      else if (signedIn) ...[
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: PlatformAvatar(
-                            url:
-                                profile?.avatarUrl ??
-                                session?.avatarUrl ??
-                                user?.avatarUrl ??
-                                '',
+                  Expanded(
+                    child: BetaGlassScrollBody(
+                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
+                      children: [
+                        if (account.isLoading)
+                          const Center(child: BetaActivityIndicator())
+                        else if (signedIn) ...[
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: PlatformAvatar(
+                              url:
+                                  profile?.avatarUrl ??
+                                  session?.avatarUrl ??
+                                  user?.avatarUrl ??
+                                  '',
+                            ),
+                            title: Text(
+                              profile?.nickname ??
+                                  session?.nickname ??
+                                  user?.nickname ??
+                                  '当前账号',
+                            ),
+                            subtitle: Text(
+                              session != null
+                                  ? '${session.platformLabel}账号 · 已登录'
+                                  : 'Mesting 账号 · 已登录',
+                            ),
                           ),
-                          title: Text(
-                            profile?.nickname ??
-                                session?.nickname ??
-                                user?.nickname ??
-                                '当前账号',
-                          ),
-                          subtitle: Text(
-                            session != null
-                                ? '${session.platformLabel}账号 · 已登录'
-                                : 'Mesting 账号 · 已登录',
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        if (session?.platform == MusicPlatform.netease)
+                          const SizedBox(height: 24),
+                          if (session?.platform == MusicPlatform.netease)
+                            BetaGlassButton(
+                              onPressed: _busy
+                                  ? null
+                                  : () async {
+                                      setState(() => _busy = true);
+                                      try {
+                                        await ref
+                                            .read(
+                                              platformAccountProvider.notifier,
+                                            )
+                                            .refreshNetease();
+                                        if (mounted) {
+                                          setState(
+                                            () => _message = '网易云登录状态已刷新',
+                                          );
+                                        }
+                                      } catch (_) {
+                                        if (mounted) {
+                                          setState(
+                                            () => _message = '刷新未完成，已保留原登录状态',
+                                          );
+                                        }
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() => _busy = false);
+                                        }
+                                      }
+                                    },
+                              child: const Text('刷新网易云登录状态'),
+                            ),
                           BetaGlassButton(
-                            onPressed: _busy
-                                ? null
-                                : () async {
-                                    setState(() => _busy = true);
-                                    try {
-                                      await ref
-                                          .read(
-                                            platformAccountProvider.notifier,
-                                          )
-                                          .refreshNetease();
-                                      if (mounted) {
-                                        setState(() => _message = '网易云登录状态已刷新');
-                                      }
-                                    } catch (_) {
-                                      if (mounted) {
-                                        setState(
-                                          () => _message = '刷新未完成，已保留原登录状态',
-                                        );
-                                      }
-                                    } finally {
-                                      if (mounted) {
-                                        setState(() => _busy = false);
-                                      }
-                                    }
-                                  },
-                            child: const Text('刷新网易云登录状态'),
+                            loading: _busy && _busyAction == 'logout',
+                            onPressed: _busy ? null : _logout,
+                            child: const Text('退出登录'),
                           ),
-                        BetaGlassButton(
-                          loading: _busy && _busyAction == 'logout',
-                          onPressed: _busy ? null : _logout,
-                          child: const Text('退出登录'),
-                        ),
-                      ] else if (_method == PlatformLoginMethod.phone) ...[
-                        Text(
-                          _isNetease
-                              ? '使用网易云音乐账号，继续你的音乐。'
-                              : '使用酷狗账号手机号，继续你的音乐。',
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: scheme.onSurfaceVariant,
+                        ] else if (_method == PlatformLoginMethod.phone) ...[
+                          Text(
+                            _isNetease
+                                ? '使用网易云音乐账号，继续你的音乐。'
+                                : '使用酷狗账号手机号，继续你的音乐。',
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 28),
-                        if (_isNetease &&
-                            widget.neteaseMethod != NeteaseLoginMethod.sms)
-                          _neteasePasswordFields()
-                        else
-                          AutofillGroup(
-                            child: Column(
-                              children: [
-                                BetaGlassField(
-                                  child: TextField(
-                                    contextMenuBuilder: buildBetaEditingMenu,
-                                    selectionControls:
-                                        mestingTextSelectionControls,
-                                    cursorRadius: const Radius.circular(1),
-                                    key: const ValueKey('beta11-phone-field'),
-                                    controller: _phone,
-                                    keyboardType: TextInputType.phone,
-                                    enabled: !_busy,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(11),
-                                    ],
-                                    autofillHints: const [
-                                      AutofillHints.telephoneNumberNational,
-                                    ],
-                                    style: const TextStyle(fontSize: 18),
-                                    decoration: const InputDecoration(
-                                      hintText: '手机号码',
-                                      prefixIcon: Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 18,
-                                          right: 12,
+                          const SizedBox(height: 28),
+                          if (_isNetease &&
+                              widget.neteaseMethod != NeteaseLoginMethod.sms)
+                            _neteasePasswordFields()
+                          else
+                            AutofillGroup(
+                              child: Column(
+                                children: [
+                                  BetaGlassField(
+                                    child: TextField(
+                                      contextMenuBuilder: buildBetaEditingMenu,
+                                      selectionControls:
+                                          mestingTextSelectionControls,
+                                      cursorRadius: const Radius.circular(1),
+                                      key: const ValueKey('beta11-phone-field'),
+                                      controller: _phone,
+                                      keyboardType: TextInputType.phone,
+                                      enabled: !_busy,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                        LengthLimitingTextInputFormatter(11),
+                                      ],
+                                      autofillHints: const [
+                                        AutofillHints.telephoneNumberNational,
+                                      ],
+                                      style: const TextStyle(fontSize: 18),
+                                      decoration: const InputDecoration(
+                                        hintText: '手机号码',
+                                        prefixIcon: Padding(
+                                          padding: EdgeInsets.only(
+                                            left: 18,
+                                            right: 12,
+                                          ),
+                                          child: Text(
+                                            '+86',
+                                            style: TextStyle(fontSize: 17),
+                                          ),
                                         ),
-                                        child: Text(
-                                          '+86',
-                                          style: TextStyle(fontSize: 17),
+                                        prefixIconConstraints: BoxConstraints(
+                                          minWidth: 66,
                                         ),
-                                      ),
-                                      prefixIconConstraints: BoxConstraints(
-                                        minWidth: 66,
                                       ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                _InlineCodeField(
-                                  controller: _code,
-                                  enabled: !_busy,
-                                  label: codeLabel,
-                                  loading: _busy && _busyAction == 'code',
-                                  onSend: _busy || _countdown > 0
-                                      ? null
-                                      : _sendCode,
-                                  onSubmitted: (_) => _phoneLogin(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        const SizedBox(height: 18),
-                        BetaGlassButton(
-                          key: const ValueKey('beta11-phone-submit'),
-                          blue: true,
-                          loading: _busy && _busyAction == 'login',
-                          interactionEnabled: !_busy,
-                          onPressed: _phoneLogin,
-                          child: const Text('登录'),
-                        ),
-                      ] else ...[
-                        Text(
-                          '使用${_label(_method).replaceAll('扫码', '')}扫描二维码并确认登录。',
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        if (_busy)
-                          const Center(
-                            child: BetaActivityIndicator(label: '正在获取二维码'),
-                          ),
-                        if (_neteaseChallenge != null)
-                          Center(
-                            child: Container(
-                              color: Colors.white,
-                              padding: const EdgeInsets.all(12),
-                              child: QrImageView(
-                                data: _neteaseChallenge!.url,
-                                size: 220,
-                                backgroundColor: Colors.white,
-                                semanticsLabel: '网易云扫码登录二维码',
+                                  const SizedBox(height: 16),
+                                  _InlineCodeField(
+                                    controller: _code,
+                                    enabled: !_busy,
+                                    label: codeLabel,
+                                    loading: _busy && _busyAction == 'code',
+                                    onSend: _busy || _countdown > 0
+                                        ? null
+                                        : _sendCode,
+                                    onSubmitted: (_) => _phoneLogin(),
+                                  ),
+                                ],
                               ),
                             ),
+                          const SizedBox(height: 18),
+                          BetaGlassButton(
+                            key: const ValueKey('beta11-phone-submit'),
+                            blue: true,
+                            loading: _busy && _busyAction == 'login',
+                            interactionEnabled: !_busy,
+                            onPressed: _phoneLogin,
+                            child: const Text('登录'),
                           ),
-                        if (_challenge != null)
-                          Center(
-                            child: Container(
-                              color: Colors.white,
-                              padding: const EdgeInsets.all(12),
-                              child: Image.memory(
-                                base64Decode(_challenge!.imageBase64),
-                                width: 220,
-                                height: 220,
-                                semanticLabel: '${_label(_method)}登录二维码',
-                                errorBuilder: (_, _, _) =>
-                                    const Text('二维码无法显示，请刷新'),
-                              ),
+                        ] else ...[
+                          Text(
+                            '使用${_label(_method).replaceAll('扫码', '')}扫描二维码并确认登录。',
+                            style: TextStyle(
+                              fontSize: 15,
+                              height: 1.6,
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
-                        const SizedBox(height: 24),
-                        BetaGlassButton(
-                          onPressed: _busy ? null : () => _select(_method),
-                          child: const Text('刷新二维码'),
-                        ),
-                        if (_polling)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 20),
-                            child: Center(
-                              child: BetaActivityIndicator(label: '等待扫码确认'),
+                          const SizedBox(height: 32),
+                          if (_busy)
+                            const Center(
+                              child: BetaActivityIndicator(label: '正在获取二维码'),
+                            ),
+                          if (_neteaseChallenge != null)
+                            Center(
+                              child: Container(
+                                color: Colors.white,
+                                padding: const EdgeInsets.all(12),
+                                child: QrImageView(
+                                  data: _neteaseChallenge!.url,
+                                  size: 220,
+                                  backgroundColor: Colors.white,
+                                  semanticsLabel: '网易云扫码登录二维码',
+                                ),
+                              ),
+                            ),
+                          if (_challenge != null)
+                            Center(
+                              child: Container(
+                                color: Colors.white,
+                                padding: const EdgeInsets.all(12),
+                                child: Image.memory(
+                                  base64Decode(_challenge!.imageBase64),
+                                  width: 220,
+                                  height: 220,
+                                  semanticLabel: '${_label(_method)}登录二维码',
+                                  errorBuilder: (_, _, _) =>
+                                      const Text('二维码无法显示，请刷新'),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 24),
+                          BetaGlassButton(
+                            onPressed: _busy ? null : () => _select(_method),
+                            child: const Text('刷新二维码'),
+                          ),
+                          if (_polling)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 20),
+                              child: Center(
+                                child: BetaActivityIndicator(label: '等待扫码确认'),
+                              ),
+                            ),
+                        ],
+                        if (_message != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                _message!,
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                  height: 1.6,
+                                ),
+                              ),
                             ),
                           ),
                       ],
-                      if (_message != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 20),
-                          child: Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              _message!,
-                              style: TextStyle(
-                                color: scheme.onSurfaceVariant,
-                                height: 1.6,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

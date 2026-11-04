@@ -12,6 +12,7 @@ import '../../music_platform/netease/together/netease_together_panel.dart';
 import '../../music_platform/netease/together/netease_together_player_header.dart';
 import '../../music_platform/netease/messages/netease_messages_repository.dart';
 import '../../music_platform/netease/together/netease_together_controller.dart';
+import '../../music_platform/netease/together/netease_together_exit.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ class BetaNowPlayingPage extends ConsumerStatefulWidget {
     super.key,
   });
   final bool lyricsInitially;
+
   /// Used by the read-only diagnostic runner to enter the same production
   /// queue surface without synthesizing a tap or changing the audio owner.
   final bool queueInitially;
@@ -460,6 +462,13 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     final track = ref.read(currentTrackProvider);
     return PlayerMoreMenu(
       onSelected: (value) async {
+        if (value == 'netease-together-exit') {
+          final controller = ref.read(neteaseTogetherControllerProvider);
+          if (controller != null) {
+            await confirmNeteaseTogetherExit(context, controller);
+          }
+          return;
+        }
         if (value == 'source-info') {
           showMusicNotice(
             context,
@@ -544,6 +553,19 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         }
       },
       groups: [
+        if (_togetherActive)
+          [
+            const PlayerMenuAction(
+              'netease-together',
+              '管理一起听',
+              CupertinoIcons.person_2,
+            ),
+            const PlayerMenuAction(
+              'netease-together-exit',
+              '退出一起听',
+              CupertinoIcons.square_arrow_right,
+            ),
+          ],
         [
           const PlayerMenuAction(
             'mode',
@@ -558,7 +580,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
               '选择音乐来源',
               CupertinoIcons.antenna_radiowaves_left_right,
             ),
-          if (track.source == TrackSource.netease)
+          if (track.source == TrackSource.netease && !_togetherActive)
             const PlayerMenuAction(
               'netease-together',
               '一起听',

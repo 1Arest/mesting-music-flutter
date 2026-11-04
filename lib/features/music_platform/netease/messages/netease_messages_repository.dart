@@ -1,5 +1,6 @@
 import 'netease_message_reads.dart';
 import 'netease_message_counts.dart';
+import 'netease_message_card.dart';
 import '../../../../core/diagnostics/local_music_diagnostics.dart';
 import '../../../../core/persistence/app_preferences.dart';
 import 'dart:convert';
@@ -47,13 +48,22 @@ class NeteaseChatMessage {
     this.image = '',
     this.link = '',
     this.resource = const {},
+    this.card,
   });
   final String id, text, image, link;
   final NeteasePerson from, to;
   final DateTime time;
   final Map<String, dynamic> resource;
+  final NeteaseMessageCard? card;
   factory NeteaseChatMessage.parse(Map<String, dynamic> row) {
     final content = _map(row['msg'] ?? row['lastMsg']);
+    final card = NeteaseMessageCard.parse({
+      // Only message envelope fields cross this boundary. Sender/recipient
+      // profiles can contain arbitrary titles or links and are not messages.
+      for (final key in ['body', 'msgBody', 'json', 'nativeUrl', 'msgType'])
+        if (row[key] != null) key: row[key],
+      ...content,
+    });
     final pic = _map(
       content['picInfo'] ?? content['picinfo'] ?? content['pic'],
     );
@@ -76,10 +86,11 @@ class NeteaseChatMessage {
       id: '${row['id'] ?? row['msgId'] ?? row['time'] ?? ''}',
       from: NeteasePerson.parse(row['fromUser']),
       to: NeteasePerson.parse(row['toUser']),
-      text: text,
+      text: card?.summary ?? text,
       image: image,
       link: '${content['url'] ?? content['linkUrl'] ?? ''}',
       resource: res,
+      card: card,
       time: DateTime.fromMillisecondsSinceEpoch(
         int.tryParse('${row['time'] ?? row['lastMsgTime']}') ?? 0,
       ),

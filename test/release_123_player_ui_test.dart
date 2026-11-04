@@ -200,6 +200,27 @@ void main() {
         expect(find.text('相距约 12.34 公里'), findsOneWidget);
         expect(find.text('一起听了 2 小时 1 分钟'), findsOneWidget);
         expect(tester.takeException(), isNull);
+        if (style == PlayerVisualStyle.cover && !narrow) {
+          await tester.tap(find.byTooltip('更多操作'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(find.text('退出一起听'), findsOneWidget);
+          await tester.tap(find.text('退出一起听'));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+          // The menu intentionally waits for route.completed before opening
+          // a business dialog; paint its first frame after that completion.
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 400));
+          expect(find.text('退出一起听？'), findsOneWidget);
+          await tester.tap(find.text('取消'));
+          await tester.pump(const Duration(milliseconds: 500));
+          expect(controller.active, isTrue);
+          expect(
+            find.byKey(const ValueKey('player-together-header')),
+            findsOneWidget,
+          );
+        }
         if (const bool.fromEnvironment('CAPTURE_TOGETHER123')) {
           final boundary = tester.renderObject<RenderRepaintBoundary>(
             find.byKey(const ValueKey('capture-player123')),

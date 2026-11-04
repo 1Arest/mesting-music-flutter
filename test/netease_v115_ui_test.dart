@@ -11,6 +11,7 @@ import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
+import 'package:mesting_music/features/music_platform/retained_kugou_scope.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_membership_page.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_playback_settings_page.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_playback_options.dart';
@@ -84,6 +85,7 @@ void main() {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         platformAccountProvider.overrideWith(TestAccount.new),
+        savedKugouSessionProvider.overrideWith((ref) async => null),
         neteaseListeningJournalProvider.overrideWith((ref) => Stream.value([])),
       ],
     );

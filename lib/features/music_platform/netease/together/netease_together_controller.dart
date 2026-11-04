@@ -158,6 +158,8 @@ class NeteaseTogetherController extends ChangeNotifier {
   List<NeteasePerson> members = [];
   List<Track> sharedTracks = [];
   bool busy = false, _disposed = false, _ticking = false, _applying = false;
+  bool ending = false;
+  int _syncEpoch = 0;
   int _sequence = 1;
   String _formerSong = '-1', _lastRemote = '';
   Timer? _timer;
@@ -165,6 +167,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   Future<void> _tail = Future.value();
   bool get current => !_disposed && isCurrent();
   bool get active => roomId != null;
+  bool _syncCurrent(int epoch) => current && !ending && epoch == _syncEpoch;
   void _resetPresence() {
     _locationEpoch++;
     distance = const TogetherDistance();
@@ -180,7 +183,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   /// heartbeats while the user is choosing a permission. Late fixes are bound
   /// to both this account and this exact room generation.
   Future<void> enableLocation() async {
-    if (!current || roomId == null || locating) return;
+    if (!current || ending || roomId == null || locating) return;
     final room = roomId, epoch = ++_locationEpoch;
     locating = true;
     presenceNotice = null;
@@ -218,7 +221,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   Future<void> disableLocation() async {
-    if (!current || roomId == null || locating) return;
+    if (!current || ending || roomId == null || locating) return;
     final room = roomId;
     ++_locationEpoch;
     locating = true;
@@ -248,8 +251,9 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   Future<void> _refreshPresence({bool force = false}) async {
+    final epoch = _syncEpoch;
     final room = roomId, peer = peers.firstOrNull;
-    if (!current || room == null || peer == null) return;
+    if (!_syncCurrent(epoch) || room == null || peer == null) return;
     if (!force &&
         _presenceFetchedAt != null &&
         DateTime.now().difference(_presenceFetchedAt!).inSeconds < 30) {
@@ -257,7 +261,9 @@ class NeteaseTogetherController extends ChangeNotifier {
     }
     _presenceFetchedAt = DateTime.now();
     bool valid() =>
-        current && roomId == room && peers.any((p) => p.id == peer.id);
+        _syncCurrent(epoch) &&
+        roomId == room &&
+        peers.any((p) => p.id == peer.id);
     try {
       final response = await _call('/listentogether/relation/statistics/get', {
         'roomId': room,
@@ -411,20 +417,37 @@ class NeteaseTogetherController extends ChangeNotifier {
   });
   Future<void> end() => _action(() async {
     if (roomId == null) return;
-    final r = await _call('/listentogether/end', {'roomId': roomId});
-    if (NeteaseMusicRepository.object(r['data'])['success'] == false) {
-      throw const MusicPlatformException('平台未确认结束一起听');
+    final room = roomId;
+    // Invalidate outstanding reads/queued commands before sending the one-shot
+    // exit. A slow status response must not recreate the room or change audio.
+    ++_syncEpoch;
+    ++_locationEpoch;
+    locating = false;
+    ending = true;
+    _notify();
+    try {
+      final r = await _call('/listentogether/end', {'roomId': room});
+      if (r['success'] == false ||
+          NeteaseMusicRepository.object(r['data'])['success'] == false) {
+        throw const MusicPlatformException('平台未确认退出一起听');
+      }
+      if (!current || roomId != room) return;
+      _stop();
+      roomId = null;
+      _lastRemote = '';
+      _resetPresence();
+      members = [];
+      sharedTracks = [];
+      notice = '已退出一起听，保留本机播放';
+    } finally {
+      // Rejected/unknown exits retain the room and allow explicit refresh.
+      ending = false;
     }
-    if (!current) return;
-    _stop();
-    roomId = null;
-    _resetPresence();
-    members = [];
-    sharedTracks = [];
-    notice = '一起听已结束';
   });
   Future<void> shareCurrentQueue() => _action(_publishQueue);
   Future<void> _publishQueue() async {
+    final epoch = _syncEpoch, room = roomId;
+    if (!_syncCurrent(epoch)) return;
     final queue = player.tracks
         .where((t) => t.source == TrackSource.netease)
         .toList();
@@ -442,14 +465,15 @@ class NeteaseTogetherController extends ChangeNotifier {
       'randomList': ids,
       'displayList': ids,
     });
-    if (current) sharedTracks = queue;
+    if (_syncCurrent(epoch) && roomId == room) sharedTracks = queue;
   }
 
   Future<void> _refresh() async {
+    final epoch = _syncEpoch;
     final data = NeteaseMusicRepository.object(
       (await _call('/listentogether/status'))['data'],
     );
-    if (!current) return;
+    if (!_syncCurrent(epoch)) return;
     if (data['inRoom'] == false) {
       _stop();
       roomId = null;
@@ -482,21 +506,24 @@ class NeteaseTogetherController extends ChangeNotifier {
       final check = NeteaseMusicRepository.object(
         (await _call('/listentogether/room/check', {'roomId': roomId}))['data'],
       );
-      if (!current) return;
+      if (!_syncCurrent(epoch)) return;
       await _remote(check);
+      if (!_syncCurrent(epoch)) return;
     }
     await _remote({...data, ...room});
     if (peers.isEmpty || error != null) _presenceClock.stop();
-    await _refreshPresence();
+    if (_syncCurrent(epoch)) await _refreshPresence();
   }
 
   Future<void> _loadQueue() async {
     if (roomId == null) return;
+    final epoch = _syncEpoch, room = roomId;
     final data = NeteaseMusicRepository.object(
       (await _call('/listentogether/sync/playlist/get', {
         'roomId': roomId,
       }))['data'],
     );
+    if (!_syncCurrent(epoch) || roomId != room) return;
     final playlist = NeteaseMusicRepository.object(data['playlist']);
     final display = playlist['displayList'];
     final raw = display is List
@@ -510,7 +537,8 @@ class NeteaseTogetherController extends ChangeNotifier {
       final r = await music.call('/song/detail', {
         'ids': ids.take(500).toList(),
       });
-      if (current) sharedTracks = NeteaseMusicRepository.tracks(r['songs']);
+      if (!_syncCurrent(epoch) || roomId != room) return;
+      sharedTracks = NeteaseMusicRepository.tracks(r['songs']);
     }
     await _remote(data);
   }
@@ -544,14 +572,16 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   void _enqueue(String action, {bool queue = false}) {
+    final epoch = _syncEpoch;
     _tail = _tail
         .then((_) async {
-          if (!current || roomId == null) return;
+          if (!_syncCurrent(epoch) || roomId == null) return;
           if (queue) await _publishQueue();
+          if (!_syncCurrent(epoch) || roomId == null) return;
           await _report(action);
         })
         .catchError((Object e) {
-          if (current) {
+          if (_syncCurrent(epoch) && roomId != null) {
             error = '同步请求未获确认，正在刷新房间状态';
             _notify();
           }
@@ -559,8 +589,13 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   Future<void> _report(String action, {bool heartbeat = false}) async {
+    final epoch = _syncEpoch;
     final track = player.track;
-    if (roomId == null || track?.source != TrackSource.netease) return;
+    if (!_syncCurrent(epoch) ||
+        roomId == null ||
+        track?.source != TrackSource.netease) {
+      return;
+    }
     final r = await _call(
       heartbeat ? '/listentogether/heatbeat' : '/listentogether/play/command',
       {
@@ -576,20 +611,23 @@ class NeteaseTogetherController extends ChangeNotifier {
         },
       },
     );
-    if (!current) return;
+    if (!_syncCurrent(epoch)) return;
     _formerSong = track.platformSongId;
     await _remote(NeteaseMusicRepository.object(r['data']));
   }
 
   Future<void> tick() async {
     if (_ticking || busy || !current || roomId == null) return;
+    final epoch = _syncEpoch;
     _ticking = true;
     try {
       await _refresh();
-      if (roomId != null && current) await _report('PLAY', heartbeat: true);
-      if (current) error = null;
+      if (roomId != null && _syncCurrent(epoch)) {
+        await _report('PLAY', heartbeat: true);
+      }
+      if (_syncCurrent(epoch)) error = null;
     } catch (_) {
-      if (current) {
+      if (_syncCurrent(epoch) && roomId != null) {
         error = '一起听连接暂时中断，正在重连';
         _presenceClock.stop();
       }
@@ -603,6 +641,8 @@ class NeteaseTogetherController extends ChangeNotifier {
   /// only an explicit versioned command, never infer a play state from member
   /// data, and suppress local echoes while applying it to the audio handler.
   Future<void> _remote(Map<String, dynamic> data) async {
+    final epoch = _syncEpoch, room = roomId;
+    if (!_syncCurrent(epoch) || room == null) return;
     Object? raw =
         data['commandInfo'] ?? data['playCommand'] ?? data['playingInfo'];
     if (raw is String) {
@@ -628,7 +668,7 @@ class NeteaseTogetherController extends ChangeNotifier {
       if (!sharedTracks.any((t) => t.platformSongId == songId)) {
         await _loadQueue();
       }
-      if (current) {
+      if (_syncCurrent(epoch) && roomId == room) {
         await player.apply(
           sharedTracks,
           songId,

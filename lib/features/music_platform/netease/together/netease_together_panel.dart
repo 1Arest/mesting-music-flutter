@@ -12,6 +12,7 @@ import '../messages/netease_messages_repository.dart';
 import '../messages/netease_messages_page.dart';
 import 'netease_together_controller.dart';
 import 'netease_together_player_header.dart';
+import 'netease_together_exit.dart';
 import '../../../../shared/widgets/liquid_glass_sheet.dart';
 
 Future<void> showNeteaseTogetherPanel(
@@ -90,28 +91,6 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
     }
   }
 
-  Future<void> _end(NeteaseTogetherController controller) async {
-    final confirmed = await showCupertinoDialog<bool>(
-      context: context,
-      builder: (c) => CupertinoAlertDialog(
-        title: const Text('结束一起听？'),
-        content: const Text('结束后将停止与朋友同步播放。'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(c, false),
-            child: const Text('取消'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text('结束'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && mounted) await controller.end();
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(neteaseTogetherControllerProvider);
@@ -163,7 +142,17 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
                         title: Text(person.name),
                       ),
                     const SizedBox(height: 10),
-                    const Text('离开此页面后仍会继续同步，直到主动结束。'),
+                    const Text('离开此页面后仍会继续同步，退出一起听后停止同步。'),
+                    const SizedBox(height: 14),
+                    BetaGlassButton(
+                      key: const ValueKey('together-panel-exit'),
+                      loading: controller.ending,
+                      onPressed: controller.busy
+                          ? null
+                          : () =>
+                                confirmNeteaseTogetherExit(context, controller),
+                      child: const Text('退出一起听'),
+                    ),
                   ],
                 ),
               ),
@@ -352,13 +341,6 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 child: Text(controller.error!),
               ),
-            if (controller.active) ...[
-              const SizedBox(height: 18),
-              BetaGlassButton(
-                onPressed: controller.busy ? null : () => _end(controller),
-                child: const Text('结束一起听'),
-              ),
-            ],
           ],
         ),
       ),

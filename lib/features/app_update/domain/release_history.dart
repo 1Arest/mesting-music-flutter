@@ -2,6 +2,12 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.25': [
+    '网易云一起听新增退出入口与确认，退出后停止会话同步，本机继续播放当前音乐。',
+    '好友聊天支持一起听记录卡片与详情，并可按消息提供的官方链接查看完整记录。',
+    '播放与同步中展示酷狗概念版账号音源及已保存账号状态，沿用现有补源设置。',
+    '手机、扫码等登录页新增底部插画，横向铺满并为文字留出空间，键盘弹出或高度不足时自动避让。',
+  ],
   '1.0.24': [
     '签到页统一网易云与酷狗标签，使用各自保存的账号，酷狗自动签到支持跨平台生效。',
     '网易云官方音源不可完整播放时，支持已登录酷狗概念版账号同曲补源及手动选择，按真实返回展示音质。',

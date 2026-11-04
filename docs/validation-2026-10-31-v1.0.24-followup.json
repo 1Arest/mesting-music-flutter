@@ -1,0 +1,583 @@
+{
+  "date": "2026-10-31",
+  "preparedAt": "2026-10-31T13:10:48.871317+08:00",
+  "baseVersion": "1.0.24",
+  "baseAndroidVersionCode": 45,
+  "baseCommit": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+  "status": "source_updated_host_verified_pending_device_and_real_message_acceptance",
+  "betaRegression": {
+    "passed": 1242,
+    "failed": 0,
+    "skipped": 0,
+    "fileCount": 74,
+    "aggregation": "Latest complete result per file; reruns replace earlier results and are never added twice.",
+    "latestPerFile": {
+      "test/artwork_image_test.dart": {
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta10_entry_test.dart": {
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta10_feedback_test.dart": {
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta10_quality_test.dart": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta11_search_test.dart": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta16_output_and_search_test.dart": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta16_playback_order_test.dart": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta6_audio_refresh_test.dart": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta8_navigation_test.dart": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta9_playback_test.dart": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta_account_exclusivity_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta_shared_page_search_test.dart": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/beta_update_isolation_test.dart": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/dual_music_platform_test.dart": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/dual_music_platform_ui_test.dart": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/followup_controls_regression_test.dart": {
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/frame_timing_probe_test.dart": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/music_home_catalogues_test.dart": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_data_adapters_test.dart": {
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_full_contracts_test.dart": {
+        "passed": 553,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_full_ui_test.dart": {
+        "passed": 25,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_full_workflows_test.dart": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v112_contracts_test.dart": {
+        "passed": 68,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v112_fallback_download_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v112_listening_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v112_ui_test.dart": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v114_workflows_test.dart": {
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/netease_v115_sources_test.dart": {
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v115_ui_test.dart": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/netease_v116_recovery_test.dart": {
+        "passed": 26,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v117_flows_test.dart": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v117_ui_test.dart": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v118_data_test.dart": {
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v118_ui_test.dart": {
+        "passed": 18,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v119_data_test.dart": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v119_ui_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v120_data_test.dart": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_v120_ui_test.dart": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/persistent_network_image_cache_test.dart": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/platform_cloud_library_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/platform_rewards_controller_test.dart": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/platform_rewards_repository_test.dart": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/platform_search_paging_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/playing_equalizer_test.dart": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/profile_playlist_navigation_test.dart": {
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_103_audio_test.dart": {
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_103_sleep_playback_test.dart": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_103_ui_test.dart": {
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_105_regression_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_106_update_notes_test.dart": {
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_107_listening_sync_test.dart": {
+        "passed": 13,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_107_local_music_test.dart": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_107_ui_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_120_render_test.dart": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_120_shadow_test.dart": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_121_artwork_transport_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_121_matte_cache_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_121_navigation_test.dart": {
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_122_crash_diagnostics_test.dart": {
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_122_profile_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_123_player_ui_test.dart": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/release_123_together_test.dart": {
+        "passed": 15,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/release_124_accounts_test.dart": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_124_diagnostics_test.dart": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_124_downloads_ui_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_124_pages_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/remote_lyrics_repository_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/scene_catalog_contract_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/search_menu_fm_regression_test.dart": {
+        "passed": 14,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/release_108_diagnostics_ui_test.dart": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-final.jsonl"
+      },
+      "test/netease_message_card_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/netease_message_card_ui_test.dart": {
+        "passed": 9,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/login_artwork_test.dart": {
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      },
+      "test/beta_login_entry_test.dart": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0,
+        "log": "beta-targeted-final.jsonl"
+      }
+    },
+    "broadRun": {
+      "log": ".codex-artifacts/2026-10-31-v124-followup/beta-final.jsonl",
+      "success": false,
+      "initialFailures": 4,
+      "cause": "Old settings UI fixtures did not override retained login storage, leaving timeout timers. The fixture is corrected and that entire file is rerun successfully."
+    },
+    "finalAffectedFilesRun": {
+      "log": ".codex-artifacts/2026-10-31-v124-followup/beta-targeted-final.jsonl",
+      "success": true,
+      "files": [
+        "test/netease_v115_ui_test.dart",
+        "test/netease_v114_workflows_test.dart",
+        "test/release_123_together_test.dart",
+        "test/release_123_player_ui_test.dart",
+        "test/netease_message_card_test.dart",
+        "test/netease_message_card_ui_test.dart",
+        "test/login_artwork_test.dart",
+        "test/beta_login_entry_test.dart"
+      ]
+    }
+  },
+  "stableRegression": {
+    "passed": 19,
+    "failed": 0,
+    "log": ".codex-artifacts/2026-10-31-v124-followup/stable-final.jsonl"
+  },
+  "androidBackRegistration": {
+    "passed": 1,
+    "failed": 0,
+    "deviceUsed": false,
+    "log": ".codex-artifacts/2026-10-31-v124-followup/android-back-final.jsonl"
+  },
+  "analysis": {
+    "issues": 0,
+    "scope": "lib and test",
+    "log": ".codex-artifacts/2026-10-31-v124-followup/analyze-final.log"
+  },
+  "togetherExit": {
+    "neteaseOnly": true,
+    "currentSongQueuePositionAndPlayingStateRetained": true,
+    "cancelNoRequest": true,
+    "rejectedOrUnknownResultKeepsRoom": true,
+    "writesNotAutomaticallyReplayed": true,
+    "lateStatusCommandsAndErrorsGuarded": true,
+    "realPlatformEndVerified": false
+  },
+  "messageCards": {
+    "generalMessageAndNestedJsonSupported": true,
+    "historyAndConversationPreviewSupported": true,
+    "nativeDetailsAndReceivedOfficialWebLink": true,
+    "boundedTraversal": true,
+    "ambiguousDurationNotInferred": true,
+    "readsDoNotSendPrivateMessagesOrRejoinRooms": true,
+    "accountChangeGuarded": true,
+    "realUserMessagePayloadObtained": false,
+    "officialReportOnDeviceVerified": false,
+    "fixtures": "synthetic, not real private messages"
+  },
+  "accountSourceInfo": {
+    "independentlyRetainedKugouIdentity": true,
+    "newToggleAdded": false,
+    "currentPlatformSwitched": false,
+    "onlineEntitlementsProbed": false
+  },
+  "loginArtwork": {
+    "asset": "assets/branding/login/companions-bottom.png",
+    "sha256": "d217310f96c0c85d7aa352eea61c8a8a46b7c8f11f1a10cac8b6dc3a872c5ee3",
+    "userSuppliedBytesPreserved": true,
+    "specificMethods": 8,
+    "platformChoicePages": 2,
+    "themeVariants": 2,
+    "fullWidth": true,
+    "heightScale": 0.85,
+    "minimumGapLogicalPixels": 24,
+    "keyboardAndShortWindowHideArt": true,
+    "formStateAndFocusPreservedByStableParent": true,
+    "betaOnlyAsset": true,
+    "noProductionLoginTransportChanges": true
+  },
+  "hostRender": {
+    "loginScreens": 20,
+    "featureScreens": 12,
+    "comparisonBoards": 3,
+    "fontSubstitution": true,
+    "notAndroidGpuAcceptance": true,
+    "loginLog": ".codex-artifacts/2026-10-31-v124-followup/login-render-final.log",
+    "featureLog": ".codex-artifacts/2026-10-31-v124-followup/ui-final.log"
+  },
+  "productFilesSha256": {
+    "assets/branding/login/companions-bottom.png": "d217310f96c0c85d7aa352eea61c8a8a46b7c8f11f1a10cac8b6dc3a872c5ee3",
+    "lib/features/auth/presentation/beta_login_artwork_frame.dart": "1c8531c5351b36ce671459b9a85901140b24428f22a83d50a7d59b4a2ee286e5",
+    "lib/features/experience/presentation/beta_now_playing_page.dart": "c46468f1d4615608c6a133e7cc19af4f3d906c66fe33c6b6870c050290941e14",
+    "lib/features/music_platform/netease/messages/netease_message_card.dart": "0121912d9b5908a229f620b52b1db2fcd86490a7801a340f4719a8165fdf573b",
+    "lib/features/music_platform/netease/messages/netease_message_card_view.dart": "7485c588240131673f06a9e76a0d6156356f2a5658a53a4a6113d2cf1bda2254",
+    "lib/features/music_platform/netease/messages/netease_messages_page.dart": "55a06eabe29ea8626e8a6e479cf0a6f55d6979cbd637e02f0f8abc9a31e41c84",
+    "lib/features/music_platform/netease/messages/netease_messages_repository.dart": "b8fede3103e87d48ae720a9787ead1fbeebc37ff77100867331e850a14953ca6",
+    "lib/features/music_platform/netease/netease_account_source_info.dart": "5ecc6b9281bc74581449ac5f485360bc4af62faf0012dc466b440769130d13bc",
+    "lib/features/music_platform/netease/netease_playback_settings_page.dart": "d9fe9a2bfe755c222310a66a9529182f90ff965524dabca42f1934419c6de802",
+    "lib/features/music_platform/netease/netease_source_settings_panel.dart": "91efd4844fac6b8784a6a7d0649fc91acb13900fee41f57b7a192376d4f1b830",
+    "lib/features/music_platform/netease/together/netease_together_controller.dart": "692eef6476972a46670e637683b519e54947a0d6effa24daf20dff0c0ba4d304",
+    "lib/features/music_platform/netease/together/netease_together_exit.dart": "6077a174afbc09d254d28382793760cc0e60c06b98b0f9046ddc8f850ad38006",
+    "lib/features/music_platform/netease/together/netease_together_panel.dart": "d7e1a9a0ff9dc17c3bdae3108f3013453e27999c90871eec5185bad71730437c",
+    "lib/features/music_platform/presentation/platform_account_page.dart": "69c9fe301c791b8cdd8abf75b003aa5fdbfda7b695a0d08cb70e751728b2319f",
+    "lib/features/music_platform/presentation/platform_login_options_page.dart": "64017ceb33c808c94a7895d65f7e35b7c891ff28027d0180ed4a4dfe382942c3",
+    "pubspec.yaml": "0176f96867684f586f0b762998e0cd98148cb717124741a2c50e07f9bb7ad23a"
+  },
+  "dependencyLockUnchanged": true,
+  "customEngineUnchanged": true,
+  "newVersionAssigned": false,
+  "apkBuilt": false,
+  "newFrozenSourceZipBuilt": false,
+  "phoneAccessed": false,
+  "adbUsed": false,
+  "realAccountAccess": false,
+  "musicBackendAccess": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "published": false,
+  "limitations": [
+    "The reported real together-record message has not been read or accepted on a real account.",
+    "The official report WebView, Android keyboard/GPU and two-device room exit still need user testing.",
+    "No new APK, release version or frozen source archive was prepared in this source-update scope."
+  ]
+}

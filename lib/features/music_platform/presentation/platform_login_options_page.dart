@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
+import '../../auth/presentation/beta_login_artwork_frame.dart';
 import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
 import '../netease/netease_login.dart';
@@ -23,6 +24,7 @@ class PlatformLoginOptionsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _AccountChoiceFrame(
     title: platform == MusicPlatform.kugou ? '酷狗登录' : '网易云登录',
+    showArtwork: true,
     children: [
       if (platform == MusicPlatform.kugou)
         for (final item in const [
@@ -133,44 +135,52 @@ class _MusicPlatformSwitchPageState
 }
 
 class _AccountChoiceFrame extends StatelessWidget {
-  const _AccountChoiceFrame({required this.title, required this.children});
+  const _AccountChoiceFrame({
+    required this.title,
+    required this.children,
+    this.showArtwork = false,
+  });
   final String title;
   final List<Widget> children;
+  final bool showArtwork;
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: Theme.of(context).colorScheme.surface,
-    body: SafeArea(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
-                child: Row(
-                  children: [
-                    const BetaGlassBackButton(),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w700,
+    body: BetaLoginArtworkFrame(
+      enabled: showArtwork,
+      child: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+                  child: Row(
+                    children: [
+                      const BetaGlassBackButton(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: BetaGlassScrollBody(
-                  padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
-                  children: children,
+                Expanded(
+                  child: BetaGlassScrollBody(
+                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
+                    children: children,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
