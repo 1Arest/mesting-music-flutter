@@ -13,6 +13,7 @@ import '../../../../shared/widgets/beta_glass_action.dart';
 import '../../../../shared/widgets/beta_glass_controls.dart';
 import '../../../../shared/widgets/beta_bottom_search.dart';
 import '../../../../shared/widgets/beta_page_search_layout.dart';
+import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_swipe_pages.dart';
 import '../../../../shared/widgets/keyboard_visibility_builder.dart';
 import '../../platform_backend_providers.dart';
@@ -31,10 +32,11 @@ import 'netease_message_diagnostic_action.dart';
 import 'netease_unread.dart';
 import '../../../../shared/widgets/beta_popup_menu_button.dart';
 
-Future<T?> _open<T>(BuildContext context, Widget page) => Navigator.of(
-  context,
-  rootNavigator: true,
-).push<T>(MaterialPageRoute(builder: (_) => page));
+/// A conversation stays on the same stack as its message inbox. Pushing it on
+/// the application root split a two-step Back sequence across the root and tab
+/// navigators, allowing Android's next edge gesture to leave the Activity.
+Future<T?> _open<T>(BuildContext context, Widget page) =>
+    Navigator.of(context).push<T>(betaContentRoute<T>(page));
 
 String neteaseMessageTime(DateTime time) {
   if (time.millisecondsSinceEpoch == 0) return '';

@@ -108,6 +108,16 @@ configurations.configureEach {
 }
 dependencies {
     add("betaReleaseImplementation", files(recoveryEngineJars.map { recoveryEngineDirectory.resolve(it) }))
+    // audio_service already supplies media 1.7.0 at runtime through its
+    // implementation dependency. Our narrow foreground bridge also needs the
+    // superclass and MediaStyle on the app's compile classpath; do not add a
+    // second runtime library or upgrade the pinned playback dependency.
+    compileOnly("androidx.media:media:1.7.0")
+}
+tasks.withType<JavaCompile>().configureEach {
+    // The existing music notification's room text is stored as UTF-8 source,
+    // independent of the Windows build machine's default code page.
+    options.encoding = "UTF-8"
 }
 val verifyRecoveryEngine = tasks.register("verifyMestingReleaseEngine") {
     // Execute on each release build so a stale SDK, missing binary or changed

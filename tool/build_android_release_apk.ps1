@@ -1,7 +1,8 @@
 param(
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$VersionName = '1.0.43',
-    [ValidateRange(64, 2147483647)][int]$VersionCode = 64,
-    [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$VersionName = '1.0.45',
+    [ValidateRange(64, 2147483647)][int]$VersionCode = 66,
+    [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,
+    [switch]$TogetherSyncDiagnostics
 )
 $ErrorActionPreference = 'Stop'
 # The notes travel inside the APK for older clients to inspect via bounded
@@ -17,4 +18,4 @@ if ($musicReleaseNotes.version -ne $VersionName -or $musicReleaseNotes.versionCo
 # replaces 1.0.1 instead of installing another app with a separate data store.
 & (Join-Path $PSScriptRoot 'build_android_md3_beta_apk.ps1') `
     -VersionName $VersionName -VersionCode $VersionCode -Mode release `
-    -FlutterSdkRoot $FlutterSdkRoot
+    -FlutterSdkRoot $FlutterSdkRoot -TogetherSyncDiagnostics:$TogetherSyncDiagnostics

@@ -41,6 +41,9 @@ class OfficialFootprintReader extends ChangeNotifier {
   int _generation = 0, _historyGeneration = 0;
   bool _alive = true;
   Future<void>? _currentWork;
+  Future<void>? _totalWork;
+  String _totalDay = '';
+  int _totalGeneration = 0;
   bool get calendarChanged => _day != footprintDay(now());
   bool get loading => today.loading || month.loading || total.loading;
   bool get _valid => _alive && current();
@@ -53,7 +56,6 @@ class OfficialFootprintReader extends ChangeNotifier {
     final generation = ++_generation;
     today = today.pending();
     month = month.pending();
-    total = total.pending();
     notifyListeners();
     bool valid() =>
         _valid && generation == _generation && footprintDay(now()) == day;
@@ -87,11 +89,41 @@ class OfficialFootprintReader extends ChangeNotifier {
         (v) => month = v,
         month,
       ),
-      read(source.totalSeconds, day, (v) => total = v, total),
+      refreshTotalOnly(),
     ]).then<void>((_) {});
     _currentWork = work;
     return work.whenComplete(() {
       if (generation == _generation) _currentWork = null;
+    });
+  }
+
+  /// My's lifetime-duration summary and the footprint header share this exact
+  /// official reading. Reading it alone does not fetch unused week/month data,
+  /// and simultaneous page requests share one in-flight operation.
+  Future<void> refreshTotalOnly() {
+    if (!_valid) return Future.value();
+    final day = footprintDay(now());
+    if (_totalWork != null && _totalDay == day) return _totalWork!;
+    _totalDay = day;
+    final generation = ++_totalGeneration, old = total;
+    total = total.pending();
+    notifyListeners();
+    bool valid() =>
+        _valid && generation == _totalGeneration && footprintDay(now()) == day;
+    final work = Future<void>.sync(() async {
+      try {
+        final value = await source.totalSeconds();
+        if (valid()) {
+          total = FootprintReading(value: value, readAt: now(), key: day);
+        }
+      } catch (_) {
+        if (valid()) total = old.failure();
+      }
+      if (valid()) notifyListeners();
+    });
+    _totalWork = work;
+    return work.whenComplete(() {
+      if (generation == _totalGeneration) _totalWork = null;
     });
   }
 
@@ -139,6 +171,7 @@ class OfficialFootprintReader extends ChangeNotifier {
     _alive = false;
     ++_generation;
     ++_historyGeneration;
+    ++_totalGeneration;
     super.dispose();
   }
 }

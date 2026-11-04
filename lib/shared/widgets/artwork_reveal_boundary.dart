@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import '../../core/platform/distribution_channel.dart';
 import 'artwork_scroll_frontier.dart';
 import 'beta_content_insets.dart';
+import 'music_loading_geometry.dart';
 
 /// A live content viewport, not a screenshot or an eager image preload. Lazy
 /// lists keep laying out their normal cache extent while unresolved rows stay
@@ -69,7 +70,13 @@ class _ArtworkRevealBoundaryState extends State<ArtworkRevealBoundary> {
           child: _ArtworkViewport(
             controller: controller,
             background: Theme.of(context).colorScheme.surface,
-            footerClearance: BetaContentInsets.bottomOf(context) + 64,
+            footerClearance: BetaContentInsets.bottomOf(context),
+            windowHeight:
+                View.of(context).physicalSize.height /
+                View.of(context).devicePixelRatio,
+            safeTop:
+                View.of(context).viewPadding.top /
+                View.of(context).devicePixelRatio,
             children: [
               ScrollConfiguration(behavior: _behavior, child: widget.child),
               ValueListenableBuilder<bool>(
@@ -125,6 +132,9 @@ class _ArtworkPendingContentState extends State<ArtworkPendingContent> {
         return box is RenderBox ? box : null;
       });
       _entry?.identity = 'content-pending-${identityHashCode(this)}';
+      // A next-page data footer waits after the already prepared rows. Unlike
+      // an unresolved cover, it must not hold those ready rows in its batch.
+      _entry?.atomicBatch = false;
     }
     _entry?.update(ready: false, enabled: TickerMode.valuesOf(context).enabled);
   }
@@ -161,6 +171,7 @@ class ArtworkRevealEntry {
   final RenderBox? Function() box;
   final ArtworkRevealController controller;
   bool ready = false, enabled = true;
+  bool atomicBatch = true;
   String identity = '';
   void update({required bool ready, required bool enabled}) {
     if (this.ready == ready && this.enabled == enabled) return;
@@ -253,14 +264,23 @@ class _ArtworkViewport extends MultiChildRenderObjectWidget {
     required this.controller,
     required this.background,
     required this.footerClearance,
+    required this.windowHeight,
+    required this.safeTop,
     required super.children,
   });
   final ArtworkRevealController controller;
   final Color background;
   final double footerClearance;
+  final double windowHeight, safeTop;
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderArtworkViewport(controller, background, footerClearance);
+      _RenderArtworkViewport(
+        controller,
+        background,
+        footerClearance,
+        windowHeight,
+        safeTop,
+      );
   @override
   void updateRenderObject(
     BuildContext context,
@@ -268,6 +288,8 @@ class _ArtworkViewport extends MultiChildRenderObjectWidget {
   ) {
     renderObject.background = background;
     renderObject.footerClearance = footerClearance;
+    renderObject.windowHeight = windowHeight;
+    renderObject.safeTop = safeTop;
   }
 }
 
@@ -281,9 +303,20 @@ class _RenderArtworkViewport extends RenderBox
     this.controller,
     this._background,
     this.footerClearance,
+    this.windowHeight,
+    this.safeTop,
   );
   final ArtworkRevealController controller;
   double footerClearance;
+  double windowHeight, safeTop;
+
+  MusicLoadingGeometry get _geometry => MusicLoadingGeometry.inWindow(
+    origin: localToGlobal(Offset.zero).dy,
+    height: size.height,
+    windowHeight: windowHeight,
+    safeTop: safeTop,
+    chromeBottom: footerClearance,
+  );
   Color _background;
   set background(Color value) {
     if (value == _background) return;
@@ -375,7 +408,8 @@ class _RenderArtworkViewport extends RenderBox
   /// Include lazy cache children, not just painted rows. This establishes the
   /// boundary before a fast gesture can move the first pending row on screen.
   void _updateFrontiers() {
-    final rows = <ScrollPosition, List<(Rect, bool)>>{};
+    final rows = <ScrollPosition, List<(Rect, bool, bool, bool)>>{};
+    final footers = <ScrollPosition, double>{};
     for (final entry in controller.entries) {
       final rect = _visibleRow(entry, visibleOnly: false);
       if (rect == null) continue;
@@ -388,7 +422,29 @@ class _RenderArtworkViewport extends RenderBox
             node.axisDirection == AxisDirection.down &&
             node.offset is ScrollPosition) {
           final position = node.offset as ScrollPosition;
-          (rows[position] ??= []).add((rect, entry.ready));
+          final inverse = Matrix4.inverted(node.getTransformTo(this));
+          (rows[position] ??= []).add((
+            MatrixUtils.transformRect(inverse, rect),
+            entry.ready,
+            !_committed.contains(entry.identity),
+            entry.atomicBatch,
+          ));
+          // Transform into list coordinates before adding its scroll offset.
+          // Overscroll or an entering tab may scale the painted subtree; a
+          // paint-space extent otherwise feeds that scale back into physics.
+          final target =
+              _geometry.bottom -
+              MusicLoadingGeometry.indicatorExtent -
+              MusicLoadingGeometry.contentGap -
+              MusicLoadingGeometry.chromeGap;
+          final localTarget = MatrixUtils.transformPoint(
+            inverse,
+            Offset(0, target),
+          ).dy;
+          footers[position] = (position.viewportDimension - localTarget).clamp(
+            0.0,
+            position.viewportDimension + 62,
+          );
           break;
         }
       }
@@ -397,17 +453,34 @@ class _RenderArtworkViewport extends RenderBox
     for (final group in rows.entries) {
       final position = group.key;
       double preparedEnd = position.pixels, pendingStart = double.infinity;
+      double batchStart = double.infinity;
+      var pendingArtwork = false;
       for (final row in group.value) {
+        // Scroll offsets are relative to this list, not the outer page. The
+        // previous calculation included its fixed header and stopped rows too
+        // high when the list was nested beneath a title or action toolbar.
         final start = row.$1.top + position.pixels;
         final end = row.$1.bottom + position.pixels;
         if (row.$2 && end > preparedEnd) preparedEnd = end;
-        if (!row.$2 && start < pendingStart) pendingStart = start;
+        if (!row.$2) {
+          if (start < pendingStart) pendingStart = start;
+          pendingArtwork = pendingArtwork || row.$4;
+        }
+        if (row.$3 && start < batchStart) batchStart = start;
+      }
+      // A new visible batch is revealed together. Its scroll fence must use
+      // the same boundary as painting, including ready rows in that batch.
+      // Prepared rows may scroll before the next data page arrives. Only a
+      // pending artwork batch holds new rows together; a data footer does not
+      // turn ready cache rows into an unresolved batch or an invisible fence.
+      if (pendingArtwork && batchStart < pendingStart) {
+        pendingStart = batchStart;
       }
       controller.frontier.update(
         position,
         preparedEnd: preparedEnd,
         pendingStart: pendingStart.isFinite ? pendingStart : null,
-        footer: footerClearance,
+        footer: footers[position]!,
       );
     }
   }
@@ -436,7 +509,7 @@ class _RenderArtworkViewport extends RenderBox
   void paint(PaintingContext context, Offset offset) {
     _updateFrontiers();
     var pendingTop = size.height;
-    var visible = false, blocked = false;
+    var visible = false, blocked = false, pendingArtwork = false;
     var batchTop = size.height;
     for (final entry in controller.entries) {
       final rect = _visibleRow(entry);
@@ -447,16 +520,17 @@ class _RenderArtworkViewport extends RenderBox
       }
       if (!entry.ready) {
         blocked = true;
+        pendingArtwork = pendingArtwork || entry.atomicBatch;
         if (rect.top < pendingTop) pendingTop = rect.top;
       }
     }
     _presented = _presented || controller.scrolled;
     _cutoff = blocked
         ? (_presented
-              ? (batchTop < pendingTop ? batchTop : pendingTop).clamp(
-                  0,
-                  size.height,
-                )
+              ? (pendingArtwork && batchTop < pendingTop
+                        ? batchTop
+                        : pendingTop)
+                    .clamp(0, size.height)
               : 0)
         : size.height;
     if (visible && !blocked) {
@@ -493,11 +567,12 @@ class _RenderArtworkViewport extends RenderBox
       );
     }
     if (loading) {
-      final top = controller.refreshing && !blocked
-          ? _refreshTop() + 18.0
-          : _cutoff == 0
-          ? (size.height - loader.size.height) / 2
-          : _cutoff + 14;
+      final top = _geometry.indicatorTop(
+        cutoff: _cutoff,
+        extent: loader.size.height,
+        refreshing: controller.refreshing,
+        refreshOrigin: _refreshTop(),
+      );
       final data = loader.parentData! as _ArtworkParentData;
       data.offset = Offset(
         (size.width - loader.size.width) / 2,

@@ -452,21 +452,20 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                           ? NeteaseEntity.album
                           : NeteaseEntity.playlist,
                     ),
+                    showDownload: !collectionScene,
+                    onDownload: !_loaded || _tracks.isEmpty
+                        ? null
+                        : () {
+                            final current = ref
+                                .read(platformAccountProvider)
+                                .value;
+                            if (current?.ownerId != _owner ||
+                                current?.token != _token) {
+                              return;
+                            }
+                            enqueueAudioDownloads(context, ref, _tracks);
+                          },
                   ),
-                  if (_tracks.isNotEmpty)
-                    TextButton.icon(
-                      icon: const Icon(Icons.download_rounded),
-                      label: const Text('下载已加载歌曲'),
-                      onPressed: () {
-                        final current = ref.read(platformAccountProvider).value;
-                        if (!_loaded ||
-                            current?.ownerId != _owner ||
-                            current?.token != _token) {
-                          return;
-                        }
-                        enqueueAudioDownloads(context, ref, _tracks);
-                      },
-                    ),
                 ],
               );
             }

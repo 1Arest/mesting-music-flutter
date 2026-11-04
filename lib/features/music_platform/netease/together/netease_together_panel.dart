@@ -1,4 +1,6 @@
 import '../../../../shared/widgets/beta_content_insets.dart';
+import '../../../../shared/widgets/beta_page_motion.dart';
+import 'together_sync_diagnostics_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -118,6 +120,16 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
           title: '一起听',
           subtitle: controller.active ? '房间成员与共享设置' : '邀请朋友，一起分享此刻的音乐',
           actions: [
+            BetaGlassAction(
+              label: '同步诊断',
+              icon: CupertinoIcons.doc_text_search,
+              blue: false,
+              onPressed: () => Navigator.of(context).push(
+                betaContentRoute<void>(
+                  TogetherSyncDiagnosticsPage(controller: controller),
+                ),
+              ),
+            ),
             BetaGlassAction(
               label: '刷新一起听',
               icon: CupertinoIcons.refresh,

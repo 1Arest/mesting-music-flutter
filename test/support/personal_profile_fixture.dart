@@ -18,6 +18,10 @@ import 'package:mesting_music/features/music_platform/netease/netease_session.da
 import 'package:mesting_music/features/music_platform/netease/netease_music_repository.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_library_repository.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_account_overview.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_connection_models.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_user_providers.dart';
+import 'package:mesting_music/features/music_platform/netease/footprint/official_footprint.dart';
+import 'package:mesting_music/features/music_platform/netease/footprint/official_footprint_providers.dart';
 import 'package:mesting_music/features/music_platform/netease/messages/netease_unread.dart';
 import 'package:mesting_music/shared/models/track.dart';
 import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
@@ -71,6 +75,12 @@ class PersonalProfileFixture {
     MestingAudioHandler? audioHandler,
     PlatformAccountController Function()? accountFactory,
     List<Override> extraOverrides = const [],
+    NeteasePersonalStats personalStats = const NeteasePersonalStats(
+      following: 9,
+      followers: 4,
+      ownerId: 'netease:7001',
+    ),
+    OfficialFootprintSource? footprintSource,
   }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
@@ -159,6 +169,10 @@ class PersonalProfileFixture {
           ),
         ),
         neteaseUnreadTotalProvider.overrideWith((ref) => 90),
+        neteasePersonalStatsProvider.overrideWith((ref) async => personalStats),
+        officialFootprintSourceProvider.overrideWithValue(
+          footprintSource ?? _ProfileFootprintSource(),
+        ),
         ...extraOverrides,
       ],
     );
@@ -174,4 +188,20 @@ class PersonalProfileFixture {
     client.close();
     await database.close();
   }
+}
+
+/// Profile acceptance fixtures have no dependency on real footprint accounts.
+/// The new summary reads only totalSeconds; other reports remain explicit.
+class _ProfileFootprintSource implements OfficialFootprintSource {
+  @override
+  Future<int> totalSeconds() async => 5610 * 3600 + 120;
+  @override
+  Future<OfficialListenPeriod> currentWeek() =>
+      Future.error(UnimplementedError());
+  @override
+  Future<OfficialListenPeriod> currentMonth() =>
+      Future.error(UnimplementedError());
+  @override
+  Future<OfficialListenPeriod> history(String month) =>
+      Future.error(UnimplementedError());
 }

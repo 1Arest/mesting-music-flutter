@@ -85,7 +85,11 @@ void main() {
         'complete NetEase My page normal/fast/reverse scrolling dark=$dark narrow=$narrow',
         (tester) async {
           final (_, router) = await mount(tester, dark: dark, narrow: narrow);
-          expect(find.text('674 首喜欢  ·  5 个歌单'), findsOneWidget);
+          expect(find.text('674 首喜欢  ·  5 个歌单'), findsNothing);
+          expect(
+            find.byKey(const ValueKey('netease-personal-statistics')),
+            findsOneWidget,
+          );
           expect(find.text('创建的歌单 · 2'), findsOneWidget);
           expect(find.text('收藏的歌单 · 2', skipOffstage: false), findsOneWidget);
           expect(find.text('Lv.9'), findsOneWidget);
@@ -162,7 +166,7 @@ void main() {
         fixture.favorites.add(next.take(673).toList());
         await tester.pump();
         await tester.pump();
-        expect(find.text('673 首喜欢  ·  5 个歌单'), findsOneWidget);
+        expect(find.text('673 首歌曲'), findsOneWidget);
         expect(avatarBuilds, 0);
         expect(buttonBuilds, 0);
       } finally {
@@ -202,7 +206,10 @@ void main() {
         await tester.pumpAndSettle();
         router.go('/profile');
         await tester.pumpAndSettle();
-        expect(find.text('674 首喜欢  ·  5 个歌单'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('netease-personal-statistics')),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
       }
     },

@@ -1,5 +1,6 @@
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,8 +26,13 @@ void openNeteaseUser(BuildContext context, PlatformSearchUser user) =>
 /// Relationship controls are shared across search, profiles and connection
 /// lists. Glass press/drag cancellation remains in the common implementation.
 class NeteaseFollowButton extends ConsumerWidget {
-  const NeteaseFollowButton({required this.user, super.key});
+  const NeteaseFollowButton({
+    required this.user,
+    this.cupertino = false,
+    super.key,
+  });
   final PlatformSearchUser user;
+  final bool cupertino;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(platformAccountProvider).value?.userId == user.id) {
@@ -35,6 +41,90 @@ class NeteaseFollowButton extends ConsumerWidget {
     final relation = ref.watch(neteaseUserRelationsProvider)[user.id];
     final followed = relation?.followed ?? user.followed;
     final label = followed ? (user.followsMe ? '互相关注' : '已关注') : '关注';
+    Future<void> toggle() async {
+      final identity = ref.read(platformAccountProvider).value;
+      if (followed) {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => cupertino
+              ? CupertinoAlertDialog(
+                  title: const Text('取消关注？'),
+                  content: Text('将不再关注${user.nickname}。'),
+                  actions: [
+                    CupertinoDialogAction(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('保留关注'),
+                    ),
+                    CupertinoDialogAction(
+                      isDestructiveAction: true,
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('取消关注'),
+                    ),
+                  ],
+                )
+              : AlertDialog(
+                  title: const Text('取消关注？'),
+                  content: Text('将不再关注${user.nickname}。'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('保留关注'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('取消关注'),
+                    ),
+                  ],
+                ),
+        );
+        if (confirmed != true || !context.mounted) return;
+      }
+      if (!context.mounted ||
+          ref.read(platformAccountProvider).value?.ownerId !=
+              identity?.ownerId ||
+          ref.read(platformAccountProvider).value?.token != identity?.token) {
+        return;
+      }
+      try {
+        await ref
+            .read(neteaseUserRelationsProvider.notifier)
+            .setFollowed(user.id, !followed, previous: followed);
+      } catch (error) {
+        if (context.mounted &&
+            ref.read(platformAccountProvider).value?.ownerId ==
+                identity?.ownerId &&
+            ref.read(platformAccountProvider).value?.token == identity?.token) {
+          showPlatformFailure(context, error);
+        }
+      }
+    }
+
+    if (cupertino) {
+      final colors = Theme.of(context).colorScheme;
+      return Semantics(
+        label: '$label ${user.nickname}',
+        button: true,
+        child: CupertinoButton(
+          key: ValueKey('netease-follow-${user.id}'),
+          onPressed: relation?.busy == true ? null : toggle,
+          minimumSize: const Size(84, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          borderRadius: BorderRadius.circular(22),
+          color: followed ? colors.surfaceContainerHighest : colors.primary,
+          disabledColor: colors.surfaceContainerHighest,
+          child: relation?.busy == true
+              ? const CupertinoActivityIndicator(radius: 9)
+              : Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: followed ? colors.onSurface : colors.onPrimary,
+                  ),
+                ),
+        ),
+      );
+    }
     return BetaGlassButton(
       key: ValueKey('netease-follow-${user.id}'),
       label: '$label ${user.nickname}',
@@ -43,42 +133,7 @@ class NeteaseFollowButton extends ConsumerWidget {
       fontSize: 13,
       accent: !followed,
       loading: relation?.busy == true,
-      onPressed: () async {
-        final identity = ref.read(platformAccountProvider).value;
-        if (followed) {
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('取消关注？'),
-              content: Text('将不再关注${user.nickname}。'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('保留关注'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('取消关注'),
-                ),
-              ],
-            ),
-          );
-          if (confirmed != true || !context.mounted) return;
-        }
-        if (!context.mounted ||
-            ref.read(platformAccountProvider).value?.ownerId !=
-                identity?.ownerId ||
-            ref.read(platformAccountProvider).value?.token != identity?.token) {
-          return;
-        }
-        try {
-          await ref
-              .read(neteaseUserRelationsProvider.notifier)
-              .setFollowed(user.id, !followed, previous: followed);
-        } catch (error) {
-          if (context.mounted) showPlatformFailure(context, error);
-        }
-      },
+      onPressed: toggle,
       child: Text(label),
     );
   }

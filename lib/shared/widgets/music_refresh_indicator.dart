@@ -118,11 +118,19 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
           ),
           if (_visible && _viewport == null)
             const Positioned(
-              top: 18,
+              top: 0,
               left: 0,
               right: 0,
               child: IgnorePointer(
-                child: Center(child: MusicActivityIndicator(independent: true)),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 18),
+                    child: Center(
+                      child: MusicActivityIndicator(independent: true),
+                    ),
+                  ),
+                ),
               ),
             ),
         ],

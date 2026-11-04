@@ -16,6 +16,8 @@ import 'together_presence.dart';
 import 'together_cumulative.dart';
 import 'together_playback_command.dart';
 import 'together_background_binding.dart';
+import 'together_sync_diagnostics.dart';
+import 'together_shared_playlist.dart';
 
 /// Kept outside pages so dismissing a sheet/chat cannot stop a room. Watching
 /// the account recreates and disposes the controller on logout/platform switch.
@@ -43,6 +45,7 @@ final neteaseTogetherControllerProvider = Provider<NeteaseTogetherController?>((
     changes: controller,
     active: () => controller.current && controller.active && !controller.ending,
     poll: controller.poll,
+    diagnostics: controller.diagnostics,
   );
   ref.onDispose(() {
     background.dispose();
@@ -197,13 +200,16 @@ class NeteaseTogetherController extends ChangeNotifier {
     this.locationGateway = const TogetherLocationGateway(),
     this.remoteApplicationTimeout = const Duration(seconds: 30),
     TogetherCumulativeClock? cumulativeClock,
-  }) : _cumulativeClock = cumulativeClock ?? TogetherCumulativeClock();
+    TogetherSyncDiagnostics? diagnostics,
+  }) : _cumulativeClock = cumulativeClock ?? TogetherCumulativeClock(),
+       diagnostics = diagnostics ?? TogetherSyncDiagnostics.shared;
   final NeteaseMusicRepository music;
   final NeteaseTogetherPlayer player;
   final NeteaseMessagesRepository messages;
   final bool Function() isCurrent;
   final bool automaticTimer;
   final Duration remoteApplicationTimeout;
+  final TogetherSyncDiagnostics diagnostics;
   final TogetherLocationGateway locationGateway;
   TogetherDistance distance = const TogetherDistance();
   String? presenceNotice;
@@ -238,6 +244,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   bool busy = false, _disposed = false, _ticking = false, _applying = false;
   bool ending = false;
   int _syncEpoch = 0;
+  int _playlistReadRevision = 0;
   int _sequence = 1;
   String _formerSong = '-1', _lastRemote = '';
   String? _remoteRoom;
@@ -250,6 +257,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   int? _activeRemoteSequence;
   TogetherPlaybackCommand? _activeRemoteCommand;
   int _remoteReceived = 0, _remoteApplied = 0, _remoteTimeouts = 0;
+  int _requestOrdinal = 0;
   bool _remoteApplicationFailed = false;
 
   /// Diagnostics expose counts only, with no room, account, friend or song.
@@ -409,17 +417,73 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
+  /// Observe only a fixed operation label and timing. The journal cannot see
+  /// the route, query, credentials, response body or exception text.
+  Future<Map<String, dynamic>> _observeRequest(
+    TogetherSyncOperation operation,
+    Future<Map<String, dynamic>> Function() request,
+  ) async {
+    final ordinal = ++_requestOrdinal;
+    final clock = Stopwatch()..start();
+    diagnostics.record(
+      TogetherSyncPhase.httpStarted,
+      operation: operation,
+      request: ordinal,
+    );
+    try {
+      final result = await request();
+      diagnostics.record(
+        TogetherSyncPhase.httpCompleted,
+        operation: operation,
+        request: ordinal,
+        durationMs: clock.elapsedMilliseconds,
+        accepted: current,
+      );
+      return result;
+    } catch (failure) {
+      diagnostics.record(
+        failure is TimeoutException
+            ? TogetherSyncPhase.httpTimedOut
+            : TogetherSyncPhase.httpFailed,
+        operation: operation,
+        request: ordinal,
+        durationMs: clock.elapsedMilliseconds,
+      );
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> _call(
     String route, [
     Map<String, Object?> query = const {},
   ]) {
     if (!current) throw const MusicPlatformException('账号已变化，一起听已停止');
     final c = neteaseCompleteContract(route, query)!;
-    return music.api.request(
-      c.path,
-      c.data,
-      weapi: c.weapi,
-      expectedCredential: music.credential,
+    final operation = switch (route) {
+      '/listentogether/status' => TogetherSyncOperation.status,
+      '/listentogether/room/check' => TogetherSyncOperation.roomCheck,
+      '/listentogether/heatbeat' => TogetherSyncOperation.heartbeat,
+      '/listentogether/play/command' => TogetherSyncOperation.playCommand,
+      '/listentogether/sync/playlist/get' => TogetherSyncOperation.playlistRead,
+      '/listentogether/sync/list/command' =>
+        TogetherSyncOperation.playlistWrite,
+      '/listentogether/relation/statistics/get' =>
+        TogetherSyncOperation.statistics,
+      '/listentogether/distance/get' => TogetherSyncOperation.distance,
+      '/listentogether/user/gps/report' => TogetherSyncOperation.location,
+      '/listentogether/room/create' ||
+      '/listentogether/accept' ||
+      '/listentogether/end' => TogetherSyncOperation.roomAction,
+      _ => TogetherSyncOperation.other,
+    };
+    return _observeRequest(
+      operation,
+      () => music.api.request(
+        c.path,
+        c.data,
+        weapi: c.weapi,
+        expectedCredential: music.credential,
+      ),
     );
   }
 
@@ -650,34 +714,41 @@ class NeteaseTogetherController extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadQueue({bool applyRemote = true}) async {
+  Future<void> _loadQueue({
+    bool applyRemote = true,
+    bool waitForPlayback = true,
+    bool reuseKnownTracks = false,
+  }) async {
     if (roomId == null) return;
     final epoch = _syncEpoch, room = roomId;
+    final revision = ++_playlistReadRevision;
+    bool valid() =>
+        _syncCurrent(epoch) &&
+        roomId == room &&
+        revision == _playlistReadRevision;
     final data = NeteaseMusicRepository.object(
       (await _call('/listentogether/sync/playlist/get', {
         'roomId': roomId,
       }))['data'],
     );
-    if (!_syncCurrent(epoch) || roomId != room) return;
-    final playlist = NeteaseMusicRepository.object(data['playlist']);
-    final display = playlist['displayList'];
-    final raw = display is List
-        ? display
-        : NeteaseMusicRepository.object(display)['result'];
-    final ids = (raw is List ? raw : const [])
-        .map((v) => '$v')
-        .where((id) => RegExp(r'^\d+$').hasMatch(id))
-        .toList();
-    if (ids.isNotEmpty) {
-      final r = await music.call('/song/detail', {
-        'ids': ids.take(500).toList(),
-      });
-      if (!_syncCurrent(epoch) || roomId != room) return;
+    if (!valid()) return;
+    final playlist = TogetherSharedPlaylist(data);
+    final cached = reuseKnownTracks ? playlist.reuse(sharedTracks) : null;
+    if (cached != null) {
+      sharedTracks = cached;
+    } else if (playlist.ids.isNotEmpty) {
+      final r = await _observeRequest(
+        TogetherSyncOperation.songDetail,
+        () => music.call('/song/detail', {'ids': playlist.ids}),
+      );
+      if (!valid()) return;
       sharedTracks = NeteaseMusicRepository.tracks(r['songs']);
     }
     // A command applying itself may need this queue. Do not recursively await
     // another command on that same serialized remote-application queue.
-    if (applyRemote) await _remote(data);
+    if (applyRemote && valid()) {
+      await _remote(data, waitForPlayback: waitForPlayback);
+    }
   }
 
   void _start() {
@@ -688,7 +759,7 @@ class NeteaseTogetherController extends ChangeNotifier {
         if (!current || roomId == null) return;
         if (_applying) {
           if (player is _HandlerTogetherPlayer) {
-            _cancelRemoteApplication();
+            _cancelRemoteApplication(reason: TogetherSyncReason.userControl);
           } else {
             return;
           }
@@ -797,9 +868,14 @@ class NeteaseTogetherController extends ChangeNotifier {
   /// Explicit room refreshes bypass this coalescing; duplicate timer sources
   /// must not send concurrent heartbeats or replay a playback mutation.
   Future<void> poll() async {
+    diagnostics.record(TogetherSyncPhase.pollEntered, active: active);
     final now = DateTime.now();
     if (_lastPoll != null &&
         now.difference(_lastPoll!) < const Duration(seconds: 4)) {
+      diagnostics.record(
+        TogetherSyncPhase.pollSkipped,
+        reason: TogetherSyncReason.cadence,
+      );
       return;
     }
     _lastPoll = now;
@@ -807,11 +883,35 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   Future<void> tick({bool waitForPlayback = true}) async {
-    if (_ticking || busy || !current || roomId == null) return;
+    if (_ticking || busy || !current || roomId == null) {
+      diagnostics.record(
+        TogetherSyncPhase.pollSkipped,
+        reason: _ticking
+            ? TogetherSyncReason.inFlight
+            : busy
+            ? TogetherSyncReason.busy
+            : !current
+            ? TogetherSyncReason.accountEnded
+            : TogetherSyncReason.roomMissing,
+      );
+      return;
+    }
     final epoch = _syncEpoch;
     _ticking = true;
+    final clock = Stopwatch()..start();
+    diagnostics.record(TogetherSyncPhase.tickStarted);
     try {
       await _refresh(waitForPlayback: waitForPlayback);
+      if (roomId != null && _syncCurrent(epoch)) {
+        // Device trace: status/check/heartbeat kept returning successfully in
+        // the background without commands; only the resume-only playlist read
+        // returned the newer playback snapshot. Poll that same authoritative
+        // source in every tick, before reporting our (possibly stale) player.
+        await _loadQueue(
+          reuseKnownTracks: true,
+          waitForPlayback: waitForPlayback,
+        );
+      }
       if (roomId != null && _syncCurrent(epoch)) {
         await _report(
           'PLAY',
@@ -820,7 +920,17 @@ class NeteaseTogetherController extends ChangeNotifier {
         );
       }
       if (_syncCurrent(epoch) && !_remoteApplicationFailed) error = null;
+      diagnostics.record(
+        TogetherSyncPhase.tickCompleted,
+        durationMs: clock.elapsedMilliseconds,
+        accepted: _syncCurrent(epoch),
+      );
     } catch (_) {
+      diagnostics.record(
+        TogetherSyncPhase.tickFailed,
+        durationMs: clock.elapsedMilliseconds,
+        accepted: _syncCurrent(epoch),
+      );
       if (_syncCurrent(epoch) && roomId != null) {
         error = '一起听连接暂时中断，正在重连';
         _cumulativeClock.markStale();
@@ -841,16 +951,41 @@ class NeteaseTogetherController extends ChangeNotifier {
     final epoch = _syncEpoch, room = roomId;
     if (!_syncCurrent(epoch) || room == null) return;
     final command = TogetherPlaybackCommand.parse(data, room);
-    if (command == null) return;
+    if (command == null) {
+      diagnostics.record(
+        TogetherSyncPhase.commandSkipped,
+        reason: TogetherSyncReason.noCommand,
+      );
+      return;
+    }
     if (_remoteRoom != room) {
       _remoteRoom = room;
       _highestRemoteSequence = null;
       _lastRemote = '';
     }
     final sequence = command.sequence;
+    final previousSequence = _highestRemoteSequence;
+    final order = sequence == null
+        ? TogetherSyncOrder.opaque
+        : previousSequence == null
+        ? TogetherSyncOrder.first
+        : sequence > previousSequence
+        ? TogetherSyncOrder.newer
+        : sequence == previousSequence
+        ? TogetherSyncOrder.equal
+        : TogetherSyncOrder.older;
+    diagnostics.record(
+      TogetherSyncPhase.commandReceived,
+      numericSequence: sequence != null,
+      order: order,
+    );
     if (sequence != null) {
       if (_highestRemoteSequence != null &&
           sequence < _highestRemoteSequence!) {
+        diagnostics.record(
+          TogetherSyncPhase.commandSkipped,
+          reason: TogetherSyncReason.olderSequence,
+        );
         return;
       }
       // Own acknowledgements are barriers too: an older peer packet cannot
@@ -859,23 +994,34 @@ class NeteaseTogetherController extends ChangeNotifier {
       if (_activeRemoteToken != null &&
           _activeRemoteSequence != null &&
           sequence > _activeRemoteSequence!) {
-        _cancelRemoteApplication();
+        _cancelRemoteApplication(reason: TogetherSyncReason.newerCommand);
       }
     }
     if (command.token == _lastRemote ||
         _pendingRemote.contains(command.token) ||
         command.userId == music.api.session?.userId) {
+      diagnostics.record(
+        TogetherSyncPhase.commandSkipped,
+        reason: command.userId == music.api.session?.userId
+            ? TogetherSyncReason.ownCommand
+            : TogetherSyncReason.duplicate,
+      );
       return;
     }
     // Opaque version tokens are supported by the existing wire decoder too.
     // A distinct accepted command still invalidates an active old operation;
     // do not leave its audio guard alive merely because it is not numeric.
     if (_activeRemoteToken != null && _activeRemoteToken != command.token) {
-      _cancelRemoteApplication();
+      _cancelRemoteApplication(reason: TogetherSyncReason.newerCommand);
     }
     _pendingRemote.add(command.token);
     _remoteReceived++;
     final application = ++_applicationRevision;
+    final clock = Stopwatch()..start();
+    diagnostics.record(
+      TogetherSyncPhase.applicationQueued,
+      application: application,
+    );
     final abort = Completer<void>();
     _applicationAbort = abort;
     _activeRemoteToken = command.token;
@@ -889,14 +1035,35 @@ class NeteaseTogetherController extends ChangeNotifier {
             _highestRemoteSequence != null &&
             sequence < _highestRemoteSequence!);
     final operation = _remoteTail.then((_) async {
-      if (!valid()) return;
+      if (!valid()) {
+        diagnostics.record(
+          TogetherSyncPhase.applicationCancelled,
+          application: application,
+          reason: TogetherSyncReason.staleOwner,
+        );
+        return;
+      }
       _applying = true;
+      diagnostics.record(
+        TogetherSyncPhase.applicationStarted,
+        application: application,
+      );
       try {
         if (!sharedTracks.any((t) => t.platformSongId == command.songId)) {
           await _loadQueue(applyRemote: false);
         }
         if (!valid() ||
             !sharedTracks.any((t) => t.platformSongId == command.songId)) {
+          diagnostics.record(
+            valid()
+                ? TogetherSyncPhase.applicationFailed
+                : TogetherSyncPhase.applicationCancelled,
+            application: application,
+            reason: valid()
+                ? TogetherSyncReason.queueMissing
+                : TogetherSyncReason.staleOwner,
+            durationMs: clock.elapsedMilliseconds,
+          );
           return;
         }
         await player.apply(
@@ -915,6 +1082,11 @@ class NeteaseTogetherController extends ChangeNotifier {
           _lastRemote = command.token;
           _remoteApplied++;
           _remoteApplicationFailed = false;
+          diagnostics.record(
+            TogetherSyncPhase.applicationCompleted,
+            application: application,
+            durationMs: clock.elapsedMilliseconds,
+          );
         }
       } finally {
         if (application == _applicationRevision) _applying = false;
@@ -930,9 +1102,16 @@ class NeteaseTogetherController extends ChangeNotifier {
           if (!valid()) return;
           applicationFailure = failure;
           _remoteApplicationFailed = true;
+          diagnostics.record(
+            failure is TimeoutException
+                ? TogetherSyncPhase.applicationTimedOut
+                : TogetherSyncPhase.applicationFailed,
+            application: application,
+            durationMs: clock.elapsedMilliseconds,
+          );
           if (failure is TimeoutException) {
             _remoteTimeouts++;
-            _cancelRemoteApplication();
+            _cancelRemoteApplication(reason: TogetherSyncReason.timeout);
           }
           error = '一起听播放同步暂未完成，正在重试';
           _notify();
@@ -954,7 +1133,14 @@ class NeteaseTogetherController extends ChangeNotifier {
     }
   }
 
-  void _cancelRemoteApplication() {
+  void _cancelRemoteApplication({
+    TogetherSyncReason reason = TogetherSyncReason.stopped,
+  }) {
+    diagnostics.record(
+      TogetherSyncPhase.applicationCancelled,
+      application: _applicationRevision,
+      reason: reason,
+    );
     ++_applicationRevision;
     final abort = _applicationAbort;
     _applicationAbort = null;
@@ -972,6 +1158,7 @@ class NeteaseTogetherController extends ChangeNotifier {
 
   Future<void> settle() => _tail;
   void _stop() {
+    diagnostics.record(TogetherSyncPhase.controllerStopped);
     if (_activeRemoteToken != null) _cancelRemoteApplication();
     _lastPoll = null;
     _timer?.cancel();

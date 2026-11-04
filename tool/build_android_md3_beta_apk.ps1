@@ -1,10 +1,13 @@
 param(
     # Public releases retain this internal flavor/package for in-place upgrades.
-    [string]$VersionName = '1.0.43',
-    [ValidateRange(1, 2147483647)][int]$VersionCode = 64,
+    [string]$VersionName = '1.0.45',
+    [ValidateRange(1, 2147483647)][int]$VersionCode = 66,
     [ValidateSet('debug', 'profile', 'release')][string]$Mode = 'release',
     [string]$TargetPlatform = 'android-arm,android-arm64',
-    [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT
+    [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,
+    # Explicit local diagnostic candidates only. Public builds emit no phase
+    # logcat events; the bounded manual report remains available in the app.
+    [switch]$TogetherSyncDiagnostics
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -39,6 +42,7 @@ try {
         '--dart-define=ENABLE_APP_UPDATE_CHECKS=true' `
         '--dart-define=MESTING_NATIVE_PLAYBACK_LOGGING=false' `
         '--dart-define=MESTING_LOCAL_DIAGNOSTICS=false' `
+        "--dart-define=TOGETHER_SYNC_DIAGNOSTICS=$($TogetherSyncDiagnostics.IsPresent.ToString().ToLowerInvariant())" `
         '--dart-define=APP_UPDATE_PACKAGE_NAME=com.mesting.music.beta'
     if ($LASTEXITCODE -ne 0) { throw 'Beta APK build failed.' }
     $lockAfter = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $appRoot 'pubspec.lock')).Hash

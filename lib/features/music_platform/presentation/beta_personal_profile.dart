@@ -1,5 +1,5 @@
 import '../../../shared/widgets/beta_content_insets.dart';
-import '../netease/netease_account_overview.dart';
+import 'netease_personal_statistics.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../domain/platform_session.dart';
 import 'package:flutter/cupertino.dart';
@@ -223,14 +223,29 @@ class _PersonalIdentity extends ConsumerWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
-          child: Text(
-            profile?.nickname ?? session.nickname,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              Text(
+                profile?.nickname ?? session.nickname,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (session.platform == MusicPlatform.netease)
+                const NeteaseLocalSvipBadge(inline: true),
+            ],
           ),
         ),
-        const NeteaseLocalSvipBadge(),
-        if (session.platform == MusicPlatform.netease) const _PersonalLevel(),
+        if (session.platform != MusicPlatform.netease)
+          const NeteaseLocalSvipBadge(),
         const SizedBox(height: 9),
         Text(
           '${session.platformLabel}账号',
@@ -247,26 +262,11 @@ class _PersonalIdentity extends ConsumerWidget {
             ),
           ),
         const SizedBox(height: 18),
-        const _PersonalCounts(),
+        if (session.platform == MusicPlatform.netease)
+          NeteasePersonalStatistics(session: session)
+        else
+          const _PersonalCounts(),
       ],
-    );
-  }
-}
-
-class _PersonalLevel extends ConsumerWidget {
-  const _PersonalLevel();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final level = ref.watch(
-      neteaseAccountOverviewProvider.select(
-        (value) => value.value?.level?.level,
-      ),
-    );
-    return TextButton(
-      onPressed: () => Navigator.of(
-        context,
-      ).push(betaContentRoute<void>(const NeteaseAccountOverviewPage())),
-      child: Text(level == null ? '查看网易云等级' : 'Lv.$level'),
     );
   }
 }

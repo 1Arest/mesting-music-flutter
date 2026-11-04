@@ -697,8 +697,15 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
 /// Real collection state is read before enabling mutations. No optimistic
 /// bookmark can claim success if the upstream rejected or timed out the write.
 class NeteaseResourceActions extends ConsumerStatefulWidget {
-  const NeteaseResourceActions({required this.item, super.key});
+  const NeteaseResourceActions({
+    required this.item,
+    this.onDownload,
+    this.showDownload = false,
+    super.key,
+  });
   final NeteaseItem item;
+  final VoidCallback? onDownload;
+  final bool showDownload;
   @override
   ConsumerState<NeteaseResourceActions> createState() =>
       _NeteaseResourceActionsState();
@@ -931,47 +938,149 @@ class _NeteaseResourceActionsState
     }
   }
 
+  void _more() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => NeteaseFullHubPage(
+        entityKind: widget.item.kind.name,
+        seed: {
+          'id': widget.item.id,
+          'pid': widget.item.id,
+          'ids': widget.item.id,
+        },
+      ),
+    ),
+  );
+
+  void _comments() {
+    final account = ref.read(platformAccountProvider).value;
+    if (account == null || !_current) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlatformCommentsPage(
+          resource: PlatformCommentResource(
+            kind: widget.item.kind == NeteaseEntity.mv
+                ? PlatformCommentKind.mv
+                : widget.item.kind == NeteaseEntity.album
+                ? PlatformCommentKind.album
+                : PlatformCommentKind.playlist,
+            id: widget.item.id,
+            name: widget.item.name,
+          ),
+          repository: NeteaseCommentsRepository(
+            ref.read(musicPlatformApiProvider),
+            account,
+            ref.read(neteaseMusicRepositoryProvider),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Compact labels keep all four operations in one row on narrow phones.
+  /// The complete purpose/state remains available through tooltip/semantics.
+  Widget _action(
+    String id,
+    String title,
+    String label,
+    IconData icon,
+    VoidCallback? action,
+  ) => Expanded(
+    child: Tooltip(
+      message: label,
+      child: BetaGlassButton(
+        key: ValueKey('resource-action-$id'),
+        label: label,
+        onPressed: action,
+        height: 72,
+        horizontalPadding: 3,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 23),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     ref.watch(platformAccountProvider);
     if (!_current) return const SizedBox.shrink();
+    final hasComments = {
+      NeteaseEntity.mv,
+      NeteaseEntity.album,
+      NeteaseEntity.playlist,
+    }.contains(widget.item.kind);
+    final saveLabel = _busy
+        ? '正在保存…'
+        : _error ??
+              (_subscribed == null
+                  ? '读取收藏状态，点击重试'
+                  : _subscribed!
+                  ? (widget.item.kind == NeteaseEntity.artist ? '取消关注' : '取消收藏')
+                  : widget.item.kind == NeteaseEntity.artist
+                  ? '关注歌手'
+                  : '收藏');
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          BetaGlassButton(
-            onPressed: _busy ? null : _toggle,
-            child: Text(
-              _busy
-                  ? '正在保存…'
-                  : _error ??
-                        (_subscribed == null
-                            ? '正在读取收藏状态…'
-                            : _subscribed!
-                            ? (widget.item.kind == NeteaseEntity.artist
-                                  ? '取消关注'
-                                  : '取消收藏')
-                            : widget.item.kind == NeteaseEntity.artist
-                            ? '关注歌手'
-                            : '收藏'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          BetaGlassButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => NeteaseFullHubPage(
-                  entityKind: widget.item.kind.name,
-                  seed: {
-                    'id': widget.item.id,
-                    'pid': widget.item.id,
-                    'ids': widget.item.id,
-                  },
-                ),
+          Row(
+            key: const ValueKey('netease-resource-action-row'),
+            children: [
+              _action(
+                'save',
+                _busy
+                    ? '保存中'
+                    : _subscribed == true
+                    ? widget.item.kind == NeteaseEntity.artist
+                          ? '已关注'
+                          : '已收藏'
+                    : widget.item.kind == NeteaseEntity.artist
+                    ? '关注'
+                    : '收藏',
+                saveLabel,
+                _subscribed == true
+                    ? CupertinoIcons.bookmark_fill
+                    : CupertinoIcons.bookmark,
+                _busy ? null : _toggle,
               ),
-            ),
-            child: const Text('更多相关功能'),
+              const SizedBox(width: 8),
+              _action('more', '更多', '更多相关功能', CupertinoIcons.ellipsis, _more),
+              if (hasComments) ...[
+                const SizedBox(width: 8),
+                _action(
+                  'comments',
+                  '评论',
+                  widget.item.kind == NeteaseEntity.mv
+                      ? 'MV 评论'
+                      : widget.item.kind == NeteaseEntity.album
+                      ? '专辑评论'
+                      : '歌单评论',
+                  CupertinoIcons.chat_bubble_text,
+                  _comments,
+                ),
+              ],
+              if (widget.showDownload) ...[
+                const SizedBox(width: 8),
+                _action(
+                  'download',
+                  '下载',
+                  '下载已加载歌曲',
+                  CupertinoIcons.arrow_down_circle,
+                  widget.onDownload,
+                ),
+              ],
+            ],
           ),
           if (widget.item.kind == NeteaseEntity.artist)
             for (final feed in [
@@ -993,42 +1102,6 @@ class _NeteaseResourceActionsState
                 id: widget.item.id,
               ),
               child: const Text('相似 MV'),
-            ),
-          if (widget.item.kind == NeteaseEntity.mv ||
-              widget.item.kind == NeteaseEntity.album ||
-              widget.item.kind == NeteaseEntity.playlist)
-            TextButton(
-              onPressed: () {
-                final account = ref.read(platformAccountProvider).value;
-                if (account == null || !_current) return;
-                Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => PlatformCommentsPage(
-                      resource: PlatformCommentResource(
-                        kind: widget.item.kind == NeteaseEntity.mv
-                            ? PlatformCommentKind.mv
-                            : widget.item.kind == NeteaseEntity.album
-                            ? PlatformCommentKind.album
-                            : PlatformCommentKind.playlist,
-                        id: widget.item.id,
-                        name: widget.item.name,
-                      ),
-                      repository: NeteaseCommentsRepository(
-                        ref.read(musicPlatformApiProvider),
-                        account,
-                        ref.read(neteaseMusicRepositoryProvider),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: Text(
-                widget.item.kind == NeteaseEntity.mv
-                    ? 'MV 评论'
-                    : widget.item.kind == NeteaseEntity.album
-                    ? '专辑评论'
-                    : '歌单评论',
-              ),
             ),
         ],
       ),

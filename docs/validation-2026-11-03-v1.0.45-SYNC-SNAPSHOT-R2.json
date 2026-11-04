@@ -1,0 +1,192 @@
+{
+  "date": "2026-11-03",
+  "version": "1.0.45",
+  "androidVersionCode": 66,
+  "stage": "private_original_signed_snapshot_fix_candidate_r2",
+  "formalFrozenBaseline": "1.0.44/code65",
+  "hostChecks": {
+    "beta-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "counts": {
+        "success": 1636,
+        "skipped": 1
+      },
+      "files": 132,
+      "selectedFileManifestMatches": true,
+      "errors": [],
+      "baseline": "D:\\AnLi\\.codex-artifacts\\2026-11-03-release145\\host-check-summary.json",
+      "completeFileRetriesApplied": [
+        "together-regression.jsonl"
+      ]
+    },
+    "stable-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "doneSeen": true,
+      "commandSuccessful": true,
+      "counts": {
+        "success": 21
+      },
+      "files": 3,
+      "errors": []
+    },
+    "search-back-player.jsonl": {
+      "completeAndSuccessful": true,
+      "counts": {
+        "success": 54
+      },
+      "files": 1,
+      "errors": []
+    },
+    "analysisPassed": true
+  },
+  "nativeHostScenariosPassed": 10,
+  "nativeAndroidRuntimeAcceptance": false,
+  "renders": [
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/ui/actions-dark-narrow.png",
+      "bytes": 11904,
+      "sha256": "5c43bc94dec31ee3d0111bb0d8b96fab1f6202ef3f3efd2a2f1097e5c20fd38d"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/ui/actions-light.png",
+      "bytes": 12681,
+      "sha256": "788f70d14f0ec880bbb9453f0fc7829d98835239735be072ee4b0dcf7eb84b97"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/ui/my-dark.png",
+      "bytes": 79641,
+      "sha256": "7e6ddb5f4c8491a75046c07d0bfb4aa40111ac1cdec82d089ac65e13ede485d4"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/ui/my-light.png",
+      "bytes": 80377,
+      "sha256": "2cf459735ef69a0238a582162751183d73da257827be6f363bc37290603f0db4"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/collapsed-dark.png",
+      "bytes": 89768,
+      "sha256": "d66e3c8681775daa154743c7c426dc9e1641cd27eb91bd3718b501558ea74e17"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/collapsed-light.png",
+      "bytes": 90933,
+      "sha256": "1f9dc3bda104b3c9ffbd64ddd4ba374f3815ec399dcd5e15ed55e116e2ae583a"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/compact-dark.png",
+      "bytes": 54938,
+      "sha256": "908d6f6cce5655fc67cf683e0e22aff6591f22db24bf88d997cf3dfb566c1053"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/compact-light.png",
+      "bytes": 55756,
+      "sha256": "57d15b2d30bc1e8b5de4d2055cdb4daf0d80d160abfe2aa257a63b5fa4bd1466"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/retained-error-light.png",
+      "bytes": 54250,
+      "sha256": "3a37e3946b7fa67e2271a7d12ede1309c9f0e6c86e5e9c317464544992b4e6fb"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/today-filter-light.png",
+      "bytes": 104839,
+      "sha256": "3693ebea0330b322aa8649fcf61e9504b2e3213802c82e12758d4f186c58d283"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/week-dark.png",
+      "bytes": 48747,
+      "sha256": "5ffae293103eb06bd542eda0ac891a82da427b1bc9393efe68178cda35694201"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/week-light.png",
+      "bytes": 49821,
+      "sha256": "e8d30d721d72db2fd31cfa188a89ab5942b631b37b9319ef399c1130f9c7dc10"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/year-dark.png",
+      "bytes": 77083,
+      "sha256": "29e7a05b65be456dbdd93ea4f9f566cee5274c7e3551178e41231d6b369b2528"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145/footprint/ui/year-light.png",
+      "bytes": 78437,
+      "sha256": "07cffa521a8d2461f204e6a60c210c66735689b570e1eb9c96bb34c8dbc757bf"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/fans-dark.png",
+      "bytes": 37007,
+      "sha256": "85549c685c07175cdcbd007c81a390326efc0f3e703532cc133afe99c3652dcf"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/fans-light.png",
+      "bytes": 37704,
+      "sha256": "c9285866a51cffda51cc9d7843f1cf1fe70d29cae43397804b25ef8a709434d3"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/following-active-bottom-search.png",
+      "bytes": 26906,
+      "sha256": "1111e92ed5602a2ae62a9c89b5fd84685151fedf0f3c6278c22a834f437b8e97"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/following-dark.png",
+      "bytes": 60506,
+      "sha256": "2959aa7b8309079f2df9099ee5d2ac70c262d76685028204d4b8e88ae7edaae9"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/following-light.png",
+      "bytes": 60795,
+      "sha256": "7f1360341bcd7de999ca6b5e6f53ceeff6ef8df14c96be1245c7cb99dc3ac635"
+    },
+    {
+      "path": ".codex-artifacts/2026-11-03-release145-social/ui/following-narrow-dark-large-text.png",
+      "bytes": 33228,
+      "sha256": "8504034aac5cf58efcc029f3c0b9b71d2350534f493ddd30a27de7b0e01f70c0"
+    }
+  ],
+  "apk": {
+    "path": ".codex-artifacts/2026-11-03-release145-sync-fix/private/Mesting-Music-v1.0.45-sync-fix-r2.apk",
+    "bytes": 108734158,
+    "sha256": "ed450f0b68507fcdcbefeae06145b5143c3147f62d2e94c6d2c35765f3ba5c27",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333"
+  },
+  "actualApkNotes": {
+    "version": "1.0.45",
+    "versionCode": 66,
+    "notesCount": 8,
+    "productionReader": true,
+    "currentVersionOfflineHistoryMatches": true,
+    "rangeRequests": 3,
+    "bytesRead": 66357,
+    "networkAccess": false,
+    "deviceAccess": false,
+    "published": false
+  },
+  "engineAndGlass": {
+    "pinnedCustomReleaseEngineVerified": true,
+    "glassShaderFiles": 7,
+    "sdkLibraryFiles": 8
+  },
+  "togetherSyncDiagnosticLoggingEnabled": true,
+  "ordinaryBuildDiagnosticLoggingDefault": false,
+  "backgroundRootCauseResolved": false,
+  "backgroundDeviceRepairVerified": false,
+  "deviceEvidencedSnapshotOmissionFixedInSource": true,
+  "deviceEvidence": ".codex-artifacts/2026-11-03-v145-device/capture-1/capture-findings.json",
+  "historicalOfficialProfileTotalFixed": false,
+  "october683MinutesRecovered": false,
+  "newCandidateDeviceAccess": false,
+  "newCandidateInstalled": false,
+  "realAccountRequestsByAgent": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false,
+  "readOnlyV144Capture": ".codex-artifacts/2026-11-03-v145-readonly/READONLY-CAPTURE-SUMMARY.json",
+  "implementation": "docs/SYNC-SNAPSHOT-FIX-2026-11-03-v1.0.45.md",
+  "boundaries": [
+    "First 1.0.45 candidate was installed with explicit user permission and its capture has ended. R2 requires new installation/retest permission.",
+    "Native/Dart delivery and HTTP completed in background; shared playback snapshot was omitted until resume. R2 reads it in regular ticks, pending physical retest.",
+    "Annual report is an official yearly aggregate; no monthly values are fabricated.",
+    "Real account relationships, footprint permissions, phone GPU and background/lock-screen behavior remain unverified."
+  ]
+}

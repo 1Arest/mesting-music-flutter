@@ -10,7 +10,8 @@ import 'netease_fallback.dart';
 import 'netease_playback_options.dart';
 
 class NeteaseLocalSvipBadge extends ConsumerWidget {
-  const NeteaseLocalSvipBadge({super.key});
+  const NeteaseLocalSvipBadge({this.inline = false, super.key});
+  final bool inline;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(neteaseLocalSvipProvider)) return const SizedBox.shrink();
@@ -18,7 +19,7 @@ class NeteaseLocalSvipBadge extends ConsumerWidget {
     return Semantics(
       label: '网易云本地 SVIP 已启用',
       child: Container(
-        margin: const EdgeInsets.only(top: 8),
+        margin: inline ? EdgeInsets.zero : const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: scheme.primaryContainer,

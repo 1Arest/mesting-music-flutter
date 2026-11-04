@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'together_sync_diagnostics.dart';
 
 /// Engine-owned Android pulses supplement Dart timers while an active room is
 /// backgrounded. The bridge carries an opaque lease only, never account data.
@@ -16,13 +17,22 @@ class TogetherBackgroundBinding {
     this.retryDelay = const Duration(milliseconds: 500),
     this.configurationProbeDelay = const Duration(seconds: 15),
     this.leaseRefreshInterval = const Duration(seconds: 45),
+    TogetherSyncDiagnostics? diagnostics,
   }) : supported =
            supported ??
-           (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+           (!kIsWeb && defaultTargetPlatform == TargetPlatform.android),
+       journal = diagnostics ?? TogetherSyncDiagnostics.shared {
     if (!this.supported) return;
     _owner = this;
     _channel.setMethodCallHandler(_receive);
-    _lifecycle = AppLifecycleListener(onStateChange: (_) => _synchronize());
+    journal.record(TogetherSyncPhase.bindingStarted);
+    _recordLifecycle(WidgetsBinding.instance.lifecycleState);
+    _lifecycle = AppLifecycleListener(
+      onStateChange: (state) {
+        _recordLifecycle(state);
+        _synchronize();
+      },
+    );
     changes.addListener(_synchronize);
     _synchronize();
   }
@@ -30,6 +40,7 @@ class TogetherBackgroundBinding {
   final bool Function() active;
   final Future<void> Function() poll;
   final bool supported;
+  final TogetherSyncDiagnostics journal;
   final Duration configurationTimeout, retryDelay;
   final Duration configurationProbeDelay, leaseRefreshInterval;
   static const _channel = MethodChannel(
@@ -49,6 +60,15 @@ class TogetherBackgroundBinding {
   Duration _confirmedAt = Duration.zero, _probeAt = Duration.zero;
   int _configurationRetry = 0;
   bool _disposed = false;
+
+  void _recordLifecycle(AppLifecycleState? state) => journal.record(
+    TogetherSyncPhase.lifecycle,
+    lifecycle: TogetherSyncLifecycle.values.byName(
+      (state ?? AppLifecycleState.detached).name,
+    ),
+    active: active(),
+    background: state != AppLifecycleState.resumed,
+  );
 
   void _synchronize() {
     if (_disposed || !identical(_owner, this)) return;
@@ -123,19 +143,39 @@ class TogetherBackgroundBinding {
 
   Future<void> _configure(int revision, bool enabled, bool background) async {
     _configurationAttempts++;
+    journal.record(
+      TogetherSyncPhase.configurationSent,
+      configuration: revision,
+      attempt: _configurationRetry,
+      active: enabled,
+      background: background,
+    );
     if (!enabled || !background) {
       // There is no background job to establish while browsing or playing
       // alone. A stop still reaches native with an ordered revision, but never
       // creates acknowledgement/retry timers for ordinary foreground pages.
       try {
-        await _channel.invokeMethod<void>('configure', {
+        final response = await _channel.invokeMethod<Object?>('configure', {
           'lease': '$revision',
           'revision': revision,
           'active': false,
           'background': false,
+          'diagnosticLogging': journal.logEvents,
         });
+        journal.record(
+          TogetherSyncPhase.configurationAccepted,
+          configuration: revision,
+          active: false,
+          accepted: response is Map && response['accepted'] == true,
+        );
       } catch (_) {
         // A disconnected engine also has a bounded native room/wake lease.
+        journal.record(
+          TogetherSyncPhase.configurationFailed,
+          configuration: revision,
+          reason: TogetherSyncReason.unavailable,
+          active: false,
+        );
       }
       return;
     }
@@ -145,8 +185,13 @@ class TogetherBackgroundBinding {
         'revision': revision,
         'active': enabled,
         'background': background,
+        'diagnosticLogging': journal.logEvents,
       });
       if (_disposed || !identical(_owner, this) || revision != _configuration) {
+        journal.record(
+          TogetherSyncPhase.configurationRetired,
+          configuration: revision,
+        );
         return;
       }
       if (response is! Map ||
@@ -158,19 +203,52 @@ class TogetherBackgroundBinding {
         _confirmedConfiguration = revision;
         _confirmedAt = _clock.elapsed;
         _configurationAccepted++;
+        journal.record(
+          TogetherSyncPhase.configurationAccepted,
+          configuration: revision,
+          accepted: true,
+          active: enabled,
+          background: background,
+        );
         _retry?.cancel();
       }
     } on MissingPluginException {
-      _configurationFailed(revision, enabled, background);
+      _configurationFailed(
+        revision,
+        enabled,
+        background,
+        TogetherSyncReason.unavailable,
+      );
     } on PlatformException {
-      _configurationFailed(revision, enabled, background);
+      _configurationFailed(
+        revision,
+        enabled,
+        background,
+        TogetherSyncReason.unconfirmed,
+      );
     } on TimeoutException {
-      _configurationFailed(revision, enabled, background);
+      _configurationFailed(
+        revision,
+        enabled,
+        background,
+        TogetherSyncReason.timeout,
+      );
     }
   }
 
-  void _configurationFailed(int revision, bool enabled, bool background) {
+  void _configurationFailed(
+    int revision,
+    bool enabled,
+    bool background,
+    TogetherSyncReason reason,
+  ) {
     _configurationFailures++;
+    journal.record(
+      TogetherSyncPhase.configurationFailed,
+      configuration: revision,
+      reason: reason,
+      attempt: _configurationRetry,
+    );
     // A failed call never becomes an acknowledged configuration. Retry the
     // same opaque revision at a bounded cadence while this owner still needs
     // it; stale results cannot configure the next account/room owner.
@@ -186,6 +264,12 @@ class TogetherBackgroundBinding {
       return;
     }
     final delay = retryDelay * (1 << _configurationRetry++);
+    journal.record(
+      TogetherSyncPhase.configurationRetry,
+      configuration: revision,
+      attempt: _configurationRetry,
+      durationMs: delay.inMilliseconds,
+    );
     _retry = Timer(delay, () {
       unawaited(_configure(revision, enabled, background));
     });
@@ -195,37 +279,100 @@ class TogetherBackgroundBinding {
     final argument = call.arguments;
     final lease = argument is Map ? argument['lease'] : argument;
     final request = argument is Map ? argument['request'] : null;
-    if (!_disposed &&
-        identical(_owner, this) &&
-        call.method == 'poll' &&
-        lease == _lease &&
-        _lastBackground == true &&
-        active()) {
-      if (argument is Map && (request is! int || request <= _lastRequest)) {
-        return false;
-      }
-      if (request is int) _lastRequest = request;
-      _pulses++;
-      if (argument is Map) {
-        // Acknowledge delivery immediately. Native scheduling must not wait for
-        // HTTP, an audio decoder, a page frame, or a complete volume fade.
-        unawaited(
-          poll().catchError((Object _) {
-            _pollFailures++;
-          }),
-        );
-      } else {
-        // Legacy local probes used the lease alone. Keep their completion
-        // contract without making production pulses depend on audio work.
-        try {
-          await poll();
-        } catch (_) {
-          _pollFailures++;
-        }
-      }
-      return true;
+    final reason = _disposed || !identical(_owner, this)
+        ? TogetherSyncReason.staleOwner
+        : call.method != 'poll'
+        ? TogetherSyncReason.unsupportedMethod
+        : lease != _lease
+        ? TogetherSyncReason.staleLease
+        : _lastBackground != true || !active()
+        ? TogetherSyncReason.inactive
+        : argument is Map && (request is! int || request <= _lastRequest)
+        ? TogetherSyncReason.staleRequest
+        : null;
+    journal.record(
+      TogetherSyncPhase.pulseReceived,
+      request: request is int ? request : null,
+      accepted: reason == null,
+    );
+    if (reason != null) {
+      journal.record(TogetherSyncPhase.pulseRejected, reason: reason);
+      return false;
     }
-    return false;
+    if (request is int) _lastRequest = request;
+    _pulses++;
+    if (argument is Map) {
+      // This ACK confirms delivery only. Export HTTP/application events
+      // separately; a blocked async phase must never look like a successful
+      // synchronization just because the native callback was acknowledged.
+      unawaited(_runPoll(request is int ? request : null));
+    } else {
+      // Preserve the completion contract of older local lease-only probes.
+      await _runPoll(null);
+    }
+    return true;
+  }
+
+  Future<void> _runPoll(int? request) async {
+    final clock = Stopwatch()..start();
+    try {
+      await poll();
+      journal.record(
+        TogetherSyncPhase.pulsePollCompleted,
+        request: request,
+        durationMs: clock.elapsedMilliseconds,
+      );
+    } catch (_) {
+      _pollFailures++;
+      journal.record(
+        TogetherSyncPhase.pulsePollFailed,
+        request: request,
+        durationMs: clock.elapsedMilliseconds,
+      );
+    }
+  }
+
+  /// Manually invoked by the local preview/copy page. This only asks the
+  /// existing native worker for its in-memory journal, never an account API.
+  static Future<Map<String, Object>> captureDiagnostics({
+    Map<String, int> synchronization = const {},
+    TogetherSyncDiagnostics? journal,
+  }) async {
+    final current = _owner;
+    var native = <String, Object>{'available': false};
+    final supported =
+        current?.supported ??
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
+    if (supported) {
+      try {
+        final raw = await _channel
+            .invokeMethod<Object?>('diagnosticSnapshot')
+            .timeout(const Duration(seconds: 2));
+        native = TogetherSyncDiagnostics.sanitizeNative(raw);
+      } catch (_) {
+        // Native absence is explicit, and cannot break audio or room state.
+      }
+    }
+    return {
+      'format': 'mesting-together-sync-v1',
+      'diagnosticLoggingEnabled':
+          TogetherSyncDiagnostics.diagnosticLoggingEnabled,
+      'generatedUtcMs': DateTime.now().toUtc().millisecondsSinceEpoch,
+      'dart': (journal ?? current?.journal ?? TogetherSyncDiagnostics.shared)
+          .snapshot(),
+      'bindingCounts': {
+        'configurationAttempts': current?._configurationAttempts ?? 0,
+        'configurationAccepted': current?._configurationAccepted ?? 0,
+        'configurationFailures': current?._configurationFailures ?? 0,
+        'dartPulses': current?._pulses ?? 0,
+        'pollFailures': current?._pollFailures ?? 0,
+      },
+      'synchronizationCounts': {
+        for (final key in ['remoteReceived', 'remoteApplied', 'remoteTimeouts'])
+          if (synchronization[key] != null) key: synchronization[key]!,
+      },
+      'native': native,
+    };
   }
 
   /// Only monotonic counters leave this bridge: never tokens, IDs or songs.
@@ -261,6 +408,7 @@ class TogetherBackgroundBinding {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    journal.record(TogetherSyncPhase.bindingDisposed);
     _retry?.cancel();
     _cancelConfigurationWaits();
     _lifecycle?.dispose();
@@ -277,6 +425,7 @@ class TogetherBackgroundBinding {
               'revision': _configuration,
               'active': false,
               'background': false,
+              'diagnosticLogging': journal.logEvents,
             })
             .catchError((Object _) {}),
       );
