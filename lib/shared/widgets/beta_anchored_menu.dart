@@ -30,6 +30,9 @@ class _BetaAnchoredMenuState<T> extends State<BetaAnchoredMenu<T>> {
     if (DistributionChannel.isBeta) {
       final selected = await showBetaGlassPopover<T>(
         context: context,
+        // Filter menus do not edit text. Taking route focus and restoring it
+        // reopens an IME that Android Back hid while its editor stayed focused.
+        requestFocus: false,
         anchor: box.localToGlobal(Offset.zero) & box.size,
         width: box.size.width,
         builder: (menu) => Column(
@@ -57,6 +60,7 @@ class _BetaAnchoredMenuState<T> extends State<BetaAnchoredMenu<T>> {
     final origin = box.localToGlobal(Offset.zero, ancestor: overlay);
     final selected = await showMenu<T>(
       context: context,
+      requestFocus: false,
       useRootNavigator: true,
       constraints: BoxConstraints.tightFor(width: box.size.width),
       position: RelativeRect.fromRect(

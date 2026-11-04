@@ -701,11 +701,17 @@ void main() {
             )
             .first;
         for (final title in ['猜你喜欢', '新歌首发', '热门榜单', '新碟上架', '主题歌单', '场景音乐']) {
-          await tester.scrollUntilVisible(
-            find.text(title),
-            330,
-            scrollable: scrollable,
-          );
+          // Each entering batch waits for its real artwork decode. A single
+          // fake-time scrollUntilVisible loop cannot cross that frontier.
+          for (
+            var step = 0;
+            step < 40 && find.text(title).hitTestable().evaluate().isEmpty;
+            step++
+          ) {
+            await tester.drag(scrollable, const Offset(0, -330));
+            await pumpArtworkReady(tester);
+          }
+          expect(find.text(title).hitTestable(), findsOneWidget);
           await tester.pump(const Duration(milliseconds: 450));
           expect(tester.takeException(), isNull);
           if (title == '热门榜单' || title == '场景音乐') {
@@ -734,20 +740,10 @@ void main() {
           dark: dark,
           capture: 'refinement-profile-$suffix',
         );
-        final profileScroll = find
-            .descendant(
-              of: find.byType(ProfilePage),
-              matching: find.byType(Scrollable),
-            )
-            .first;
-        await tester.scrollUntilVisible(
-          find.text('应用'),
-          280,
-          scrollable: profileScroll,
-        );
-        await tester.pump(const Duration(milliseconds: 450));
+        // Beta's shared My page exposes Settings in its header; the old
+        // bottom "应用" section belongs to the retired profile composition.
         expect(find.text('装扮'), findsNothing);
-        expect(find.text('设置'), findsOneWidget);
+        expect(find.bySemanticsLabel('设置'), findsOneWidget);
         await captureScreenshot(tester, 'refinement-profile-$suffix-settings');
         await pump(
           tester,
@@ -1856,10 +1852,13 @@ void main() {
         expect(tester.getSize(send), const Size(48, 48));
         expect(tester.getSize(find.byType(TextField)).height, lessThan(60));
         await tester.tap(sort);
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 450));
         expect(find.text('最新'), findsOneWidget);
         await tester.tap(find.text('最新').hitTestable());
-        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pump(const Duration(milliseconds: 350));
         expect(find.text('最新'), findsOneWidget);
         expect(find.byType(PlatformCommentComposer), findsOneWidget);
         tester.view.viewInsets = const FakeViewPadding(bottom: 280);
@@ -2112,9 +2111,14 @@ void main() {
                   : _track,
             );
         await middle('beta10-song-${next ? 'next' : 'previous'}-middle');
-        final transitions = tester.widgetList<PlayerContentTransition>(
-          find.byType(PlayerContentTransition),
-        );
+        // A retained outgoing artwork stage intentionally freezes its own
+        // ticker/direction while the outer transition dismisses it. Check the
+        // live content island, not that inactive historical snapshot.
+        final transitions = find
+            .byType(PlayerContentTransition)
+            .evaluate()
+            .where((element) => TickerMode.valuesOf(element).enabled)
+            .map((element) => element.widget as PlayerContentTransition);
         expect(transitions.every((w) => w.direction == (next ? 1 : -1)), true);
         await tester.pump(const Duration(milliseconds: 450));
       }
@@ -2223,8 +2227,10 @@ void main() {
       await tester.tap(find.text('收藏'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 450));
-      expect(find.text('手机号登录'), findsOneWidget);
-      Navigator.of(tester.element(find.text('手机号登录'))).pop();
+      // Protected writes use the shared platform-choice welcome route.
+      expect(find.text('酷狗登录'), findsOneWidget);
+      expect(find.text('网易云登录'), findsOneWidget);
+      Navigator.of(tester.element(find.text('酷狗登录'))).pop();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 450));
       expect(allowed, false);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'beta_page_route_observer.dart';
+import 'beta_swipe_pages.dart';
 
 /// Nested branch routes remain current in their own Navigator. This additional
 /// visibility signal prevents a retained tab from owning the active search bar.
@@ -157,7 +158,18 @@ class _RetainedTabState extends State<_RetainedTab>
       visible: widget.visible,
       motionSettled: widget.motionSettled,
       location: widget.location,
-      child: TickerMode(enabled: widget.visible, child: widget.child),
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (event) {
+          if (event.metrics.axis != Axis.vertical) return false;
+          // Relay before PageView increments notification depth. Retained,
+          // hidden tabs must never change the visible capsule's geometry.
+          if (widget.visible && event.depth == 0) {
+            BetaActivePageScrollNotification(event).dispatch(context);
+          }
+          return true;
+        },
+        child: TickerMode(enabled: widget.visible, child: widget.child),
+      ),
     );
   }
 }

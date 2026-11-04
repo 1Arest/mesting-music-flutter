@@ -153,6 +153,14 @@ class ArtworkRefreshCoordinator {
     return true;
   }
 
+  /// Prepare one playback picture without holding the audio source resolver.
+  /// The view keeps its decoded previous picture until this bounded job ends.
+  Future<bool> preparePlaybackArtwork(String uri) => _ready(
+    uri,
+    null,
+    deadline: DateTime.now().add(const Duration(seconds: 20)),
+  );
+
   Future<bool> _ready(
     String source,
     ArtworkRefreshRegistration? registration, {

@@ -14,6 +14,7 @@ import '../full/netease_manual_routes.dart';
 import 'together_presence.dart';
 import 'together_cumulative.dart';
 import 'together_playback_command.dart';
+import 'together_background_binding.dart';
 
 /// Kept outside pages so dismissing a sheet/chat cannot stop a room. Watching
 /// the account recreates and disposes the controller on logout/platform switch.
@@ -34,7 +35,13 @@ final neteaseTogetherControllerProvider = Provider<NeteaseTogetherController?>((
   final lifecycle = AppLifecycleListener(
     onResume: () => unawaited(controller.resume()),
   );
+  final background = TogetherBackgroundBinding(
+    changes: controller,
+    active: () => controller.current && controller.active && !controller.ending,
+    poll: controller.poll,
+  );
   ref.onDispose(() {
+    background.dispose();
     lifecycle.dispose();
     controller.dispose();
   });
@@ -183,6 +190,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   final _pendingRemote = <String>{};
   Future<void> _remoteTail = Future.value();
   Timer? _timer;
+  DateTime? _lastPoll;
   final _subscriptions = <StreamSubscription<dynamic>>[];
   Future<void> _tail = Future.value();
   bool get current => !_disposed && isCurrent();
@@ -612,7 +620,7 @@ class NeteaseTogetherController extends ChangeNotifier {
       }),
     );
     if (automaticTimer) {
-      _timer = Timer.periodic(const Duration(seconds: 5), (_) => tick());
+      _timer = Timer.periodic(const Duration(seconds: 5), (_) => poll());
     }
   }
 
@@ -668,6 +676,19 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (!_syncCurrent(epoch)) return;
     _formerSong = track.platformSongId;
     await _remote(NeteaseMusicRepository.object(r['data']));
+  }
+
+  /// Both background engine pulses and the Dart fallback use one cadence.
+  /// Explicit room refreshes bypass this coalescing; duplicate timer sources
+  /// must not send concurrent heartbeats or replay a playback mutation.
+  Future<void> poll() async {
+    final now = DateTime.now();
+    if (_lastPoll != null &&
+        now.difference(_lastPoll!) < const Duration(seconds: 4)) {
+      return;
+    }
+    _lastPoll = now;
+    await tick();
   }
 
   Future<void> tick() async {
@@ -772,6 +793,7 @@ class NeteaseTogetherController extends ChangeNotifier {
 
   Future<void> settle() => _tail;
   void _stop() {
+    _lastPoll = null;
     _timer?.cancel();
     _timer = null;
     for (final s in _subscriptions) {

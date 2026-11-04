@@ -21,32 +21,36 @@ class BetaEdgeBack extends StatelessWidget {
     final navigator = Navigator.maybeOf(context);
     final active =
         enabled && (onBack != null || (navigator?.canPop() ?? false));
-    if (!active) return child;
+    // A popup changes Navigator.canPop even when this underlying page stays
+    // visible. Keep its content at the same element position: swapping the
+    // Scaffold with a LayoutBuilder used to dispose menus/editors mid-open,
+    // losing selection results and restoring focus to a replacement editor.
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
           fit: StackFit.expand,
           children: [
             child,
-            for (final left in [true, false])
-              Positioned(
-                left: left ? 0 : null,
-                right: left ? null : 0,
-                top: 0,
-                bottom: 0,
-                width: 32,
-                child: _EdgeRecognizer(
-                  left: left,
-                  onBack: () {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    if (onBack != null) {
-                      onBack!();
-                    } else {
-                      unawaited(navigator!.maybePop());
-                    }
-                  },
+            if (active)
+              for (final left in [true, false])
+                Positioned(
+                  left: left ? 0 : null,
+                  right: left ? null : 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 32,
+                  child: _EdgeRecognizer(
+                    left: left,
+                    onBack: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      if (onBack != null) {
+                        onBack!();
+                      } else {
+                        unawaited(navigator!.maybePop());
+                      }
+                    },
+                  ),
                 ),
-              ),
           ],
         );
       },

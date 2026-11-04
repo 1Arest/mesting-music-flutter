@@ -120,6 +120,16 @@ void openPlatformPlaylistComments(
     showPlatformFailure(context, const MusicPlatformException('平台未返回歌单评论标识'));
     return;
   }
+  // The source route may be replaced or disposed before a pushed page builds.
+  // Capture its account-scoped repository now; a route builder cannot retain
+  // the originating WidgetRef and read it after that element is deactivated.
+  final repository = session.platform == MusicPlatform.netease
+      ? NeteaseCommentsRepository(
+          ref.read(musicPlatformApiProvider),
+          session,
+          ref.read(neteaseMusicRepositoryProvider),
+        )
+      : PlatformCommentsRepository(ref.read(musicPlatformApiProvider), session);
   Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute<void>(
       builder: (_) => PlatformCommentsPage(
@@ -128,16 +138,7 @@ void openPlatformPlaylistComments(
           id: id,
           name: name,
         ),
-        repository: session.platform == MusicPlatform.netease
-            ? NeteaseCommentsRepository(
-                ref.read(musicPlatformApiProvider),
-                session,
-                ref.read(neteaseMusicRepositoryProvider),
-              )
-            : PlatformCommentsRepository(
-                ref.read(musicPlatformApiProvider),
-                session,
-              ),
+        repository: repository,
       ),
     ),
   );

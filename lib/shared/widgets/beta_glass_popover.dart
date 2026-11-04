@@ -470,6 +470,7 @@ Future<T?> showBetaGlassPopover<T>({
   double width = 300,
   String label = '关闭菜单',
   bool fromInnerEdge = false,
+  bool requestFocus = true,
 }) async {
   appHaptic(context, AppHapticEvent.impact);
   final media = MediaQuery.of(context);
@@ -480,6 +481,7 @@ Future<T?> showBetaGlassPopover<T>({
     fromInnerEdge: fromInnerEdge,
   );
   final route = _BetaGlassPopoverRoute<T>(
+    requestFocus: requestFocus,
     label: label,
     reduceMotion: media.disableAnimations,
     pageBuilder: (dialog, animation, _) => Theme(
@@ -499,6 +501,7 @@ Future<T?> showBetaGlassPopover<T>({
 class _BetaGlassPopoverRoute<T> extends RawDialogRoute<T> {
   _BetaGlassPopoverRoute({
     required super.pageBuilder,
+    super.requestFocus,
     required String label,
     required this.reduceMotion,
   }) : super(

@@ -20,6 +20,8 @@ import '../../presentation/platform_design.dart';
 import '../../presentation/platform_comment_composer.dart';
 import '../../presentation/platform_comments_page.dart';
 import '../netease_music_repository.dart';
+import '../netease_user_page.dart';
+import '../../domain/platform_search_user.dart';
 import '../full/netease_together_page.dart';
 import '../full/netease_entity_picker.dart';
 import 'netease_messages_repository.dart';
@@ -809,7 +811,31 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                               : MainAxisAlignment.start,
                           children: [
                             if (!mine) ...[
-                              NeteasePersonAvatar(widget.peer, size: 36),
+                              Semantics(
+                                button: true,
+                                label: '查看${widget.peer.name}的个人主页',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: widget.peer.id.isEmpty
+                                      ? null
+                                      : () {
+                                          FocusManager.instance.primaryFocus
+                                              ?.unfocus();
+                                          openNeteaseUser(
+                                            context,
+                                            PlatformSearchUser(
+                                              id: widget.peer.id,
+                                              nickname: widget.peer.name,
+                                              avatar: widget.peer.avatar,
+                                            ),
+                                          );
+                                        },
+                                  child: NeteasePersonAvatar(
+                                    widget.peer,
+                                    size: 36,
+                                  ),
+                                ),
+                              ),
                               const SizedBox(width: 9),
                             ],
                             Flexible(

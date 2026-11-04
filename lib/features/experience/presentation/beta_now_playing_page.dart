@@ -41,6 +41,7 @@ import '../../music_platform/presentation/music_mv_page.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
 import 'player_chrome_reveal.dart';
 import 'player_content_transition.dart';
+import 'player_artwork_transition.dart';
 
 /// THESIS: Artwork and lyrics lead; shared Apple transport recedes below them.
 /// PALETTE: Cover-derived blur, a dark readability veil, white transport, red
@@ -369,13 +370,21 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                           showNeteaseTogetherPanel(context),
                                     ),
                                   Expanded(
-                                    child: ArtworkRevealBoundary(
+                                    child: SizedBox(
                                       child: PlayerContentTransition(
                                         direction: _direction,
                                         child: _queue
-                                            ? const PlayerQueuePanel(
+                                            ? const ArtworkRevealBoundary(
                                                 key: ValueKey(
-                                                  'player-queue-panel',
+                                                  'player-queue-content',
+                                                ),
+                                                // Queue batches retain their
+                                                // existing readiness boundary;
+                                                // cover changes own theirs.
+                                                child: PlayerQueuePanel(
+                                                  key: ValueKey(
+                                                    'player-queue-panel',
+                                                  ),
                                                 ),
                                               )
                                             : _lyrics
@@ -387,7 +396,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                               )
                                             : Padding(
                                                 key: ValueKey(
-                                                  'immersive-cover-${track.id}-${style.id}',
+                                                  'immersive-cover-${style.id}',
                                                 ),
                                                 padding:
                                                     const EdgeInsets.fromLTRB(
@@ -402,11 +411,13 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                                   child: GestureDetector(
                                                     onTap: () =>
                                                         _showLyrics(true),
-                                                    child: PlayerArtworkStage(
-                                                      style: style,
-                                                      track: track,
-                                                      playing: playing,
-                                                    ),
+                                                    child:
+                                                        PlayerArtworkTransition(
+                                                          direction: _direction,
+                                                          style: style,
+                                                          track: track,
+                                                          playing: playing,
+                                                        ),
                                                   ),
                                                 ),
                                               ),

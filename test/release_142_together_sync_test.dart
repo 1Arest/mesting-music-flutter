@@ -53,7 +53,7 @@ const _outsideQueue = Track(
 
 // A shared in-memory room carries the actual decoded EAPI command envelope
 // between two independent controllers. Neither client reaches an account.
-class _Room {
+class SyntheticTogetherRoom {
   Map<String, dynamic>? latest, replay;
   int sequence = 0, failSongReads = 0;
   bool delayHeartbeat = false;
@@ -148,11 +148,11 @@ class _LateTrackPlayer extends FakeTogetherPlayer {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late _Room room;
+  late SyntheticTogetherRoom room;
   late List<FakeTogetherPlayer> players;
   late List<NeteaseTogetherController> controllers;
   Future<void> prepare({bool latePeerTrack = false}) async {
-    room = _Room();
+    room = SyntheticTogetherRoom();
     players = [
       FakeTogetherPlayer(),
       latePeerTrack ? _LateTrackPlayer() : FakeTogetherPlayer(),

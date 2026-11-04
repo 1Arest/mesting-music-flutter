@@ -90,75 +90,80 @@ class VinylDiscSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  stops: [0, .88, .945, 1],
-                  colors: [
-                    Color(0xFF171719),
-                    Color(0xFF0B0B0D),
-                    Color(0xFF252529),
-                    Color(0xFF101012),
+    // Classic's tonearm reserves vertical space inside a square stage. Loosen
+    // that rectangular constraint before enforcing 1:1, including the label;
+    // BoxShape.circle alone only fixes the grooves, not a stretched ClipOval.
+    return Center(
+      child: AspectRatio(
+        aspectRatio: 1,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    stops: [0, .88, .945, 1],
+                    colors: [
+                      Color(0xFF171719),
+                      Color(0xFF0B0B0D),
+                      Color(0xFF252529),
+                      Color(0xFF101012),
+                    ],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x66000000),
+                      blurRadius: 34,
+                      spreadRadius: 2,
+                      offset: Offset(0, 18),
+                    ),
+                    BoxShadow(
+                      color: Color(0x332D2D31),
+                      blurRadius: 12,
+                      spreadRadius: 3,
+                    ),
                   ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x66000000),
-                    blurRadius: 34,
-                    spreadRadius: 2,
-                    offset: Offset(0, 18),
-                  ),
-                  BoxShadow(
-                    color: Color(0x332D2D31),
-                    blurRadius: 12,
-                    spreadRadius: 3,
-                  ),
-                ],
               ),
             ),
-          ),
-          Positioned.fill(
-            child: RotationTransition(
-              turns: turns,
-              child: RepaintBoundary(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      stops: [0, .31, .315, .58, .82, 1],
-                      colors: [
-                        Color(0xFF111113),
-                        Color(0xFF09090B),
-                        Color(0xFF1B1B1E),
-                        Color(0xFF101012),
-                        Color(0xFF08080A),
-                        Color(0xFF151518),
-                      ],
+            Positioned.fill(
+              child: RotationTransition(
+                turns: turns,
+                child: RepaintBoundary(
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        stops: [0, .31, .315, .58, .82, 1],
+                        colors: [
+                          Color(0xFF111113),
+                          Color(0xFF09090B),
+                          Color(0xFF1B1B1E),
+                          Color(0xFF101012),
+                          Color(0xFF08080A),
+                          Color(0xFF151518),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: FractionallySizedBox(
-                    widthFactor: labelSizeFactor.clamp(.35, .66),
-                    heightFactor: labelSizeFactor.clamp(.35, .66),
-                    child: ClipOval(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: .72),
-                            width: 2.5,
+                    child: FractionallySizedBox(
+                      widthFactor: labelSizeFactor.clamp(.35, .66),
+                      heightFactor: labelSizeFactor.clamp(.35, .66),
+                      child: ClipOval(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: .72),
+                              width: 2.5,
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: SizedBox.expand(
-                          child: ArtworkImage(
-                            uri: coverAsset,
-                            fit: BoxFit.cover,
+                          child: SizedBox.expand(
+                            child: ArtworkImage(
+                              uri: coverAsset,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
                       ),
@@ -167,28 +172,28 @@ class VinylDiscSurface extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(painter: _VinylGroovePainter()),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(painter: _VinylGroovePainter()),
+              ),
             ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: LayoutBuilder(
-                builder: (context, constraints) => DecoratedBox(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF343438).withValues(alpha: .76),
-                      width: constraints.maxWidth * .025,
+            Positioned.fill(
+              child: IgnorePointer(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF343438).withValues(alpha: .76),
+                        width: constraints.maxWidth * .025,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
