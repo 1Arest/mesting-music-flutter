@@ -1,6 +1,24 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
+import '../../../core/performance/background_json.dart';
 import '../domain/local_music.dart';
+
+LocalMusicLibrary _parseLocalMusicSnapshot(Map<Object?, Object?> snapshot) =>
+    LocalMusicLibrary.fromMap(snapshot);
+
+/// Native scanning already has its own worker. Its detached channel snapshot
+/// must also leave the UI isolate before Dart validation, sorting and grouping.
+/// Only codec-safe map values cross the boundary, never the channel or grants.
+Future<LocalMusicLibrary> decodeLocalMusicLibrarySnapshot(
+  Map<Object?, Object?> snapshot,
+) => largeJsonValue(snapshot)
+    ? compute(
+        _parseLocalMusicSnapshot,
+        snapshot,
+        debugLabel: 'local-music-index',
+      )
+    : Future.value(_parseLocalMusicSnapshot(snapshot));
 
 class LocalMusicException implements Exception {
   const LocalMusicException(this.message, {this.code = ''});
@@ -55,7 +73,7 @@ class AndroidLocalMusicRepository implements LocalMusicRepository {
     if (data == null) {
       throw const LocalMusicException('本地音乐索引暂时无法读取，请重试');
     }
-    return LocalMusicLibrary.fromMap(data);
+    return decodeLocalMusicLibrarySnapshot(data);
   }
 
   @override

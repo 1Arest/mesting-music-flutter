@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show ChangeNotifierProvider;
 import '../../core/cache/cached_browse_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,7 +16,10 @@ import '../music_platform/domain/platform_session.dart';
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/netease/netease_library_repository.dart';
 import '../music_platform/data/platform_library_repository.dart';
+import '../music_platform/data/cloud_library_repository.dart';
 import 'data/library_repository.dart';
+import 'data/favorite_track_window.dart';
+import 'data/playlist_directory_window.dart';
 import 'data/library_sync_api.dart';
 
 const _libraryCloudBootstrapPrefix = 'library_cloud_bootstrapped_v2_';
@@ -155,24 +159,69 @@ final activeLibraryOwnerProvider = Provider<String>((ref) {
   return ref.watch(currentUserProvider)?.uid ?? legacyLibraryOwnerId;
 });
 
+final favoriteTrackWindowProvider = Provider<FavoriteTrackWindow>((ref) {
+  final window = FavoriteTrackWindow(ref.watch(libraryRepositoryProvider));
+  ref.onDispose(window.dispose);
+  return window;
+});
+
 final favoriteTracksProvider = StreamProvider<List<Track>>((ref) {
   if (!ref.watch(isAuthenticatedProvider) && !DistributionChannel.isBeta) {
     return Stream.value(const <Track>[]);
   }
-  return ref.watch(libraryRepositoryProvider).watchFavorites();
+  if (!DistributionChannel.isBeta) {
+    return ref.watch(libraryRepositoryProvider).watchFavorites();
+  }
+  return ref.watch(favoriteTrackWindowProvider).stream;
+});
+
+/// Complete membership is cheap IDs, never the subset of loaded detail rows.
+/// Keep this separate from viewport pagination and its displayed count.
+final _favoriteMembershipRevisionProvider = StreamProvider<int>((ref) {
+  return ref.watch(favoriteTrackWindowProvider).revisions;
+});
+
+final completeFavoriteIdsProvider = FutureProvider<Set<String>>((ref) async {
+  if (!ref.exists(favoriteTrackWindowProvider)) {
+    return {
+      for (final track
+          in ref.watch(favoriteTracksProvider).value ?? const <Track>[])
+        track.id,
+    };
+  }
+  await ref.watch(_favoriteMembershipRevisionProvider.future);
+  return ref.watch(libraryRepositoryProvider).favoriteIds();
 });
 
 final favoriteTrackIdsProvider = Provider<Set<String>>((ref) {
   final tracks = ref.watch(favoriteTracksProvider).value ?? const <Track>[];
-  return tracks.map((track) => track.id).toSet();
+  return {
+    ...?ref.watch(completeFavoriteIdsProvider).value,
+    ...tracks.map((track) => track.id),
+  };
+});
+
+final favoriteCollectionCountProvider = Provider<int>((ref) {
+  final tracks = ref.watch(favoriteTracksProvider).value ?? const <Track>[];
+  return ref.exists(favoriteTrackWindowProvider)
+      ? ref.read(favoriteTrackWindowProvider).total ?? tracks.length
+      : tracks.length;
 });
 
 final playlistsProvider = StreamProvider<List<UserPlaylist>>((ref) {
   if (!ref.watch(isAuthenticatedProvider) && !DistributionChannel.isBeta) {
     return Stream.value(const <UserPlaylist>[]);
   }
-  return ref.watch(libraryRepositoryProvider).watchPlaylists();
+  if (!DistributionChannel.isBeta) {
+    return ref.watch(libraryRepositoryProvider).watchPlaylists();
+  }
+  return ref.watch(playlistDirectoryWindowProvider).stream;
 });
+
+final playlistDirectoryWindowProvider =
+    ChangeNotifierProvider<PlaylistDirectoryWindow>(
+      (ref) => PlaylistDirectoryWindow(ref.watch(libraryRepositoryProvider)),
+    );
 
 final playlistProvider = FutureProvider.family<UserPlaylist?, String>((
   ref,
@@ -194,5 +243,24 @@ final playlistTracksProvider = StreamProvider.family<List<Track>, String>((
   if (!ref.watch(isAuthenticatedProvider) && !DistributionChannel.isBeta) {
     return Stream.value(const <Track>[]);
   }
-  return ref.watch(libraryRepositoryProvider).watchPlaylistTracks(playlistId);
+  if (!DistributionChannel.isBeta) {
+    return ref.watch(libraryRepositoryProvider).watchPlaylistTracks(playlistId);
+  }
+  final repository = ref.watch(libraryRepositoryProvider);
+  // Reordering a local playlist needs its complete ordering; its DB snapshot
+  // is cached/decoded separately. Cloud browsing has no implicit full read.
+  if (repository is! CloudLibraryRepository) {
+    return repository.watchPlaylistTracks(playlistId);
+  }
+  return ref.watch(playlistTrackWindowProvider(playlistId)).stream;
 });
+
+final playlistTrackWindowProvider = Provider.autoDispose
+    .family<FavoriteTrackWindow, String>((ref, id) {
+      final window = FavoriteTrackWindow(
+        ref.watch(libraryRepositoryProvider),
+        playlistId: id,
+      );
+      ref.onDispose(window.dispose);
+      return window;
+    });

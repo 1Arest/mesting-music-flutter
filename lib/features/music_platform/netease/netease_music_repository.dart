@@ -1,5 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../../../core/performance/background_json.dart' show largeJsonValue;
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
+import '../../../core/cache/browse_response_cache.dart';
+import '../data/track_page_utils.dart';
 import '../data/music_platform_api.dart';
 import '../data/platform_category_search.dart';
 import '../data/platform_explore.dart';
@@ -22,6 +27,19 @@ class NeteaseMusicRepository {
   final NeteaseApi api;
   final String? credential;
   final bool nativeLogEnabled;
+  final _playlistIndexes = <String, Future<_NeteasePlaylistIndex>>{};
+  final _playlistPages = <String, Future<TrackPage>>{};
+  final _fixedCollections = <String, Future<List<Track>>>{};
+  int _playlistRevision = 0;
+
+  /// A library mutation starts a new collection snapshot. Old in-flight pages
+  /// may finish for their original caller, but cannot populate the new cache.
+  void invalidatePlaylists() {
+    _playlistRevision++;
+    _playlistIndexes.clear();
+    _playlistPages.clear();
+    _fixedCollections.clear();
+  }
 
   /// `startplay` updates recent plays; the separate `play` event carries only
   /// actual elapsed seconds. A 200 response is receipt, not proof of indexing.
@@ -134,6 +152,13 @@ class NeteaseMusicRepository {
   static List<Track> tracks(Object? values) =>
       rows(values).map(track).whereType<Track>().toList();
 
+  static Future<List<Track>> tracksAsync(Object? value) {
+    final values = rows(value);
+    return values.length < 100
+        ? Future.value(tracks(values))
+        : compute(tracks, values, debugLabel: 'netease-track-metadata');
+  }
+
   Future<PlatformSearchPage> search(
     String query, {
     int page = 1,
@@ -228,11 +253,13 @@ class NeteaseMusicRepository {
 
   Future<List<Track>> daily() async {
     final value = await call('/recommend/songs');
-    return tracks(object(value['data'])['dailySongs'] ?? value['recommend']);
+    return tracksAsync(
+      object(value['data'])['dailySongs'] ?? value['recommend'],
+    );
   }
 
   Future<List<Track>> newSongs() async =>
-      tracks((await call('/top/song'))['data']);
+      tracksAsync((await call('/top/song'))['data']);
   Future<List<Track>> fm() async =>
       tracks((await call('/personal/fm'))['data']);
   Future<List<Map<String, dynamic>>> featured() async {
@@ -250,28 +277,165 @@ class NeteaseMusicRepository {
         .toList();
   }
 
-  /// Detail can omit track objects for large lists. Rehydrate every returned ID
-  /// in bounded batches, keeping the server's order and avoiding a silent cut.
-  Future<List<Track>> playlist(String id) async {
+  Future<_NeteasePlaylistIndex> _fetchPlaylistIndex(String id) async {
+    final revision = _playlistRevision;
     final playlist = object(
-      (await call('/playlist/detail', {'id': id}))['playlist'],
+      // n=0 asks for the ordered ID index, not thousands of song DTOs. The
+      // transport keeps the legacy default for callers that omit this field.
+      (await call('/playlist/detail', {'id': id, 'n': 0}))['playlist'],
     );
+    final index = largeJsonValue(playlist)
+        ? await compute(
+            _parsePlaylistIndex,
+            playlist,
+            debugLabel: 'netease-playlist-index',
+          )
+        : _parsePlaylistIndex(playlist);
+    if (revision == _playlistRevision) {
+      // Observed previews and direct continuation share one source index.
+      _playlistIndexes[id] = Future.value(index);
+    }
+    return index;
+  }
+
+  static _NeteasePlaylistIndex _parsePlaylistIndex(
+    Map<String, dynamic> playlist,
+  ) {
     final ids = rows(playlist['trackIds']).map((e) => '${e['id']}').toList();
-    if (ids.isEmpty) return tracks(playlist['tracks']);
     final known = {
       for (final t in tracks(playlist['tracks'])) t.platformSongId: t,
     };
-    final missing = ids.where((id) => !known.containsKey(id)).toList();
+    return _NeteasePlaylistIndex(
+      ids.isEmpty ? known.keys.toList() : ids,
+      known,
+    );
+  }
+
+  Future<_NeteasePlaylistIndex> _playlistIndex(String id) {
+    if (BrowseResponseCache.observing) return _fetchPlaylistIndex(id);
+    final revision = _playlistRevision;
+    return _playlistIndexes[id] ??= _fetchPlaylistIndex(id).catchError((
+      Object error,
+    ) {
+      if (revision == _playlistRevision) _playlistIndexes.remove(id);
+      throw error;
+    });
+  }
+
+  Future<void> _hydrateIds(
+    _NeteasePlaylistIndex index,
+    List<String> ids,
+  ) async {
+    final missing = ids.where((id) => !index.known.containsKey(id)).toList();
     for (var i = 0; i < missing.length; i += 500) {
       final end = (i + 500).clamp(0, missing.length);
       final payload = await call('/song/detail', {
         'ids': missing.sublist(i, end),
       });
-      for (final t in tracks(payload['songs'])) {
-        known[t.platformSongId] = t;
+      for (final t in await tracksAsync(payload['songs'])) {
+        index.known[t.platformSongId] = t;
       }
     }
-    return ids.map((id) => known[id]).whereType<Track>().toList();
+  }
+
+  /// Exposes a real source slice: unavailable IDs still advance nextOffset,
+  /// preventing a sparse provider response from looping or skipping later IDs.
+  Future<TrackPage> playlistPage(String id, {int offset = 0, int limit = 30}) {
+    final start = offset.clamp(0, 1 << 31);
+    final size = limit.clamp(1, 1000);
+    final revision = _playlistRevision;
+    Future<TrackPage> load() async {
+      final index = await _playlistIndex(id);
+      final begin = start.clamp(0, index.ids.length);
+      final end = (begin + size).clamp(begin, index.ids.length);
+      final ids = index.ids.sublist(begin, end);
+      await _hydrateIds(index, ids);
+      return TrackPage(
+        ids.map((id) => index.known[id]).whereType<Track>().toList(),
+        offset: begin,
+        nextOffset: end,
+        total: index.ids.length,
+        hasMore: end < index.ids.length,
+      );
+    }
+
+    if (BrowseResponseCache.observing) return load();
+    final key = '$id:$start:$size';
+    return _playlistPages[key] ??= load().catchError((Object error) {
+      if (revision == _playlistRevision) _playlistPages.remove(key);
+      throw error;
+    });
+  }
+
+  /// Complete operations (search/export/explicit Play All) retain the complete
+  /// collection. Normal list rendering uses playlistPage instead.
+  Future<List<Track>> playlist(String id) async {
+    final index = await _playlistIndex(id);
+    await _hydrateIds(index, index.ids);
+    return index.ids.map((id) => index.known[id]).whereType<Track>().toList();
+  }
+
+  Future<TrackPage> categoryTrackPage(
+    PlatformSearchHit hit, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    if (hit.kind == PlatformSearchKind.playlists) {
+      return playlistPage(hit.globalId, offset: offset, limit: limit);
+    }
+    if (hit.kind == PlatformSearchKind.artists) {
+      final start = offset.clamp(0, 1 << 31);
+      final size = limit.clamp(1, 500);
+      final payload = await call('/artist/songs', {
+        'id': hit.id,
+        'offset': start,
+        'limit': size,
+        'order': 'hot',
+      });
+      final values = rows(payload['songs']);
+      final total = int.tryParse('${payload['total']}');
+      return TrackPage(
+        tracks(values),
+        offset: start,
+        nextOffset: start + values.length,
+        total: total,
+        hasMore: payload['more'] is bool
+            ? payload['more'] == true
+            : total != null
+            ? start + values.length < total
+            : values.length >= size,
+      );
+    }
+    return exploreTrackPage(
+      PlatformExploreItem(
+        id: hit.id,
+        title: hit.title,
+        cover: hit.cover,
+        kind: PlatformExploreKind.album,
+      ),
+      offset: offset,
+      limit: limit,
+    );
+  }
+
+  Future<TrackPage> exploreTrackPage(
+    PlatformExploreItem item, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    if (item.kind != PlatformExploreKind.album) {
+      return playlistPage(item.id, offset: offset, limit: limit);
+    }
+    Future<List<Track>> load() async =>
+        tracksAsync((await call('/album', {'id': item.id}))['songs']);
+    final key = 'album:${item.id}';
+    final values = await (BrowseResponseCache.observing
+        ? load()
+        : (_fixedCollections[key] ??= load().catchError((Object error) {
+            _fixedCollections.remove(key);
+            throw error;
+          })));
+    return sliceTrackPage(values, offset: offset, limit: limit);
   }
 
   Future<List<Track>> categoryTracks(PlatformSearchHit hit) async {
@@ -311,7 +475,7 @@ class NeteaseMusicRepository {
 
   Future<List<Track>> exploreTracks(PlatformExploreItem item) async {
     if (item.kind != PlatformExploreKind.album) return playlist(item.id);
-    return tracks((await call('/album', {'id': item.id}))['songs']);
+    return tracksAsync((await call('/album', {'id': item.id}))['songs']);
   }
 
   Future<Set<PlatformAudioQuality>> qualities(String id) async {
@@ -386,4 +550,12 @@ class NeteaseMusicRepository {
       availabilityMessage: preview ? '网易云试听片段' : '网易云音乐',
     );
   }
+}
+
+/// Metadata is stored separately from the immutable source-order index. A
+/// partial detail response cannot accidentally shorten the playlist itself.
+class _NeteasePlaylistIndex {
+  _NeteasePlaylistIndex(this.ids, this.known);
+  final List<String> ids;
+  final Map<String, Track> known;
 }

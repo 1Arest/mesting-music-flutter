@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import '../../../core/performance/background_json.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 
 import '../../auth/domain/auth_models.dart';
 import '../domain/listen_together.dart';
@@ -46,6 +48,7 @@ class CloudBaseSocialRepository
   final String _actionPath;
   final Duration _requestTimeout;
   final Map<String, String> _resolvedMediaUrls = <String, String>{};
+  final _messageSnapshots = <String, (String, List<SocialMessage>)>{};
 
   @override
   Future<SocialSummary> summary() async {
@@ -79,7 +82,7 @@ class CloudBaseSocialRepository
   @override
   Future<List<SocialUser>> searchUsers(String query) async {
     final payload = await _call('searchUsers', {'query': query.trim()});
-    return _users(payload['users']);
+    return _usersAsync(payload['users']);
   }
 
   @override
@@ -91,7 +94,7 @@ class CloudBaseSocialRepository
   @override
   Future<List<SocialUser>> listConnections(SocialConnectionKind kind) async {
     final payload = await _call('listConnections', {'kind': kind.name});
-    return _users(payload['users']);
+    return _usersAsync(payload['users']);
   }
 
   @override
@@ -123,17 +126,31 @@ class CloudBaseSocialRepository
   @override
   Future<List<SocialConversation>> listConversations() async {
     final payload = await _call('listConversations');
-    return _list(payload['conversations'])
-        .map((item) => SocialConversation.fromJson(_map(item)))
-        .toList(growable: false);
+    final rows = _list(payload['conversations']);
+    return rows.length < 100
+        ? _conversationRows(rows)
+        : compute(_conversationRows, rows, debugLabel: 'chat-conversations');
   }
 
   @override
   Future<List<SocialMessage>> listMessages(String uid) async {
     final payload = await _call('listMessages', {'uid': uid});
-    return _list(
-      payload['messages'],
-    ).map((item) => SocialMessage.fromJson(_map(item))).toList(growable: false);
+    final encoded = await encodeJsonValue(payload['messages']);
+    final cached = _messageSnapshots[uid];
+    if (cached?.$1 == encoded) return cached!.$2;
+    final rows = _list(payload['messages']);
+    final messages = rows.length < 100
+        ? _messageRows(rows)
+        : await compute(
+            _messageRows,
+            rows,
+            debugLabel: 'chat-message-snapshot',
+          );
+    if (_messageSnapshots.length >= 4) {
+      _messageSnapshots.remove(_messageSnapshots.keys.first);
+    }
+    _messageSnapshots[uid] = (encoded, messages);
+    return messages;
   }
 
   @override
@@ -375,7 +392,7 @@ class CloudBaseSocialRepository
       final response = await http.Response.fromStream(
         await request.send(),
       ).timeout(const Duration(seconds: 90));
-      final payload = _decode(response);
+      final payload = await _decode(response);
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw SocialRequestException(
           _text(payload['message']) ?? '媒体上传失败，请稍后重试',
@@ -457,7 +474,7 @@ class CloudBaseSocialRepository
     } on http.ClientException {
       throw const SocialRequestException('暂时无法连接好友服务，请稍后重试');
     }
-    final payload = _decode(response);
+    final payload = await _decode(response);
     final failed =
         response.statusCode < 200 ||
         response.statusCode >= 300 ||
@@ -520,10 +537,10 @@ class CloudBaseSocialRepository
     return session;
   }
 
-  Map<String, Object?> _decode(http.Response response) {
+  Future<Map<String, Object?>> _decode(http.Response response) async {
     if (response.bodyBytes.isEmpty) return const {};
     try {
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      final decoded = await decodeJsonBytes(response.bodyBytes);
       if (decoded is Map) return Map<String, Object?>.from(decoded);
     } on Object {
       // Fall through to the safe error below.
@@ -583,7 +600,7 @@ class CloudBaseSocialRepository
     }
     Object? decoded;
     try {
-      decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      decoded = await decodeJsonBytes(response.bodyBytes);
     } on Object {
       throw const SocialRequestException('云存储返回了无法识别的数据');
     }
@@ -597,6 +614,18 @@ class CloudBaseSocialRepository
     throw const SocialRequestException('云存储返回的数据格式不完整');
   }
 }
+
+List<SocialMessage> _messageRows(List<Object?> rows) => rows
+    .map((item) => SocialMessage.fromJson(_map(item)))
+    .toList(growable: false);
+
+List<SocialConversation> _conversationRows(List<Object?> rows) => rows
+    .map((item) => SocialConversation.fromJson(_map(item)))
+    .toList(growable: false);
+
+Future<List<SocialUser>> _usersAsync(Object? value) => _list(value).length < 100
+    ? Future.value(_users(value))
+    : compute(_users, value, debugLabel: 'social-users');
 
 List<SocialUser> _users(Object? value) => _list(value)
     .map((item) => SocialUser.fromJson(_map(item)))

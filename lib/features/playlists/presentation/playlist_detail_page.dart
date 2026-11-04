@@ -93,8 +93,20 @@ class PlaylistDetailPage extends ConsumerWidget {
                           playAll: trackList,
                         )
                       : ref.read(audioHandlerProvider).replaceQueue(trackList),
-            onAddTracks: () =>
-                _showTrackPicker(context, ref, trackList, favoriteTracks),
+            onAddTracks: () async {
+              try {
+                final all = ref.exists(favoriteTrackWindowProvider)
+                    ? await ref.read(favoriteTrackWindowProvider).complete()
+                    : favoriteTracks;
+                if (context.mounted) {
+                  _showTrackPicker(context, ref, trackList, all);
+                }
+              } catch (failure) {
+                if (context.mounted) {
+                  _showPlaylistNotice(context, '收藏读取未完成，请重试', added: false);
+                }
+              }
+            },
             onReorder: (items, oldIndex, newIndex) {
               final reordered = List<Track>.of(items);
               if (newIndex > oldIndex) newIndex -= 1;

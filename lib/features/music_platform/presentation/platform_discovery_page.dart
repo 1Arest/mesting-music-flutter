@@ -1,6 +1,8 @@
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
+import '../../../shared/widgets/music_list_footer.dart';
 import '../netease/fallback/netease_source_picker.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
@@ -324,41 +326,75 @@ class PlatformPublicPlaylistPage extends ConsumerWidget {
   final String name;
   final String cover;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => PlatformPageFrame(
-    title: name,
-    subtitle: '酷狗精选歌单',
-    actions: [
-      if (ref.watch(showPlatformFeaturesProvider))
-        IconButton(
-          tooltip: '酷狗歌单评论',
-          icon: const Icon(Icons.comment_outlined),
-          onPressed: () =>
-              openPlatformPlaylistComments(context, ref, id: id, name: name),
-        ),
-    ],
-    child: CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: ref
-              .watch(platformPublicPlaylistProvider(id))
-              .when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
-                data: (tracks) =>
-                    EditorialCollectionHero(cover: cover, tracks: tracks),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final value = ref.watch(platformPublicPlaylistProvider(id));
+    final window = ref.exists(publicPlaylistWindowProvider(id))
+        ? ref.watch(publicPlaylistWindowProvider(id))
+        : null;
+    return PlatformPageFrame(
+      title: name,
+      subtitle: '酷狗精选歌单',
+      actions: [
+        if (ref.watch(showPlatformFeaturesProvider))
+          IconButton(
+            tooltip: '酷狗歌单评论',
+            icon: const Icon(Icons.comment_outlined),
+            onPressed: () =>
+                openPlatformPlaylistComments(context, ref, id: id, name: name),
+          ),
+      ],
+      child: ListenableBuilder(
+        listenable: window ?? const AlwaysStoppedAnimation(0),
+        builder: (context, _) => AutomaticSongPaging(
+          enabled:
+              window != null &&
+              window.hasMore &&
+              !window.loading &&
+              window.error == null,
+          onLoadMore: () => window?.loadMore() ?? Future.value(),
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: value.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (tracks) => EditorialCollectionHero(
+                    cover: cover,
+                    tracks: window?.items ?? tracks,
+                    total: window?.total,
+                    loadComplete: window?.complete,
+                  ),
+                ),
               ),
-        ),
-        PlatformSongs(
-          sliver: true,
-          value: ref.watch(platformPublicPlaylistProvider(id)),
-          retry: () => ref.invalidate(platformPublicPlaylistProvider(id)),
-        ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: BetaContentInsets.musicBottomOf(context, 210),
+              PlatformSongs(
+                sliver: true,
+                value: value.whenData((tracks) => window?.items ?? tracks),
+                retry: () {
+                  ref.invalidate(publicPlaylistWindowProvider(id));
+                  ref.invalidate(platformPublicPlaylistProvider(id));
+                },
+              ),
+              SliverToBoxAdapter(
+                child: window?.loading == true
+                    ? const PlatformFeedbackState(loading: true)
+                    : window?.error != null
+                    ? TextButton(
+                        onPressed: window!.loadMore,
+                        child: const Text('加载未完成，点击重试'),
+                      )
+                    : window?.hasMore == true
+                    ? const SizedBox(height: 12)
+                    : const MusicListEnd(),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: BetaContentInsets.musicBottomOf(context, 210),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
 }

@@ -53,7 +53,7 @@ void main() {
           ),
         );
         await tester.pump();
-        await tester.drag(find.byType(ListView), const Offset(0, 750));
+        await tester.drag(find.byType(Scrollable), const Offset(0, 750));
         for (var i = 0; i < 8; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
@@ -62,7 +62,7 @@ void main() {
         expect(activeAppleIndicators(tester), 1);
         expect(find.text('cached rows').hitTestable(), findsOneWidget);
         expect(find.byType(MusicRefreshIndicator), findsOneWidget);
-        await tester.drag(find.byType(ListView), const Offset(0, 250));
+        await tester.drag(find.byType(Scrollable), const Offset(0, 250));
         await tester.pump(const Duration(milliseconds: 50));
         expect(
           calls,

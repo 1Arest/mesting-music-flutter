@@ -163,7 +163,7 @@ void main() {
         await mount(const MusicFunctionsPage());
         expect(find.byKey(const ValueKey('function-听书')), findsOneWidget);
         await capture(tester, 'functions-${config.$4}');
-        await tester.drag(find.byType(ListView).first, const Offset(0, -550));
+        await tester.drag(find.byType(Scrollable).first, const Offset(0, -550));
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('function-本地音乐')), findsOneWidget);
         await capture(tester, 'functions-bottom-${config.$4}');

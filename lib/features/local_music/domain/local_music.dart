@@ -22,6 +22,8 @@ class LocalMusicEntry {
   final String folderPath, artwork, origin;
   final Duration duration;
   final bool available;
+  static final _tracks = Expando<Track>('local-music-track');
+  static final _searchTexts = Expando<String>('local-music-search');
 
   factory LocalMusicEntry.fromMap(Map<Object?, Object?> map) {
     String text(String key) => '${map[key] ?? ''}'.trim();
@@ -53,7 +55,10 @@ class LocalMusicEntry {
     );
   }
 
-  Track get track => Track(
+  /// Reading a row title must not construct a playback object. The immutable
+  /// entry also reuses its track when it is later queued or played repeatedly.
+  String get displayTitle => musicDisplayTitle(title);
+  Track get track => _tracks[this] ??= Track(
     id: id,
     title: title,
     artist: artist,
@@ -69,7 +74,9 @@ class LocalMusicEntry {
   bool matches(String query) {
     final needle = query.trim().toLowerCase();
     return needle.isEmpty ||
-        '$title\n$artist\n$album\n$folderName'.toLowerCase().contains(needle);
+        (_searchTexts[this] ??= '$title\n$artist\n$album\n$folderName'
+                .toLowerCase())
+            .contains(needle);
   }
 
   LocalMusicEntry withAvailability(bool value) => LocalMusicEntry(
@@ -99,10 +106,20 @@ class LocalMusicLibrary {
     this.entries = const [],
     this.permissionGranted = false,
     this.notice = '',
-  });
+  }) : _preparedFolders = null;
+  const LocalMusicLibrary._prepared({
+    required this.entries,
+    required this.permissionGranted,
+    required this.notice,
+    required List<LocalMusicFolder> folders,
+  }) : _preparedFolders = folders;
   final List<LocalMusicEntry> entries;
   final bool permissionGranted;
   final String notice;
+  final List<LocalMusicFolder>? _preparedFolders;
+  static final _folderCache = Expando<List<LocalMusicFolder>>(
+    'local-music-library-folders',
+  );
 
   factory LocalMusicLibrary.fromMap(Map<Object?, Object?> map) {
     final entries = <LocalMusicEntry>[];
@@ -120,24 +137,112 @@ class LocalMusicLibrary {
       }
     }
     entries.sort((a, b) => a.title.compareTo(b.title));
-    return LocalMusicLibrary(
+    return LocalMusicLibrary._prepared(
       entries: List.unmodifiable(entries),
       permissionGranted: map['permissionGranted'] == true,
       notice: '${map['notice'] ?? ''}',
+      folders: _groupLocalFolders(entries),
     );
   }
 
-  List<LocalMusicFolder> get folders {
-    final groups = <String, LocalMusicFolder>{};
-    for (final entry in entries) {
-      final old = groups[entry.folderId];
-      groups[entry.folderId] = LocalMusicFolder(
-        entry.folderId,
-        entry.folderName,
-        entry.folderPath,
-        (old?.count ?? 0) + 1,
-      );
+  /// A library is one immutable device snapshot. Parsed snapshots carry their
+  /// worker-built groups; manually constructed snapshots group only once.
+  List<LocalMusicFolder> get folders =>
+      _preparedFolders ?? (_folderCache[this] ??= _groupLocalFolders(entries));
+}
+
+List<LocalMusicFolder> _groupLocalFolders(List<LocalMusicEntry> entries) {
+  final groups = <String, _LocalFolderCount>{};
+  for (final entry in entries) {
+    final group = groups.putIfAbsent(
+      entry.folderId,
+      () => _LocalFolderCount(entry),
+    );
+    group.entry = entry;
+    group.count++;
+  }
+  final folders = [
+    for (final group in groups.values)
+      LocalMusicFolder(
+        group.entry.folderId,
+        group.entry.folderName,
+        group.entry.folderPath,
+        group.count,
+      ),
+  ]..sort((a, b) => a.name.compareTo(b.name));
+  return List.unmodifiable(folders);
+}
+
+class _LocalFolderCount {
+  _LocalFolderCount(this.entry);
+  LocalMusicEntry entry;
+  int count = 0;
+}
+
+/// Complete derived collections, rather than a rendering window, remain the
+/// source for search, folder contents and playback-all. Busy/artwork rebuilds
+/// reuse the same result while a new device snapshot invalidates every query.
+class LocalMusicView {
+  const LocalMusicView({
+    required this.entries,
+    required this.available,
+    required this.folders,
+    required this.selectedFolder,
+  });
+  final List<LocalMusicEntry> entries, available;
+  final List<LocalMusicFolder> folders;
+  final LocalMusicFolder? selectedFolder;
+}
+
+class LocalMusicViewCache {
+  LocalMusicLibrary? _library;
+  final _views = <(String, String?), LocalMusicView>{};
+
+  LocalMusicView select(
+    LocalMusicLibrary library, {
+    String query = '',
+    String? folderId,
+  }) {
+    if (!identical(library, _library)) {
+      _library = library;
+      _views.clear();
     }
-    return groups.values.toList()..sort((a, b) => a.name.compareTo(b.name));
+    final needle = query.trim().toLowerCase(),
+        key = (query.trim().toLowerCase(), folderId);
+    final cached = _views.remove(key);
+    if (cached != null) {
+      _views[key] = cached;
+      return cached;
+    }
+    final matching = needle.isEmpty
+        ? library.entries
+        : library.entries
+              .where((entry) => entry.matches(needle))
+              .toList(growable: false);
+    final entries = folderId == null
+        ? matching
+        : matching
+              .where((entry) => entry.folderId == folderId)
+              .toList(growable: false);
+    final matchingFolders = needle.isEmpty
+        ? null
+        : matching.map((entry) => entry.folderId).toSet();
+    final result = LocalMusicView(
+      entries: List.unmodifiable(entries),
+      available: List.unmodifiable(entries.where((entry) => entry.available)),
+      folders: matchingFolders == null
+          ? library.folders
+          : List.unmodifiable(
+              library.folders.where(
+                (folder) => matchingFolders.contains(folder.id),
+              ),
+            ),
+      selectedFolder: library.folders
+          .where((folder) => folder.id == folderId)
+          .firstOrNull,
+    );
+    if (_views.length >= 8) _views.remove(_views.keys.first);
+    _views[key] = result;
+    return result;
   }
 }

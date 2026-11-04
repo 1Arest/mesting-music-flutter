@@ -2,6 +2,7 @@ import '../../../../shared/widgets/beta_swipe_pages.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/track.dart';
@@ -43,7 +44,11 @@ class _ListeningFootprintPageState
   bool _active = true;
   String _query = '';
   final _scrolls = List.generate(3, (_) => ScrollController());
+  final _scrollPageKeys = List.generate(3, (_) => GlobalKey());
   ScrollController get _scroll => _scrolls[_bound?.scale.index ?? 0];
+  Drag? _headerDrag;
+  double? _swipeHeaderOffset;
+  int _headerSwipeGeneration = 0;
   final _selectedDays = <String, String>{};
   late final BetaPageSearchController _search;
 
@@ -68,6 +73,37 @@ class _ListeningFootprintPageState
       mounted && _active && ModalRoute.of(context)?.isCurrent == true;
   void _filter(String value) {
     if (mounted) setState(() => _query = value.trim().toLowerCase());
+  }
+
+  void _startHeaderDrag(DragStartDetails details) {
+    _headerDrag?.cancel();
+    if (!_scroll.hasClients) return;
+    // Moving the header out of the pager must not remove vertical drags that
+    // start on its title. Reuse the active scroll's own physics and activity.
+    _headerDrag = _scroll.position.drag(details, () => _headerDrag = null);
+  }
+
+  bool _holdHeaderDuringSwipe(ScrollNotification event) {
+    if (event.depth != 0 || event.metrics.axis != Axis.horizontal) return false;
+    if (event is ScrollStartNotification && event.dragDetails != null) {
+      ++_headerSwipeGeneration;
+      // Different pages may retain different vertical offsets. Changing the
+      // active scale halfway across a swipe must not move the common title's
+      // alignment or resize its header while the finger is still paging.
+      _swipeHeaderOffset = _scroll.hasClients ? _scroll.offset : 0;
+    } else if (event is ScrollEndNotification && _swipeHeaderOffset != null) {
+      final generation = _headerSwipeGeneration;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            generation != _headerSwipeGeneration ||
+            _swipeHeaderOffset == null) {
+          return;
+        }
+        setState(() => _swipeHeaderOffset = null);
+      });
+      WidgetsBinding.instance.ensureVisualUpdate();
+    }
+    return false;
   }
 
   void _revealReport() {
@@ -105,6 +141,7 @@ class _ListeningFootprintPageState
   @override
   void dispose() {
     _calendar?.cancel();
+    _headerDrag?.cancel();
     _search.dispose();
     for (final scroll in _scrolls) {
       scroll.dispose();
@@ -122,6 +159,8 @@ class _ListeningFootprintPageState
       _summary = summary;
       _selectedDays.clear();
       _query = '';
+      _swipeHeaderOffset = null;
+      ++_headerSwipeGeneration;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted ||
             !identical(detail, _bound) ||
@@ -141,107 +180,155 @@ class _ListeningFootprintPageState
             backgroundColor: Theme.of(context).colorScheme.surface,
             body: AnimatedBuilder(
               animation: Listenable.merge([?detail, ?summary]),
-              builder: (context, _) => BetaSwipePages(
-                index: detail?.scale.index ?? 0,
-                length: 3,
-                onChanged: (index) {
-                  if (detail == null) return;
-                  detail.selectScale(FootprintScale.values[index]);
-                  unawaited(detail.loadSelected());
-                },
-                itemBuilder: (context, index) {
-                  final pageScale = FootprintScale.values[index];
-                  final page = detail?.view(pageScale);
-                  return CustomScrollView(
-                    key: index == (detail?.scale.index ?? 0)
-                        ? const ValueKey('listening-footprint-scroll')
-                        : ValueKey('footprint-scroll-$index'),
-                    controller: _scrolls[index],
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    slivers: [
-                      SliverPersistentHeader(
-                        pinned: true,
-                        delegate: _FootprintHeader(
-                          top: MediaQuery.paddingOf(context).top,
-                          textScale:
-                              MediaQuery.textScalerOf(context).scale(16) / 16,
-                          scale: pageScale,
-                          total:
-                              summary?.total ?? const FootprintReading<int>(),
-                          loading:
-                              summary?.total.loading == true ||
-                              detail?.loading == true,
-                          onScale: detail == null
-                              ? null
-                              : (scale) {
-                                  detail.selectScale(scale);
-                                  _revealReport();
-                                  unawaited(detail.loadSelected());
-                                },
-                          onRefresh: detail == null
-                              ? null
-                              : () => unawaited(_refresh()),
+              builder: (context, _) {
+                final scale = detail?.scale ?? FootprintScale.week;
+                final metrics = _FootprintHeaderMetrics(
+                  top: MediaQuery.paddingOf(context).top,
+                  textScale: MediaQuery.textScalerOf(context).scale(16) / 16,
+                );
+                final scroll = _scrolls[scale.index];
+                return Stack(
+                  children: [
+                    Positioned.fill(
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _holdHeaderDuringSwipe,
+                        child: BetaSwipePages(
+                          index: scale.index,
+                          length: 3,
+                          onChanged: (index) {
+                            if (detail == null) return;
+                            detail.selectScale(FootprintScale.values[index]);
+                            unawaited(detail.loadSelected());
+                          },
+                          itemBuilder: (context, index) => _reportPage(
+                            detail,
+                            index,
+                            headerExtent: metrics.maxExtent,
+                          ),
                         ),
                       ),
-                      if (detail == null)
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(child: Text('请返回并选择网易云账号')),
-                        )
-                      else ...[
-                        SliverToBoxAdapter(child: _periodNavigation(page!)),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
-                            child: pageScale == FootprintScale.year
-                                ? _yearReport(page)
-                                : _dailyReport(page),
+                    ),
+                    // One common glass header stays outside the horizontal
+                    // viewport. Each scale still owns its vertical controller;
+                    // only that scale can compact this shared large title.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: AnimatedBuilder(
+                        animation: scroll,
+                        builder: (context, _) => GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onVerticalDragStart: _startHeaderDrag,
+                          onVerticalDragUpdate: (details) =>
+                              _headerDrag?.update(details),
+                          onVerticalDragEnd: (details) =>
+                              _headerDrag?.end(details),
+                          onVerticalDragCancel: () => _headerDrag?.cancel(),
+                          child: _FootprintHeader(
+                            metrics: metrics,
+                            scrollOffset:
+                                _swipeHeaderOffset ??
+                                (scroll.hasClients ? scroll.offset : 0),
+                            scale: scale,
+                            total:
+                                summary?.total ?? const FootprintReading<int>(),
+                            loading:
+                                summary?.total.loading == true ||
+                                detail?.loading == true,
+                            onScale: detail == null
+                                ? null
+                                : (scale) {
+                                    detail.selectScale(scale);
+                                    _revealReport();
+                                    unawaited(detail.loadSelected());
+                                  },
+                            onRefresh: detail == null
+                                ? null
+                                : () => unawaited(_refresh()),
                           ),
                         ),
-                        ..._todaySlivers(page),
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              22,
-                              26,
-                              22,
-                              BetaContentInsets.musicBottomOf(context, 32),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const _Footnote(
-                                  '网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。',
-                                ),
-                                const SizedBox(height: 18),
-                                BetaGlassButton(
-                                  key: const ValueKey(
-                                    'footprint-open-diagnostics',
-                                  ),
-                                  onPressed: () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          const OfficialFootprintPage(),
-                                    ),
-                                  ),
-                                  child: const Text('统计与本机记录核对'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  );
-                },
-              ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _reportPage(
+    ListeningFootprintReader? detail,
+    int index, {
+    required double headerExtent,
+  }) {
+    final pageScale = FootprintScale.values[index];
+    final page = detail?.view(pageScale);
+    return KeyedSubtree(
+      key: index == (detail?.scale.index ?? 0)
+          ? const ValueKey('listening-footprint-scroll')
+          : ValueKey('footprint-scroll-$index'),
+      // The active-page marker changes on a swipe. A stable identity below it
+      // retains the actual scroll element/position instead of detaching and
+      // recreating that page at offset zero when its marker changes.
+      child: CustomScrollView(
+        key: _scrollPageKeys[index],
+        controller: _scrolls[index],
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: [
+          // A transparent spacer preserves the original report/scroll geometry
+          // while the real header is painted once above all horizontal pages.
+          SliverToBoxAdapter(child: SizedBox(height: headerExtent)),
+          if (detail == null)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: Text('请返回并选择网易云账号')),
+            )
+          else ...[
+            SliverToBoxAdapter(child: _periodNavigation(page!)),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+                child: pageScale == FootprintScale.year
+                    ? _yearReport(page)
+                    : _dailyReport(page),
+              ),
+            ),
+            ..._todaySlivers(page),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  26,
+                  22,
+                  BetaContentInsets.musicBottomOf(context, 32),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _Footnote('网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。'),
+                    const SizedBox(height: 18),
+                    BetaGlassButton(
+                      key: const ValueKey('footprint-open-diagnostics'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const OfficialFootprintPage(),
+                        ),
+                      ),
+                      child: const Text('统计与本机记录核对'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -556,178 +643,187 @@ class _ListeningFootprintPageState
   }
 }
 
-class _FootprintHeader extends SliverPersistentHeaderDelegate {
+/// Shared geometry keeps large-text spacing and the body's scroll reservation
+/// identical without making the header part of any horizontal page.
+class _FootprintHeaderMetrics {
+  const _FootprintHeaderMetrics({required this.top, required this.textScale});
+  final double top, textScale;
+  double get segmentHeight => 44 + ((textScale - 1) * 24).clamp(0, 32);
+  double get minExtent => top + 68 + segmentHeight;
+  double get maxExtent =>
+      minExtent + 116 + ((textScale - 1) * 112).clamp(0, 160);
+}
+
+class _FootprintHeader extends StatelessWidget {
   const _FootprintHeader({
-    required this.top,
-    required this.textScale,
+    required this.metrics,
+    required this.scrollOffset,
     required this.scale,
     required this.total,
     required this.loading,
     required this.onScale,
     required this.onRefresh,
   });
-  final double top, textScale;
+  final _FootprintHeaderMetrics metrics;
+  final double scrollOffset;
   final FootprintScale scale;
   final FootprintReading<int> total;
   final bool loading;
   final ValueChanged<FootprintScale>? onScale;
   final VoidCallback? onRefresh;
-  double get segmentHeight => 44 + ((textScale - 1) * 24).clamp(0, 32);
-  @override
-  double get minExtent => top + 68 + segmentHeight;
-  @override
-  double get maxExtent =>
-      minExtent + 116 + ((textScale - 1) * 112).clamp(0, 160);
 
   @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final t = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+  Widget build(BuildContext context) {
+    final top = metrics.top, textScale = metrics.textScale;
+    final collapse = scrollOffset.clamp(
+      0.0,
+      metrics.maxExtent - metrics.minExtent,
+    );
+    final t = collapse / (metrics.maxExtent - metrics.minExtent);
     final scheme = Theme.of(context).colorScheme;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: ColoredBox(
-          color: scheme.surface.withValues(alpha: .94),
-          child: Stack(
-            children: [
-              Positioned(
-                top: top + 6,
-                left: 18,
-                child: const BetaGlassBackButton(),
-              ),
-              Positioned(
-                top: top + 6,
-                right: 18,
-                child: BetaGlassButton(
-                  key: const ValueKey('listening-footprint-refresh'),
-                  width: 48,
-                  height: 48,
-                  label: '刷新听歌足迹',
-                  loading: loading,
-                  onPressed: onRefresh,
-                  child: const Icon(CupertinoIcons.arrow_clockwise, size: 21),
+    return SizedBox(
+      key: const ValueKey('footprint-shared-header'),
+      height: metrics.maxExtent - collapse,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: ColoredBox(
+            color: scheme.surface.withValues(alpha: .94),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: top + 6,
+                  left: 18,
+                  child: const BetaGlassBackButton(),
                 ),
-              ),
-              Positioned(
-                left: 22,
-                right: 22,
-                top: lerpDouble(top + 71, top + 18, t),
-                child: IgnorePointer(
-                  child: Align(
-                    alignment: Alignment(lerpDouble(-1, 0, t)!, 0),
-                    child: Text(
-                      '听歌足迹',
-                      key: const ValueKey('footprint-collapsing-title'),
-                      style: TextStyle(
-                        fontSize: lerpDouble(34, 17, t),
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                        letterSpacing: lerpDouble(-.9, -.2, t),
+                Positioned(
+                  top: top + 6,
+                  right: 18,
+                  child: BetaGlassButton(
+                    key: const ValueKey('listening-footprint-refresh'),
+                    width: 48,
+                    height: 48,
+                    label: '刷新听歌足迹',
+                    loading: loading,
+                    onPressed: onRefresh,
+                    child: const Icon(CupertinoIcons.arrow_clockwise, size: 21),
+                  ),
+                ),
+                Positioned(
+                  left: 22,
+                  right: 22,
+                  top: lerpDouble(top + 71, top + 18, t),
+                  child: IgnorePointer(
+                    child: Align(
+                      alignment: Alignment(lerpDouble(-1, 0, t)!, 0),
+                      child: Text(
+                        '听歌足迹',
+                        key: const ValueKey('footprint-collapsing-title'),
+                        style: TextStyle(
+                          fontSize: lerpDouble(34, 17, t),
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                          letterSpacing: lerpDouble(-.9, -.2, t),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                left: 22,
-                right: 22,
-                top: top + 119 + ((textScale - 1) * 42).clamp(0, 60) - 44 * t,
-                child: IgnorePointer(
-                  child: Opacity(
-                    opacity: (1 - t * 1.65).clamp(0, 1),
-                    child: ExcludeSemantics(
-                      excluding: t > .6,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            total.value == null
-                                ? '官方累计时长暂未获取'
-                                : '累计听歌 ${officialDuration(total.value!)}',
-                            key: const ValueKey('footprint-official-total'),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (total.failed)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                total.value == null
-                                    ? '读取失败，点击右上角重试'
-                                    : '刷新失败，保留上次官方读数',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: scheme.onSurfaceVariant,
-                                ),
+                Positioned(
+                  left: 22,
+                  right: 22,
+                  top: top + 119 + ((textScale - 1) * 42).clamp(0, 60) - 44 * t,
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: (1 - t * 1.65).clamp(0, 1),
+                      child: ExcludeSemantics(
+                        excluding: t > .6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              total.value == null
+                                  ? '官方累计时长暂未获取'
+                                  : '累计听歌 ${officialDuration(total.value!)}',
+                              key: const ValueKey('footprint-official-total'),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                        ],
+                            if (total.failed)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  total.value == null
+                                      ? '读取失败，点击右上角重试'
+                                      : '刷新失败，保留上次官方读数',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              Positioned(
-                left: 22,
-                right: 22,
-                bottom: 10,
-                child: SizedBox(
-                  height: segmentHeight,
-                  child: CupertinoSlidingSegmentedControl<FootprintScale>(
-                    key: const ValueKey('footprint-scale-control'),
-                    groupValue: scale,
-                    backgroundColor: BetaAppearance.panel(
-                      Theme.of(context).brightness,
-                    ),
-                    thumbColor: Theme.of(context).brightness == Brightness.dark
-                        ? scheme.surfaceContainerHighest
-                        : Colors.white,
-                    proportionalWidth: false,
-                    onValueChanged: (value) {
-                      if (value != null) onScale?.call(value);
-                    },
-                    children: {
-                      for (final value in FootprintScale.values)
-                        value: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 5,
-                          ),
-                          child: Text(
-                            switch (value) {
-                              FootprintScale.week => '周',
-                              FootprintScale.month => '月',
-                              FootprintScale.year => '年',
-                            },
-                            key: ValueKey('footprint-scale-${value.name}'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: scheme.onSurface,
-                              fontWeight: scale == value
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                Positioned(
+                  left: 22,
+                  right: 22,
+                  bottom: 10,
+                  child: SizedBox(
+                    height: metrics.segmentHeight,
+                    child: CupertinoSlidingSegmentedControl<FootprintScale>(
+                      key: const ValueKey('footprint-scale-control'),
+                      groupValue: scale,
+                      backgroundColor: BetaAppearance.panel(
+                        Theme.of(context).brightness,
+                      ),
+                      thumbColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? scheme.surfaceContainerHighest
+                          : Colors.white,
+                      proportionalWidth: false,
+                      onValueChanged: (value) {
+                        if (value != null) onScale?.call(value);
+                      },
+                      children: {
+                        for (final value in FootprintScale.values)
+                          value: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 5,
+                            ),
+                            child: Text(
+                              switch (value) {
+                                FootprintScale.week => '周',
+                                FootprintScale.month => '月',
+                                FootprintScale.year => '年',
+                              },
+                              key: ValueKey('footprint-scale-${value.name}'),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: scheme.onSurface,
+                                fontWeight: scale == value
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ),
-                    },
+                      },
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-  @override
-  bool shouldRebuild(_FootprintHeader oldDelegate) => true;
 }
 
 class _DaySelection extends StatelessWidget {

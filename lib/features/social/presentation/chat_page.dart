@@ -169,7 +169,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   bool get _isSelectingMessages => _selectedMessageIds.isNotEmpty;
 
-  void _restoreSavedMessageIds() {
+  Future<void> _restoreSavedMessageIds() async {
     final uid = ref.read(currentUserProvider)?.uid;
     if (uid == null || uid.isEmpty) return;
     try {
@@ -177,14 +177,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ref.read(sharedPreferencesProvider),
         uid,
       );
-      final savedMessages = readSavedChatMessages(
+      final savedMessages = await readSavedChatMessagesAsync(
         ref.read(sharedPreferencesProvider),
         uid,
       );
+      if (!mounted || ref.read(currentUserProvider)?.uid != uid) return;
       _savedMessages = {
         for (final message in savedMessages) message.id: message,
       };
       _savedMessageIds = {...saved, ..._savedMessages.keys};
+      setState(() {});
     } on Object {
       // Lightweight previews and widget tests may not supply preferences.
     }
@@ -452,6 +454,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
   }
 
+  List<SocialMessage>? _lastRemoteSnapshot;
   Future<void> _loadMessages({bool silent = false}) async {
     if (_messageLoadInFlight) return;
     _messageLoadInFlight = true;
@@ -462,6 +465,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       final remoteMessages = await ref.read(
         socialMessagesProvider(widget.uid).future,
       );
+      if (!mounted) return;
+      if (silent && identical(remoteMessages, _lastRemoteSnapshot)) return;
+      _lastRemoteSnapshot = remoteMessages;
       final messages = remoteMessages
           .where((message) => !_hiddenMessageIds.contains(message.id))
           .toList(growable: false);

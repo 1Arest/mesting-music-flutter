@@ -1,5 +1,8 @@
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
+import '../../../shared/widgets/music_list_footer.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_swipe_pages.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -223,32 +226,62 @@ class _HistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListView.separated(
-      key: ValueKey(
-        ranking ? 'listening-ranking-list' : 'recent-playback-list',
+    final window = ref.exists(historyTrackWindowProvider(ranking))
+        ? ref.watch(historyTrackWindowProvider(ranking))
+        : null;
+    return ListenableBuilder(
+      listenable: window ?? const AlwaysStoppedAnimation(0),
+      builder: (context, _) => AutomaticSongPaging(
+        enabled:
+            window != null &&
+            window.hasMore &&
+            !window.loading &&
+            window.error == null,
+        onLoadMore: () => window?.loadMore() ?? Future.value(),
+        child: ListView.separated(
+          key: ValueKey(
+            ranking ? 'listening-ranking-list' : 'recent-playback-list',
+          ),
+          physics: const ArtworkFrontierPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.fromLTRB(16, 6, 16, 170),
+          ),
+          itemCount: items.length + 1,
+          separatorBuilder: (_, _) => const SizedBox(height: 9),
+          itemBuilder: (context, index) {
+            if (index == items.length) {
+              if (window?.loading == true) {
+                return const Center(child: MusicActivityIndicator());
+              }
+              if (window?.error != null) {
+                return TextButton(
+                  onPressed: window!.loadMore,
+                  child: const Text('加载未完成，点击重试'),
+                );
+              }
+              return window?.hasMore == true
+                  ? const SizedBox(height: 12)
+                  : const MusicListEnd();
+            }
+            final item = items[index];
+            return _HistoryTrackRow(
+              item: item,
+              rank: ranking ? index + 1 : null,
+              onTap: () => DistributionChannel.isBeta
+                  ? playBetaSelection(context, ref, item.track)
+                  : ref
+                        .read(audioHandlerProvider)
+                        .playSingleTrack(
+                          item.track,
+                          playbackContext: items.map((item) => item.track),
+                        ),
+            );
+          },
+        ),
       ),
-      physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
-      padding: BetaContentInsets.musicPaddingOf(
-        context,
-        EdgeInsets.fromLTRB(16, 6, 16, 170),
-      ),
-      itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 9),
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return _HistoryTrackRow(
-          item: item,
-          rank: ranking ? index + 1 : null,
-          onTap: () => DistributionChannel.isBeta
-              ? playBetaSelection(context, ref, item.track)
-              : ref
-                    .read(audioHandlerProvider)
-                    .playSingleTrack(
-                      item.track,
-                      playbackContext: items.map((item) => item.track),
-                    ),
-        );
-      },
     );
   }
 }

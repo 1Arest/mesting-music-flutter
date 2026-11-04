@@ -11,6 +11,13 @@ import 'music_platform_providers.dart';
 final platformExploreRepositoryProvider = Provider<PlatformExploreRepository>((
   ref,
 ) {
+  // The transport object survives login changes. Its repository's fixed-feed
+  // snapshots must instead belong to the exact owner/credential generation.
+  ref.watch(
+    platformAccountProvider.select(
+      (value) => (value.value?.ownerId, value.value?.token),
+    ),
+  );
   final api = ref.watch(musicPlatformApiProvider);
   return ref.watch(usesNeteaseProvider)
       ? NeteaseExploreAdapter(api, ref.watch(neteaseMusicRepositoryProvider))

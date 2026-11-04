@@ -5,10 +5,15 @@ import '../../../core/cache/browse_response_cache.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
 import '../domain/platform_session.dart';
 import 'music_platform_api.dart';
 import 'platform_catalog.dart';
 import 'kugou_favorite_playlist.dart';
+import 'kugou_playlist_paging.dart';
+import 'track_page_utils.dart';
+import 'kugou_favorite_index.dart';
+import '../../library/data/playlist_directory_window.dart';
 
 /// Implements the existing library boundary with the active Kugou cloud.
 /// Nothing is copied into the guest/CloudBase database or uploaded implicitly.
@@ -26,12 +31,22 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   Future<List<Map<String, dynamic>>>? _lists;
   final _trackLoads = <String, Future<List<Track>>>{};
   final _fileIds = <String, Map<String, String>>{};
+  Future<KugouFavoriteIndex>? _favorites;
   bool _closed = false;
   List<Map<String, dynamic>> _snapshot = const [];
   Future<void> _pendingWrite = Future<void>.value();
   int _revision = 0;
   final _createdDrafts = <String, String>{};
   final _creationBaselines = <String, Set<String>>{};
+  late final _trackPager = KugouPlaylistPaging(
+    read: _get,
+    rows: PlatformCatalog.rows,
+  );
+  late final _favoritePager = KugouPlaylistPaging(
+    read: _get,
+    rows: PlatformCatalog.rows,
+    pageSize: 200,
+  );
 
   /// Serialize writes once, without retrying remote mutations automatically.
   Future<T> _write<T>(Future<T> Function() operation) {
@@ -85,6 +100,9 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
       if (active && !_closed) {
         _lists = null;
         _trackLoads.clear();
+        _favorites = null;
+        _trackPager.clear();
+        _favoritePager.clear();
         unawaited(emit());
       }
     });
@@ -103,6 +121,9 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
     _lists = null;
     _trackLoads.clear();
     _fileIds.clear();
+    _favorites = null;
+    _trackPager.clear();
+    _favoritePager.clear();
     if (!_closed) _changes.add(null);
   }
 
@@ -170,6 +191,8 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   );
 
   Future<Map<String, dynamic>> _row(String id) async {
+    final known = _snapshot.where((row) => _id(row) == id).firstOrNull;
+    if (known != null) return known;
     final rows = await _loadLists();
     for (final row in rows) {
       if (_id(row) == id) return row;
@@ -247,6 +270,40 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
         .toList(),
   );
   @override
+  Stream<PlaylistDirectoryPage> watchPlaylistDirectory() =>
+      _watch(() => playlistDirectoryPage());
+  @override
+  Future<PlaylistDirectoryPage> playlistDirectoryPage({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final revision = _revision;
+    final payload = await _get('/user/playlist', {
+      'page': '${offset ~/ 30 + 1}',
+      'pagesize': '30',
+      'userid': identity.userId,
+    });
+    final rows = PlatformCatalog.rows(payload);
+    if (revision == _revision) {
+      final merged = {for (final row in _snapshot) _id(row): row};
+      for (final row in rows) {
+        merged[_id(row)] = row;
+      }
+      _snapshot = merged.values.toList();
+    }
+    return PlaylistDirectoryPage(
+      rows
+          .where(
+            (row) => !('${row['type']}' == '1' && '${row['source']}' == '2'),
+          )
+          .map(_playlist)
+          .toList(),
+      nextOffset: offset + rows.length,
+      hasMore: rows.length >= 30,
+    );
+  }
+
+  @override
   Future<UserPlaylist?> getPlaylist(String id) async =>
       _playlist(await _row(id));
   @override
@@ -254,11 +311,118 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
       _watch(() async => _loadTracks(await _row(playlistId)));
   @override
   Stream<List<Track>> watchFavorites() =>
-      _watch(() async => _loadTracks(await _favoriteRow()));
+      _watch(() async => (await _favoriteIndex()).tracks);
   @override
-  Future<bool> isFavorite(String trackId) async => (await _loadTracks(
-    await _favoriteRow(),
-  )).any((track) => track.id == trackId);
+  Stream<TrackPage> watchFavoritePreview() => _watch(() => favoritePage());
+  @override
+  Stream<TrackPage> watchPlaylistPreview(String id) =>
+      _watch(() => playlistPage(id));
+  @override
+  Future<TrackPage> playlistPage(
+    String id, {
+    int offset = 0,
+    int limit = 30,
+  }) async => _pageForRow(await _row(id), offset: offset, limit: limit);
+
+  Future<TrackPage> _pageForRow(
+    Map<String, dynamic> row, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final revision = _revision;
+    final listId = '${row['listid'] ?? ''}';
+    final page = await _trackPager.page(
+      listId.isEmpty ? '/playlist/track/all' : '/playlist/track/all/new',
+      {
+        if (listId.isNotEmpty) 'listid': listId,
+        if (listId.isEmpty)
+          'global_collection_id': '${row['global_collection_id'] ?? ''}',
+      },
+      offset: offset,
+      limit: limit,
+    );
+    if (revision == _revision) {
+      final records = _fileIds.putIfAbsent(_id(row), () => {});
+      for (final record in page.items) {
+        final parsed = PlatformCatalog.tracks([record]);
+        if (parsed.isNotEmpty && record['fileid'] != null) {
+          records[parsed.first.id] = '${record['fileid']}';
+        }
+      }
+    }
+    return TrackPage(
+      PlatformCatalog.tracks(page.items),
+      offset: page.offset,
+      nextOffset: page.nextOffset,
+      total: page.total,
+      hasMore: page.hasMore,
+    );
+  }
+
+  @override
+  Future<TrackPage> favoritePage({
+    int offset = 0,
+    int limit = 30,
+    String query = '',
+  }) async {
+    return sliceTrackPageAsync(
+      (await _favoriteIndex()).tracks,
+      offset: offset,
+      limit: limit,
+      query: query,
+    );
+  }
+
+  Future<KugouFavoriteIndex> _favoriteIndex() {
+    Future<KugouFavoriteIndex> load() async {
+      final revision = _revision;
+      final row = await _favoriteRow();
+      final records = <Map<String, dynamic>>[];
+      var offset = 0;
+      // This endpoint cannot return newest-first pages. Fetch the index once,
+      // checking list_ver between pages; transport snapshots remain privately
+      // cached by the original credential. Ordinary playlists stay paginated.
+      while (true) {
+        final listId = '${row['listid'] ?? ''}';
+        final page = await _favoritePager.page(
+          listId.isEmpty ? '/playlist/track/all' : '/playlist/track/all/new',
+          {
+            if (listId.isNotEmpty) 'listid': listId,
+            if (listId.isEmpty)
+              'global_collection_id': '${row['global_collection_id'] ?? ''}',
+          },
+          offset: offset,
+          limit: 200,
+        );
+        if (_closed || revision != _revision) throw StateError('收藏已变化，请重试');
+        records.addAll(page.items);
+        if (!page.hasMore) break;
+        if (page.nextOffset <= offset || page.nextOffset > 100000) {
+          throw const MusicPlatformException('收藏索引未前进，请刷新后重试');
+        }
+        offset = page.nextOffset;
+      }
+      final index = await buildKugouFavoriteIndex(records);
+      if (_closed || revision != _revision) throw StateError('收藏已变化，请重试');
+      _fileIds[_id(row)] = index.fileIds;
+      return index;
+    }
+
+    final existing = _favorites;
+    if (!BrowseResponseCache.observing && existing != null) return existing;
+    return _favorites = load().catchError((Object error) {
+      _favorites = null;
+      throw error;
+    });
+  }
+
+  @override
+  Future<Set<String>> favoriteIds() async =>
+      (await _favoriteIndex()).tracks.map((track) => track.id).toSet();
+
+  @override
+  Future<bool> isFavorite(String trackId) async =>
+      (await favoriteIds()).contains(trackId);
   @override
   Future<void> setFavorite(Track track, {required bool favorite}) async {
     await _write(() => _setFavorite(track, favorite));
@@ -310,7 +474,8 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
 
   Future<void> _remove(Map<String, dynamic> row, String trackId) async {
     _requireOwned(row);
-    await _loadTracks(row);
+    // Already loaded pages retain their record IDs. The documented hash
+    // fallback lets a direct action avoid fetching an entire large collection.
     final fileId = _fileIds[_id(row)]?[trackId];
     // The endpoint accepts a hash fallback; never send a global mixsongid as
     // the per-playlist record fileid, which could delete the wrong record.

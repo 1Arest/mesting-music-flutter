@@ -303,6 +303,8 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
   String? _token;
   bool _loaded = false;
   PlatformExploreItem? _resolvedItem;
+  int _sourceOffset = 0;
+  bool _downloadingAll = false;
   @override
   void initState() {
     super.initState();
@@ -321,6 +323,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
       final owner = account?.ownerId, token = account?.token;
       final repository = ref.read(platformExploreRepositoryProvider);
       final page = _page + 1;
+      final offset = _sourceOffset;
       final batch = await _browse.load(
         key: page,
         request: () async {
@@ -328,11 +331,14 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
           final collectionScene =
               resolved.kind == PlatformExploreKind.scene &&
               resolved.sceneContent == PlatformSceneContent.collections;
+          final trackPage = collectionScene
+              ? null
+              : await repository.tracksPage(resolved, offset: offset);
           return (
             resolved: resolved,
-            tracks: collectionScene
-                ? <Track>[]
-                : await repository.tracks(resolved, page: page),
+            tracks: trackPage?.items ?? <Track>[],
+            nextOffset: trackPage?.nextOffset ?? offset,
+            more: trackPage?.hasMore ?? false,
             collections: collectionScene
                 ? await repository.sceneCollections(resolved, page: page)
                 : <PlatformExploreItem>[],
@@ -365,8 +371,8 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                   current.resolved.sceneContent ==
                       PlatformSceneContent.collections
                   ? current.collections.length >= 30
-                  : widget.item.kind != PlatformExploreKind.theme &&
-                        current.tracks.length >= 30;
+                  : current.more;
+              _sourceOffset = current.nextOffset;
             }
           });
         },
@@ -394,9 +400,8 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
         _page++;
         _more = isCollectionScene
             ? collections.length >= 30 && newCollections.isNotEmpty
-            : widget.item.kind != PlatformExploreKind.theme &&
-                  fresh.length >= 30 &&
-                  additions.isNotEmpty;
+            : batch.more;
+        _sourceOffset = batch.nextOffset;
         _owner = owner;
         _token = token;
         _loaded = true;
@@ -455,9 +460,9 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                           : NeteaseEntity.playlist,
                     ),
                     showDownload: !collectionScene,
-                    onDownload: !_loaded || _tracks.isEmpty
+                    onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
                         ? null
-                        : () {
+                        : () async {
                             final current = ref
                                 .read(platformAccountProvider)
                                 .value;
@@ -465,7 +470,39 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                                 current?.token != _token) {
                               return;
                             }
-                            enqueueAudioDownloads(context, ref, _tracks);
+                            setState(() => _downloadingAll = true);
+                            try {
+                              final all = await ref
+                                  .read(neteaseMusicRepositoryProvider)
+                                  .exploreTracks(_resolvedItem ?? widget.item);
+                              if (!context.mounted ||
+                                  ref
+                                          .read(platformAccountProvider)
+                                          .value
+                                          ?.ownerId !=
+                                      _owner ||
+                                  ref
+                                          .read(platformAccountProvider)
+                                          .value
+                                          ?.token !=
+                                      _token) {
+                                return;
+                              }
+                              await enqueueAudioDownloads(context, ref, all);
+                            } catch (failure) {
+                              if (context.mounted) {
+                                showMusicNotice(
+                                  context,
+                                  icon: Icons.error_outline,
+                                  title: '歌曲读取未完成，请重试',
+                                  message: '',
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _downloadingAll = false);
+                              }
+                            }
                           },
                   ),
                 ],

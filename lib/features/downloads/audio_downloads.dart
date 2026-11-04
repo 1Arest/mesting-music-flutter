@@ -154,17 +154,100 @@ class AudioDownloadManager extends ChangeNotifier {
   final Future<void> Function(List<AudioDownloadTask>) persist;
   final List<AudioDownloadTask> _tasks;
   List<AudioDownloadTask> get tasks => List.unmodifiable(_tasks);
+  bool restoring = false;
+  final _deferredEnqueue = <(String, List<Track>, PlatformAudioQuality?)>[];
+  Object? restoreError;
+  bool _batching = false, _batchSave = false, _batchChanged = false;
+
+  /// A large persisted directory hydrates before new queued writes are allowed
+  /// to replace it. New requests retain their owner and are cancelled on login
+  /// changes, just like active transfers.
+  Future<void> restoreSnapshot(Future<List<AudioDownloadTask>> snapshot) async {
+    restoring = true;
+    _notify();
+    try {
+      final restored = await snapshot;
+      if (_disposed) return;
+      final known = _tasks.map((task) => task.id).toSet();
+      _tasks.insertAll(0, restored.where((task) => known.add(task.id)));
+      _resume.addAll(
+        restored
+            .where((task) => task.phase == AudioDownloadPhase.paused)
+            .map((task) => task.id),
+      );
+    } catch (failure) {
+      restoreError = failure;
+    } finally {
+      if (!_disposed) {
+        restoring = false;
+        _notify();
+        final deferred = _deferredEnqueue.toList();
+        _deferredEnqueue.clear();
+        for (final request in deferred) {
+          if (restoreError == null && request.$1 == currentOwner()) {
+            enqueueAll(request.$2, quality: request.$3);
+          }
+        }
+      }
+    }
+  }
+
+  /// Structural listeners do not receive byte-progress ticks. Rows subscribe
+  /// by task ID; account-scoped badges reuse one completed-ID index.
+  final collectionChanges = ValueNotifier<int>(0);
+  final _taskChanges = <String, ValueNotifier<int>>{};
+  final _completedIds = <String, Set<String>>{};
+  Map<String, AudioDownloadTask>? _byId;
+  Map<String, int>? _positions;
+  int _indexOf(String id) =>
+      (_positions ??= {
+        for (final row in _tasks.indexed) row.$2.id: row.$1,
+      })[id] ??
+      -1;
+  Listenable taskChanges(String id) =>
+      _taskChanges.putIfAbsent(id, () => ValueNotifier(0));
+  AudioDownloadTask? taskById(String id) =>
+      (_byId ??= {for (final task in _tasks) task.id: task})[id];
+  Set<String> completedTrackIds(String owner) => _completedIds.putIfAbsent(
+    owner,
+    () => {
+      for (final task in _tasks)
+        if (task.owner == owner &&
+            task.phase == AudioDownloadPhase.completed &&
+            task.uri.isNotEmpty)
+          task.track.id,
+    },
+  );
   bool _working = false, _disposed = false;
   String? _active;
   final _attempts = <String, int>{};
   final Set<String> _resume;
   Completer<void>? _abort;
   Future<void> _writes = Future.value();
-  void _notify() {
-    if (!_disposed) notifyListeners();
+  void _notify({bool collection = true, String? taskId}) {
+    if (_disposed) return;
+    if (_batching) {
+      _batchChanged = true;
+      return;
+    }
+    if (collection) {
+      _byId = null;
+      _positions = null;
+      _completedIds.clear();
+      collectionChanges.value++;
+    }
+    if (taskId != null) {
+      final signal = _taskChanges[taskId];
+      if (signal != null) signal.value++;
+    }
+    notifyListeners();
   }
 
   void _save() {
+    if (_batching) {
+      _batchSave = true;
+      return;
+    }
     final snapshot = List<AudioDownloadTask>.of(_tasks);
     _writes = _writes.catchError((Object _) {}).then((_) => persist(snapshot));
     // Storage errors must not leak into the playback/UI zone as unhandled work.
@@ -172,46 +255,64 @@ class AudioDownloadManager extends ChangeNotifier {
   }
 
   void _replace(AudioDownloadTask task, {bool save = true}) {
-    final index = _tasks.indexWhere((i) => i.id == task.id);
+    final index = _indexOf(task.id);
     if (index < 0) return;
+    final previous = _tasks[index];
     _tasks[index] = task;
+    _byId?[task.id] = task;
     if (save) _save();
-    _notify();
+    _notify(
+      collection: previous.phase != task.phase || previous.uri != task.uri,
+      taskId: task.id,
+    );
   }
 
-  void enqueue(Track track, {PlatformAudioQuality? quality}) {
+  void enqueue(Track track, {PlatformAudioQuality? quality}) =>
+      enqueueAll([track], quality: quality);
+
+  void enqueueAll(Iterable<Track> tracks, {PlatformAudioQuality? quality}) {
     final owner = currentOwner();
     if (owner == null) throw const MusicPlatformException('请先登录对应音乐平台');
-    if (_tasks.any(
-      (t) =>
-          t.owner == owner &&
-          t.track.id == track.id &&
-          t.requestedQuality == quality &&
-          {
-            AudioDownloadPhase.queued,
-            AudioDownloadPhase.resolving,
-            AudioDownloadPhase.downloading,
-            AudioDownloadPhase.saving,
-            AudioDownloadPhase.paused,
-          }.contains(t.phase),
-    )) {
+    if (restoreError != null) {
+      throw const MusicPlatformException('下载记录暂时无法读取，请重试后再添加');
+    }
+    if (restoring) {
+      _deferredEnqueue.add((owner, tracks.toList(), quality));
       return;
     }
-    _tasks.add(
-      AudioDownloadTask(
-        id: '${DateTime.now().microsecondsSinceEpoch}-${_tasks.length}',
-        owner: owner,
-        track: track,
-        requestedQuality: quality,
-      ),
-    );
+    final active = {
+      for (final t in _tasks)
+        if (t.owner == owner &&
+            {
+              AudioDownloadPhase.queued,
+              AudioDownloadPhase.resolving,
+              AudioDownloadPhase.downloading,
+              AudioDownloadPhase.saving,
+              AudioDownloadPhase.paused,
+            }.contains(t.phase))
+          (t.track.id, t.requestedQuality),
+    };
+    var added = false;
+    for (final track in tracks) {
+      if (!active.add((track.id, quality))) continue;
+      added = true;
+      _tasks.add(
+        AudioDownloadTask(
+          id: '${DateTime.now().microsecondsSinceEpoch}-${_tasks.length}',
+          owner: owner,
+          track: track,
+          requestedQuality: quality,
+        ),
+      );
+    }
+    if (!added) return;
     _save();
     _notify();
     unawaited(_pump());
   }
 
   void cancel(String id) {
-    final task = _tasks.firstWhere((t) => t.id == id);
+    final task = taskById(id) ?? (throw StateError('下载任务不存在'));
     if (task.phase == AudioDownloadPhase.saving ||
         task.phase == AudioDownloadPhase.completed) {
       return;
@@ -288,21 +389,35 @@ class AudioDownloadManager extends ChangeNotifier {
   }
 
   void cancelPending() {
-    for (final task in List<AudioDownloadTask>.of(_tasks)) {
-      if (task.phase == AudioDownloadPhase.queued ||
-          task.phase == AudioDownloadPhase.resolving ||
-          task.phase == AudioDownloadPhase.downloading) {
-        cancel(task.id);
-      } else if (task.phase == AudioDownloadPhase.saving) {
-        // An account token can change without changing ownerId. Invalidate a
-        // saving attempt too; its late exporter result cannot claim success.
-        _attempts[task.id] = (_attempts[task.id] ?? 0) + 1;
-        _replace(
-          task.copy(
-            phase: AudioDownloadPhase.failed,
-            error: '账号已变化，保存结果未写入下载记录',
-          ),
-        );
+    _deferredEnqueue.clear();
+    _batching = true;
+    try {
+      for (final task in List<AudioDownloadTask>.of(_tasks)) {
+        if (task.phase == AudioDownloadPhase.queued ||
+            task.phase == AudioDownloadPhase.resolving ||
+            task.phase == AudioDownloadPhase.downloading) {
+          cancel(task.id);
+        } else if (task.phase == AudioDownloadPhase.saving) {
+          // An account token can change without changing ownerId. Invalidate a
+          // saving attempt too; its late exporter result cannot claim success.
+          _attempts[task.id] = (_attempts[task.id] ?? 0) + 1;
+          _replace(
+            task.copy(
+              phase: AudioDownloadPhase.failed,
+              error: '账号已变化，保存结果未写入下载记录',
+            ),
+          );
+        }
+      }
+    } finally {
+      _batching = false;
+      if (_batchSave) {
+        _batchSave = false;
+        _save();
+      }
+      if (_batchChanged) {
+        _batchChanged = false;
+        _notify();
       }
     }
   }
@@ -332,11 +447,10 @@ class AudioDownloadManager extends ChangeNotifier {
       _attempts[task.id] == attempt &&
       !_disposed &&
       task.owner == currentOwner() &&
-      _tasks.any(
-        (t) => t.id == task.id && t.phase != AudioDownloadPhase.cancelled,
-      );
+      taskById(task.id) != null &&
+      taskById(task.id)!.phase != AudioDownloadPhase.cancelled;
   Future<void> _pump() async {
-    if (_working || _disposed) return;
+    if (_working || _disposed || restoring) return;
     _working = true;
     try {
       while (!_disposed) {
@@ -585,6 +699,10 @@ class AudioDownloadManager extends ChangeNotifier {
     _disposed = true;
     if (_abort?.isCompleted == false) _abort!.complete();
     client.close();
+    collectionChanges.dispose();
+    for (final signal in _taskChanges.values) {
+      signal.dispose();
+    }
     super.dispose();
   }
 }
@@ -605,13 +723,11 @@ Track downloadedPlaybackTrack(AudioDownloadTask task) {
   );
 }
 
-final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
-  final preferences = ref.watch(sharedPreferencesProvider);
+/// Persisted tasks are one device snapshot, not a frame-time UI operation.
+List<AudioDownloadTask> _decodeDownloadSnapshot(String raw) {
   final restored = <AudioDownloadTask>[];
   try {
-    final rows =
-        jsonDecode(preferences.getString('audio_download_tasks_v1') ?? '[]')
-            as List;
+    final rows = jsonDecode(raw) as List;
     for (final row in rows.whereType<Map>()) {
       final phase = AudioDownloadPhase.values.byName('${row['phase']}');
       restored.add(
@@ -639,6 +755,36 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
   } catch (_) {
     /* A corrupt history must not block new downloads. */
   }
+  return restored;
+}
+
+Future<List<AudioDownloadTask>> decodeAudioDownloadSnapshot(String raw) =>
+    raw.length < 128 * 1024
+    ? Future.value(_decodeDownloadSnapshot(raw))
+    : compute(
+        _decodeDownloadSnapshot,
+        raw,
+        debugLabel: 'download-directory-restore',
+      );
+
+String _encodeDownloadSnapshot(List<AudioDownloadTask> tasks) =>
+    jsonEncode(tasks.map((task) => task.toJson()).toList());
+Future<String> encodeAudioDownloadSnapshot(List<AudioDownloadTask> tasks) =>
+    tasks.length < 100
+    ? Future.value(_encodeDownloadSnapshot(tasks))
+    : compute(
+        _encodeDownloadSnapshot,
+        tasks,
+        debugLabel: 'download-directory-write',
+      );
+
+final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
+  final preferences = ref.watch(sharedPreferencesProvider);
+  final raw = preferences.getString('audio_download_tasks_v1') ?? '[]';
+  final largeSnapshot = raw.length >= 128 * 1024;
+  final restored = largeSnapshot
+      ? <AudioDownloadTask>[]
+      : _decodeDownloadSnapshot(raw);
   final manager = AudioDownloadManager(
     client: http.Client(),
     restored: restored,
@@ -648,7 +794,7 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
     persist: (tasks) async {
       if (!await preferences.setString(
         'audio_download_tasks_v1',
-        jsonEncode(tasks.map((t) => t.toJson()).toList()),
+        await encodeAudioDownloadSnapshot(tasks),
       )) {
         throw const MusicPlatformException('下载记录未保存');
       }
@@ -740,6 +886,9 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
     },
     publish: const AudioDownloadStorage().publish,
   );
+  if (largeSnapshot) {
+    unawaited(manager.restoreSnapshot(decodeAudioDownloadSnapshot(raw)));
+  }
   ref.listen(platformAccountProvider, (before, after) {
     if (before?.value?.ownerId != after.value?.ownerId ||
         before?.value?.token != after.value?.token) {

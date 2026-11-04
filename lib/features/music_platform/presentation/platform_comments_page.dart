@@ -1,3 +1,4 @@
+import 'platform_lazy_list.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/cupertino.dart';
@@ -165,6 +166,13 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
   final _browse = CachedBrowseLoader();
   final _text = TextEditingController();
   List<PlatformComment> _comments = [];
+  // Data revisions keep composer/focus/loading rebuilds from sorting the whole
+  // loaded collection. In-place cache refreshes increment the revision too.
+  int _commentRevision = 0, _derivedRevision = -1;
+  PlatformCommentSort? _derivedSort;
+  PlatformCommentScope? _derivedScope;
+  List<PlatformComment> _derivedComments = const [];
+  Map<Key, int> _derivedCommentIndices = const {};
   int _page = 0;
   int _generation = 0;
   bool _loading = false;
@@ -290,6 +298,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
               _sortNotice = sortNotice;
             }
             if (page == _page) _hasMore = current.hasMore;
+            _commentRevision++;
           });
         },
       );
@@ -311,6 +320,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
         _comments = merged.values.toList();
         _page = page;
         _hasMore = result.hasMore && progressed;
+        _commentRevision++;
       });
     } catch (error) {
       if (mounted && generation == _generation && !silent) {
@@ -391,10 +401,72 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    ref.watch(showPlatformFeaturesProvider);
-    ref.watch(platformAccountProvider);
+  Widget _commentRow(
+    BuildContext context,
+    PlatformComment comment,
+  ) => BetaContentReveal(
+    key: ValueKey('comment-reveal-${comment.id}'),
+    child: PlatformCommentCard(
+      comment: comment,
+      onHug: widget.repository is NeteaseCommentsRepository && !_writing
+          ? () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => NeteaseCommentHugsPage(
+                  repository: widget.repository as NeteaseCommentsRepository,
+                  resource: widget.resource,
+                  comment: comment,
+                ),
+              ),
+            )
+          : null,
+      onReaction: widget.repository is NeteaseCommentsRepository && !_writing
+          ? () async {
+              if (!_current) return;
+              setState(() => _writing = true);
+              try {
+                await (widget.repository as NeteaseCommentsRepository).like(
+                  widget.resource,
+                  comment,
+                );
+                if (mounted && _current) {
+                  await _load(reset: true, silent: true);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  showPlatformFailure(context, e);
+                }
+              } finally {
+                if (mounted) {
+                  setState(() => _writing = false);
+                }
+              }
+            }
+          : null,
+      onReply: _writing ? null : () => setState(() => _reply = comment),
+      onDelete: !_writing && comment.userId == widget.repository.identity.userId
+          ? () => _delete(comment)
+          : null,
+      onThread: widget.thread == null
+          ? () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => PlatformCommentsPage(
+                  resource: widget.resource,
+                  repository: widget.repository,
+                  thread: comment,
+                ),
+              ),
+            )
+          : null,
+    ),
+  );
+
+  List<PlatformComment> get _visibleComments {
+    if (_derivedRevision == _commentRevision &&
+        _derivedSort == _sort &&
+        _derivedScope == _scope) {
+      return _derivedComments;
+    }
+    final singerIds = _singers.map((row) => row.id).toSet();
     final entries =
         <String, PlatformComment>{
               if (widget.thread == null)
@@ -405,7 +477,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
               (row) => switch (_scope) {
                 PlatformCommentScope.all => true,
                 PlatformCommentScope.singer =>
-                  row.isSinger || _singers.any((singer) => singer.id == row.id),
+                  row.isSinger || singerIds.contains(row.id),
                 PlatformCommentScope.mine =>
                   row.userId == widget.repository.identity.userId,
               },
@@ -424,6 +496,21 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
         ),
       },
     );
+    _derivedRevision = _commentRevision;
+    _derivedSort = _sort;
+    _derivedScope = _scope;
+    _derivedCommentIndices = {
+      for (var index = 0; index < entries.length; index++)
+        ValueKey('comment-reveal-${entries[index].id}'): index,
+    };
+    return _derivedComments = List.unmodifiable(entries);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.watch(showPlatformFeaturesProvider);
+    ref.watch(platformAccountProvider);
+    final entries = _visibleComments;
     return PlatformPageFrame(
       musicChrome: false,
       title: widget.thread != null
@@ -511,11 +598,11 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                       Positioned.fill(
                         child: MusicRefreshIndicator(
                           onRefresh: () => _load(reset: true),
-                          child: ListView(
+                          child: buildPlatformLazyList(
                             controller: _scroll,
                             physics: const AlwaysScrollableScrollPhysics(),
                             padding: const EdgeInsets.fromLTRB(18, 8, 18, 170),
-                            children: [
+                            header: [
                               if (widget.thread != null)
                                 PlatformPanel(
                                   child: Column(
@@ -554,99 +641,12 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                                       ? '暂时没有评论，来写下你的感受'
                                       : '已加载评论中暂无此类内容',
                                 ),
-                              for (final comment in entries)
-                                BetaContentReveal(
-                                  key: ValueKey('comment-reveal-${comment.id}'),
-                                  child: PlatformCommentCard(
-                                    comment: comment,
-                                    onHug:
-                                        widget.repository
-                                                is NeteaseCommentsRepository &&
-                                            !_writing
-                                        ? () =>
-                                              Navigator.of(
-                                                context,
-                                                rootNavigator: true,
-                                              ).push(
-                                                MaterialPageRoute<void>(
-                                                  builder: (_) =>
-                                                      NeteaseCommentHugsPage(
-                                                        repository:
-                                                            widget.repository
-                                                                as NeteaseCommentsRepository,
-                                                        resource:
-                                                            widget.resource,
-                                                        comment: comment,
-                                                      ),
-                                                ),
-                                              )
-                                        : null,
-                                    onReaction:
-                                        widget.repository
-                                                is NeteaseCommentsRepository &&
-                                            !_writing
-                                        ? () async {
-                                            if (!_current) return;
-                                            setState(() => _writing = true);
-                                            try {
-                                              await (widget.repository
-                                                      as NeteaseCommentsRepository)
-                                                  .like(
-                                                    widget.resource,
-                                                    comment,
-                                                  );
-                                              if (mounted && _current) {
-                                                await _load(
-                                                  reset: true,
-                                                  silent: true,
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (context.mounted) {
-                                                showPlatformFailure(context, e);
-                                              }
-                                            } finally {
-                                              if (mounted) {
-                                                setState(
-                                                  () => _writing = false,
-                                                );
-                                              }
-                                            }
-                                          }
-                                        : null,
-                                    onReply: _writing
-                                        ? null
-                                        : () =>
-                                              setState(() => _reply = comment),
-                                    onDelete:
-                                        !_writing &&
-                                            comment.userId ==
-                                                widget
-                                                    .repository
-                                                    .identity
-                                                    .userId
-                                        ? () => _delete(comment)
-                                        : null,
-                                    onThread: widget.thread == null
-                                        ? () =>
-                                              Navigator.of(
-                                                context,
-                                                rootNavigator: true,
-                                              ).push(
-                                                MaterialPageRoute<void>(
-                                                  builder: (_) =>
-                                                      PlatformCommentsPage(
-                                                        resource:
-                                                            widget.resource,
-                                                        repository:
-                                                            widget.repository,
-                                                        thread: comment,
-                                                      ),
-                                                ),
-                                              )
-                                        : null,
-                                  ),
-                                ),
+                            ],
+                            itemCount: entries.length,
+                            findItemIndex: (key) => _derivedCommentIndices[key],
+                            itemBuilder: (context, index) =>
+                                _commentRow(context, entries[index]),
+                            footer: [
                               if (_loading &&
                                   !_silentLoading &&
                                   _comments.isNotEmpty)

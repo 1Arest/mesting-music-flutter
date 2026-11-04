@@ -220,6 +220,10 @@ class PlatformRecommendationDetail extends ConsumerStatefulWidget {
 class _PlatformRecommendationDetailState
     extends ConsumerState<PlatformRecommendationDetail> {
   final _extra = <Track>[];
+  int _fixedVisible = 30;
+  List<Track>? _mergedBase;
+  List<Track> _mergedSnapshot = const [];
+  int _mergedExtraCount = -1, _mergedGeneration = -1;
   bool _loading = false, _more = true;
   String? _error;
   String? _baseSignature;
@@ -385,11 +389,23 @@ class _PlatformRecommendationDetailState
               },
             );
           }
-          final merged = <String, Track>{
-            for (final t in [...base, ..._extra]) t.id: t,
-          };
-          final tracks = merged.values.toList();
-          _baseIds = base.map((track) => track.id).toSet();
+          // Revealing thirty more rows must not re-index a fixed response of
+          // thousands of songs. Only a changed source snapshot/FM batch does.
+          if (!identical(base, _mergedBase) ||
+              _extra.length != _mergedExtraCount ||
+              _mergedGeneration != _generation) {
+            _mergedBase = base;
+            _mergedExtraCount = _extra.length;
+            _mergedGeneration = _generation;
+            _mergedSnapshot = <String, Track>{
+              for (final t in [...base, ..._extra]) t.id: t,
+            }.values.toList();
+            _baseIds = base.map((track) => track.id).toSet();
+          }
+          final tracks = _mergedSnapshot;
+          final visibleCount = widget.kind == null
+              ? _fixedVisible.clamp(0, tracks.length)
+              : tracks.length;
           return MusicRefreshIndicator(
             onRefresh: () async {
               setState(() {
@@ -404,18 +420,23 @@ class _PlatformRecommendationDetailState
             },
             child: AutomaticSongPaging(
               fillInitialViewport: widget.kind != PlatformRecommendationKind.fm,
-              enabled:
-                  widget.kind != null && _more && !_loading && _error == null,
-              onLoadMore: _load,
+              enabled: widget.kind == null
+                  ? visibleCount < tracks.length
+                  : _more && !_loading && _error == null,
+              onLoadMore: widget.kind == null
+                  ? () async {
+                      if (mounted) setState(() => _fixedVisible += 30);
+                    }
+                  : _load,
               child: ListView.builder(
                 cacheExtent: MediaQuery.sizeOf(context).height,
                 padding: BetaContentInsets.musicPaddingOf(
                   context,
                   EdgeInsets.only(bottom: 180),
                 ),
-                itemCount: tracks.length + 1,
+                itemCount: visibleCount + 1,
                 itemBuilder: (context, index) {
-                  if (index < tracks.length) {
+                  if (index < visibleCount) {
                     return EditorialTrackRow(
                       track: tracks[index],
                       contextTracks: tracks,
@@ -430,7 +451,8 @@ class _PlatformRecommendationDetailState
                     return TextButton(onPressed: _load, child: Text(_error!));
                   }
                   if (tracks.isEmpty) return const EditorialEmpty('平台暂未返回歌曲');
-                  return widget.kind != null && _more
+                  return (widget.kind != null && _more) ||
+                          visibleCount < tracks.length
                       ? const SizedBox(height: 12)
                       : const MusicListEnd();
                 },

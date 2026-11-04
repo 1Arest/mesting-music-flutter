@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 
 import '../data/music_platform_api.dart';
 import 'netease_connection_models.dart';
@@ -77,6 +78,7 @@ class NeteaseConnectionsController extends ChangeNotifier {
     query = value;
     _ensureReliableSort();
     notifyListeners();
+    if (_started && value.trim().isNotEmpty) unawaited(loadRemaining());
   }
 
   void setFilter(NeteaseConnectionFilter value) {
@@ -90,6 +92,7 @@ class NeteaseConnectionsController extends ChangeNotifier {
       return false;
     }
     sort = value;
+    if (value == NeteaseConnectionSort.name) unawaited(loadRemaining());
     notifyListeners();
     return true;
   }
@@ -103,12 +106,14 @@ class NeteaseConnectionsController extends ChangeNotifier {
   Future<void> start() async {
     if (_started || !_active) return;
     _started = true;
-    await loadRemaining();
+    await loadMore();
   }
+
+  Future<void> loadMore() => loadRemaining(singlePage: true);
 
   /// Complete every upstream page before claiming a complete local search or
   /// name sort. Existing rows remain visible while later pages arrive/retry.
-  Future<void> loadRemaining() async {
+  Future<void> loadRemaining({bool singlePage = false}) async {
     if (busy || complete || !_active) return;
     final generation = _generation;
     bool current() => _active && generation == _generation;
@@ -136,6 +141,11 @@ class NeteaseConnectionsController extends ChangeNotifier {
           _artistOffset += page.consumed;
           _artistsMore = page.more;
           notifyListeners();
+        }
+        if (singlePage &&
+            query.trim().isEmpty &&
+            sort == NeteaseConnectionSort.official) {
+          break;
         }
       }
     } catch (_) {
@@ -175,11 +185,18 @@ class NeteaseConnectionsController extends ChangeNotifier {
     error = null;
     notifyListeners();
     await replacement.start();
+    while (!replacement.complete &&
+        replacement.error == null &&
+        replacement._items.length < _items.length &&
+        _active &&
+        generation == _generation) {
+      await replacement.loadMore();
+    }
     if (!_active || generation != _generation) {
       replacement.dispose();
       return;
     }
-    if (replacement.complete) {
+    if (replacement.error == null) {
       _items
         ..clear()
         ..addAll(replacement._items);

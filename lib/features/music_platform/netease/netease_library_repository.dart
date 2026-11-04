@@ -6,6 +6,9 @@ import '../../../core/cache/browse_response_cache.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
+import '../data/track_page_utils.dart';
+import '../../library/data/playlist_directory_window.dart';
 import '../data/music_platform_api.dart';
 import '../domain/platform_session.dart';
 import 'netease_music_repository.dart';
@@ -25,6 +28,8 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
   Future<void> _pending = Future.value();
   bool _closed = false;
   List<Map<String, dynamic>> _snapshot = const [];
+  Future<Set<String>>? _favoriteIds;
+  int _revision = 0;
 
   Future<T> _write<T>(Future<T> Function() operation) {
     final result = _pending.then((_) => operation());
@@ -33,7 +38,10 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
   }
 
   void refresh() {
+    _revision++;
     _lists = null;
+    _favoriteIds = null;
+    music.invalidatePlaylists();
     if (!_closed) _changes.add(null);
   }
 
@@ -75,6 +83,7 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
           throw error;
         }));
   Future<List<Map<String, dynamic>>> _fetchLists() async {
+    final revision = _revision;
     final result = <Map<String, dynamic>>[];
     final seen = <String>{};
     for (var offset = 0; offset < 10000; offset += 100) {
@@ -112,7 +121,7 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
         }
       }
       if (payload['more'] != true || rows.length < 100) {
-        _snapshot = result;
+        if (revision == _revision) _snapshot = result;
         return result;
       }
       if (added == 0) throw const MusicPlatformException('网易云歌单分页未前进，请重试');
@@ -157,6 +166,7 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
     ),
   );
   Future<Map<String, dynamic>> _row(String id) async =>
+      _snapshot.where((row) => _id(row) == id).firstOrNull ??
       (await _loadLists()).firstWhere(
         (r) => _id(r) == id,
         orElse: () => throw const MusicPlatformException('网易云歌单不存在，请刷新'),
@@ -172,6 +182,35 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
   Stream<List<UserPlaylist>> watchPlaylists() =>
       _watch(() async => (await _loadLists()).map(_playlist).toList());
   @override
+  Stream<PlaylistDirectoryPage> watchPlaylistDirectory() =>
+      _watch(() => playlistDirectoryPage());
+  @override
+  Future<PlaylistDirectoryPage> playlistDirectoryPage({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final revision = _revision;
+    final payload = await music.call('/user/playlist', {
+      'uid': identity.userId,
+      'limit': limit,
+      'offset': offset,
+    });
+    final rows = NeteaseMusicRepository.rows(payload['playlist']);
+    if (revision == _revision) {
+      final merged = {for (final row in _snapshot) _id(row): row};
+      for (final row in rows) {
+        merged[_id(row)] = row;
+      }
+      _snapshot = merged.values.toList();
+    }
+    return PlaylistDirectoryPage(
+      rows.map(_playlist).toList(),
+      nextOffset: offset + rows.length,
+      hasMore: payload['more'] == true && rows.length >= limit,
+    );
+  }
+
+  @override
   Future<UserPlaylist?> getPlaylist(String id) async =>
       _playlist(await _row(id));
   @override
@@ -181,10 +220,53 @@ class NeteaseLibraryRepository extends CloudLibraryRepository {
   Stream<List<Track>> watchFavorites() =>
       _watch(() async => music.playlist('${(await _favoriteRow())['id']}'));
   @override
+  Stream<TrackPage> watchFavoritePreview() => _watch(() => favoritePage());
+  @override
+  Stream<TrackPage> watchPlaylistPreview(String id) =>
+      _watch(() => playlistPage(id));
+  @override
+  Future<TrackPage> playlistPage(String id, {int offset = 0, int limit = 30}) =>
+      music.playlistPage(_remoteId(id), offset: offset, limit: limit);
+  @override
+  Future<TrackPage> favoritePage({
+    int offset = 0,
+    int limit = 30,
+    String query = '',
+  }) async {
+    final id = '${(await _favoriteRow())['id']}';
+    if (query.trim().isEmpty) {
+      return music.playlistPage(id, offset: offset, limit: limit);
+    }
+    // Full-collection search is an explicit operation. It must never quietly
+    // limit matches to the metadata pages already painted by the preview.
+    return sliceTrackPageAsync(
+      await music.playlist(id),
+      offset: offset,
+      limit: limit,
+      query: query,
+    );
+  }
+
+  @override
+  Future<Set<String>> favoriteIds() {
+    Future<Set<String>> load() async {
+      final payload = await music.call('/likelist', {'uid': identity.userId});
+      return (payload['ids'] as List? ?? const [])
+          .map((id) => 'netease_$id')
+          .toSet();
+    }
+
+    if (BrowseResponseCache.observing) return load();
+    return _favoriteIds ??= load().catchError((Object error) {
+      _favoriteIds = null;
+      throw error;
+    });
+  }
+
+  @override
   Future<bool> isFavorite(String trackId) async {
     final id = NeteaseMusicRepository.songId(trackId);
-    final payload = await music.call('/likelist', {'uid': identity.userId});
-    return (payload['ids'] as List? ?? const []).any((v) => '$v' == id);
+    return (await favoriteIds()).contains('netease_$id');
   }
 
   @override

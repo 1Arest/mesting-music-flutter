@@ -49,9 +49,7 @@ Future<void> enqueueAudioDownloads(
     final current = ref.read(platformAccountProvider).value;
     if (current?.ownerId != owner || current?.token != account?.token) return;
     final manager = ref.read(audioDownloadManagerProvider);
-    for (final track in tracks) {
-      manager.enqueue(track, quality: quality);
-    }
+    manager.enqueueAll(tracks, quality: quality);
     showMusicNotice(
       context,
       icon: Icons.check_rounded,
@@ -174,8 +172,17 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
     return PlatformPageFrame(
       title: '下载管理',
       child: ListenableBuilder(
-        listenable: manager,
+        listenable: manager.collectionChanges,
         builder: (context, _) {
+          if (manager.restoring) {
+            return const PlatformFeedbackState(loading: true);
+          }
+          if (manager.restoreError != null) {
+            return PlatformFeedbackState(
+              message: '下载记录暂时无法读取',
+              retry: () => ref.invalidate(audioDownloadManagerProvider),
+            );
+          }
           final tasks = manager.tasks
               .where((t) => t.owner == owner)
               .toList()
@@ -325,124 +332,127 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
         ),
       SliverList.builder(
         itemCount: visible.length,
-        itemBuilder: (context, index) {
-          final task = visible[index];
-          final done = task.phase == AudioDownloadPhase.completed;
-          final resolving = task.phase == AudioDownloadPhase.resolving;
-          final active = task.phase == AudioDownloadPhase.downloading;
-          final canCancel = {
-            AudioDownloadPhase.queued,
-            AudioDownloadPhase.resolving,
-            AudioDownloadPhase.downloading,
-          }.contains(task.phase);
-          final label = switch (task.phase) {
-            AudioDownloadPhase.queued => '等待下载',
-            AudioDownloadPhase.resolving => '正在解析音源',
-            AudioDownloadPhase.downloading => '正在下载',
-            AudioDownloadPhase.saving => '正在保存',
-            AudioDownloadPhase.completed =>
-              '已下载 · ${formatDownloadBytes(task.received)}',
-            AudioDownloadPhase.failed => task.error,
-            AudioDownloadPhase.cancelled => '已取消',
-            AudioDownloadPhase.paused =>
-              '已暂停 · ${formatDownloadBytes(task.received)}',
-          };
-          final row = Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  onTap: done && !_busy ? () => _play([task]) : null,
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: TrackArtwork(
-                      track: task.track,
-                      width: 52,
-                      height: 52,
+        itemBuilder: (context, index) => ListenableBuilder(
+          listenable: manager.taskChanges(visible[index].id),
+          builder: (context, _) {
+            final task = manager.taskById(visible[index].id) ?? visible[index];
+            final done = task.phase == AudioDownloadPhase.completed;
+            final resolving = task.phase == AudioDownloadPhase.resolving;
+            final active = task.phase == AudioDownloadPhase.downloading;
+            final canCancel = {
+              AudioDownloadPhase.queued,
+              AudioDownloadPhase.resolving,
+              AudioDownloadPhase.downloading,
+            }.contains(task.phase);
+            final label = switch (task.phase) {
+              AudioDownloadPhase.queued => '等待下载',
+              AudioDownloadPhase.resolving => '正在解析音源',
+              AudioDownloadPhase.downloading => '正在下载',
+              AudioDownloadPhase.saving => '正在保存',
+              AudioDownloadPhase.completed =>
+                '已下载 · ${formatDownloadBytes(task.received)}',
+              AudioDownloadPhase.failed => task.error,
+              AudioDownloadPhase.cancelled => '已取消',
+              AudioDownloadPhase.paused =>
+                '已暂停 · ${formatDownloadBytes(task.received)}',
+            };
+            final row = Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    onTap: done && !_busy ? () => _play([task]) : null,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: TrackArtwork(
+                        track: task.track,
+                        width: 52,
+                        height: 52,
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    task.track.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Text(
-                    '${task.track.artist}\n${task.requestedQuality == null ? '' : '${task.track.source == TrackSource.netease ? task.requestedQuality!.neteaseLabel : task.requestedQuality!.label} · '}$label',
-                  ),
-                  isThreeLine: true,
-                  trailing: done
-                      ? IconButton(
-                          tooltip: '下载文件操作',
-                          icon: const Icon(CupertinoIcons.ellipsis),
-                          onPressed: _busy ? null : () => _menu(task),
-                        )
-                      : task.phase == AudioDownloadPhase.paused
-                      ? IconButton(
-                          tooltip: '继续下载',
-                          icon: const Icon(CupertinoIcons.play_fill),
-                          onPressed: () => manager.resume(task.id),
-                        )
-                      : active || resolving
-                      ? IconButton(
-                          tooltip: '暂停下载',
-                          icon: const Icon(CupertinoIcons.pause_fill),
-                          onPressed: () => manager.pause(task.id),
-                        )
-                      : canCancel
-                      ? IconButton(
-                          tooltip: '取消下载',
-                          icon: const Icon(CupertinoIcons.xmark_circle),
-                          onPressed: () => manager.cancel(task.id),
-                        )
-                      : task.phase == AudioDownloadPhase.failed ||
-                            task.phase == AudioDownloadPhase.cancelled
-                      ? IconButton(
-                          tooltip: '重新下载',
-                          icon: const Icon(CupertinoIcons.arrow_clockwise),
-                          onPressed: () async {
-                            final folder = await _storage.ensureDirectory();
-                            if (folder != null && mounted) {
-                              manager.retry(task.id);
-                            }
-                          },
-                        )
-                      : null,
-                ),
-                if (resolving)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 12),
-                    child: AudioResolvingWave(),
-                  ),
-                if (active ||
-                    task.phase == AudioDownloadPhase.saving ||
-                    task.phase == AudioDownloadPhase.paused)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: AppleDownloadProgress(
-                      receivedBytes: task.received,
-                      totalBytes: task.total,
-                      semanticLabel: '音频下载进度',
+                    title: Text(
+                      task.track.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    subtitle: Text(
+                      '${task.track.artist}\n${task.requestedQuality == null ? '' : '${task.track.source == TrackSource.netease ? task.requestedQuality!.neteaseLabel : task.requestedQuality!.label} · '}$label',
+                    ),
+                    isThreeLine: true,
+                    trailing: done
+                        ? IconButton(
+                            tooltip: '下载文件操作',
+                            icon: const Icon(CupertinoIcons.ellipsis),
+                            onPressed: _busy ? null : () => _menu(task),
+                          )
+                        : task.phase == AudioDownloadPhase.paused
+                        ? IconButton(
+                            tooltip: '继续下载',
+                            icon: const Icon(CupertinoIcons.play_fill),
+                            onPressed: () => manager.resume(task.id),
+                          )
+                        : active || resolving
+                        ? IconButton(
+                            tooltip: '暂停下载',
+                            icon: const Icon(CupertinoIcons.pause_fill),
+                            onPressed: () => manager.pause(task.id),
+                          )
+                        : canCancel
+                        ? IconButton(
+                            tooltip: '取消下载',
+                            icon: const Icon(CupertinoIcons.xmark_circle),
+                            onPressed: () => manager.cancel(task.id),
+                          )
+                        : task.phase == AudioDownloadPhase.failed ||
+                              task.phase == AudioDownloadPhase.cancelled
+                        ? IconButton(
+                            tooltip: '重新下载',
+                            icon: const Icon(CupertinoIcons.arrow_clockwise),
+                            onPressed: () async {
+                              final folder = await _storage.ensureDirectory();
+                              if (folder != null && mounted) {
+                                manager.retry(task.id);
+                              }
+                            },
+                          )
+                        : null,
                   ),
-              ],
-            ),
-          );
-          if (done || task.phase == AudioDownloadPhase.saving) return row;
-          return Dismissible(
-            key: ValueKey('download-dismiss-${task.id}'),
-            direction: DismissDirection.endToStart,
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 28),
-              color: Theme.of(context).colorScheme.error,
-              child: const Icon(CupertinoIcons.delete, color: Colors.white),
-            ),
-            confirmDismiss: (_) async => manager.remove(task.id),
-            child: row,
-          );
-        },
+                  if (resolving)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: AudioResolvingWave(),
+                    ),
+                  if (active ||
+                      task.phase == AudioDownloadPhase.saving ||
+                      task.phase == AudioDownloadPhase.paused)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: AppleDownloadProgress(
+                        receivedBytes: task.received,
+                        totalBytes: task.total,
+                        semanticLabel: '音频下载进度',
+                      ),
+                    ),
+                ],
+              ),
+            );
+            if (done || task.phase == AudioDownloadPhase.saving) return row;
+            return Dismissible(
+              key: ValueKey('download-dismiss-${task.id}'),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 28),
+                color: Theme.of(context).colorScheme.error,
+                child: const Icon(CupertinoIcons.delete, color: Colors.white),
+              ),
+              confirmDismiss: (_) async => manager.remove(task.id),
+              child: row,
+            );
+          },
+        ),
       ),
       SliverToBoxAdapter(
         child: Column(

@@ -171,20 +171,18 @@ class NeteaseFullRepository {
       return {'code': 200, 'message': '上传已完成，请刷新内容列表确认'};
     }
     if (endpoint.route == '/playlist/track/all') {
-      final tracks = await music.playlist('${q['id']}');
+      final page = await music.playlistPage(
+        '${q['id']}',
+        offset: int.tryParse('${q['offset']}') ?? 0,
+        limit: int.tryParse('${q['limit']}') ?? 1000,
+      );
       checkOwner();
-      final start = (int.tryParse('${q['offset']}') ?? 0).clamp(
-        0,
-        tracks.length,
-      );
-      final end = (start + (int.tryParse('${q['limit']}') ?? 1000)).clamp(
-        start,
-        tracks.length,
-      );
       return {
         'code': 200,
-        'tracks': tracks.sublist(start, end),
-        'more': end < tracks.length,
+        'tracks': page.items,
+        'more': page.hasMore,
+        'total': page.total,
+        'nextOffset': page.nextOffset,
       };
     }
     if (endpoint.route == '/related/playlist') {

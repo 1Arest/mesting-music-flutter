@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/performance/background_json.dart';
 import 'dart:convert';
 import '../../../core/cache/browse_response_cache.dart';
 import '../../../core/cache/browse_cache_routes.dart';
@@ -194,7 +195,12 @@ class MusicPlatformApi {
       final response = await http.Response.fromStream(
         await _client.send(request).timeout(timeout),
       ).timeout(timeout);
-      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      final decoded = await decodeJsonBytes(response.bodyBytes);
+      if (!_sessionCurrent() ||
+          session?.ownerId != identity?.ownerId ||
+          session?.token != identity?.token) {
+        throw const MusicPlatformException('账号已变化，请返回后重新操作');
+      }
       if (decoded is! Map<String, dynamic>) {
         throw const FormatException('音乐平台返回了无法识别的数据');
       }

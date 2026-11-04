@@ -1,4 +1,6 @@
 import 'platform_backend_providers.dart';
+import '../library/data/favorite_track_window.dart';
+import '../library/library_providers.dart';
 import '../../core/cache/cached_browse_provider.dart';
 import 'netease/netease_catalog_adapters.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,11 @@ import 'music_platform_providers.dart';
 import 'platform_recommendation_providers.dart';
 
 final platformCatalogProvider = Provider<PlatformCatalog>((ref) {
+  ref.watch(
+    platformAccountProvider.select(
+      (value) => (value.value?.ownerId, value.value?.token),
+    ),
+  );
   final api = ref.watch(musicPlatformApiProvider);
   return ref.watch(usesNeteaseProvider)
       ? NeteaseCatalogAdapter(api, ref.watch(neteaseMusicRepositoryProvider))
@@ -42,8 +49,19 @@ final platformFeaturedProvider = FutureProvider<List<Map<String, dynamic>>>((
 final platformPublicPlaylistProvider = FutureProvider.autoDispose
     .family<List<Track>, String>((ref, id) async {
       await ref.watch(platformAccountProvider.future);
-      return cachedBrowse(
-        ref,
-        () => ref.watch(platformCatalogProvider).publicPlaylist(id),
+      return ref.watch(publicPlaylistWindowProvider(id)).stream.first;
+    });
+
+final publicPlaylistWindowProvider = Provider.autoDispose
+    .family<FavoriteTrackWindow, String>((ref, id) {
+      final catalog = ref.watch(platformCatalogProvider);
+      final first = cachedBrowse(ref, () => catalog.publicPlaylistPage(id));
+      final window = FavoriteTrackWindow(
+        ref.watch(libraryRepositoryProvider),
+        preview: Stream.fromFuture(first),
+        readPage: (offset, limit) =>
+            catalog.publicPlaylistPage(id, offset: offset, limit: limit),
       );
+      ref.onDispose(window.dispose);
+      return window;
     });

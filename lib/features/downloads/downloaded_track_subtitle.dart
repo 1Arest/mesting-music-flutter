@@ -24,15 +24,9 @@ class DownloadedTrackSubtitle extends ConsumerWidget {
     if (owner == null) return artist();
     final manager = ref.watch(audioDownloadManagerProvider);
     return ListenableBuilder(
-      listenable: manager,
+      listenable: manager.collectionChanges,
       builder: (context, _) {
-        final downloaded = manager.tasks.any(
-          (task) =>
-              task.owner == owner &&
-              task.track.id == track.id &&
-              task.phase == AudioDownloadPhase.completed &&
-              task.uri.isNotEmpty,
-        );
+        final downloaded = manager.completedTrackIds(owner).contains(track.id);
         return !downloaded
             ? artist()
             : Row(

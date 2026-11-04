@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/database/app_database.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
+import 'package:mesting_music/features/library/data/library_repository.dart';
+import 'package:mesting_music/features/library/data/favorite_track_window.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/platform_backend_providers.dart';
 import 'package:mesting_music/features/music_platform/platform_profile_provider.dart';
@@ -72,6 +74,8 @@ class PersonalProfileFixture {
   );
 
   static Future<PersonalProfileFixture> create({
+    LibraryRepository? browsingLibrary,
+    FavoriteTrackWindow? favoritesWindow,
     MestingAudioHandler? audioHandler,
     PlatformAccountController Function()? accountFactory,
     List<Override> extraOverrides = const [],
@@ -141,8 +145,14 @@ class PersonalProfileFixture {
             signature: '完整登录态个人页',
           ),
         ),
-        libraryRepositoryProvider.overrideWithValue(library),
+        libraryRepositoryProvider.overrideWithValue(browsingLibrary ?? library),
+        if (favoritesWindow != null)
+          favoriteTrackWindowProvider.overrideWithValue(favoritesWindow),
         favoriteTracksProvider.overrideWith((ref) async* {
+          if (favoritesWindow != null) {
+            yield* ref.watch(favoriteTrackWindowProvider).stream;
+            return;
+          }
           yield fixture.tracks;
           yield* fixture.favorites.stream;
         }),

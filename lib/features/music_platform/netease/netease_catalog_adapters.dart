@@ -1,5 +1,5 @@
 import '../../../shared/models/track.dart';
-import '../../../core/cache/browse_response_cache.dart';
+import '../../../shared/models/track_page.dart';
 import '../data/platform_catalog.dart';
 import '../data/platform_category_search.dart';
 import '../data/platform_explore.dart';
@@ -46,6 +46,12 @@ class NeteaseCatalogAdapter extends PlatformCatalog {
   @override
   Future<List<Track>> publicPlaylist(String globalId) =>
       music.playlist(globalId);
+  @override
+  Future<TrackPage> publicPlaylistPage(
+    String globalId, {
+    int offset = 0,
+    int limit = 30,
+  }) => music.playlistPage(globalId, offset: offset, limit: limit);
 }
 
 class NeteaseRecommendationsAdapter extends PlatformRecommendations {
@@ -120,7 +126,12 @@ class NeteaseRecommendationsAdapter extends PlatformRecommendations {
 class NeteaseExploreAdapter extends PlatformExploreRepository {
   NeteaseExploreAdapter(super.api, this.music);
   final NeteaseMusicRepository music;
-  final Map<String, Future<List<Track>>> _tracks = {};
+  @override
+  Future<TrackPage> tracksPage(
+    PlatformExploreItem item, {
+    int offset = 0,
+    int limit = 30,
+  }) => music.exploreTrackPage(item, offset: offset, limit: limit);
   @override
   Future<List<PlatformExploreItem>> list(
     PlatformExploreKind kind, {
@@ -131,16 +142,11 @@ class NeteaseExploreAdapter extends PlatformExploreRepository {
       item;
   @override
   Future<List<Track>> tracks(PlatformExploreItem item, {int page = 1}) async {
-    final key = '${item.kind.name}:${item.id}';
-    final values = await (BrowseResponseCache.observing
-        ? music.exploreTracks(item)
-        : (_tracks[key] ??= music.exploreTracks(item).catchError((
-            Object error,
-          ) {
-            _tracks.remove(key);
-            throw error;
-          })));
-    return values.skip((page - 1) * 30).take(30).toList();
+    return (await music.exploreTrackPage(
+      item,
+      offset: (page - 1).clamp(0, 1 << 31) * 30,
+      limit: 30,
+    )).items;
   }
 
   @override

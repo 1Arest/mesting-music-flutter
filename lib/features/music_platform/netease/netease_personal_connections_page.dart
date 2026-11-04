@@ -1,4 +1,5 @@
 import '../../../shared/widgets/music_notice.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -294,46 +295,53 @@ class _NeteasePersonalConnectionsPageState
           ),
         ),
         Expanded(
-          child: CustomScrollView(
-            key: PageStorageKey('personal-connections-list-$index'),
-            controller: _scroll[index],
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            slivers: [
-              CupertinoSliverRefreshControl(onRefresh: controller.refresh),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(22, 6, 22, 8),
-                sliver: SliverToBoxAdapter(
-                  child: Text(
-                    controller.complete
-                        ? '${values.length} 个${controller.query.trim().isEmpty ? '条目' : '搜索结果'}'
-                        : '已加载 ${controller.items.length} 个条目，${controller.busy ? '正在补齐完整列表' : '列表尚未完整'}',
-                    style: TextStyle(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 12,
+          child: AutomaticSongPaging(
+            enabled:
+                !controller.complete &&
+                !controller.busy &&
+                controller.error == null,
+            onLoadMore: controller.loadMore,
+            child: CustomScrollView(
+              key: PageStorageKey('personal-connections-list-$index'),
+              controller: _scroll[index],
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                CupertinoSliverRefreshControl(onRefresh: controller.refresh),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(22, 6, 22, 8),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      controller.complete
+                          ? '${values.length} 个${controller.query.trim().isEmpty ? '条目' : '搜索结果'}'
+                          : '已加载 ${controller.items.length} 个条目，${controller.busy ? '正在补齐完整列表' : '列表尚未完整'}',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SliverList.builder(
-                itemCount: values.length,
-                itemBuilder: (context, row) => _ConnectionRow(
-                  key: ValueKey('connection-${values[row].key}'),
-                  connection: values[row],
+                SliverList.builder(
+                  itemCount: values.length,
+                  itemBuilder: (context, row) => _ConnectionRow(
+                    key: ValueKey('connection-${values[row].key}'),
+                    connection: values[row],
+                  ),
                 ),
-              ),
-              SliverPadding(
-                padding: BetaContentInsets.musicPaddingOf(
-                  context,
-                  const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                SliverPadding(
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: _status(controller, values.isEmpty),
+                  ),
                 ),
-                sliver: SliverToBoxAdapter(
-                  child: _status(controller, values.isEmpty),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -360,8 +368,8 @@ class _NeteasePersonalConnectionsPageState
     }
     if (!controller.complete) {
       return CupertinoButton(
-        onPressed: controller.loadRemaining,
-        child: const Text('继续加载完整列表'),
+        onPressed: controller.loadMore,
+        child: const Text('继续加载'),
       );
     }
     return Center(

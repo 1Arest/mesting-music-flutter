@@ -1,3 +1,4 @@
+import '../presentation/platform_lazy_list.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,12 +107,12 @@ class _NeteaseCommentHugsPageState
       title: '抱一抱',
       child: !_current
           ? const Center(child: Text('账号已变化，请返回'))
-          : ListView(
+          : buildPlatformLazyList(
               padding: BetaContentInsets.musicPaddingOf(
                 context,
                 const EdgeInsets.all(22),
               ),
-              children: [
+              header: [
                 Text(
                   widget.comment.nickname,
                   style: Theme.of(context).textTheme.titleMedium,
@@ -127,11 +128,16 @@ class _NeteaseCommentHugsPageState
                 ),
                 const SizedBox(height: 24),
                 const Text('给过拥抱的人'),
-                for (final person in _people)
-                  ListTile(
-                    leading: NeteasePersonAvatar(person),
-                    title: Text(person.name),
-                  ),
+              ],
+              itemCount: _people.length,
+              itemBuilder: (context, index) {
+                final person = _people[index];
+                return ListTile(
+                  leading: NeteasePersonAvatar(person),
+                  title: Text(person.name),
+                );
+              },
+              footer: [
                 if (!_busy && _people.isEmpty && _error == null)
                   const Padding(
                     padding: EdgeInsets.all(18),

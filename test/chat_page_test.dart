@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -438,7 +439,7 @@ void main() {
           senderUid: index.isEven ? 'friend' : 'me',
           receiverUid: index.isEven ? 'me' : 'friend',
           kind: SocialMessageKind.image,
-          mediaUrl: 'assets/branding/dress-midnight-launch.png',
+          mediaUrl: 'assets/images/theme_playlists/shinchan/cover-01.jpg',
           sentAt: DateTime(2026, 7, 25, 8, index),
         ),
       SocialMessage(
@@ -574,7 +575,10 @@ void main() {
           senderUid: 'me',
           receiverUid: 'friend',
           kind: SocialMessageKind.image,
-          mediaUrl: 'assets/branding/dress-midnight-launch.png',
+          // Test-only portrait: old login illustrations were removed in 1.0.26.
+          mediaUrl: File(
+            'test/fixtures/chat-portrait.png',
+          ).absolute.uri.toString(),
           sentAt: DateTime.now(),
         ),
       ],
@@ -589,6 +593,32 @@ void main() {
     final preview = find.byKey(
       const ValueKey('chat-image-preview-portrait-image'),
     );
+    // Wait for the exact resized FileImage rather than a timing guess. The
+    // synthetic portrait is test-only and does not belong to the app bundle.
+    final portrait = find.descendant(
+      of: find.byKey(const ValueKey('chat-image-content-portrait-image')),
+      matching: find.byType(Image),
+    );
+    var portraitReady = false;
+    Object? portraitError;
+    await tester.runAsync(() async {
+      unawaited(
+        precacheImage(
+          tester.widget<Image>(portrait).image,
+          tester.element(portrait),
+          onError: (failure, _) => portraitError = failure,
+        ).then((_) => portraitReady = true),
+      );
+    });
+    for (var frame = 0; frame < 50 && !portraitReady; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+    }
+    expect(portraitError, isNull);
+    expect(portraitReady, isTrue);
+    await tester.pump(const Duration(milliseconds: 240));
     expect(preview, findsOneWidget);
     final imageBubble = tester.widget<Container>(
       find.byKey(const ValueKey('chat-message-bubble-portrait-image')),
@@ -603,7 +633,7 @@ void main() {
     expect(artwork.decodeHeight, isNull);
     expect(previewSize.width, lessThanOrEqualTo(260));
     expect(previewSize.height, lessThanOrEqualTo(360));
-    expect(previewSize.aspectRatio, closeTo(841 / 1870, .01));
+    expect(previewSize.aspectRatio, closeTo(168 / 374, .01));
     expect(
       find.descendant(of: preview, matching: find.byType(ColoredBox)),
       findsNothing,
@@ -1038,7 +1068,10 @@ void main() {
       final thumbnail = tester.widget<ArtworkImage>(
         find.byKey(const ValueKey('chat-video-thumbnail')),
       );
-      expect(thumbnail.uri, 'assets/branding/dress-midnight-launch.png');
+      expect(
+        thumbnail.uri,
+        'assets/images/theme_playlists/shinchan/cover-01.jpg',
+      );
       expect(find.text('01:05'), findsOneWidget);
       expect(videoPlatform.createCalls, 1);
       final videoBubble = tester.widget<Container>(
@@ -1053,7 +1086,10 @@ void main() {
       final stableThumbnail = tester.widget<ArtworkImage>(
         find.byKey(const ValueKey('chat-video-thumbnail')),
       );
-      expect(stableThumbnail.uri, 'assets/branding/dress-midnight-launch.png');
+      expect(
+        stableThumbnail.uri,
+        'assets/images/theme_playlists/shinchan/cover-01.jpg',
+      );
       expect(find.text('01:05'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(videoPlatform.createCalls, 1);
@@ -1220,8 +1256,8 @@ class _RefreshingVideoChatRepository extends _ChatRepository {
         kind: SocialMessageKind.video,
         mediaUrl: 'https://example.com/video.mp4?token=$listCalls',
         thumbnailUrl: listCalls.isOdd
-            ? 'assets/branding/dress-midnight-launch.png'
-            : 'assets/branding/dress-morning-launch.png',
+            ? 'assets/images/theme_playlists/shinchan/cover-01.jpg'
+            : 'assets/images/theme_playlists/shinchan/cover-02.jpg',
         sentAt: DateTime.now(),
       ),
     ];

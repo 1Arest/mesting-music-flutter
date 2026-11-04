@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:drift/drift.dart' show OrderingTerm;
+import '../../../core/performance/track_snapshots.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
 import 'library_sync_api.dart';
 import 'retired_bundled_tracks.dart';
+import 'playlist_directory_window.dart';
 
 class PlaylistDetail {
   const PlaylistDetail({required this.playlist, required this.tracks});
@@ -51,12 +55,72 @@ class LibraryRepository {
   Stream<List<Track>> watchFavorites() {
     return _database
         .watchFavorites(ownerId)
-        .map(
-          (rows) => rows
-              .map((row) => _decodeTrack(row.trackSnapshot))
-              .where((track) => !isRetiredBundledTrackId(track.id))
-              .toList(),
+        .asyncMap(
+          (rows) async => (await decodeTrackSnapshots(
+            rows.map((row) => row.trackSnapshot).toList(),
+          )).where((track) => !isRetiredBundledTrackId(track.id)).toList(),
         );
+  }
+
+  /// Browsing uses one page; explicit whole-collection operations keep their
+  /// existing stream. Membership is an ID-only index, independent of details.
+  Future<TrackPage> favoritePage({
+    int offset = 0,
+    int limit = 30,
+    String query = '',
+  }) async {
+    final rows = await _database.favoriteSlice(
+      ownerId,
+      offset: offset,
+      limit: limit,
+      query: query,
+    );
+    final total = await _database.favoriteCount(ownerId, query: query);
+    return TrackPage(
+      rows
+          .map((row) => _decodeTrack(row.trackSnapshot))
+          .where((t) => !isRetiredBundledTrackId(t.id))
+          .toList(),
+      offset: offset,
+      nextOffset: offset + rows.length,
+      total: total,
+      hasMore: offset + rows.length < total,
+    );
+  }
+
+  Stream<TrackPage> watchFavoritePreview() =>
+      _database.watchFavoriteSlice(ownerId).asyncMap((_) => favoritePage());
+
+  Stream<TrackPage> watchPlaylistPreview(String id) => _database
+      .watchPlaylistTracks(ownerId, id)
+      .asyncMap((_) => playlistPage(id));
+
+  Future<Set<String>> favoriteIds() async => (await _database.favoriteIds(
+    ownerId,
+  )).where((id) => !isRetiredBundledTrackId(id)).toSet();
+
+  Future<TrackPage> playlistPage(
+    String id, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final rows = await _database.playlistTrackSlice(
+      ownerId,
+      id,
+      offset: offset,
+      limit: limit,
+    );
+    final total = await _database.playlistTrackCount(ownerId, id);
+    return TrackPage(
+      rows
+          .map((row) => _decodeTrack(row.trackSnapshot))
+          .where((t) => !isRetiredBundledTrackId(t.id))
+          .toList(),
+      offset: offset,
+      nextOffset: offset + rows.length,
+      total: total,
+      hasMore: offset + rows.length < total,
+    );
   }
 
   Future<bool> isFavorite(String trackId) =>
@@ -78,17 +142,47 @@ class LibraryRepository {
   Stream<List<UserPlaylist>> watchPlaylists() =>
       _database.watchPlaylists(ownerId);
 
+  Future<PlaylistDirectoryPage> playlistDirectoryPage({
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final rows =
+        await (_database.select(_database.userPlaylists)
+              ..where((row) => row.ownerId.equals(ownerId))
+              ..orderBy([(row) => OrderingTerm.desc(row.updatedAt)])
+              ..limit(limit, offset: offset))
+            .get();
+    return PlaylistDirectoryPage(
+      rows,
+      nextOffset: offset + rows.length,
+      hasMore: rows.length >= limit,
+    );
+  }
+
+  Stream<PlaylistDirectoryPage> watchPlaylistDirectory() =>
+      (_database.select(_database.userPlaylists)
+            ..where((row) => row.ownerId.equals(ownerId))
+            ..orderBy([(row) => OrderingTerm.desc(row.updatedAt)])
+            ..limit(30))
+          .watch()
+          .map(
+            (rows) => PlaylistDirectoryPage(
+              rows,
+              nextOffset: rows.length,
+              hasMore: rows.length >= 30,
+            ),
+          );
+
   Future<UserPlaylist?> getPlaylist(String id) =>
       _database.getPlaylist(ownerId, id);
 
   Stream<List<Track>> watchPlaylistTracks(String playlistId) {
     return _database
         .watchPlaylistTracks(ownerId, playlistId)
-        .map(
-          (rows) => rows
-              .map((row) => _decodeTrack(row.trackSnapshot))
-              .where((track) => !isRetiredBundledTrackId(track.id))
-              .toList(),
+        .asyncMap(
+          (rows) async => (await decodeTrackSnapshots(
+            rows.map((row) => row.trackSnapshot).toList(),
+          )).where((track) => !isRetiredBundledTrackId(track.id)).toList(),
         );
   }
 

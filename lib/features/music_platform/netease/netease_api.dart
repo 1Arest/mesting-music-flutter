@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/performance/background_json.dart';
 import 'dart:math';
 import 'dart:typed_data';
 import '../../../core/cache/browse_response_cache.dart';
@@ -272,7 +273,7 @@ class NeteaseApi {
         };
       case '/playlist/detail':
         path = '/api/v6/playlist/detail';
-        data = {'id': q('id'), 'n': 100000, 's': 0};
+        data = {'id': q('id'), 'n': q('n', 100000), 's': 0};
       case '/song/detail':
         path = '/api/v3/song/detail';
         weapi = true;
@@ -666,8 +667,11 @@ class NeteaseApi {
         throw MusicPlatformException('网易云请求未完成（${response.statusCode}）');
       }
       final result = MusicPlatformApi.objectMap(
-        jsonDecode(utf8.decode(response.bodyBytes)),
+        await decodeJsonBytes(response.bodyBytes),
       );
+      if (generation != _generation) {
+        throw const MusicPlatformException('音乐平台已切换，请重新操作');
+      }
       final code = int.tryParse('${result['code']}');
       // A write with no recognizable receipt may already have reached the
       // service. Keep it uncertain instead of claiming acceptance or retrying.

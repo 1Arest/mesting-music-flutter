@@ -1,3 +1,4 @@
+import '../../presentation/platform_lazy_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -472,6 +473,9 @@ class NeteaseTogetherHistoryPage extends ConsumerStatefulWidget {
 class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
   late final _repository = ref.read(neteaseTogetherRecordsRepositoryProvider);
   final _records = <NeteaseTogetherRecord>[];
+  // Group labels are small data, not a prebuilt Widget per historical record.
+  final _dateHeadings = <String?>[];
+  String? _lastHistoryDate;
   final _seen = <String>{};
   NeteaseTogetherHistoryPageData? _page;
   String? _error, _cursor;
@@ -505,6 +509,8 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
       setState(() {
         if (reset) {
           _records.clear();
+          _dateHeadings.clear();
+          _lastHistoryDate = null;
           _seen.clear();
           _masked = false;
         }
@@ -518,7 +524,17 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
           final key = row.id.isNotEmpty
               ? row.id
               : '${row.roomId}:${row.startedAt}';
-          if (_seen.add(key)) _records.add(row);
+          if (_seen.add(key)) {
+            _records.add(row);
+            final date = row.dateLabel.isNotEmpty
+                ? row.dateLabel
+                : _date(row.startedAt);
+            final heading = date.isNotEmpty && date != _lastHistoryDate
+                ? date
+                : null;
+            _dateHeadings.add(heading);
+            if (heading != null) _lastHistoryDate = heading;
+          }
         }
         _masked |= data.membershipLimited && data.records.isNotEmpty;
         _more =
@@ -555,9 +571,9 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
       ],
       child: _page == null
           ? _RecordState(busy: _busy, error: _error, retry: _load)
-          : ListView(
+          : buildPlatformLazyList(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-              children: [
+              header: [
                 if (most != null) ...[
                   Text(
                     '和TA最常一起听',
@@ -592,7 +608,10 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
                     padding: EdgeInsets.symmetric(vertical: 30),
                     child: Text('暂无一起听记录'),
                   ),
-                ..._historyRows(context),
+              ],
+              itemCount: _records.length,
+              itemBuilder: _historyRow,
+              footer: [
                 if (_masked || _page!.membershipLimited)
                   Padding(
                     key: const ValueKey('together-history-membership-limit'),
@@ -619,23 +638,17 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
     );
   }
 
-  List<Widget> _historyRows(BuildContext context) {
-    final widgets = <Widget>[];
-    String? date;
-    for (final record in _records) {
-      final nextDate = record.dateLabel.isNotEmpty
-          ? record.dateLabel
-          : _date(record.startedAt);
-      if (nextDate != date && nextDate.isNotEmpty) {
-        date = nextDate;
-        widgets.add(
+  Widget _historyRow(BuildContext context, int index) {
+    final record = _records[index];
+    final heading = _dateHeadings[index];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (heading != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(0, 12, 0, 10),
-            child: Text(date, style: Theme.of(context).textTheme.titleSmall),
+            child: Text(heading, style: Theme.of(context).textTheme.titleSmall),
           ),
-        );
-      }
-      widgets.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Material(
@@ -668,9 +681,8 @@ class _HistoryPageState extends ConsumerState<NeteaseTogetherHistoryPage> {
             ),
           ),
         ),
-      );
-    }
-    return widgets;
+      ],
+    );
   }
 }
 

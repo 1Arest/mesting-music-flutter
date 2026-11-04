@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -148,67 +149,79 @@ class _AddToPlaylistSheet extends ConsumerWidget {
                 }
                 return ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 390),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: items.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 6),
-                    itemBuilder: (context, index) {
-                      final playlist = items[index];
-                      final tracks = cloud
-                          ? const <Track>[]
-                          : ref
-                                    .watch(playlistTracksProvider(playlist.id))
-                                    .value ??
-                                const <Track>[];
-                      final cover =
-                          playlist.coverAsset ??
-                          (tracks.isEmpty ? '' : tracks.first.coverAsset);
-                      return ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        tileColor: tokens.glassSubtle,
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: ArtworkImage(
-                            uri: cover,
-                            width: 48,
-                            height: 48,
+                  child: AutomaticSongPaging(
+                    enabled:
+                        ref.exists(playlistDirectoryWindowProvider) &&
+                        ref.watch(playlistDirectoryWindowProvider).hasMore &&
+                        !ref.watch(playlistDirectoryWindowProvider).loading &&
+                        ref.watch(playlistDirectoryWindowProvider).error ==
+                            null,
+                    onLoadMore: () =>
+                        ref.read(playlistDirectoryWindowProvider).loadMore(),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: items.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 6),
+                      itemBuilder: (context, index) {
+                        final playlist = items[index];
+                        final tracks = cloud
+                            ? const <Track>[]
+                            : ref
+                                      .watch(
+                                        playlistTracksProvider(playlist.id),
+                                      )
+                                      .value ??
+                                  const <Track>[];
+                        final cover =
+                            playlist.coverAsset ??
+                            (tracks.isEmpty ? '' : tracks.first.coverAsset);
+                        return ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ),
-                        title: Text(
-                          playlist.name,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        subtitle: Text(
-                          cloud ? '酷狗云端歌单' : '${tracks.length} 首歌曲',
-                        ),
-                        trailing: const Icon(Icons.add_rounded),
-                        onTap: () async {
-                          try {
-                            await ref
-                                .read(libraryRepositoryProvider)
-                                .addTrackToPlaylist(playlist.id, track);
-                            if (context.mounted) {
-                              Navigator.pop(context, playlist.name);
+                          tileColor: tokens.glassSubtle,
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: ArtworkImage(
+                              uri: cover,
+                              width: 48,
+                              height: 48,
+                            ),
+                          ),
+                          title: Text(
+                            playlist.name,
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: Text(
+                            cloud ? '酷狗云端歌单' : '${tracks.length} 首歌曲',
+                          ),
+                          trailing: const Icon(Icons.add_rounded),
+                          onTap: () async {
+                            try {
+                              await ref
+                                  .read(libraryRepositoryProvider)
+                                  .addTrackToPlaylist(playlist.id, track);
+                              if (context.mounted) {
+                                Navigator.pop(context, playlist.name);
+                              }
+                            } on FavoriteTrackRequiredException {
+                              if (!context.mounted) return;
+                              showMusicNotice(
+                                context,
+                                icon: Icons.favorite_border_rounded,
+                                title: '请先收藏这首歌',
+                                message: '收藏状态已变化，请返回后重试',
+                              );
+                            } on Object catch (error) {
+                              if (context.mounted) {
+                                showPlatformFailure(context, error);
+                              }
                             }
-                          } on FavoriteTrackRequiredException {
-                            if (!context.mounted) return;
-                            showMusicNotice(
-                              context,
-                              icon: Icons.favorite_border_rounded,
-                              title: '请先收藏这首歌',
-                              message: '收藏状态已变化，请返回后重试',
-                            );
-                          } on Object catch (error) {
-                            if (context.mounted) {
-                              showPlatformFailure(context, error);
-                            }
-                          }
-                        },
-                      );
-                    },
+                          },
+                        );
+                      },
+                    ),
                   ),
                 );
               },

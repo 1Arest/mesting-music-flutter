@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../performance/background_json.dart';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
@@ -182,8 +183,8 @@ class BrowseResponseCache {
     return _copy(fresh);
   }
 
-  static BrowseJson _copy(BrowseJson value) =>
-      Map<String, dynamic>.from(jsonDecode(jsonEncode(value)) as Map);
+  static Future<BrowseJson> _copy(BrowseJson value) async =>
+      await copyJsonValueAsync(value) as BrowseJson;
 
   Future<BrowseJson?> _restore(String id) async {
     final memory = _memory.remove(id);
@@ -195,11 +196,12 @@ class BrowseResponseCache {
     if (record == null) return null;
     try {
       final raw = await record.file.readAsString();
-      final json = jsonDecode(raw) as Map;
+      final json = await decodeJsonText(raw) as Map;
       final body = Map<String, dynamic>.from(json['body'] as Map);
+      final encodedBody = await encodeJsonValue(body);
       if (json['version'] != 1 ||
           json['id'] != id ||
-          json['hash'] != _hash(jsonEncode(body))) {
+          json['hash'] != _hash(encodedBody)) {
         throw const FormatException('Invalid disposable snapshot');
       }
       _files[id] = (
@@ -207,7 +209,7 @@ class BrowseResponseCache {
         bytes: record.bytes,
         used: DateTime.now(),
       );
-      _remember(id, body);
+      _remember(id, body, utf8.encode(encodedBody).length);
       return body;
     } on Object {
       _files.remove(id);
@@ -220,10 +222,9 @@ class BrowseResponseCache {
     }
   }
 
-  void _remember(String id, BrowseJson body) {
+  void _remember(String id, BrowseJson body, int bytes) {
     _memory.remove(id);
     _memorySizes.remove(id);
-    final bytes = utf8.encode(jsonEncode(body)).length;
     final budget = maxBytes < 4 * 1024 * 1024 ? maxBytes : 4 * 1024 * 1024;
     if (bytes > budget || maxEntries == 0) return;
     _memory[id] = body;
@@ -284,11 +285,13 @@ class BrowseResponseCache {
             body['error_code'] != null && '${body['error_code']}' != '0') {
           return body;
         }
-        final encoded = jsonEncode(body);
+        final encoded = await encodeJsonValue(body);
         if (utf8.encode(encoded).length > maxEntryBytes) return body;
         final previous = await _restore(id);
         checkCurrent();
-        if (previous != null && jsonEncode(previous) == encoded) return body;
+        if (previous != null && await encodeJsonValue(previous) == encoded) {
+          return body;
+        }
         if (previous != null && prepareRefresh != null) {
           final ready = await prepareRefresh!(previous, body);
           checkCurrent();
@@ -304,15 +307,13 @@ class BrowseResponseCache {
           if (root != null) {
             final file = File('${root.path}/$id.json');
             final temporary = File('${file.path}.tmp');
-            final bytes = utf8.encode(
-              jsonEncode({
-                'version': 1,
-                'id': id,
-                'route': _routes[id],
-                'hash': _hash(encoded),
-                'body': body,
-              }),
-            );
+            final bytes = await encodeJsonBytes({
+              'version': 1,
+              'id': id,
+              'route': _routes[id],
+              'hash': _hash(encoded),
+              'body': body,
+            });
             if (bytes.length <= maxEntryBytes) {
               try {
                 await temporary.writeAsBytes(bytes, flush: true);
@@ -339,7 +340,10 @@ class BrowseResponseCache {
           }
           checkCurrent();
           if ((_epochs[scopeHash] ?? 0) != epoch) return;
-          _remember(id, _copy(body));
+          final ownedBody = await _copy(body);
+          checkCurrent();
+          if ((_epochs[scopeHash] ?? 0) != epoch) return;
+          _remember(id, ownedBody, utf8.encode(encoded).length);
           for (final listener in List<void Function()>.of(
             _listeners[id] ?? const {},
           )) {

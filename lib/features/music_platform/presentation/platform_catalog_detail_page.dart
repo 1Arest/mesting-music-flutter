@@ -34,7 +34,7 @@ class _PlatformCatalogDetailPageState
   bool _busy = false, _more = true;
   int _page = 0;
   String? _error;
-  Future<List<Track>>? _neteaseTracks;
+  int _sourceOffset = 0;
   late final String? _owner, _token;
   @override
   void initState() {
@@ -60,11 +60,13 @@ class _PlatformCatalogDetailPageState
       }
       final List<Track> fresh;
       final int rowCount;
+      bool? sourceMore;
       if (identity?.platform == MusicPlatform.netease) {
         final repository = ref.read(neteaseMusicRepositoryProvider);
-        final all = await (_neteaseTracks ??= _browse.load(
-          key: 'netease-tracks',
-          request: () => repository.categoryTracks(hit),
+        final start = _sourceOffset;
+        final page = await _browse.load(
+          key: 'netease-tracks:$start',
+          request: () => repository.categoryTrackPage(hit, offset: start),
           onUpdate: (previous, current) {
             if (!mounted ||
                 ref.read(platformAccountProvider).value?.ownerId != _owner ||
@@ -72,16 +74,24 @@ class _PlatformCatalogDetailPageState
               return;
             }
             setState(() {
-              _neteaseTracks = Future.value(current);
-              _tracks
-                ..clear()
-                ..addAll(current.take(_page * 30));
-              _more = current.length > _tracks.length;
+              replaceBrowsePage(
+                _tracks,
+                previous.items,
+                current.items,
+                (track) => track.id,
+                fallbackIndex: start,
+              );
+              if (_sourceOffset == previous.nextOffset) {
+                _sourceOffset = current.nextOffset;
+                _more = current.hasMore;
+              }
             });
           },
-        ));
-        fresh = all.skip(_page * 30).take(30).toList();
-        rowCount = fresh.length;
+        );
+        fresh = page.items;
+        rowCount = page.nextOffset - start;
+        _sourceOffset = page.nextOffset;
+        sourceMore = page.hasMore;
       } else {
         final page = _page + 1;
         final path = switch (hit.kind) {
@@ -135,7 +145,7 @@ class _PlatformCatalogDetailPageState
         final added = fresh.where((t) => ids.add(t.id)).toList();
         _tracks.addAll(added);
         _page++;
-        _more = rowCount >= 30 && added.isNotEmpty;
+        _more = sourceMore ?? (rowCount >= 30 && added.isNotEmpty);
       });
     } catch (error) {
       if (mounted) {

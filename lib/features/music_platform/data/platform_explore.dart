@@ -1,4 +1,7 @@
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
+import 'track_page_utils.dart';
+import '../../../core/cache/browse_response_cache.dart';
 import 'music_platform_api.dart';
 import 'platform_catalog.dart';
 import 'platform_artwork.dart';
@@ -243,6 +246,35 @@ class PlatformExploreRepository {
     throw const MusicPlatformException('此场景暂未提供可播放的音乐内容');
   }
 
+  static final _fixedSnapshots = Expando<Map<String, Future<List<Track>>>>('fixed-collection-pages');
+  Map<String, Future<List<Track>>> get _fixedTrackSnapshots => _fixedSnapshots[this] ??= {};
+  Future<TrackPage> tracksPage(
+    PlatformExploreItem item, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    if (item.kind == PlatformExploreKind.theme) {
+      if (BrowseResponseCache.observing) {
+        final current = tracks(item);
+        _fixedTrackSnapshots[item.id] = current;
+        return sliceTrackPageAsync(await current, offset: offset, limit: limit);
+      }
+      final values = await (_fixedTrackSnapshots[item.id] ??= tracks(item)
+          .catchError((Object error) {
+            _fixedTrackSnapshots.remove(item.id);
+            throw error;
+          }));
+      return sliceTrackPageAsync(values, offset: offset, limit: limit);
+    }
+    final values = await tracks(item, page: offset ~/ 30 + 1);
+    return TrackPage(
+      values,
+      offset: offset,
+      nextOffset: offset + values.length,
+      hasMore: values.length >= 30,
+    );
+  }
+
   Future<List<Track>> tracks(PlatformExploreItem item, {int page = 1}) async {
     item = await resolveScene(item);
     if (item.kind == PlatformExploreKind.scene &&
@@ -256,7 +288,7 @@ class PlatformExploreRepository {
       PlatformExploreKind.theme => '/theme/playlist/track',
       PlatformExploreKind.scene => '/scene/audio/list',
     };
-    return PlatformCatalog.tracks(
+    return PlatformCatalog.tracksAsync(
       await api.get(
         path,
         query: {

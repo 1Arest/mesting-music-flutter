@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../performance/track_snapshots.dart';
 
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
@@ -247,6 +248,99 @@ class AppDatabase extends _$AppDatabase {
       'CREATE INDEX IF NOT EXISTS platform_listening_timeline '
       'ON platform_listening_outboxes (owner_id, created_at)',
     );
+  }
+
+  /// SQL does ordering/filtering before LIMIT: a visible window never needs to
+  /// decode every saved track. JSON keys are fixed and search terms are bound
+  /// variables, including quotes, percent signs and non-ASCII song names.
+  String _favoriteWhere(String query) {
+    final count = query
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((s) => s.isNotEmpty)
+        .length;
+    return 'owner_id = ? AND deleted_at IS NULL${List.filled(count, " AND instr(lower(CASE WHEN json_valid(track_snapshot) THEN coalesce(json_extract(track_snapshot, '\$.title'),'') || ' ' || coalesce(json_extract(track_snapshot, '\$.artist'),'') || ' ' || coalesce(json_extract(track_snapshot, '\$.album'),'') ELSE '' END), ?) > 0").join()}';
+  }
+
+  List<Variable> _favoriteVariables(String ownerId, String query) => [
+    Variable(ownerId),
+    for (final word in query.trim().toLowerCase().split(RegExp(r'\s+')))
+      if (word.isNotEmpty) Variable(word),
+  ];
+
+  Stream<List<FavoriteTrack>> watchFavoriteSlice(
+    String ownerId, {
+    int offset = 0,
+    int limit = 30,
+    String query = '',
+  }) => customSelect(
+    'SELECT * FROM favorite_tracks WHERE ${_favoriteWhere(query)} ORDER BY created_at DESC, track_id ASC LIMIT ? OFFSET ?',
+    variables: [
+      ..._favoriteVariables(ownerId, query),
+      Variable(limit),
+      Variable(offset),
+    ],
+    readsFrom: {favoriteTracks},
+  ).watch().map((rows) => rows.map((row) => favoriteTracks.map(row.data)).toList());
+
+  Future<List<FavoriteTrack>> favoriteSlice(
+    String ownerId, {
+    int offset = 0,
+    int limit = 30,
+    String query = '',
+  }) => customSelect(
+    'SELECT * FROM favorite_tracks WHERE ${_favoriteWhere(query)} ORDER BY created_at DESC, track_id ASC LIMIT ? OFFSET ?',
+    variables: [
+      ..._favoriteVariables(ownerId, query),
+      Variable(limit),
+      Variable(offset),
+    ],
+    readsFrom: {favoriteTracks},
+  ).get().then((rows) => rows.map((row) => favoriteTracks.map(row.data)).toList());
+
+  Future<int> favoriteCount(
+    String ownerId, {
+    String query = '',
+  }) async => (await customSelect(
+    'SELECT count(*) AS n FROM favorite_tracks WHERE ${_favoriteWhere(query)}',
+    variables: _favoriteVariables(ownerId, query),
+    readsFrom: {favoriteTracks},
+  ).getSingle()).read<int>('n');
+
+  Future<Set<String>> favoriteIds(String ownerId) async => {
+    for (final row in await customSelect(
+      'SELECT track_id FROM favorite_tracks WHERE owner_id = ? AND deleted_at IS NULL',
+      variables: [Variable(ownerId)],
+      readsFrom: {favoriteTracks},
+    ).get())
+      row.read<String>('track_id'),
+  };
+
+  Future<List<UserPlaylistTrack>> playlistTrackSlice(
+    String ownerId,
+    String playlistId, {
+    int offset = 0,
+    int limit = 30,
+  }) =>
+      (select(userPlaylistTracks)
+            ..where(
+              (row) =>
+                  row.ownerId.equals(ownerId) &
+                  row.playlistId.equals(playlistId),
+            )
+            ..orderBy([(row) => OrderingTerm.asc(row.sortOrder)])
+            ..limit(limit, offset: offset))
+          .get();
+
+  Future<int> playlistTrackCount(String ownerId, String playlistId) async {
+    final count = userPlaylistTracks.trackId.count();
+    final query = selectOnly(userPlaylistTracks)
+      ..addColumns([count])
+      ..where(
+        userPlaylistTracks.ownerId.equals(ownerId) &
+            userPlaylistTracks.playlistId.equals(playlistId),
+      );
+    return (await query.getSingle()).read(count) ?? 0;
   }
 
   Stream<List<FavoriteTrack>> watchFavorites(String ownerId) {
@@ -1034,9 +1128,7 @@ class AppDatabase extends _$AppDatabase {
       PlaybackSessionsCompanion.insert(
         ownerId: Value(ownerId),
         id: 1,
-        queueSnapshot: jsonEncode(
-          queue.map((track) => track.toJson()).toList(),
-        ),
+        queueSnapshot: await encodeTrackQueue(queue),
         currentIndex: currentIndex,
         positionMs: position.inMilliseconds,
         playbackMode: playbackMode,
@@ -1277,6 +1369,42 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(row) => OrderingTerm.desc(row.lastPlayedAt)]))
         .watch();
   }
+
+  SimpleSelectStatement<$PlaybackHistoriesTable, PlaybackHistory>
+  _historyPageQuery(
+    String ownerId, {
+    bool ranking = false,
+    int offset = 0,
+    int limit = 30,
+  }) => select(playbackHistories)
+    ..where((row) => row.ownerId.equals(ownerId))
+    ..orderBy([
+      if (ranking) (row) => OrderingTerm.desc(row.completedPlayCount),
+      (row) => OrderingTerm.desc(row.lastPlayedAt),
+      (row) => OrderingTerm.asc(row.trackId),
+    ])
+    ..limit(limit, offset: offset);
+
+  Future<List<PlaybackHistory>> playbackHistoryPage(
+    String ownerId, {
+    bool ranking = false,
+    int offset = 0,
+    int limit = 30,
+  }) => _historyPageQuery(
+    ownerId,
+    ranking: ranking,
+    offset: offset,
+    limit: limit,
+  ).get();
+  Stream<List<PlaybackHistory>> watchPlaybackHistoryPreview(
+    String ownerId, {
+    bool ranking = false,
+  }) => _historyPageQuery(ownerId, ranking: ranking).watch();
+  Future<int> playbackHistoryCount(String ownerId) async => (await customSelect(
+    'SELECT count(*) AS total FROM playback_histories WHERE owner_id = ?',
+    variables: [Variable<String>(ownerId)],
+    readsFrom: {playbackHistories},
+  ).getSingle()).read<int>('total');
 
   Stream<List<PlaybackHistory>> watchListeningRanking(String ownerId) {
     return (select(playbackHistories)

@@ -1,12 +1,19 @@
 import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
 import 'embedded_kugou_music_source.dart';
 import 'music_platform_api.dart';
+import 'kugou_playlist_paging.dart';
+import 'package:flutter/foundation.dart';
 
 /// Shared response parsing for the upstream discovery and cloud-list APIs.
 /// No UI page constructs signed URLs or guesses cloud playlist identifiers.
 class PlatformCatalog {
   PlatformCatalog(this.api);
   final MusicPlatformApi api;
+  late final _playlists = KugouPlaylistPaging(
+    read: (path, query) => api.get(path, query: query),
+    rows: rows,
+  );
 
   static List<Map<String, dynamic>> rows(Object? value) {
     if (value is List) {
@@ -46,13 +53,20 @@ class PlatformCatalog {
       )
       .toList(growable: false);
 
+  static Future<List<Track>> tracksAsync(Object? value) {
+    final values = rows(value);
+    return values.length < 100
+        ? Future.value(tracks(values))
+        : compute(tracks, values, debugLabel: 'kugou-track-metadata');
+  }
+
   Future<List<Track>> daily() async {
     final payload = await api.get('/everyday/recommend');
-    return tracks(payload);
+    return tracksAsync(payload);
   }
 
   /// Public new-song chart, separate from account-based daily recommendations.
-  Future<List<Track>> newSongs() async => tracks(
+  Future<List<Track>> newSongs() async => tracksAsync(
     await api.get(
       '/top/song',
       query: const {'type': '21608', 'pagesize': '30'},
@@ -93,5 +107,25 @@ class PlatformCatalog {
       if (added == 0) throw const MusicPlatformException('平台歌单分页未前进，请重新加载');
     }
     throw const MusicPlatformException('歌单超过本次加载上限，请在平台客户端查看完整内容');
+  }
+
+  Future<TrackPage> publicPlaylistPage(
+    String globalId, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    final page = await _playlists.page(
+      '/playlist/track/all',
+      {'global_collection_id': globalId},
+      offset: offset,
+      limit: limit,
+    );
+    return TrackPage(
+      tracks(page.items),
+      offset: page.offset,
+      nextOffset: page.nextOffset,
+      total: page.total,
+      hasMore: page.hasMore,
+    );
   }
 }

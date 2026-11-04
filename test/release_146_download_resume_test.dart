@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mesting_music/features/downloads/audio_downloads.dart';
@@ -87,6 +88,163 @@ class _Ranges extends http.BaseClient {
 }
 
 void main() {
+  test(
+    'large persisted task directory decodes and encodes all records off-thread',
+    () async {
+      final tasks = [
+        for (var i = 0; i < 3000; i++)
+          AudioDownloadTask(
+            id: 'stored_$i',
+            owner: 'netease:7',
+            track: recording(id: 'netease_$i'),
+            phase: AudioDownloadPhase.paused,
+            received: 4096,
+            total: 8192,
+            validator: '"one"',
+          ),
+      ];
+      final raw = await encodeAudioDownloadSnapshot(tasks);
+      expect(raw.length, greaterThan(128 * 1024));
+      expect(jsonDecode(raw), hasLength(3000));
+      final restored = await decodeAudioDownloadSnapshot(raw);
+      expect(restored, hasLength(3000));
+      expect(restored.last.id, 'stored_2999');
+      expect(restored.last.received, 4096);
+      expect(restored.last.validator, '"one"');
+      expect(restored.last.phase, AudioDownloadPhase.paused);
+    },
+  );
+
+  test(
+    'account change during directory hydration cancels deferred additions',
+    () async {
+      var owner = 'netease:7';
+      final pending = Completer<List<AudioDownloadTask>>();
+      final manager = AudioDownloadManager(
+        client: _Ranges(),
+        resolve: (_) async => throw StateError('No media request allowed'),
+        publish: (_, _, _, _) async => throw StateError('No publish allowed'),
+        currentOwner: () => owner,
+        directory: () async => Directory.systemTemp,
+        persist: (_) async {},
+      );
+      addTearDown(manager.dispose);
+      final restoring = manager.restoreSnapshot(pending.future);
+      manager.enqueue(recording());
+      expect(manager.tasks, isEmpty);
+      expect(manager.restoring, true);
+      owner = 'netease:8';
+      manager.cancelPending();
+      pending.complete([
+        AudioDownloadTask(
+          id: 'old',
+          owner: 'netease:7',
+          track: recording(),
+          phase: AudioDownloadPhase.paused,
+        ),
+      ]);
+      await restoring;
+      expect(manager.restoring, false);
+      expect(manager.tasks.single.id, 'old');
+      expect(manager.tasks.single.phase, AudioDownloadPhase.paused);
+    },
+  );
+
+  test(
+    'bulk enqueue and account cancellation persist once per batch with no duplicate tasks',
+    () async {
+      final blocked = Completer<String>();
+      var writes = 0;
+      final manager = AudioDownloadManager(
+        client: _Ranges(),
+        resolve: (_) => blocked.future,
+        publish: (_, _, _, _) async => throw StateError('No publish allowed'),
+        currentOwner: () => 'netease:7',
+        directory: () async => Directory.systemTemp,
+        persist: (_) async {
+          writes++;
+        },
+      );
+      addTearDown(manager.dispose);
+      final tracks = [
+        for (var i = 0; i < 3000; i++) recording(id: 'netease_$i'),
+      ];
+      manager.enqueueAll([...tracks, ...tracks.take(50)]);
+      await Future<void>.delayed(Duration.zero);
+      expect(manager.tasks, hasLength(3000));
+      expect(writes, lessThanOrEqualTo(2));
+      final before = writes;
+      var notifications = 0;
+      manager.collectionChanges.addListener(() => notifications++);
+      manager.cancelPending();
+      await Future<void>.delayed(Duration.zero);
+      expect(writes, before + 1);
+      expect(notifications, 1);
+      expect(
+        manager.tasks.every(
+          (task) => task.phase == AudioDownloadPhase.cancelled,
+        ),
+        true,
+      );
+    },
+  );
+  test(
+    'byte progress updates one task without rebuilding a 3000-task collection',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'music147-progress',
+      );
+      addTearDown(() async {
+        // Abort is asynchronous: wait for the real transfer's sink to release
+        // its Windows handle before deleting this test's private directory.
+        for (var attempt = 0; ; attempt++) {
+          try {
+            await directory.delete(recursive: true);
+            return;
+          } on FileSystemException {
+            if (attempt >= 20) rethrow;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        }
+      });
+      final client = _Ranges();
+      final manager = AudioDownloadManager(
+        client: client,
+        restored: [
+          for (var i = 0; i < 3000; i++)
+            AudioDownloadTask(
+              id: 'old_$i',
+              owner: 'netease:7',
+              track: recording(),
+              phase: AudioDownloadPhase.failed,
+            ),
+        ],
+        resolve: (_) async => 'https://synthetic.invalid/song',
+        publish: (_, _, _, _) async => 'content://synthetic/published',
+        currentOwner: () => 'netease:7',
+        directory: () async => directory,
+        persist: (_) async {},
+      );
+      addTearDown(manager.dispose);
+      manager.enqueue(recording());
+      await until(
+        () => manager.tasks.last.phase == AudioDownloadPhase.downloading,
+      );
+      final id = manager.tasks.last.id;
+      var collections = 0, rows = 0;
+      manager.collectionChanges.addListener(() => collections++);
+      manager.taskChanges(id).addListener(() => rows++);
+      await Future<void>.delayed(const Duration(milliseconds: 270));
+      client.first.add(client.bytes.sublist(0, 40));
+      await until(() => manager.taskById(id)!.received == 40);
+      expect(collections, 0);
+      expect(rows, greaterThan(0));
+      expect(manager.completedTrackIds('netease:7'), isEmpty);
+      manager.pause(id);
+      expect(collections, 1);
+      expect(manager.taskById(id)!.phase, AudioDownloadPhase.paused);
+    },
+  );
   test(
     'range validation rejects ignored Range, shifted bytes and changed entity',
     () {

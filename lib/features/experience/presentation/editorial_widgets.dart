@@ -40,31 +40,56 @@ const editorialBottomClearance = 210.0;
 
 /// Shared page rhythm, not a second router or an alternate account model.
 class EditorialScroll extends StatelessWidget {
-  const EditorialScroll({required this.children, this.onRefresh, super.key});
+  const EditorialScroll({
+    required this.children,
+    this.onRefresh,
+    this.footer = const MusicListEnd(label: '已到底'),
+    super.key,
+  });
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
+  final Widget footer;
   @override
   Widget build(BuildContext context) {
-    final scroll = ListView(
+    final scroll = CustomScrollView(
       physics: const ArtworkFrontierPhysics(
         parent: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       ),
-      padding: EdgeInsets.only(
-        top: MediaQuery.paddingOf(context).top + 14,
-        bottom: BetaContentInsets.musicBottomOf(
-          context,
-          editorialBottomClearance,
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.only(
+            top: MediaQuery.paddingOf(context).top + 14,
+            bottom: BetaContentInsets.musicBottomOf(
+              context,
+              editorialBottomClearance,
+            ),
+          ),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              for (final child in children)
+                if (child is EditorialSliver)
+                  child
+                else
+                  SliverToBoxAdapter(child: child),
+              SliverToBoxAdapter(child: footer),
+            ],
+          ),
         ),
-      ),
-      children: [
-        ...children,
-        const MusicListEnd(label: '已到底'),
       ],
     );
     return onRefresh == null
         ? scroll
         : MusicRefreshIndicator(onRefresh: onRefresh!, child: scroll);
   }
+}
+
+/// A lazy section embedded in the common editorial scroll, without a nested
+/// shrink-wrapped list that lays out the entire collection on first entry.
+class EditorialSliver extends StatelessWidget {
+  const EditorialSliver({required this.sliver, super.key});
+  final Widget sliver;
+  @override
+  Widget build(BuildContext context) => sliver;
 }
 
 class EditorialHeader extends ConsumerWidget {
@@ -518,11 +543,15 @@ class EditorialCollectionHero extends ConsumerWidget {
     required this.cover,
     required this.tracks,
     this.description = '',
+    this.total,
+    this.loadComplete,
     super.key,
   });
   final String cover;
   final String description;
   final List<Track> tracks;
+  final int? total;
+  final Future<List<Track>> Function()? loadComplete;
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
     padding: const EdgeInsets.fromLTRB(22, 16, 22, 26),
@@ -550,19 +579,30 @@ class EditorialCollectionHero extends ConsumerWidget {
             ),
           ),
         Text(
-          '${tracks.length} 首歌曲',
+          '${total ?? tracks.length} 首歌曲',
           style: TextStyle(color: context.musicThemeTokens.textSecondary),
         ),
         const SizedBox(height: 14),
         FilledButton.icon(
           onPressed: tracks.isEmpty
               ? null
-              : () => playBetaSelection(
-                  context,
-                  ref,
-                  tracks.first,
-                  playAll: tracks,
-                ),
+              : () async {
+                  try {
+                    final all = loadComplete == null
+                        ? tracks
+                        : await loadComplete!();
+                    if (context.mounted && all.isNotEmpty) {
+                      await playBetaSelection(
+                        context,
+                        ref,
+                        all.first,
+                        playAll: all,
+                      );
+                    }
+                  } catch (failure) {
+                    if (context.mounted) showPlatformFailure(context, failure);
+                  }
+                },
           icon: const Icon(Icons.play_arrow_rounded),
           style: FilledButton.styleFrom(
             backgroundColor: BetaAppearance.playbackAction(

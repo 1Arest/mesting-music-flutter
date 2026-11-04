@@ -224,6 +224,9 @@ void main() {
       });
       final controller = connections145Controller(music);
       await controller.start();
+      expect(controller.complete, false);
+      expect(music.calls, hasLength(2));
+      await controller.loadRemaining();
       expect(controller.complete, true);
       expect(controller.items, hasLength(107));
       expect(music.calls.map((call) => (call.$1, call.$2['offset'])), [
@@ -305,6 +308,7 @@ void main() {
       final controller = connections145Controller(music);
       await controller.start();
       expect(controller.complete, false);
+      await controller.loadMore();
       expect(controller.error, isNotNull);
       expect(controller.items, hasLength(1));
       expect(music.calls, hasLength(3));

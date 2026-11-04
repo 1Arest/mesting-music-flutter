@@ -1,3 +1,4 @@
+import '../../presentation/platform_lazy_list.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
 import '../../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../../shared/widgets/music_loading_scope.dart';
@@ -112,6 +113,13 @@ class NeteaseMessagesPage extends ConsumerStatefulWidget {
 class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
   final _conversations = <NeteaseConversation>[];
   Map<String, int> _counts = {};
+  int _conversationRevision = 0, _visibleRevision = -1;
+  int? _visibleReadRevision;
+  String? _visibleFilter;
+  List<NeteaseConversation> _visible = const [];
+  Map<String, int>? _lastRawCounts;
+  int _countsDataRevision = -1, _countsReadRevision = -1;
+  Map<String, int> _visibleTotals = const {};
   String _filter = '';
   String? _error;
   bool _busy = false, _more = true;
@@ -155,6 +163,7 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
         _offset += list.length;
         final ids = _conversations.map((c) => c.peer.id).toSet();
         _conversations.addAll(list.where((c) => ids.add(c.peer.id)));
+        _conversationRevision++;
         _more = list.length >= 30;
       });
       try {
@@ -199,20 +208,50 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
       if (current) await _load();
     },
   );
+
+  /// Loading indicators and search focus do not change conversation data.
+  /// Read receipts do: include their revision so unread badges refresh at once.
+  List<NeteaseConversation> _visibleConversations(int readRevision) {
+    if (_visibleRevision == _conversationRevision &&
+        _visibleReadRevision == readRevision &&
+        _visibleFilter == _filter) {
+      return _visible;
+    }
+    final query = _filter.toLowerCase();
+    _visible = _conversations
+        .map(repository.visibleConversation)
+        .where(
+          (c) => '${c.peer.name} ${c.last.text}'.toLowerCase().contains(query),
+        )
+        .toList(growable: false);
+    _visibleRevision = _conversationRevision;
+    _visibleReadRevision = readRevision;
+    _visibleFilter = _filter;
+    return _visible;
+  }
+
+  Map<String, int> _visibleCounts(int readRevision) {
+    if (_countsDataRevision == _conversationRevision &&
+        _countsReadRevision == readRevision &&
+        identical(_lastRawCounts, _counts)) {
+      return _visibleTotals;
+    }
+    _visibleTotals = repository.visibleCounts(_counts);
+    _countsDataRevision = _conversationRevision;
+    _countsReadRevision = readRevision;
+    _lastRawCounts = _counts;
+    return _visibleTotals;
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(neteaseMessagesRepositoryProvider);
     ref.watch(usesNeteaseProvider);
     if (!current) return stale();
-    ref.watch(neteaseMessageReadRevisionProvider);
-    final counts = repository.visibleCounts(_counts);
-    final list = _conversations
-        .map(repository.visibleConversation)
-        .where(
-          (c) => '${c.peer.name} ${c.last.text}'.toLowerCase().contains(
-            _filter.toLowerCase(),
-          ),
-        );
+    final readRevision =
+        ref.watch(neteaseMessageReadRevisionProvider).value ?? 0;
+    final counts = _visibleCounts(readRevision);
+    final list = _visibleConversations(readRevision);
     return BetaPageSearchLayout(
       controller: _search,
       child: PlatformPageFrame(
@@ -233,10 +272,10 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
         ],
         child: MusicRefreshIndicator(
           onRefresh: _load,
-          child: ListView(
+          child: buildPlatformLazyList(
             padding: BetaContentInsets.musicPaddingOf(context, EdgeInsets.zero),
             physics: const AlwaysScrollableScrollPhysics(),
-            children: [
+            header: [
               if (_filter.isEmpty) ...[
                 _category(
                   '新增粉丝',
@@ -272,42 +311,47 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
                     child: Center(child: BetaActivityIndicator()),
                   ),
                 ),
-              for (final conversation in list)
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 8,
-                  ),
-                  leading: NeteasePersonAvatar(conversation.peer, size: 54),
-                  title: Text(
-                    conversation.peer.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    conversation.last.image.isEmpty
-                        ? conversation.last.text
-                        : '[图片]',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        neteaseMessageTime(conversation.last.time),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                      if (conversation.unread > 0) ...[
-                        const SizedBox(height: 5),
-                        _UnreadBadge(conversation.unread),
-                      ],
-                    ],
-                  ),
-                  onTap: () => _chat(conversation.peer),
+            ],
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final conversation = list[index];
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 8,
                 ),
+                leading: NeteasePersonAvatar(conversation.peer, size: 54),
+                title: Text(
+                  conversation.peer.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  conversation.last.image.isEmpty
+                      ? conversation.last.text
+                      : '[图片]',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      neteaseMessageTime(conversation.last.time),
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    if (conversation.unread > 0) ...[
+                      const SizedBox(height: 5),
+                      _UnreadBadge(conversation.unread),
+                    ],
+                  ],
+                ),
+                onTap: () => _chat(conversation.peer),
+              );
+            },
+            footer: [
               if (!_busy && _error == null && list.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(32),
@@ -383,6 +427,10 @@ class NeteaseFriendsPage extends ConsumerStatefulWidget {
 class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
   final _people = <NeteasePerson>[];
   List<NeteasePerson>? _results;
+  int _peopleRevision = 0, _matchedRevision = -1;
+  String? _matchedFilter;
+  List<NeteasePerson>? _matchedResults;
+  List<NeteasePerson> _matchedPeople = const [];
   String _filter = '';
   String? _error;
   bool _busy = false, _more = false;
@@ -432,6 +480,7 @@ class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
       final ids = _people.map((p) => p.id).toSet();
       setState(() {
         _people.addAll(friends.where((p) => ids.add(p.id)));
+        _peopleRevision++;
         _offset += friends.length;
         _more = friends.length >= 50;
       });
@@ -439,11 +488,12 @@ class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
         try {
           final conversations = await repository.conversations();
           if (current) {
-            setState(
-              () => _people.addAll(
+            setState(() {
+              _people.addAll(
                 conversations.map((c) => c.peer).where((p) => ids.add(p.id)),
-              ),
-            );
+              );
+              _peopleRevision++;
+            });
           }
         } catch (_) {
           /* The friend list does not depend on private history. */
@@ -484,24 +534,36 @@ class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
     }
   }
 
+  List<NeteasePerson> get _visiblePeople {
+    if (_matchedRevision == _peopleRevision &&
+        _matchedFilter == _filter &&
+        identical(_matchedResults, _results)) {
+      return _matchedPeople;
+    }
+    final query = _filter.toLowerCase();
+    _matchedPeople =
+        (_results ?? _people.where((p) => p.name.toLowerCase().contains(query)))
+            .where((p) => p.id.isNotEmpty && p.id != repository.self)
+            .toList(growable: false);
+    _matchedRevision = _peopleRevision;
+    _matchedFilter = _filter;
+    _matchedResults = _results;
+    return _matchedPeople;
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(neteaseMessagesRepositoryProvider);
     ref.watch(usesNeteaseProvider);
     if (!current) return stale();
-    final people =
-        (_results ??
-                _people.where(
-                  (p) => p.name.toLowerCase().contains(_filter.toLowerCase()),
-                ))
-            .where((p) => p.id.isNotEmpty && p.id != repository.self);
+    final people = _visiblePeople;
     return BetaPageSearchLayout(
       controller: _search,
       child: PlatformPageFrame(
         title: '选择朋友',
-        child: ListView(
+        child: buildPlatformLazyList(
           padding: BetaContentInsets.musicPaddingOf(context, EdgeInsets.zero),
-          children: [
+          header: [
             if (_error != null) _MessageFeedback(_error!, retry: _load),
             if (_busy)
               const Center(
@@ -510,16 +572,21 @@ class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
                   child: BetaActivityIndicator(),
                 ),
               ),
-            for (final person in people)
-              ListTile(
-                leading: NeteasePersonAvatar(person),
-                title: Text(person.name),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 6,
-                ),
-                onTap: () => Navigator.of(context).pop(person),
+          ],
+          itemCount: people.length,
+          itemBuilder: (context, index) {
+            final person = people[index];
+            return ListTile(
+              leading: NeteasePersonAvatar(person),
+              title: Text(person.name),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 6,
               ),
+              onTap: () => Navigator.of(context).pop(person),
+            );
+          },
+          footer: [
             if (!_busy && people.isEmpty)
               const _MessageFeedback('暂无匹配的朋友，可以在底部搜索网易云用户'),
             if (_more && _results == null)
@@ -1387,14 +1454,14 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
     };
     final list = MusicRefreshIndicator(
       onRefresh: _load,
-      child: ListView(
+      child: buildPlatformLazyList(
         key: PageStorageKey('notices-${_kind.name}'),
         padding: BetaContentInsets.musicPaddingOf(
           context,
           EdgeInsets.only(bottom: 190),
         ),
         physics: const AlwaysScrollableScrollPhysics(),
-        children: [
+        header: [
           if (_error != null) _MessageFeedback(_error!, retry: _load),
           if (_busy)
             const MusicLoadingPlaceholder(
@@ -1403,25 +1470,30 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
                 child: Center(child: BetaActivityIndicator()),
               ),
             ),
-          for (final row in _rows)
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 22,
-                vertical: 8,
-              ),
-              leading: NeteasePersonAvatar(row.person),
-              title: Text(row.person.name),
-              subtitle: Text(
-                row.text,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: Text(
-                neteaseMessageTime(row.time),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              onTap: () => _detail(row),
+        ],
+        itemCount: _rows.length,
+        itemBuilder: (context, index) {
+          final row = _rows[index];
+          return ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 22,
+              vertical: 8,
             ),
+            leading: NeteasePersonAvatar(row.person),
+            title: Text(row.person.name),
+            subtitle: Text(
+              row.text,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Text(
+              neteaseMessageTime(row.time),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            onTap: () => _detail(row),
+          );
+        },
+        footer: [
           if (!_busy && _rows.isEmpty && _error == null)
             const _MessageFeedback('暂时没有消息'),
           if (_more)

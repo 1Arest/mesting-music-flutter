@@ -49,6 +49,7 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
   String _query = '';
   String? _folderId;
   bool _preparingPlayback = false;
+  final _views = LocalMusicViewCache();
 
   Future<void> _play(
     LocalMusicEntry entry, {
@@ -183,33 +184,15 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
     final state = ref.watch(localMusicControllerProvider);
     final controller = ref.read(localMusicControllerProvider.notifier);
     final tokens = context.musicThemeTokens;
-    final folders = state.library.folders;
-    final matchingFolderIds = _query.trim().isEmpty
-        ? null
-        : state.library.entries
-              .where((entry) => entry.matches(_query))
-              .map((entry) => entry.folderId)
-              .toSet();
-    final visibleFolders = folders
-        .where(
-          (folder) =>
-              matchingFolderIds == null ||
-              matchingFolderIds.contains(folder.id),
-        )
-        .toList(growable: false);
-    final selectedFolder = folders
-        .where((folder) => folder.id == _folderId)
-        .firstOrNull;
-    final entries = state.library.entries
-        .where(
-          (entry) =>
-              (_folderId == null || entry.folderId == _folderId) &&
-              entry.matches(_query),
-        )
-        .toList(growable: false);
-    final available = entries
-        .where((entry) => entry.available)
-        .toList(growable: false);
+    final view = _views.select(
+      state.library,
+      query: _query,
+      folderId: _folderId,
+    );
+    final visibleFolders = view.folders;
+    final selectedFolder = view.selectedFolder;
+    final entries = view.entries;
+    final available = view.available;
     final busy = state.busy || _preparingPlayback;
 
     return BetaPageSearchLayout(
@@ -505,7 +488,7 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                               ),
                               leading: _LocalArtwork(entry: entry),
                               title: Text(
-                                entry.track.title,
+                                entry.displayTitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(

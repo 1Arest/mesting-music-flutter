@@ -275,13 +275,11 @@ class _PersonalIdentity extends ConsumerWidget {
 /// A metadata/availability update for another one of 674 favorites must not
 /// rebuild the avatar, glass controls or playlist slivers.
 final _personalFavoriteSummary = Provider((ref) {
+  final count = ref.watch(favoriteCollectionCountProvider);
   return ref.watch(
     favoriteTracksProvider.select((value) {
       final tracks = value.value;
-      return (
-        count: tracks?.length ?? 0,
-        cover: tracks?.firstOrNull?.coverAsset ?? '',
-      );
+      return (count: count, cover: tracks?.firstOrNull?.coverAsset ?? '');
     }),
   );
 });
@@ -296,8 +294,14 @@ class _PersonalCounts extends ConsumerWidget {
     final playlists = ref.watch(
       playlistsProvider.select((s) => s.value?.length ?? 0),
     );
+    final directory = ref.exists(playlistDirectoryWindowProvider)
+        ? ref.watch(playlistDirectoryWindowProvider)
+        : null;
+    final playlistLabel = directory?.hasMore == true && directory?.total == null
+        ? '已加载 $playlists 个歌单'
+        : '${directory?.total ?? playlists} 个歌单';
     return Text(
-      '$favorites 首喜欢  ·  $playlists 个歌单',
+      '$favorites 首喜欢  ·  $playlistLabel',
       style: Theme.of(context).textTheme.bodyMedium,
     );
   }

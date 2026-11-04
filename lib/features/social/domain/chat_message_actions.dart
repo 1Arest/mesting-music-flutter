@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -136,6 +137,42 @@ List<SavedChatMessage> readSavedChatMessages(
   if (normalizedUid.isEmpty) return const <SavedChatMessage>[];
   final raw = preferences.getString(savedChatMessagesKey(normalizedUid));
   if (raw == null || raw.isEmpty) return const <SavedChatMessage>[];
+  final cached = _savedSnapshotCache[preferences]?[normalizedUid];
+  if (cached?.$1 == raw) return cached!.$2;
+  final decoded = _decodeSavedMessages(raw);
+  (_savedSnapshotCache[preferences] ??= {})[normalizedUid] = (raw, decoded);
+  return decoded;
+}
+
+final _savedSnapshotCache =
+    Expando<Map<String, (String, List<SavedChatMessage>)>>(
+      'saved-message-snapshots',
+    );
+
+/// Only the stored text crosses to the worker. Preferences and account state
+/// remain on the caller; the raw-keyed cache cannot reuse another user's list.
+Future<List<SavedChatMessage>> readSavedChatMessagesAsync(
+  SharedPreferences preferences,
+  String uid,
+) async {
+  final raw = preferences.getString(savedChatMessagesKey(uid.trim()));
+  if (uid.trim().isEmpty || raw == null || raw.isEmpty) return const [];
+  final cached = _savedSnapshotCache[preferences]?[uid.trim()];
+  if (cached?.$1 == raw) return cached!.$2;
+  final values = raw.length < 128 * 1024
+      ? _decodeSavedMessages(raw)
+      : await compute(
+          _decodeSavedMessages,
+          raw,
+          debugLabel: 'saved-chat-messages',
+        );
+  final cache = _savedSnapshotCache[preferences] ??= {};
+  if (cache.length >= 4) cache.remove(cache.keys.first);
+  cache[uid.trim()] = (raw, values);
+  return values;
+}
+
+List<SavedChatMessage> _decodeSavedMessages(String raw) {
   try {
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const <SavedChatMessage>[];
@@ -151,7 +188,7 @@ List<SavedChatMessage> readSavedChatMessages(
     }
     final values = messages.values.toList()
       ..sort((left, right) => right.sentAt.compareTo(left.sentAt));
-    return values;
+    return List.unmodifiable(values);
   } on FormatException {
     return const <SavedChatMessage>[];
   }
@@ -161,9 +198,24 @@ Future<void> writeSavedChatMessages(
   SharedPreferences preferences,
   String uid,
   Iterable<SavedChatMessage> messages,
-) {
+) async {
   final normalizedUid = uid.trim();
   if (normalizedUid.isEmpty) return Future<void>.value();
+  final input = messages.toList(growable: false);
+  final snapshot = input.length < 100
+      ? _encodeSavedSnapshot(input)
+      : await compute(
+          _encodeSavedSnapshot,
+          input,
+          debugLabel: 'saved-chat-write',
+        );
+  await preferences.setString(savedChatMessagesKey(normalizedUid), snapshot.$1);
+  (_savedSnapshotCache[preferences] ??= {})[normalizedUid] = snapshot;
+}
+
+(String, List<SavedChatMessage>) _encodeSavedSnapshot(
+  List<SavedChatMessage> messages,
+) {
   final deduplicated = <String, SavedChatMessage>{
     for (final message in messages)
       if (message.id.trim().isNotEmpty && message.conversationUid.isNotEmpty)
@@ -171,9 +223,9 @@ Future<void> writeSavedChatMessages(
   };
   final values = deduplicated.values.toList()
     ..sort((left, right) => right.sentAt.compareTo(left.sentAt));
-  return preferences.setString(
-    savedChatMessagesKey(normalizedUid),
+  return (
     jsonEncode(values.map((message) => message.toJson()).toList()),
+    List.unmodifiable(values),
   );
 }
 
@@ -194,7 +246,7 @@ Future<bool> removeSavedChatMessage(
 
   final messageIds = readSavedChatMessageIds(preferences, normalizedUid);
   final removedId = messageIds.remove(normalizedMessageId);
-  final messages = readSavedChatMessages(preferences, normalizedUid);
+  final messages = await readSavedChatMessagesAsync(preferences, normalizedUid);
   final remainingMessages = messages
       .where((message) => message.id != normalizedMessageId)
       .toList(growable: false);

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:io';
 
@@ -135,14 +136,11 @@ class SavedMessagesPage extends ConsumerStatefulWidget {
 class _SavedMessagesPageState extends ConsumerState<SavedMessagesPage> {
   @override
   Widget build(BuildContext context) {
+    return _SavedSnapshots(builder: (messages) => _content(context, messages));
+  }
+
+  Widget _content(BuildContext context, List<SavedChatMessage> messages) {
     final top = MediaQuery.paddingOf(context).top;
-    final currentUser = ref.watch(currentUserProvider);
-    final messages = currentUser == null
-        ? const <SavedChatMessage>[]
-        : readSavedChatMessages(
-            ref.watch(sharedPreferencesProvider),
-            currentUser.uid,
-          );
     return Column(
       children: [
         SizedBox(height: top + 12),
@@ -234,14 +232,17 @@ class SavedMessageDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return _SavedSnapshots(
+      builder: (messages) => _content(context, ref, messages),
+    );
+  }
+
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref,
+    List<SavedChatMessage> messages,
+  ) {
     final top = MediaQuery.paddingOf(context).top;
-    final currentUser = ref.watch(currentUserProvider);
-    final messages = currentUser == null
-        ? const <SavedChatMessage>[]
-        : readSavedChatMessages(
-            ref.watch(sharedPreferencesProvider),
-            currentUser.uid,
-          );
     final message = _savedMessageWithId(messages, messageId);
     return Column(
       children: [
@@ -804,4 +805,42 @@ String _savedMessageTime(DateTime value) {
         '${local.minute.toString().padLeft(2, '0')}';
   }
   return '${local.month}/${local.day}';
+}
+
+/// Large saved collections hydrate once per stored snapshot, with no parsing
+/// during player/theme rebuilds and no previous-account data while waiting.
+class _SavedSnapshots extends ConsumerStatefulWidget {
+  const _SavedSnapshots({required this.builder});
+  final Widget Function(List<SavedChatMessage>) builder;
+  @override
+  ConsumerState<_SavedSnapshots> createState() => _SavedSnapshotsState();
+}
+
+class _SavedSnapshotsState extends ConsumerState<_SavedSnapshots> {
+  (String, String)? _key;
+  Future<List<SavedChatMessage>>? _future;
+  @override
+  Widget build(BuildContext context) {
+    final uid = ref.watch(currentUserProvider)?.uid ?? '';
+    final preferences = ref.watch(sharedPreferencesProvider);
+    final raw = preferences.getString(savedChatMessagesKey(uid)) ?? '';
+    if (uid.isEmpty || raw.length < 128 * 1024) {
+      return widget.builder(
+        uid.isEmpty ? const [] : readSavedChatMessages(preferences, uid),
+      );
+    }
+    final key = (uid, raw);
+    if (key != _key) {
+      _key = key;
+      _future = readSavedChatMessagesAsync(preferences, uid);
+    }
+    return FutureBuilder<List<SavedChatMessage>>(
+      key: ValueKey(uid),
+      future: _future,
+      builder: (context, snapshot) =>
+          snapshot.connectionState != ConnectionState.done
+          ? const Center(child: MusicActivityIndicator())
+          : widget.builder(snapshot.data ?? const []),
+    );
+  }
 }

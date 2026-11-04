@@ -1,3 +1,4 @@
+import '../../presentation/platform_lazy_list.dart';
 import '../../../../shared/widgets/beta_choice_field.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
 import 'dart:io';
@@ -389,6 +390,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
       if (mounted) {
         setState(() {
           _rows.clear();
+          _dataRevision++;
           _facts.clear();
           _busy = false;
           _more = false;
@@ -405,6 +407,22 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
   final _fields = <String, TextEditingController>{};
   final _files = <String, Object?>{};
   final _rows = <NeteaseContentRow>[];
+  int _dataRevision = 0, _derivedRevision = -1;
+  List<Track> _resultTracks = const [];
+  List<MapEntry<String, String>> _factRows = const [];
+
+  /// Keep playback context complete while avoiding a full row scan when a form
+  /// field, loading indicator or filter-panel control rebuilds the page.
+  void _deriveResults() {
+    if (_derivedRevision == _dataRevision) return;
+    _resultTracks = _rows
+        .map((r) => r.track)
+        .whereType<Track>()
+        .toList(growable: false);
+    _factRows = _facts.entries.toList(growable: false);
+    _derivedRevision = _dataRevision;
+  }
+
   final _facts = <String, String>{};
   final _selections = <String, String>{};
   String? _owner, _credential, _error, _notice, _videoUrl;
@@ -649,6 +667,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
                     }
                   }
                   _facts.addAll(fresh.facts);
+                  _dataRevision++;
                   _offset = (_offset - old.rows.length + fresh.rows.length)
                       .clamp(0, 2147483647);
                   if (page == _page - 1) {
@@ -679,6 +698,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
         final identities = _rows.map((r) => r.identity).toSet();
         _rows.addAll(result.rows.where((r) => identities.add(r.identity)));
         _facts.addAll(result.facts);
+        _dataRevision++;
         if ({'/video/url', '/mv/url', '/mlog/url'}.contains(e.route)) {
           _videoUrl = neteaseVideoUrl(payload);
         }
@@ -822,7 +842,8 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
         ),
       );
     }
-    final tracks = _rows.map((r) => r.track).whereType<Track>().toList();
+    _deriveResults();
+    final tracks = _resultTracks;
     final visibleParams = _params.where(
       (p) =>
           p.key != _searchKey &&
@@ -832,14 +853,14 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
     return _searchLayout(
       PlatformPageFrame(
         title: neteaseTaskTitle(e),
-        child: ListView(
+        child: buildPlatformLazyList(
           padding: EdgeInsets.fromLTRB(
             22,
             10,
             22,
             BetaContentInsets.bottomOf(context, 40),
           ),
-          children: [
+          header: [
             if (!e.write &&
                 _params.any(
                   (p) =>
@@ -958,62 +979,12 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
                 ),
                 child: const Text('查看此曲风的歌曲、专辑与歌单'),
               ),
-            for (final fact in _facts.entries)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: fact.key.contains('二维码')
-                    ? Column(
-                        children: [
-                          QrImageView(data: fact.value, size: 220),
-                          Text(
-                            fact.key == '支付二维码'
-                                ? '请使用所选支付应用扫码，核对订单后付款'
-                                : '请使用网易云官方客户端扫码',
-                          ),
-                        ],
-                      )
-                    : fact.key == '乐谱图片'
-                    ? ArtworkImage(
-                        uri: fact.value,
-                        height: 480,
-                        fit: BoxFit.contain,
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            fact.key,
-                            style: Theme.of(context).textTheme.labelLarge,
-                          ),
-                          const SizedBox(height: 7),
-                          SelectableText(fact.value),
-                        ],
-                      ),
-              ),
-            for (final row in _rows)
-              row.track != null
-                  ? EditorialTrackRow(track: row.track!, contextTracks: tracks)
-                  : ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: row.cover.isEmpty
-                          ? Icon(_categoryIcon(e.category))
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: ArtworkImage(
-                                uri: row.cover,
-                                width: 48,
-                                height: 48,
-                              ),
-                            ),
-                      title: Text(row.title),
-                      subtitle: row.subtitle.isEmpty
-                          ? null
-                          : Text(row.subtitle),
-                      trailing: row.id.isEmpty
-                          ? null
-                          : const Icon(CupertinoIcons.chevron_right, size: 16),
-                      onTap: () => _openRow(context, row),
-                    ),
+          ],
+          itemCount: _factRows.length + _rows.length,
+          itemBuilder: (context, index) => index < _factRows.length
+              ? _factRow(context, _factRows[index])
+              : _contentRow(context, _rows[index - _factRows.length], tracks),
+          footer: [
             if (_more)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 18),
@@ -1028,6 +999,54 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
       ),
     );
   }
+
+  Widget _factRow(BuildContext context, MapEntry<String, String> fact) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: fact.key.contains('二维码')
+            ? Column(
+                children: [
+                  QrImageView(data: fact.value, size: 220),
+                  Text(
+                    fact.key == '支付二维码'
+                        ? '请使用所选支付应用扫码，核对订单后付款'
+                        : '请使用网易云官方客户端扫码',
+                  ),
+                ],
+              )
+            : fact.key == '乐谱图片'
+            ? ArtworkImage(uri: fact.value, height: 480, fit: BoxFit.contain)
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(fact.key, style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 7),
+                  SelectableText(fact.value),
+                ],
+              ),
+      );
+
+  Widget _contentRow(
+    BuildContext context,
+    NeteaseContentRow row,
+    List<Track> tracks,
+  ) => row.track != null
+      ? EditorialTrackRow(track: row.track!, contextTracks: tracks)
+      : ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: row.cover.isEmpty
+              ? Icon(_categoryIcon(e.category))
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: ArtworkImage(uri: row.cover, width: 48, height: 48),
+                ),
+          title: Text(row.title),
+          subtitle: row.subtitle.isEmpty ? null : Text(row.subtitle),
+          trailing: row.id.isEmpty
+              ? null
+              : const Icon(CupertinoIcons.chevron_right, size: 16),
+          onTap: () => _openRow(context, row),
+        );
 
   void _openRow(BuildContext context, NeteaseContentRow row) {
     if (!_current) return;
@@ -1400,7 +1419,7 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
   }
 }
 
-class NeteaseContentDetailPage extends StatelessWidget {
+class NeteaseContentDetailPage extends StatefulWidget {
   const NeteaseContentDetailPage({
     required this.row,
     this.category,
@@ -1411,37 +1430,73 @@ class NeteaseContentDetailPage extends StatelessWidget {
   final String? category;
   final Map<String, Object?> seed;
   @override
+  State<NeteaseContentDetailPage> createState() =>
+      _NeteaseContentDetailPageState();
+}
+
+class _NeteaseContentDetailPageState extends State<NeteaseContentDetailPage> {
+  NeteaseContentRow get row => widget.row;
+  String? get category => widget.category;
+  Map<String, Object?> get seed => widget.seed;
+  late NeteaseContent _details;
+  late List<MapEntry<String, String>> _detailFacts;
+
+  void _parseDetails() {
+    _details = NeteaseContent.parse(row.raw, '/content/detail');
+    _detailFacts = _details.facts.entries.toList(growable: false);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _parseDetails();
+  }
+
+  @override
+  void didUpdateWidget(NeteaseContentDetailPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.row, row)) _parseDetails();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final details = NeteaseContent.parse(row.raw, '/content/detail');
+    final details = _details;
     return PlatformPageFrame(
       title: row.kind == 'message' ? '消息内容' : '内容详情',
-      child: ListView(
+      child: buildPlatformLazyList(
         padding: BetaContentInsets.musicPaddingOf(
           context,
           const EdgeInsets.all(24),
         ),
-        children: [
+        header: [
           Text(row.title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),
           SelectableText(row.subtitle),
-          for (final fact in details.facts.entries)
-            Padding(
+        ],
+        itemCount: _detailFacts.length + details.rows.length,
+        itemBuilder: (context, index) {
+          if (index < _detailFacts.length) {
+            final fact = _detailFacts[index];
+            return Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Text('${fact.key}：${fact.value}'),
-            ),
-          for (final item in details.rows)
-            ListTile(
-              title: Text(item.title),
-              subtitle: item.subtitle.isEmpty ? null : Text(item.subtitle),
-              onTap: () => _push(
-                context,
-                NeteaseContentDetailPage(
-                  row: item,
-                  category: category,
-                  seed: seed,
-                ),
+            );
+          }
+          final item = details.rows[index - _detailFacts.length];
+          return ListTile(
+            title: Text(item.title),
+            subtitle: item.subtitle.isEmpty ? null : Text(item.subtitle),
+            onTap: () => _push(
+              context,
+              NeteaseContentDetailPage(
+                row: item,
+                category: category,
+                seed: seed,
               ),
             ),
+          );
+        },
+        footer: [
           const SizedBox(height: 24),
           BetaGlassButton(
             onPressed: () => _push(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database/app_database.dart';
 import '../../shared/models/track.dart';
@@ -8,8 +9,47 @@ import '../library/library_providers.dart';
 final playbackDaysProvider = StreamProvider<List<PlaybackDailyHistory>>(
   (ref) => ref
       .watch(appDatabaseProvider)
-      .watchPlaybackDays(ref.watch(activeLibraryOwnerProvider)),
+      .watchPlaybackDays(ref.watch(activeLibraryOwnerProvider))
+      .asyncMap(preparePlaybackDays),
 );
+
+final _replayCache = Expando<Map<(int, int?), ListeningReplay>>(
+  'listening-replay',
+);
+
+/// Build complete monthly/yearly aggregates once for a new immutable snapshot.
+/// Calendar taps and unrelated player rebuilds then do constant-time lookups.
+Map<(int, int?), ListeningReplay> _prepareReplays(
+  List<PlaybackDailyHistory> days,
+) {
+  final periods = <(int, int?)>{};
+  for (final day in days) {
+    final date = DateTime.tryParse(day.dayKey);
+    if (date != null) {
+      periods.add((date.year, null));
+      periods.add((date.year, date.month));
+    }
+  }
+  return {
+    for (final period in periods)
+      period: ListeningReplay._aggregate(days, period.$1, period.$2),
+  };
+}
+
+Future<List<PlaybackDailyHistory>> preparePlaybackDays(
+  List<PlaybackDailyHistory> rows,
+) async {
+  final snapshot = List<PlaybackDailyHistory>.unmodifiable(rows);
+  final cache = rows.length < 100
+      ? _prepareReplays(snapshot)
+      : await compute(
+          _prepareReplays,
+          snapshot,
+          debugLabel: 'listening-replay',
+        );
+  _replayCache[snapshot] = cache;
+  return snapshot;
+}
 
 /// Calendar availability is independent of listening totals. A future month
 /// must never become selectable simply because the UI renders a whole year.
@@ -42,6 +82,19 @@ class ListeningReplay {
   /// Uses local calendar keys written at listening time. Legacy cumulative
   /// totals are never redistributed into invented past months.
   factory ListeningReplay.fromDays(
+    List<PlaybackDailyHistory> days,
+    int year,
+    int? month,
+  ) {
+    final cache = _replayCache[days] ??= {};
+    return cache[(year, month)] ??= ListeningReplay._aggregate(
+      days,
+      year,
+      month,
+    );
+  }
+
+  static ListeningReplay _aggregate(
     List<PlaybackDailyHistory> days,
     int year,
     int? month,

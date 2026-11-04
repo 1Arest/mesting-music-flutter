@@ -92,7 +92,7 @@ class MusicLandingPage extends ConsumerWidget {
                                   tracks.last.coverAsset,
                               title: '我的喜欢',
                               subtitle:
-                                  '${favorites.value?.length ?? 0} 首珍藏的旋律',
+                                  '${ref.watch(favoriteCollectionCountProvider)} 首珍藏的旋律',
                               width: width,
                               feature: true,
                               onTap: () =>

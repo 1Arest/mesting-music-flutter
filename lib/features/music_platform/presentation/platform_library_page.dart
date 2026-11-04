@@ -1,5 +1,7 @@
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
+import '../../../shared/widgets/music_list_footer.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../music_platform_providers.dart';
@@ -137,6 +139,10 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
       );
     }
     final playlist = ref.watch(playlistProvider(id));
+    final value = ref.watch(playlistTracksProvider(id));
+    final window = ref.exists(playlistTrackWindowProvider(id))
+        ? ref.watch(playlistTrackWindowProvider(id))
+        : null;
     return PlatformPageFrame(
       title: playlist.value?.name ?? '云端歌单',
       subtitle:
@@ -176,33 +182,57 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
           await repository.synchronize(forcePull: true);
           ref.invalidate(playlistProvider(id));
         },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            if (playlist.hasValue)
-              SliverToBoxAdapter(
-                child: EditorialCollectionHero(
-                  cover: playlist.value?.coverAsset ?? '',
-                  description: playlist.value?.description ?? '',
-                  tracks:
-                      ref.watch(playlistTracksProvider(id)).value ?? const [],
+        child: ListenableBuilder(
+          listenable: window ?? const AlwaysStoppedAnimation(0),
+          builder: (context, _) => AutomaticSongPaging(
+            enabled:
+                window != null &&
+                window.hasMore &&
+                !window.loading &&
+                window.error == null,
+            onLoadMore: () => window?.loadMore() ?? Future.value(),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (playlist.hasValue)
+                  SliverToBoxAdapter(
+                    child: EditorialCollectionHero(
+                      cover: playlist.value?.coverAsset ?? '',
+                      description: playlist.value?.description ?? '',
+                      tracks: value.value ?? const [],
+                      total: window?.total,
+                      loadComplete: window?.complete,
+                    ),
+                  ),
+                PlatformSongs(
+                  sliver: true,
+                  value: value,
+                  retry: () => repository.synchronize(forcePull: true),
+                  playlistId: repository.canManage(id) ? id : null,
                 ),
-              ),
-            PlatformSongs(
-              sliver: true,
-              value: ref.watch(playlistTracksProvider(id)),
-              retry: () => repository.synchronize(forcePull: true),
-              playlistId: repository.canManage(id) ? id : null,
-            ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: BetaContentInsets.musicBottomOf(
-                  context,
-                  editorialBottomClearance,
+                SliverToBoxAdapter(
+                  child: window?.loading == true
+                      ? const PlatformFeedbackState(loading: true)
+                      : window?.error != null
+                      ? TextButton(
+                          onPressed: window!.loadMore,
+                          child: const Text('加载未完成，点击重试'),
+                        )
+                      : window?.hasMore == true
+                      ? const SizedBox(height: 12)
+                      : const MusicListEnd(),
                 ),
-              ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: BetaContentInsets.musicBottomOf(
+                      context,
+                      editorialBottomClearance,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

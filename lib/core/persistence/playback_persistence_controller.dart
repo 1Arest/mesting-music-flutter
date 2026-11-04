@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import '../performance/track_snapshots.dart';
 import 'package:audio_service/audio_service.dart';
 
 import 'package:flutter/widgets.dart';
@@ -104,10 +104,7 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
         await _audioHandler.clearSession();
         return;
       }
-      final rawQueue = jsonDecode(session.queueSnapshot) as List<Object?>;
-      final restoredTracks = rawQueue
-          .map((item) => Track.fromJson(item! as Map<String, Object?>))
-          .toList();
+      final restoredTracks = await decodeTrackQueue(session.queueSnapshot);
       final currentId = restoredTracks.isEmpty
           ? null
           : restoredTracks[session.currentIndex.clamp(
