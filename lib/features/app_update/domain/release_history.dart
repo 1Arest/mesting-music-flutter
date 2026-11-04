@@ -2,6 +2,12 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.42': [
+    '修复一起听详情的本次陪伴时长被缩短的问题，使聊天记录进入详情后的时间正确显示。',
+    '修正与这位好友的历史累计一起听时长，分别展示本次歌曲数、累计歌曲数和累计时长。',
+    '修复歌曲页底部导航和播放胶囊异常出现，处理不同入口、播放器弹窗及旧动画回调的显隐。',
+    '修正一起听双方播放、暂停及切歌同步，处理旧回执覆盖新状态、加载失败后的恢复与重复回传。',
+  ],
   '1.0.41': [
     '修复网易云一起听结束记录仍显示为分享内容的问题，补齐专用记录消息的读取。',
     '结束记录卡片保留消息原有时长文字与双方头像，可进入本次详情及全部一起听记录。',

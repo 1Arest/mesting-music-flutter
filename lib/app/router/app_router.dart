@@ -1,4 +1,5 @@
 import '../../shared/widgets/beta_page_motion.dart';
+import '../../shared/widgets/beta_page_route_observer.dart';
 import 'beta_tab_shell.dart';
 import '../../features/experience/presentation/player_dismiss_motion.dart';
 import '../../features/experience/presentation/playback_pill_menu.dart';
@@ -59,6 +60,7 @@ import '../../features/music_platform/platform_capabilities.dart';
 final appRootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouter = GoRouter(
+  observers: [if (DistributionChannel.isBeta) BetaPageRouteObserver()],
   navigatorKey: appRootNavigatorKey,
   initialLocation: '/music/recommend',
   routes: [
@@ -420,6 +422,7 @@ List<RouteBase> _musicShellRoutes() {
     ),
   ];
   ShellRoute regular(List<RouteBase> children) => ShellRoute(
+    observers: [if (DistributionChannel.isBeta) BetaPageRouteObserver()],
     builder: (context, state, child) =>
         MusicShell(location: state.uri.toString(), child: child),
     routes: children,

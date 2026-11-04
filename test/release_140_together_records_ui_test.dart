@@ -28,19 +28,25 @@ import 'release_141_type51_message_test.dart' show type51Fixture;
 // account. The legacy card uses the shipped CommonMessage.fromJson schema.
 const _self = NeteaseTogetherProfile(id: '7', name: '合成测试本人');
 const _peer = NeteaseTogetherProfile(id: '8', name: '合成测试好友');
-const _record = NeteaseTogetherRecord(
-  id: 'first',
+// Feed the UI the report's wire values instead of prebuilt Duration objects:
+// a DTO unit bug must be visible to the card -> report -> history assertions.
+final _record = NeteaseTogetherRecord.fromReport(
+  {
+    'id': 'first',
+    'userInfo': {'userId': 7, 'nickname': _self.name},
+    'anotherUserInfo': {'userId': 8, 'nickname': _peer.name},
+    'duration': 93900,
+    'songCount': 224,
+    'totalDuration': 56909760,
+    'totalSongCount': 18344,
+    'distance': 3167.77,
+    'canInvite': true,
+    'online': false,
+    'showCollectBtn': true,
+  },
   roomId: 'fixture_room_1',
-  self: _self,
-  peer: _peer,
-  duration: Duration(hours: 26, minutes: 5),
-  songCount: 224,
-  totalDuration: Duration(hours: 15808, minutes: 16),
-  totalSongCount: 18344,
-  distanceKilometres: 3167.77,
-  canInvite: true,
-  online: false,
-  showCollectButton: true,
+  selfId: '7',
+  peerId: '8',
 );
 
 class _Records extends NeteaseTogetherRecordsRepository {

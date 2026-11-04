@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'beta_root_tab_viewport.dart';
+import 'beta_page_route_observer.dart';
 
 /// Route addresses cannot describe pages pushed on a retained tab Navigator.
 /// Fullscreen content registers its actual visibility here instead. The render
@@ -77,6 +78,8 @@ class BetaMusicChromeCover extends StatefulWidget {
 
 class _BetaMusicChromeCoverState extends State<BetaMusicChromeCover> {
   BetaMusicChromeController? _controller;
+  BetaPageRouteObserver? _routes;
+  bool _active = true;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -85,14 +88,21 @@ class _BetaMusicChromeCoverState extends State<BetaMusicChromeCover> {
       _controller?.uncover(this);
       _controller = next;
     }
+    final routes = BetaPageRouteObserver.maybeOf(context);
+    if (_routes != routes) {
+      _routes?.removeListener(_synchronize);
+      _routes = routes;
+      _routes?.addListener(_synchronize);
+    }
     _synchronize();
   }
 
   void _synchronize() {
+    if (!_active) return;
     final route = ModalRoute.of(context);
     if (widget.enabled &&
         BetaTabVisibility.of(context) &&
-        (route?.isCurrent ?? true)) {
+        (_routes?.isTopPage(route) ?? (route?.isCurrent ?? true))) {
       _controller?.cover(this, player: widget.player);
     } else {
       _controller?.uncover(this);
@@ -107,12 +117,22 @@ class _BetaMusicChromeCoverState extends State<BetaMusicChromeCover> {
 
   @override
   void deactivate() {
+    _active = false;
+    _routes?.removeListener(_synchronize);
+    _routes = null;
     _controller?.uncover(this);
     super.deactivate();
   }
 
   @override
+  void activate() {
+    super.activate();
+    _active = true;
+  }
+
+  @override
   void dispose() {
+    _routes?.removeListener(_synchronize);
     _controller?.uncover(this);
     super.dispose();
   }

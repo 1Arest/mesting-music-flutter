@@ -13,8 +13,10 @@ import 'package:mesting_music/features/music_platform/netease/together/together_
 import 'package:mesting_music/features/music_platform/netease/together/together_records_repository.dart';
 
 // Synthetic public-schema fixtures, not an account capture. Field names and
-// millisecond units come from the inspected official full-records/ending web
-// clients; see OFFICIAL-RECORDS-CONTRACTS.md and official-record-{list,ending}.js
+// endpoint-specific units come from the actual official render call sites:
+// ending QmAe.e reads seconds; list QmAe.c reads milliseconds. The v140
+// contract had mistaken the list helper for the ending helper; see the v142
+// correction and official-record-{list,ending}.js
 // in the private v140 investigation directory. Transport tests verify Mesting's
 // existing EAPI adapter; they do not prove equality to the official bridge's
 // hidden wire transport or acceptance by a real account.
@@ -29,9 +31,9 @@ const _room = 'synthetic_room_1793619000000';
 const _report = {
   'userInfo': {'userId': 8},
   'anotherUserInfo': {'userId': 7},
-  'duration': 93900000,
+  'duration': 93900,
   'songCount': 224,
-  'totalDuration': 56909760000,
+  'totalDuration': 56909760,
   'totalSongCount': 18344,
   'distance': 3167.77,
   'endTime': 1793619000000,
@@ -102,7 +104,7 @@ http.Response _reply(Object? data) => http.Response(
 
 void main() {
   test(
-    'ending report keeps millisecond durations and kilometres without live-clock substitution',
+    'ending report keeps second durations and kilometres without live-clock substitution',
     () {
       final value = NeteaseTogetherRecord.fromReport(
         _report,

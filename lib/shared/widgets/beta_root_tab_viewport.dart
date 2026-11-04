@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'beta_page_route_observer.dart';
 
 /// Nested branch routes remain current in their own Navigator. This additional
 /// visibility signal prevents a retained tab from owning the active search bar.
@@ -98,7 +99,19 @@ class _BetaRootTabViewportState extends State<BetaRootTabViewport> {
 
   @override
   Widget build(BuildContext context) {
-    final current = ModalRoute.isCurrentOf(context) ?? true;
+    final routes = BetaPageRouteObserver.maybeOf(context);
+    return routes == null
+        ? _viewport(context, null)
+        : ListenableBuilder(
+            listenable: routes,
+            builder: (context, _) => _viewport(context, routes),
+          );
+  }
+
+  Widget _viewport(BuildContext context, BetaPageRouteObserver? routes) {
+    final current =
+        routes?.isTopPage(ModalRoute.of(context)) ??
+        (ModalRoute.isCurrentOf(context) ?? true);
     return PageView(
       key: const ValueKey('beta-root-tab-viewport'),
       controller: _controller,

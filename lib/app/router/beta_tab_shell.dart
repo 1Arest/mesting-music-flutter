@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../../shared/widgets/beta_root_tab_viewport.dart';
+import '../../shared/widgets/beta_page_route_observer.dart';
 
 /// Retained root branches live under the existing music Navigator. Query views
 /// (daily, favorites, etc.) are secondary pages, not another instance of the
@@ -18,6 +19,7 @@ List<RouteBase> betaTabShellRoutes(List<GoRoute> roots) => [
     branches: [
       for (final route in roots)
         StatefulShellBranch(
+          observers: [BetaPageRouteObserver()],
           initialLocation: route.path,
           preload: true,
           routes: [

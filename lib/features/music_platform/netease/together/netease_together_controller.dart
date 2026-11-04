@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -14,6 +13,7 @@ import '../messages/netease_messages_repository.dart';
 import '../full/netease_manual_routes.dart';
 import 'together_presence.dart';
 import 'together_cumulative.dart';
+import 'together_playback_command.dart';
 
 /// Kept outside pages so dismissing a sheet/chat cannot stop a room. Watching
 /// the account recreates and disposes the controller on logout/platform switch.
@@ -178,6 +178,10 @@ class NeteaseTogetherController extends ChangeNotifier {
   int _syncEpoch = 0;
   int _sequence = 1;
   String _formerSong = '-1', _lastRemote = '';
+  String? _remoteRoom;
+  int? _highestRemoteSequence;
+  final _pendingRemote = <String>{};
+  Future<void> _remoteTail = Future.value();
   Timer? _timer;
   final _subscriptions = <StreamSubscription<dynamic>>[];
   Future<void> _tail = Future.value();
@@ -545,7 +549,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (_syncCurrent(epoch)) await _refreshPresence(force: forcePresence);
   }
 
-  Future<void> _loadQueue() async {
+  Future<void> _loadQueue({bool applyRemote = true}) async {
     if (roomId == null) return;
     final epoch = _syncEpoch, room = roomId;
     final data = NeteaseMusicRepository.object(
@@ -570,7 +574,9 @@ class NeteaseTogetherController extends ChangeNotifier {
       if (!_syncCurrent(epoch) || roomId != room) return;
       sharedTracks = NeteaseMusicRepository.tracks(r['songs']);
     }
-    await _remote(data);
+    // A command applying itself may need this queue. Do not recursively await
+    // another command on that same serialized remote-application queue.
+    if (applyRemote) await _remote(data);
   }
 
   void _start() {
@@ -592,7 +598,16 @@ class NeteaseTogetherController extends ChangeNotifier {
     _subscriptions.add(
       player.trackChanges.listen((id) {
         if (!_applying && player.track?.platformSongId != _formerSong) {
-          _enqueue('GOTO');
+          // A direct song/search/album selection need not emit replaceQueue.
+          // Make the selected recording available to the peer before GOTO;
+          // ordinary next/previous within the shared queue needs no list write.
+          final songId = player.track?.platformSongId;
+          _enqueue(
+            'GOTO',
+            queue:
+                songId != null &&
+                !sharedTracks.any((track) => track.platformSongId == songId),
+          );
         }
       }),
     );
@@ -632,7 +647,16 @@ class NeteaseTogetherController extends ChangeNotifier {
         'roomId': roomId,
         'songId': track!.platformSongId,
         'progress': player.position.inMilliseconds,
-        'playStatus': player.playing ? 'PLAY' : 'PAUSE',
+        // Native pause fades complete after the intent event. Report what the
+        // user requested, not that still-playing audio snapshot. Heartbeats
+        // continue to report the actual settled player state.
+        'playStatus': !heartbeat && action == 'PAUSE'
+            ? 'PAUSE'
+            : !heartbeat && action == 'PLAY'
+            ? 'PLAY'
+            : player.playing
+            ? 'PLAY'
+            : 'PAUSE',
         if (!heartbeat) ...{
           'commandType': action,
           'formerSongId': _formerSong,
@@ -673,41 +697,76 @@ class NeteaseTogetherController extends ChangeNotifier {
   Future<void> _remote(Map<String, dynamic> data) async {
     final epoch = _syncEpoch, room = roomId;
     if (!_syncCurrent(epoch) || room == null) return;
-    Object? raw =
-        data['commandInfo'] ?? data['playCommand'] ?? data['playingInfo'];
-    if (raw is String) {
-      try {
-        raw = jsonDecode(raw);
-      } catch (_) {
+    final command = TogetherPlaybackCommand.parse(data, room);
+    if (command == null) return;
+    if (_remoteRoom != room) {
+      _remoteRoom = room;
+      _highestRemoteSequence = null;
+      _lastRemote = '';
+    }
+    final sequence = command.sequence;
+    if (sequence != null) {
+      if (_highestRemoteSequence != null &&
+          sequence < _highestRemoteSequence!) {
         return;
       }
+      // Own acknowledgements are barriers too: an older peer packet cannot
+      // undo a newer local action already accepted by the server.
+      _highestRemoteSequence = sequence;
     }
-    final command = NeteaseMusicRepository.object(raw);
-    final seq = command['serverSeq'] ?? command['version'] ?? data['serverSeq'];
-    if (seq == null || command.isEmpty || !current) return;
-    final token = '$roomId:$seq';
-    final songId = '${command['targetSongId'] ?? command['songId'] ?? ''}';
-    if (token == _lastRemote ||
-        songId.isEmpty ||
-        '${command['userId'] ?? ''}' == music.api.session?.userId) {
+    if (command.token == _lastRemote ||
+        _pendingRemote.contains(command.token) ||
+        command.userId == music.api.session?.userId) {
       return;
     }
-    _lastRemote = token;
-    _applying = true;
-    try {
-      if (!sharedTracks.any((t) => t.platformSongId == songId)) {
-        await _loadQueue();
+    _pendingRemote.add(command.token);
+    final operation = _remoteTail.then((_) async {
+      if (!_syncCurrent(epoch) ||
+          roomId != room ||
+          sequence != null &&
+              _highestRemoteSequence != null &&
+              sequence < _highestRemoteSequence!) {
+        return;
       }
-      if (_syncCurrent(epoch) && roomId == room) {
+      _applying = true;
+      try {
+        if (!sharedTracks.any((t) => t.platformSongId == command.songId)) {
+          await _loadQueue(applyRemote: false);
+        }
+        if (!_syncCurrent(epoch) ||
+            roomId != room ||
+            !sharedTracks.any((t) => t.platformSongId == command.songId) ||
+            sequence != null &&
+                _highestRemoteSequence != null &&
+                sequence < _highestRemoteSequence!) {
+          return;
+        }
         await player.apply(
           sharedTracks,
-          songId,
-          Duration(milliseconds: int.tryParse('${command['progress']}') ?? 0),
-          command['playStatus'] != 'PAUSE',
+          command.songId,
+          command.position ??
+              (player.track?.platformSongId == command.songId
+                  ? player.position
+                  : Duration.zero),
+          command.playing,
         );
+        if (_syncCurrent(epoch) && roomId == room) {
+          _formerSong = command.songId;
+          // Consume only successfully applied state. A failed source lookup
+          // can retry the same server command on the next read.
+          _lastRemote = command.token;
+        }
+      } finally {
+        _applying = false;
       }
+    });
+    // Keep later applications running after one failure, while propagating the
+    // original failure to this caller's connection/retry state.
+    _remoteTail = operation.catchError((Object _) {});
+    try {
+      await operation;
     } finally {
-      _applying = false;
+      _pendingRemote.remove(command.token);
     }
   }
 

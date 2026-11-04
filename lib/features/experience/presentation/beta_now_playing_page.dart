@@ -75,6 +75,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
   double _direction = 1;
   StreamSubscription<String>? _commands;
   bool _routeExitRequested = false;
+  late final PlayerChromeReveal _chromeReveal;
   NeteaseTogetherController? _togetherController;
   bool _togetherActive = false;
   void _roomVisibilityChanged() {
@@ -103,6 +104,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
   @override
   void initState() {
     super.initState();
+    _chromeReveal = ref.read(playerChromeRevealProvider)..claim(this);
     // Only room appearance/disappearance affects the player's height budget;
     // heartbeats and duration updates remain inside the small room island.
     ref.listenManual(neteaseTogetherControllerProvider, (_, next) {
@@ -118,7 +120,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
       if (command == 'skipPrevious') _direction = -1;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) ref.read(playerChromeRevealProvider).value = 0;
+      if (mounted) _chromeReveal.publish(this, 0);
       if (mounted && widget.togetherInitially) _openInitialTogether();
     });
   }
@@ -140,6 +142,14 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
 
   @override
   void dispose() {
+    final previousPlayer = _chromeReveal.release(this);
+    if (previousPlayer != null) {
+      // Restore after the route's disposal phase; a newer entry can claim the
+      // signal in the meantime, in which case publish safely ignores this.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _chromeReveal.publish(previousPlayer, 0);
+      });
+    }
     _togetherController?.removeListener(_roomVisibilityChanged);
     _commands?.cancel();
     super.dispose();
@@ -198,8 +208,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         child: Builder(
           builder: (context) => PlayerPullToDismiss(
             onDismiss: _dismissPlayer,
-            onProgress: (value) =>
-                ref.read(playerChromeRevealProvider).value = value,
+            onProgress: (value) => _chromeReveal.publish(this, value),
             child: PopScope(
               canPop: !detail,
               onPopInvokedWithResult: (didPop, _) {

@@ -1,11 +1,11 @@
 /// Read-only DTOs for NetEase's ending report and full-record history. Field
-/// names/units were checked against its public ending/list web clients on
-/// 2026-11-02; evidence is kept outside distributable source artifacts under
-/// .codex-artifacts/2026-11-02-v140-fixes/.firecrawl/official-record-*.js.
+/// names/units follow each public ending/list render call on 2026-11-02.
+/// The v142 investigation corrects v140's unit inference: ending QmAe.e reads
+/// seconds, whereas list QmAe.c reads milliseconds. Supporting expressions are
+/// kept privately under .codex-artifacts/2026-11-02-release142-record-duration.
 ///
 /// These models never derive an ended room's statistics from a live room clock.
-/// In particular, the web reports use MILLISECONDS, unlike the existing live
-/// relation-statistics endpoint whose totalConnectionTime is in seconds.
+/// Keep each endpoint's unit explicit; never guess it from the number's size.
 class NeteaseTogetherProfile {
   const NeteaseTogetherProfile({
     required this.id,
@@ -119,8 +119,10 @@ class NeteaseTogetherRecord {
       peer: peer,
       startedAt: _timestamp(row['startTime']),
       endedAt: _timestamp(row['endTime']),
-      duration: _milliseconds(row['duration']),
-      totalDuration: _milliseconds(row['totalDuration']),
+      // The ending client divides each raw value by 60 to obtain minutes.
+      // Reusing the history-list millisecond reader shortens these 1000-fold.
+      duration: _seconds(row['duration']),
+      totalDuration: _seconds(row['totalDuration']),
       songCount: _nonnegativeInt(row['songCount']),
       totalSongCount: _nonnegativeInt(row['totalSongCount']),
       distanceKilometres: _distance(row['distance']),
@@ -265,6 +267,16 @@ Duration? _milliseconds(Object? value) {
   final millis = _nonnegativeInt(value);
   return millis != null && millis <= 100 * 366 * 86400000
       ? Duration(milliseconds: millis)
+      : null;
+}
+
+/// record/get uses seconds for both this session and the relationship total;
+/// full/records keeps milliseconds. Separate readers also retain known zero,
+/// unknown/malformed values and the same duration limit without a heuristic.
+Duration? _seconds(Object? value) {
+  final seconds = _nonnegativeInt(value);
+  return seconds != null && seconds <= 100 * 366 * 86400
+      ? Duration(seconds: seconds)
       : null;
 }
 
