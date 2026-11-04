@@ -1,17 +1,16 @@
-# 当前 Git/GitHub 接续：1.0.24 / code45
+# 当前维护分支接续：1.0.49 / code70
 
-日期：2026-10-31。1.0.23 R2 正式归档与1.0.24预发布已创建，两个源码提交、固定标签和全部31个附件摘要均经核验。维护入口beta使用1.0.24；最新正式Release为1.0.23，1.0.24待手机验收。
+2026-11-04，已按用户确认准备24个版本的Git/GitHub完整归档。最新标签[v1.0.49](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.49)，维护分支beta；正式稳定通道与Beta通道见[分组倒序目录](apk-downloads.md)。安装通道与Release状态独立，Latest属于Beta安装通道的正式交付。
 
-先读[跨电脑总交接](../HANDOFF-GITHUB-2026-10-31-v1.0.24.md)、AGENTS.md、[归档来源](version-archive/RELEASE-ARCHIVE-2026-10-31-v123-v124.md)与[GitHub回读证据](version-archive/GITHUB-ARCHIVE-2026-10-31-v123-v124-verification.json)。1.0.23源码ZIP为本次恢复并重新验证的资料，非历史原冻结ZIP，业务二进制完全重现未证明；1.0.24采用原冻结源码与APK。
+先读[本轮归档来源](version-archive/RELEASE-ARCHIVE-2026-11-04-v125-v149.md)、[1.0.49安装验收](INSTALL-v1.0.49.md)和AGENTS.md。各标签完整还原原版ZIP，APK和手工ZIP附件不重建、不重签；历史文件中的“未推送”保留原时点。上传后会另加机器核验记录，包含263附件摘要与远端提交。
 
 ```powershell
 git clone --config core.autocrlf=false --branch beta https://github.com/Mesting42/mesting-music-flutter.git Mesting-Music
 cd Mesting-Music
-git fetch origin --tags
 git status --short --branch
-git merge-base --is-ancestor v1.0.24 HEAD
+git merge-base --is-ancestor v1.0.49 HEAD
 ```
 
-[1.0.23正式归档](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.23) · [1.0.24预发布](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.24) · [1.0.24修改](fixes-2026-10-31-v1.0.24.md) · [安装验收](INSTALL-v1.0.24.md) · [诊断场景](DIAGNOSTIC-SCENARIOS-v1.0.24.md)。冻结文档中的“未提交/未发布/待实现”是各自历史状态，当前事实以上述接续与验证为准。
+此机原D:/AnLi主HEAD仍保留b6bcd542、原脏改动和空暂存，远端会领先本地主HEAD。不要在这个脏工作区自动pull/reset/clean；新电脑从beta克隆接续。签名材料须私下转移，定制引擎和完整许可随源码保留。
 
-已有工作区先保留改动再普通快进，不覆盖工作文件。环境、私下转移原签名和完整许可见总交接，后续Android code大于45。本次不操作music后台或手机，手机测试继续暂停；新需求逐题确认方案后实施。
+真实账号/CDN/IME/GPU、一起听剩余设备范围仍待验收；历史总听歌时长及十月683分钟未解决。此归档任务未访问手机/ADB、音乐账号、业务后台或重发旧日志。
