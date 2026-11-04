@@ -285,6 +285,13 @@ void main() {
           250,
           scrollable: find.byType(Scrollable).last,
         );
+        // Newer releases move these historical rows. Bring the row into the
+        // usable viewport before tapping, clear of the floating music controls.
+        await Scrollable.ensureVisible(
+          tester.element(header),
+          alignment: 0.25,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(header);
         await tester.pumpAndSettle();
         expect(find.text(notesForMusicVersion(version).first), findsOneWidget);

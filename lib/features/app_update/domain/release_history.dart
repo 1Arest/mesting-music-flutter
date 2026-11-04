@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.36': [
+    '网易云播放与同步新增按月听歌上报诊断，分别展示本机时长、逐次记录和发送状态。',
+    '历史字段检查标出缺少真实秒数、原始开始时间和旧版标记的记录，区分最近播放确认与足迹累计。',
+    '提供脱敏诊断预览与复制，便于核查历史时长问题；本机统计保留，诊断过程不补发、不自动上传。',
+  ],
   '1.0.35': [
     '列表快速下滑时停在已加载内容末尾，下一批文字与封面就绪后再继续滚动，统一末尾加载动画并保留向上回看与重试。',
     '网易云播放上报补充真实收听秒数和原始开始时间，区分倍速媒体时长，补发确定未发送的逐次记录且避免重复计数。',

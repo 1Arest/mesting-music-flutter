@@ -13,6 +13,7 @@ import 'netease_source_settings_panel.dart';
 import 'netease_account_source_info.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import 'netease_footprint.dart';
+import 'diagnostics/netease_listening_audit_page.dart';
 
 class NeteasePlaybackSettingsPage extends ConsumerStatefulWidget {
   const NeteasePlaybackSettingsPage({super.key});
@@ -152,6 +153,16 @@ class _PlaybackSettingsState
                     }
                   },
             child: const Text('同步确定未发送的记录'),
+          ),
+          const SizedBox(height: 16),
+          BetaGlassButton(
+            key: const ValueKey('netease-monthly-audit'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const NeteaseListeningAuditPage(),
+              ),
+            ),
+            child: const Text('按月听歌上报诊断'),
           ),
           for (final feed in [
             NeteaseFeed.recentSongs,
