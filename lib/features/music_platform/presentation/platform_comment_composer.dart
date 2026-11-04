@@ -19,6 +19,12 @@ class PlatformCommentComposer extends StatelessWidget {
     this.onCancelReply,
     this.hintText,
     this.sendLabel = '发送评论',
+    this.actionIcon = CupertinoIcons.arrow_up,
+    this.expandOnPress = true,
+    this.onChanged,
+    this.onSubmitted,
+    this.singleLine = false,
+    this.autofocus = false,
     super.key,
   });
   final TextEditingController controller;
@@ -34,6 +40,9 @@ class PlatformCommentComposer extends StatelessWidget {
   /// changes. Keep the renderer and keyboard behaviour in this one component.
   final String? hintText;
   final String sendLabel;
+  final IconData actionIcon;
+  final bool expandOnPress, singleLine, autofocus;
+  final ValueChanged<String>? onChanged, onSubmitted;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
@@ -76,11 +85,20 @@ class PlatformCommentComposer extends StatelessWidget {
                     selectionControls: mestingTextSelectionControls,
                     cursorRadius: const Radius.circular(1),
                     controller: controller,
+                    autofocus: autofocus,
+                    onChanged: onChanged,
+                    onSubmitted: onSubmitted,
                     enabled: !sending,
                     maxLength: 1000,
                     minLines: 1,
-                    maxLines: keyboardVisible ? 2 : 4,
-                    textInputAction: TextInputAction.newline,
+                    maxLines: singleLine
+                        ? 1
+                        : keyboardVisible
+                        ? 2
+                        : 4,
+                    textInputAction: singleLine
+                        ? TextInputAction.search
+                        : TextInputAction.newline,
                     style: const TextStyle(fontSize: 16, height: 1.4),
                     decoration: InputDecoration(
                       hintText:
@@ -126,7 +144,8 @@ class PlatformCommentComposer extends StatelessWidget {
                         height: 48,
                         useOwnLayer: true,
                         quality: GlassQuality.premium,
-                        stretch: .15,
+                        stretch: expandOnPress ? .15 : 0,
+                        interactionScale: expandOnPress ? null : 1,
                         shape: const LiquidRoundedRectangle(borderRadius: 24),
                         settings: betaBlueActionGlass,
                         child: sending
@@ -134,11 +153,7 @@ class PlatformCommentComposer extends StatelessWidget {
                                 color: Colors.white,
                                 radius: 12,
                               )
-                            : const Icon(
-                                CupertinoIcons.arrow_up,
-                                color: Colors.white,
-                                size: 23,
-                              ),
+                            : Icon(actionIcon, color: Colors.white, size: 23),
                       ),
                     ),
                   ),

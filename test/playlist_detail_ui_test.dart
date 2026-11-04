@@ -15,6 +15,10 @@ void main() {
   testWidgets('playlist detail shows track count without aggregate duration', (
     tester,
   ) async {
+    // Both lazy rows must actually be in the viewport before asserting their
+    // individual metadata; the old default landscape fixture hid the second.
+    await tester.binding.setSurfaceSize(const Size(430, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final now = DateTime(2026, 7, 23);
     final tracks = testTracks.take(2).toList(growable: false);
     final playlist = UserPlaylist(

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_swipe_pages.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/cupertino.dart';
@@ -41,7 +42,8 @@ class _ListeningFootprintPageState
   Timer? _calendar;
   bool _active = true;
   String _query = '';
-  final _scroll = ScrollController();
+  final _scrolls = List.generate(3, (_) => ScrollController());
+  ScrollController get _scroll => _scrolls[_bound?.scale.index ?? 0];
   final _selectedDays = <String, String>{};
   late final BetaPageSearchController _search;
 
@@ -104,7 +106,9 @@ class _ListeningFootprintPageState
   void dispose() {
     _calendar?.cancel();
     _search.dispose();
-    _scroll.dispose();
+    for (final scroll in _scrolls) {
+      scroll.dispose();
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -137,84 +141,103 @@ class _ListeningFootprintPageState
             backgroundColor: Theme.of(context).colorScheme.surface,
             body: AnimatedBuilder(
               animation: Listenable.merge([?detail, ?summary]),
-              builder: (context, _) => CustomScrollView(
-                key: const ValueKey('listening-footprint-scroll'),
-                controller: _scroll,
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                slivers: [
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _FootprintHeader(
-                      top: MediaQuery.paddingOf(context).top,
-                      textScale:
-                          MediaQuery.textScalerOf(context).scale(16) / 16,
-                      scale: detail?.scale ?? FootprintScale.week,
-                      total: summary?.total ?? const FootprintReading<int>(),
-                      loading:
-                          summary?.total.loading == true ||
-                          detail?.loading == true,
-                      onScale: detail == null
-                          ? null
-                          : (scale) {
-                              detail.selectScale(scale);
-                              _revealReport();
-                              unawaited(detail.loadSelected());
-                            },
-                      onRefresh: detail == null
-                          ? null
-                          : () => unawaited(_refresh()),
+              builder: (context, _) => BetaSwipePages(
+                index: detail?.scale.index ?? 0,
+                length: 3,
+                onChanged: (index) {
+                  if (detail == null) return;
+                  detail.selectScale(FootprintScale.values[index]);
+                  unawaited(detail.loadSelected());
+                },
+                itemBuilder: (context, index) {
+                  final pageScale = FootprintScale.values[index];
+                  final page = detail?.view(pageScale);
+                  return CustomScrollView(
+                    key: index == (detail?.scale.index ?? 0)
+                        ? const ValueKey('listening-footprint-scroll')
+                        : ValueKey('footprint-scroll-$index'),
+                    controller: _scrolls[index],
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
                     ),
-                  ),
-                  if (detail == null)
-                    const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: Text('请返回并选择网易云账号')),
-                    )
-                  else ...[
-                    SliverToBoxAdapter(child: _periodNavigation(detail)),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
-                        child: detail.scale == FootprintScale.year
-                            ? _yearReport(detail)
-                            : _dailyReport(detail),
-                      ),
-                    ),
-                    ..._todaySlivers(detail),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          22,
-                          26,
-                          22,
-                          BetaContentInsets.musicBottomOf(context, 32),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    slivers: [
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _FootprintHeader(
+                          top: MediaQuery.paddingOf(context).top,
+                          textScale:
+                              MediaQuery.textScalerOf(context).scale(16) / 16,
+                          scale: pageScale,
+                          total:
+                              summary?.total ?? const FootprintReading<int>(),
+                          loading:
+                              summary?.total.loading == true ||
+                              detail?.loading == true,
+                          onScale: detail == null
+                              ? null
+                              : (scale) {
+                                  detail.selectScale(scale);
+                                  _revealReport();
+                                  unawaited(detail.loadSelected());
+                                },
+                          onRefresh: detail == null
+                              ? null
+                              : () => unawaited(_refresh()),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const _Footnote(
-                              '网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。',
+                      ),
+                      if (detail == null)
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(child: Text('请返回并选择网易云账号')),
+                        )
+                      else ...[
+                        SliverToBoxAdapter(child: _periodNavigation(page!)),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(22, 6, 22, 0),
+                            child: pageScale == FootprintScale.year
+                                ? _yearReport(page)
+                                : _dailyReport(page),
+                          ),
+                        ),
+                        ..._todaySlivers(page),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              22,
+                              26,
+                              22,
+                              BetaContentInsets.musicBottomOf(context, 32),
                             ),
-                            const SizedBox(height: 18),
-                            BetaGlassButton(
-                              key: const ValueKey('footprint-open-diagnostics'),
-                              onPressed: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const OfficialFootprintPage(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const _Footnote(
+                                  '网易云官方多端统计。今日数据可能延迟 1～2 分钟，历史总时长按天更新。',
                                 ),
-                              ),
-                              child: const Text('统计与本机记录核对'),
+                                const SizedBox(height: 18),
+                                BetaGlassButton(
+                                  key: const ValueKey(
+                                    'footprint-open-diagnostics',
+                                  ),
+                                  onPressed: () => Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const OfficialFootprintPage(),
+                                    ),
+                                  ),
+                                  child: const Text('统计与本机记录核对'),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ],
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -223,7 +246,7 @@ class _ListeningFootprintPageState
     );
   }
 
-  Widget _periodNavigation(ListeningFootprintReader reader) {
+  Widget _periodNavigation(ListeningFootprintView reader) {
     final period = reader.selection;
     final first = period.civilStart,
         last = period.civilEnd.subtract(const Duration(days: 1));
@@ -271,7 +294,7 @@ class _ListeningFootprintPageState
     );
   }
 
-  Widget _dailyReport(ListeningFootprintReader reader) {
+  Widget _dailyReport(ListeningFootprintView reader) {
     final reading = reader.report,
         report = reading.value,
         period = reader.selection;
@@ -337,7 +360,7 @@ class _ListeningFootprintPageState
     );
   }
 
-  Widget _yearReport(ListeningFootprintReader reader) {
+  Widget _yearReport(ListeningFootprintView reader) {
     final reading = reader.yearly, value = reading.value;
     if (value == null) {
       return _UnavailableReport(
@@ -393,7 +416,7 @@ class _ListeningFootprintPageState
     );
   }
 
-  List<Widget> _todaySlivers(ListeningFootprintReader reader) {
+  List<Widget> _todaySlivers(ListeningFootprintView reader) {
     final reading = reader.todaySongs, today = footprintDay(reader.now());
     final value = reading.value, oldDay = value != null && value.day != today;
     final all = value?.songs ?? const <OfficialFootprintSong>[];

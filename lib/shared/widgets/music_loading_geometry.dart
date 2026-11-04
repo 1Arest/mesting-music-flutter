@@ -44,7 +44,7 @@ class MusicLoadingGeometry {
         ? math.max(top, refreshOrigin) + 18
         : cutoff == 0
         ? top + (bottom - top - extent) / 2
-        : cutoff + contentGap;
+        : maximum;
     return requested.clamp(top, maximum);
   }
 }

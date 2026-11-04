@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'dart:async';
@@ -407,6 +408,7 @@ class _PlatformRecommendationDetailState
                   widget.kind != null && _more && !_loading && _error == null,
               onLoadMore: _load,
               child: ListView.builder(
+                cacheExtent: MediaQuery.sizeOf(context).height,
                 padding: BetaContentInsets.musicPaddingOf(
                   context,
                   EdgeInsets.only(bottom: 180),
@@ -428,7 +430,9 @@ class _PlatformRecommendationDetailState
                     return TextButton(onPressed: _load, child: Text(_error!));
                   }
                   if (tracks.isEmpty) return const EditorialEmpty('平台暂未返回歌曲');
-                  return const SizedBox(height: 24);
+                  return widget.kind != null && _more
+                      ? const SizedBox(height: 12)
+                      : const MusicListEnd();
                 },
               ),
             ),

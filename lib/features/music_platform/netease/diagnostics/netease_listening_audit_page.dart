@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/music_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,9 +83,12 @@ class _AuditPageState extends ConsumerState<NeteaseListeningAuditPage> {
     if (copy != true || !_current(report)) return;
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted || !_current(report)) return;
-    ScaffoldMessenger.of(
+    showMusicNotice(
       context,
-    ).showSnackBar(const SnackBar(content: Text('已复制本月脱敏诊断')));
+      icon: Icons.check_rounded,
+      title: '已复制本月脱敏诊断',
+      message: '',
+    );
   }
 
   Widget _fact(String label, String value) => Padding(

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_notice.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -412,9 +413,12 @@ class _NeteasePersonalConnectionsPageState
     );
     if (!mounted || !_current || selected == null) return;
     if (!controller.setSort(selected)) {
-      ScaffoldMessenger.of(
+      showMusicNotice(
         context,
-      ).showSnackBar(const SnackBar(content: Text('网易云未提供完整关注时间，暂时无法按时间排序')));
+        icon: Icons.info_outline_rounded,
+        title: '网易云未提供完整关注时间，暂时无法按时间排序',
+        message: '',
+      );
     }
   }
 }

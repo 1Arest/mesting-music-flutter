@@ -1,3 +1,4 @@
+import '../../downloads/downloaded_track_subtitle.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../netease/fallback/netease_source_picker.dart';
@@ -181,11 +182,7 @@ class _TrackList extends ConsumerWidget {
         child: TrackArtwork(track: track, width: 48, height: 48),
       ),
       title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        track.artist,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: DownloadedTrackSubtitle(track: track),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

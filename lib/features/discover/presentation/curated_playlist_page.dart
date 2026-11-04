@@ -264,14 +264,18 @@ class _PlaylistHero extends ConsumerWidget {
                             .replaceQueue(tracks!),
                   style: FilledButton.styleFrom(
                     backgroundColor: DistributionChannel.isBeta
-                        ? Theme.of(context).colorScheme.primary
+                        ? BetaAppearance.playbackAction(
+                            Theme.of(context).brightness,
+                          )
                         : MestingPalette.heart,
                     foregroundColor: DistributionChannel.isBeta
                         ? Theme.of(context).colorScheme.onPrimary
                         : Colors.white,
                     disabledBackgroundColor:
                         (DistributionChannel.isBeta
-                                ? Theme.of(context).colorScheme.primary
+                                ? BetaAppearance.playbackAction(
+                                    Theme.of(context).brightness,
+                                  )
                                 : MestingPalette.heart)
                             .withValues(alpha: .42),
                     disabledForegroundColor: Colors.white.withValues(

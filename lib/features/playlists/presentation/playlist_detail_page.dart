@@ -1,3 +1,4 @@
+import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:ui';
@@ -517,6 +518,7 @@ class _PlaylistHero extends StatelessWidget {
                       flex: 6,
                       child: _PlaylistHeroAction(
                         label: '播放全部',
+                        red: true,
                         icon: Icons.play_arrow_rounded,
                         onTap: onPlayAll,
                         emphasized: true,
@@ -628,12 +630,13 @@ class _PlaylistHeroAction extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.emphasized = false,
+    this.red = false,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
-  final bool emphasized;
+  final bool emphasized, red;
 
   @override
   Widget build(BuildContext context) {
@@ -658,7 +661,11 @@ class _PlaylistHeroAction extends StatelessWidget {
               decoration: BoxDecoration(
                 color: emphasized
                     ? (DistributionChannel.isBeta
-                          ? Theme.of(context).colorScheme.primary
+                          ? red
+                                ? BetaAppearance.playbackAction(
+                                    Theme.of(context).brightness,
+                                  )
+                                : Theme.of(context).colorScheme.primary
                           : MestingPalette.heart)
                     : tokens.glassSubtle,
                 borderRadius: BorderRadius.circular(17),

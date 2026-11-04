@@ -21,6 +21,7 @@ class BetaGlassButton extends StatelessWidget {
     this.width,
     this.accent = false,
     this.blue = false,
+    this.red = false,
     this.fontSize = 15,
     this.horizontalPadding = 18,
     super.key,
@@ -28,6 +29,7 @@ class BetaGlassButton extends StatelessWidget {
   final Widget child;
   final VoidCallback? onPressed;
   final bool loading, accent, blue, interactionEnabled, hapticFeedback;
+  final bool red;
   final String? label;
   final double height;
   final double fontSize;
@@ -44,7 +46,7 @@ class BetaGlassButton extends StatelessWidget {
     // our white label used to stay white. Keep premium optics and render an
     // explicit neutral state instead; semantics, focus and hit testing below
     // remain genuinely disabled. A pending request keeps its original tint.
-    final emphasized = blue && (available || loading);
+    final emphasized = (blue || red) && (available || loading);
     final foreground = !available && !loading
         ? scheme.onSurfaceVariant
         : emphasized
@@ -69,7 +71,9 @@ class BetaGlassButton extends StatelessWidget {
                 if (hapticFeedback) {
                   appHaptic(
                     context,
-                    blue ? AppHapticEvent.impact : AppHapticEvent.selection,
+                    blue || red
+                        ? AppHapticEvent.impact
+                        : AppHapticEvent.selection,
                   );
                 }
                 onPressed!();
@@ -89,10 +93,22 @@ class BetaGlassButton extends StatelessWidget {
               // Tap/keyboard inflation, refraction and highlight remain intact.
               persistPressOnDrag: false,
               ambientBaseLight: emphasized ? .06 : null,
-              glowColor: emphasized ? const Color(0xFF6CA7FF) : null,
+              glowColor: emphasized
+                  ? red
+                        ? BetaAppearance.playbackAction(
+                            Theme.of(context).brightness,
+                          )
+                        : const Color(0xFF6CA7FF)
+                  : null,
               glowOpacity: emphasized ? .12 : null,
               settings: emphasized
-                  ? betaBlueActionGlass
+                  ? red
+                        ? betaBlueActionGlass.copyWith(
+                            glassColor: BetaAppearance.playbackAction(
+                              Theme.of(context).brightness,
+                            ).withAlpha(242),
+                          )
+                        : betaBlueActionGlass
                   : betaNeutralActionGlass(context),
               shape: LiquidRoundedRectangle(borderRadius: height / 2),
               child: Padding(

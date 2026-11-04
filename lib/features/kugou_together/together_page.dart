@@ -1,3 +1,4 @@
+import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 
@@ -282,8 +283,11 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
                       } catch (_) {
                         await Clipboard.setData(ClipboardData(text: room.id));
                         if (context.mounted) {
-                          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                            const SnackBar(content: Text('房间号已复制')),
+                          showMusicNotice(
+                            context,
+                            icon: Icons.check_rounded,
+                            title: '房间号已复制',
+                            message: '',
                           );
                         }
                       }

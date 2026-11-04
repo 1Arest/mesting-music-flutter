@@ -19,6 +19,8 @@ import '../player/presentation/beta_playback_actions.dart';
 import 'audio_downloads.dart';
 import 'audio_download_quality.dart';
 import 'audio_download_storage.dart';
+import '../../shared/widgets/music_notice.dart';
+import '../../shared/widgets/music_list_footer.dart';
 
 Future<void> enqueueAudioDownload(
   BuildContext context,
@@ -50,9 +52,12 @@ Future<void> enqueueAudioDownloads(
     for (final track in tracks) {
       manager.enqueue(track, quality: quality);
     }
-    ScaffoldMessenger.maybeOf(
+    showMusicNotice(
       context,
-    )?.showSnackBar(const SnackBar(content: Text('已加入下载队列，可在“已下载”中查看')));
+      icon: Icons.check_rounded,
+      title: '已加入下载队列',
+      message: '可在下载管理中查看',
+    );
   } catch (e) {
     if (context.mounted) showPlatformFailure(context, e);
   }
@@ -250,7 +255,7 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                       key: downloaded
                           ? const ValueKey('downloaded-play-all')
                           : null,
-                      blue: true,
+                      red: true,
                       height: 52,
                       horizontalPadding: 5,
                       loading: _busy,
@@ -339,8 +344,10 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
               '已下载 · ${formatDownloadBytes(task.received)}',
             AudioDownloadPhase.failed => task.error,
             AudioDownloadPhase.cancelled => '已取消',
+            AudioDownloadPhase.paused =>
+              '已暂停 · ${formatDownloadBytes(task.received)}',
           };
-          return Padding(
+          final row = Padding(
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -371,6 +378,18 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                           icon: const Icon(CupertinoIcons.ellipsis),
                           onPressed: _busy ? null : () => _menu(task),
                         )
+                      : task.phase == AudioDownloadPhase.paused
+                      ? IconButton(
+                          tooltip: '继续下载',
+                          icon: const Icon(CupertinoIcons.play_fill),
+                          onPressed: () => manager.resume(task.id),
+                        )
+                      : active || resolving
+                      ? IconButton(
+                          tooltip: '暂停下载',
+                          icon: const Icon(CupertinoIcons.pause_fill),
+                          onPressed: () => manager.pause(task.id),
+                        )
                       : canCancel
                       ? IconButton(
                           tooltip: '取消下载',
@@ -396,7 +415,9 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                     padding: EdgeInsets.only(bottom: 12),
                     child: AudioResolvingWave(),
                   ),
-                if (active || task.phase == AudioDownloadPhase.saving)
+                if (active ||
+                    task.phase == AudioDownloadPhase.saving ||
+                    task.phase == AudioDownloadPhase.paused)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: AppleDownloadProgress(
@@ -408,10 +429,28 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
               ],
             ),
           );
+          if (done || task.phase == AudioDownloadPhase.saving) return row;
+          return Dismissible(
+            key: ValueKey('download-dismiss-${task.id}'),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 28),
+              color: Theme.of(context).colorScheme.error,
+              child: const Icon(CupertinoIcons.delete, color: Colors.white),
+            ),
+            confirmDismiss: (_) async => manager.remove(task.id),
+            child: row,
+          );
         },
       ),
       SliverToBoxAdapter(
-        child: SizedBox(height: BetaContentInsets.musicBottomOf(context, 190)),
+        child: Column(
+          children: [
+            if (visible.isNotEmpty) const MusicListEnd(),
+            SizedBox(height: BetaContentInsets.musicBottomOf(context, 12)),
+          ],
+        ),
       ),
     ],
   );

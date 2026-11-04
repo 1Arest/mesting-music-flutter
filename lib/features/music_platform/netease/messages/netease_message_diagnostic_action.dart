@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/music_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -57,9 +58,12 @@ class NeteaseMessageDiagnosticAction extends StatelessWidget {
     if (copy != true || !context.mounted || !isCurrent()) return;
     await Clipboard.setData(ClipboardData(text: report.json));
     if (!context.mounted || !isCurrent()) return;
-    ScaffoldMessenger.maybeOf(
+    showMusicNotice(
       context,
-    )?.showSnackBar(const SnackBar(content: Text('已复制这条消息的脱敏诊断')));
+      icon: Icons.check_rounded,
+      title: '已复制这条消息的脱敏诊断',
+      message: '',
+    );
   }
 
   @override

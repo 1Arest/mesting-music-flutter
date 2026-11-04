@@ -1,3 +1,4 @@
+import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,9 +34,12 @@ class ListeningSyncPage extends ConsumerWidget {
                     .setEnabled(value);
               } on Object {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(
+                  showMusicNotice(
                     context,
-                  ).showSnackBar(const SnackBar(content: Text('设置暂未保存，请重试')));
+                    icon: Icons.error_outline_rounded,
+                    title: '设置暂未保存，请重试',
+                    message: '',
+                  );
                 }
               }
             },

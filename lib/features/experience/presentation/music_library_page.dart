@@ -1,3 +1,4 @@
+import 'favorite_tracks_search.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -33,13 +34,12 @@ class MusicLibraryPage extends ConsumerWidget {
     final cloud = repository is CloudLibraryRepository;
     final favorites = ref.watch(favoriteTracksProvider);
     final playlists = ref.watch(playlistsProvider);
-    final recent = ref.watch(recentPlaybackProvider);
     if (view == 'favorites' || view == 'recent') {
       final value = view == 'favorites'
           ? favorites
-          : recent.whenData(
-              (items) => items.map((item) => item.track).toList(),
-            );
+          : ref
+                .watch(recentPlaybackProvider)
+                .whenData((items) => items.map((item) => item.track).toList());
       return PlatformStyle(
         child: value.when(
           loading: () => const PlatformFeedbackState(loading: true),
@@ -47,50 +47,62 @@ class MusicLibraryPage extends ConsumerWidget {
             '歌曲暂时无法读取',
             onRetry: () => repository.synchronize(forcePull: true),
           ),
-          data: (tracks) => MusicRefreshIndicator(
-            onRefresh: () => repository.synchronize(forcePull: true),
-            child: ListView.builder(
-              padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + 14,
-                bottom: BetaContentInsets.musicBottomOf(
-                  context,
-                  editorialBottomClearance,
-                ),
-              ),
-              physics: const ArtworkFrontierPhysics(
-                parent: AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-              ),
-              itemCount: tracks.length + 2,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return EditorialHeader(
-                    view == 'favorites' ? '我的喜欢' : '最近播放',
-                    back: true,
-                    trailing: IconButton(
-                      tooltip: '新建歌单',
-                      onPressed: () => createEditorialPlaylist(context, ref),
-                      icon: const Icon(Icons.add_circle_outline_rounded),
-                    ),
-                  );
-                }
-                if (index == 1) {
-                  return _CollectionTracks(
+          data: (tracks) => view == 'favorites'
+              ? FavoriteTracksSearch(
+                  onCreatePlaylist: () => createEditorialPlaylist(context, ref),
+                  tracks: tracks,
+                  header: _CollectionTracks(
                     tracks: tracks,
                     headerOnly: true,
-                    empty: view == 'favorites'
-                        ? '还没有收藏，点亮爱心留住喜欢的歌。'
-                        : '播放一首歌后，在这里继续聆听。',
-                  );
-                }
-                return EditorialTrackRow(
-                  track: tracks[index - 2],
-                  contextTracks: tracks,
-                );
-              },
-            ),
-          ),
+                    empty: '还没有收藏，点亮爱心留住喜欢的歌。',
+                  ),
+                  onRefresh: () => repository.synchronize(forcePull: true),
+                )
+              : MusicRefreshIndicator(
+                  onRefresh: () => repository.synchronize(forcePull: true),
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.paddingOf(context).top + 14,
+                      bottom: BetaContentInsets.musicBottomOf(
+                        context,
+                        editorialBottomClearance,
+                      ),
+                    ),
+                    physics: const ArtworkFrontierPhysics(
+                      parent: AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                    ),
+                    itemCount: tracks.length + 2,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return EditorialHeader(
+                          view == 'favorites' ? '我的喜欢' : '最近播放',
+                          back: true,
+                          trailing: IconButton(
+                            tooltip: '新建歌单',
+                            onPressed: () =>
+                                createEditorialPlaylist(context, ref),
+                            icon: const Icon(Icons.add_circle_outline_rounded),
+                          ),
+                        );
+                      }
+                      if (index == 1) {
+                        return _CollectionTracks(
+                          tracks: tracks,
+                          headerOnly: true,
+                          empty: view == 'favorites'
+                              ? '还没有收藏，点亮爱心留住喜欢的歌。'
+                              : '播放一首歌后，在这里继续聆听。',
+                        );
+                      }
+                      return EditorialTrackRow(
+                        track: tracks[index - 2],
+                        contextTracks: tracks,
+                      );
+                    },
+                  ),
+                ),
         ),
       );
     }
@@ -315,6 +327,12 @@ class _CollectionTracks extends ConsumerWidget {
                             playAll: tracks,
                           ),
                           icon: const Icon(Icons.play_arrow_rounded),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: BetaAppearance.playbackAction(
+                              Theme.of(context).brightness,
+                            ),
+                            foregroundColor: Colors.white,
+                          ),
                           label: const Text('播放全部'),
                         ),
                       ],

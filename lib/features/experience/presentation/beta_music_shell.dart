@@ -615,11 +615,17 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
       host: _pageSearchHost,
       child: BetaMusicChromeScope(
         controller: _chrome,
-        child: BetaContentInsets(
-          bottom: widget.chromeVisible
-              ? BetaContentInsets.musicChromeBottomOf(context)
-              : 0,
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _compact,
           child: shell,
+          builder: (context, compact, child) => BetaContentInsets(
+            bottom: !widget.chromeVisible
+                ? 0
+                : compact && !_anySearch
+                ? BetaContentInsets.compactMusicBottomOf(context)
+                : BetaContentInsets.musicChromeBottomOf(context),
+            child: child!,
+          ),
         ),
       ),
     );

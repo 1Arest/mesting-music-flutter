@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/route_settled_content.dart';
 import 'dart:convert';
@@ -431,6 +432,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
         enabled: _more && !_busy && _error == null,
         onLoadMore: _load,
         child: ListView.builder(
+          cacheExtent: MediaQuery.sizeOf(context).height,
           padding: BetaContentInsets.musicPaddingOf(
             context,
             EdgeInsets.only(bottom: 190),
@@ -520,7 +522,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                 !_more) {
               return EditorialEmpty(collectionScene ? '平台暂未返回歌单' : '平台暂未返回歌曲');
             }
-            return const SizedBox(height: 24);
+            return _more ? const SizedBox(height: 12) : const MusicListEnd();
           },
         ),
       ),

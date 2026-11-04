@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../platform_backend_providers.dart';
 import '../domain/platform_session.dart';
@@ -170,6 +171,7 @@ class _PlatformCatalogDetailPageState
         enabled: _more && !_busy && _error == null,
         onLoadMore: _load,
         child: ListView.builder(
+          cacheExtent: MediaQuery.sizeOf(context).height,
           key: PageStorageKey(
             'catalog-${widget.hit.kind.name}-${widget.hit.id}',
           ),
@@ -229,7 +231,9 @@ class _PlatformCatalogDetailPageState
             }
             return _tracks.isEmpty
                 ? const EditorialEmpty('平台暂未返回歌曲')
-                : const SizedBox(height: 20);
+                : _more
+                ? const SizedBox(height: 12)
+                : const MusicListEnd();
           },
         ),
       ),

@@ -1,3 +1,6 @@
+import '../../downloads/downloaded_track_subtitle.dart';
+import '../../themes/beta_appearance.dart';
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -53,7 +56,10 @@ class EditorialScroll extends StatelessWidget {
           editorialBottomClearance,
         ),
       ),
-      children: children,
+      children: [
+        ...children,
+        const MusicListEnd(label: '已到底'),
+      ],
     );
     return onRefresh == null
         ? scroll
@@ -442,10 +448,8 @@ class EditorialTrackRow extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  track.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                DownloadedTrackSubtitle(
+                  track: track,
                   style: TextStyle(
                     color: context.musicThemeTokens.textSecondary,
                     fontSize: 13,
@@ -560,6 +564,12 @@ class EditorialCollectionHero extends ConsumerWidget {
                   playAll: tracks,
                 ),
           icon: const Icon(Icons.play_arrow_rounded),
+          style: FilledButton.styleFrom(
+            backgroundColor: BetaAppearance.playbackAction(
+              Theme.of(context).brightness,
+            ),
+            foregroundColor: Colors.white,
+          ),
           label: const Text('播放全部'),
         ),
       ],

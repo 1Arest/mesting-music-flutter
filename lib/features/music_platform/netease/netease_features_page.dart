@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
@@ -430,6 +431,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                 enabled: _more && !_busy && _error == null,
                 onLoadMore: _load,
                 child: ListView.builder(
+                  cacheExtent: MediaQuery.sizeOf(context).height,
                   padding: BetaContentInsets.musicPaddingOf(
                     context,
                     EdgeInsets.only(
@@ -449,28 +451,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             if (widget.feed == NeteaseFeed.podcasts)
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  for (final feed in [
-                                    NeteaseFeed.podcastCategories,
-                                    NeteaseFeed.podcastToday,
-                                    NeteaseFeed.podcastPersonal,
-                                    NeteaseFeed.podcastTop,
-                                    NeteaseFeed.recommendedPrograms,
-                                    NeteaseFeed.subscribedPodcasts,
-                                    NeteaseFeed.recentPodcasts,
-                                  ])
-                                    TextButton(
-                                      onPressed: () =>
-                                          openNeteaseFeed(context, feed),
-                                      child: Text(
-                                        NeteaseFeaturesRepository.titles[feed]!,
-                                      ),
-                                    ),
-                                ],
-                              ),
+                              _PodcastNavigation(),
                             if (widget.feed == NeteaseFeed.podcastPrograms)
                               NeteaseResourceActions(
                                 item: NeteaseItem(
@@ -595,7 +576,9 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                           ? EditorialEmpty(
                               '暂无${widget.title ?? NeteaseFeaturesRepository.titles[widget.feed] ?? '内容'}',
                             )
-                          : const SizedBox(height: 24);
+                          : _more
+                          ? const SizedBox(height: 12)
+                          : const MusicListEnd();
                     }
                     final item = _items[index - 1];
                     if (item.track != null) {
@@ -1107,4 +1090,77 @@ class _NeteaseResourceActionsState
       ),
     );
   }
+}
+
+/// A single compact navigation row; menu entries retain the original routes.
+class _PodcastNavigation extends StatelessWidget {
+  static const feeds = [
+    NeteaseFeed.podcastCategories,
+    NeteaseFeed.podcastToday,
+    NeteaseFeed.podcastPersonal,
+    NeteaseFeed.podcastTop,
+    NeteaseFeed.recommendedPrograms,
+    NeteaseFeed.subscribedPodcasts,
+    NeteaseFeed.recentPodcasts,
+  ];
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final textStyle =
+          TextButtonTheme.of(context).style?.textStyle?.resolve({}) ??
+          Theme.of(context).textTheme.labelLarge;
+      // Fit the actual labels, including accessibility text scaling. Equal
+      // width cells could clip the longest entry even on a wide tablet.
+      var requiredWidth = 0.0;
+      for (final feed in feeds) {
+        final painter = TextPainter(
+          text: TextSpan(
+            text: NeteaseFeaturesRepository.titles[feed]!,
+            style: textStyle,
+          ),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout();
+        requiredWidth += painter.width + 24;
+        painter.dispose();
+      }
+      if (requiredWidth <= box.maxWidth) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (final feed in feeds)
+              TextButton(
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(0, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                onPressed: () => openNeteaseFeed(context, feed),
+                child: Text(
+                  NeteaseFeaturesRepository.titles[feed]!,
+                  maxLines: 1,
+                ),
+              ),
+          ],
+        );
+      }
+      return DropdownButtonFormField<NeteaseFeed>(
+        key: const ValueKey('podcast-navigation-menu'),
+        isExpanded: true,
+        hint: const Text('播客分类与推荐', maxLines: 1),
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        ),
+        items: [
+          for (final feed in feeds)
+            DropdownMenuItem(
+              value: feed,
+              child: Text(NeteaseFeaturesRepository.titles[feed]!, maxLines: 1),
+            ),
+        ],
+        onChanged: (feed) {
+          if (feed != null) openNeteaseFeed(context, feed);
+        },
+      );
+    },
+  );
 }

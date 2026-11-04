@@ -399,6 +399,7 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                                   alignment: Alignment.centerLeft,
                                   child: BetaGlassButton(
                                     label: '播放全部 ${available.length} 首歌曲',
+                                    red: true,
                                     onPressed: busy
                                         ? null
                                         : () => _play(

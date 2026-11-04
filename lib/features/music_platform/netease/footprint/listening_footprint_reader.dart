@@ -31,6 +31,8 @@ class ListeningFootprintReader extends ChangeNotifier {
   bool _alive = true;
   bool get _valid => _alive && current();
   FootprintPeriod get selection => _selections[scale]!;
+  ListeningFootprintView view(FootprintScale scale) =>
+      ListeningFootprintView._(this, scale);
   FootprintReading<OfficialListeningReport> get report =>
       _reports[selection.key] ?? const FootprintReading();
   bool get loading =>
@@ -46,6 +48,19 @@ class ListeningFootprintReader extends ChangeNotifier {
             footprintDay(current!.readAt!) == footprintDay(now())
         ? current.value?.todayListening
         : null;
+  }
+
+  void _moveView(ListeningFootprintView view, int delta) {
+    if (!_valid || !view.canMove(delta)) return;
+    if (view.scale == FootprintScale.year) {
+      selectYear(
+        availableYears[availableYears.indexOf(view.selection.civilStart.year) +
+            delta],
+      );
+    } else {
+      _selections[view.scale] = view.selection.move(delta);
+      notifyListeners();
+    }
   }
 
   void selectScale(FootprintScale value) {
@@ -238,4 +253,34 @@ class ListeningFootprintReader extends ChangeNotifier {
     _alive = false;
     super.dispose();
   }
+}
+
+/// A page-specific lens over the same account cache. Neighboring swipe pages
+/// must never relabel one shared report while a finger is between two pages.
+class ListeningFootprintView {
+  ListeningFootprintView._(this.owner, this.scale);
+  final ListeningFootprintReader owner;
+  final FootprintScale scale;
+  FootprintPeriod get selection => owner._selections[scale]!;
+  FootprintReading<OfficialListeningReport> get report =>
+      owner._reports[selection.key] ?? const FootprintReading();
+  FootprintReading<OfficialYearlyFootprint> get yearly => owner.yearly;
+  FootprintReading<OfficialTodaySongs> get todaySongs => owner.todaySongs;
+  OfficialTodayListening? get todayListening => owner.todayListening;
+  DateTime now() => owner.now();
+  bool canMove(int delta) {
+    if (scale != FootprintScale.year) return selection.canMove(delta, now());
+    final index = owner.availableYears.indexOf(selection.civilStart.year);
+    return index >= 0 &&
+        index + delta >= 0 &&
+        index + delta < owner.availableYears.length;
+  }
+
+  void move(int delta) => owner._moveView(this, delta);
+  void selectYear(int year) => owner.selectYear(year);
+  Future<void> loadToday({bool force = false}) => owner.loadToday(force: force);
+  Future<void> loadSelected({bool force = false}) =>
+      scale == FootprintScale.year
+      ? owner._loadYears(force: force)
+      : owner._loadReport(selection, force: force);
 }

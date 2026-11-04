@@ -1,3 +1,5 @@
+import 'package:mesting_music/shared/widgets/beta_swipe_pages.dart';
+import 'package:mesting_music/features/music_platform/netease/footprint/listening_footprint_models.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -188,6 +190,37 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump();
   }
+
+  testWidgets(
+    'footprint swipes switch week month year and retain each selected period',
+    (tester) async {
+      final container = await mount(tester);
+      final reader = container.read(listeningFootprintReaderProvider)!;
+      expect(reader.scale, FootprintScale.week);
+      await tester.drag(
+        find.byKey(const ValueKey('footprint-period-label')),
+        const Offset(-310, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(reader.scale, FootprintScale.month);
+      reader.move(-1);
+      await reader.loadSelected();
+      await tester.pump();
+      final month = reader.selection.key;
+      await tester.drag(
+        find.byKey(const ValueKey('footprint-period-label')).hitTestable(),
+        const Offset(-310, 0),
+      );
+      await tester.pumpAndSettle();
+      expect(reader.scale, FootprintScale.year);
+      await tester.drag(find.byType(BetaSwipePages), const Offset(310, 0));
+      await tester.pumpAndSettle();
+      expect(reader.scale, FootprintScale.month);
+      expect(reader.selection.key, month);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   for (final dark in [false, true]) {
     testWidgets(

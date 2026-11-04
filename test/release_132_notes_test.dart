@@ -1,3 +1,4 @@
+import 'package:mesting_music/features/experience/presentation/beta_bottom_bar.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -277,10 +278,9 @@ void main() {
       final historyList = find.byKey(
         const PageStorageKey('music-release-history'),
       );
-      final historyScroll = find.descendant(
-        of: historyList,
-        matching: find.byType(Scrollable),
-      ).first;
+      final historyScroll = find
+          .descendant(of: historyList, matching: find.byType(Scrollable))
+          .first;
       // The longer newest notes can keep this fixture's older installed
       // version outside the lazy list. Build its row before checking notes.
       await tester.scrollUntilVisible(
@@ -302,11 +302,7 @@ void main() {
       await tester.pumpAndSettle();
       for (final version in ['1.0.31', '1.0.30']) {
         final header = find.text('v$version');
-        await tester.scrollUntilVisible(
-          header,
-          250,
-          scrollable: historyScroll,
-        );
+        await tester.scrollUntilVisible(header, 250, scrollable: historyScroll);
         // Newer releases move these historical rows. Bring the row into the
         // usable viewport before tapping, clear of the floating music controls.
         await Scrollable.ensureVisible(tester.element(header), alignment: 0.25);
@@ -326,7 +322,9 @@ void main() {
       final history = tester.widget<ListView>(historyList);
       expect(
         (history.padding! as EdgeInsets).bottom,
-        greaterThanOrEqualTo(170),
+        greaterThanOrEqualTo(
+          tester.getSize(find.byType(BetaMusicBottomBar)).height,
+        ),
       );
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

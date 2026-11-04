@@ -140,9 +140,13 @@ class _SecondaryLayoutState extends ConsumerState<BetaSecondaryMusicLayout> {
                             child: NotificationListener<ScrollNotification>(
                               onNotification: _scroll,
                               child: BetaContentInsets(
-                                bottom: BetaContentInsets.musicChromeBottomOf(
-                                  context,
-                                ),
+                                bottom: _compact && !search.active
+                                    ? BetaContentInsets.compactMusicBottomOf(
+                                        context,
+                                      )
+                                    : BetaContentInsets.musicChromeBottomOf(
+                                        context,
+                                      ),
                                 child: widget.child,
                               ),
                             ),

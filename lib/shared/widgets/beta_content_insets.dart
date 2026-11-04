@@ -13,9 +13,8 @@ class BetaContentInsets extends InheritedWidget {
   });
   final double bottom;
 
-  /// Reserve the expanded accessory even while it is compact. Otherwise its
-  /// scroll-triggered expansion can cover the last control or move the extent.
-  /// This is shared by root and independently pushed music pages.
+  /// The shell publishes the currently painted chrome height. Authored legacy
+  /// 180/210dp spacers must not override a compact accessory's actual footprint.
   static double musicChromeBottomOf(BuildContext context) =>
       170 +
       2 * (MediaQuery.textScalerOf(context).scale(24) - 24).clamp(0.0, 28.0) +
@@ -28,13 +27,26 @@ class BetaContentInsets extends InheritedWidget {
   static double musicBottomOf(BuildContext context, [double minimum = 0]) =>
       DistributionChannel.isBeta
       ? math.max(
-          minimum,
-          context
-                  .dependOnInheritedWidgetOfExactType<BetaContentInsets>()
-                  ?.bottom ??
-              musicChromeBottomOf(context),
+          minimum >= 144 ? 12 : minimum,
+          (context
+                      .dependOnInheritedWidgetOfExactType<BetaContentInsets>()
+                      ?.bottom ??
+                  musicChromeBottomOf(context)) -
+              // SafeArea can already consume the system navigation inset.
+              // Retain its physical height for painting, subtract it once for
+              // padding inside that smaller scroll viewport.
+              math.max(
+                0,
+                MediaQuery.viewPaddingOf(context).bottom -
+                    MediaQuery.paddingOf(context).bottom,
+              ),
         )
       : minimum;
+
+  static double compactMusicBottomOf(BuildContext context) =>
+      104 +
+      (MediaQuery.textScalerOf(context).scale(24) - 24).clamp(0.0, 28.0) +
+      MediaQuery.viewPaddingOf(context).bottom;
 
   static EdgeInsets musicPaddingOf(
     BuildContext context,

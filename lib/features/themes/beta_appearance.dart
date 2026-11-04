@@ -48,6 +48,13 @@ abstract final class BetaAppearance {
       ? const Color(0xFFFF375F)
       : const Color(0xFFFF2D55);
 
+  /// Filled playback actions keep white labels readable in both themes;
+  /// favorite glyphs retain their independent, brighter selection color.
+  static Color playbackAction(Brightness brightness) =>
+      brightness == Brightness.dark
+      ? const Color(0xFFD92D4D)
+      : const Color(0xFFD70040);
+
   static Color success(Brightness brightness) => brightness == Brightness.dark
       ? const Color(0xFF30D158)
       : const Color(0xFF007A2B);

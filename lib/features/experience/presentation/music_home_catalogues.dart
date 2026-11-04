@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -216,6 +217,7 @@ class _MusicHomeCataloguePageState
               enabled: _more && !_busy && _error == null,
               onLoadMore: _load,
               child: ListView.builder(
+                cacheExtent: MediaQuery.sizeOf(context).height,
                 padding: BetaContentInsets.musicPaddingOf(
                   context,
                   EdgeInsets.only(
@@ -236,7 +238,9 @@ class _MusicHomeCataloguePageState
                     }
                     return _items.isEmpty
                         ? const EditorialEmpty('平台暂未返回音乐内容')
-                        : const SizedBox(height: 24);
+                        : _more
+                        ? const SizedBox(height: 12)
+                        : const MusicListEnd();
                   }
                   final item = _items[index];
                   return ListTile(

@@ -1,3 +1,4 @@
+import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
@@ -1267,7 +1268,9 @@ class _DailyHeroContent extends StatelessWidget {
             icon: const Icon(Icons.play_arrow_rounded, size: 18),
             label: const Text('播放全部'),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF465CC7),
+              backgroundColor: DistributionChannel.isBeta
+                  ? BetaAppearance.playbackAction(Theme.of(context).brightness)
+                  : const Color(0xFF465CC7),
               foregroundColor: Colors.white,
               minimumSize: const Size(116, 44),
               textStyle: const TextStyle(
