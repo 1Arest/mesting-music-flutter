@@ -17,6 +17,7 @@ import '../../playlists/presentation/playlist_editor_dialog.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/track_artwork.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../library/presentation/library_access.dart';
@@ -121,6 +122,7 @@ class MusicLibraryPage extends ConsumerWidget {
             const EditorialSection('常用音乐'),
             _LibraryLink(
               icon: Icons.favorite_rounded,
+              tone: BetaFeatureTone.music,
               title: '我的喜欢',
               subtitle: cloud
                   ? '${ref.watch(platformAccountProvider).value?.platformLabel ?? '音乐'}云端收藏'
@@ -129,6 +131,7 @@ class MusicLibraryPage extends ConsumerWidget {
             ),
             _LibraryLink(
               icon: Icons.download_rounded,
+              tone: BetaFeatureTone.downloads,
               title: '已下载',
               subtitle: '离线播放、导出与下载任务',
               onTap: () => openAudioDownloads(context, downloadedOnly: true),
@@ -143,12 +146,14 @@ class MusicLibraryPage extends ConsumerWidget {
             const EditorialSection('播放足迹'),
             _LibraryLink(
               icon: Icons.history_rounded,
+              tone: BetaFeatureTone.insights,
               title: '最近播放',
               subtitle: '接着上一次的旋律',
               onTap: () => context.push('/music/library?view=recent'),
             ),
             _LibraryLink(
               icon: Icons.insights_rounded,
+              tone: BetaFeatureTone.insights,
               title: '听歌回顾',
               subtitle: '你的每月与年度音乐足迹',
               onTap: () => context.push('/music/replay'),
@@ -214,11 +219,13 @@ class _LibraryLink extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.tone = BetaFeatureTone.action,
   });
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final BetaFeatureTone tone;
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
@@ -226,7 +233,7 @@ class _LibraryLink extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 26),
+          Icon(icon, color: BetaAppearance.feature(context, tone), size: 26),
           const SizedBox(width: 18),
           Expanded(
             child: Column(

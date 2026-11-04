@@ -1,7 +1,7 @@
 param(
     # Public releases retain this internal flavor/package for in-place upgrades.
-    [string]$VersionName = '1.0.37',
-    [ValidateRange(1, 2147483647)][int]$VersionCode = 58,
+    [string]$VersionName = '1.0.39',
+    [ValidateRange(1, 2147483647)][int]$VersionCode = 60,
     [ValidateSet('debug', 'profile', 'release')][string]$Mode = 'release',
     [string]$TargetPlatform = 'android-arm,android-arm64',
     [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT
@@ -37,6 +37,8 @@ try {
         "--build-name=$VersionName" "--build-number=$VersionCode" `
         '--dart-define=USE_CLOUDBASE_AUTH=true' `
         '--dart-define=ENABLE_APP_UPDATE_CHECKS=true' `
+        '--dart-define=MESTING_NATIVE_PLAYBACK_LOGGING=false' `
+        '--dart-define=MESTING_LOCAL_DIAGNOSTICS=false' `
         '--dart-define=APP_UPDATE_PACKAGE_NAME=com.mesting.music.beta'
     if ($LASTEXITCODE -ne 0) { throw 'Beta APK build failed.' }
     $lockAfter = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $appRoot 'pubspec.lock')).Hash

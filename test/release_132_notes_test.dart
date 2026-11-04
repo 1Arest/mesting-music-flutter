@@ -274,6 +274,21 @@ void main() {
       await tester.tap(entry);
       await tester.pumpAndSettle();
       expect(find.byType(MusicReleaseHistoryPage), findsOneWidget);
+      final historyList = find.byKey(
+        const PageStorageKey('music-release-history'),
+      );
+      final historyScroll = find.descendant(
+        of: historyList,
+        matching: find.byType(Scrollable),
+      ).first;
+      // The longer newest notes can keep this fixture's older installed
+      // version outside the lazy list. Build its row before checking notes.
+      await tester.scrollUntilVisible(
+        find.text('v1.0.32'),
+        250,
+        scrollable: historyScroll,
+      );
+      await tester.pumpAndSettle();
       expect(find.text(notesForMusicVersion('1.0.32').first), findsOneWidget);
       await capture132UI(tester, 'release-history-current');
       // The fixture's installed version moves down as new releases are added.
@@ -290,14 +305,11 @@ void main() {
         await tester.scrollUntilVisible(
           header,
           250,
-          scrollable: find.byType(Scrollable).last,
+          scrollable: historyScroll,
         );
         // Newer releases move these historical rows. Bring the row into the
         // usable viewport before tapping, clear of the floating music controls.
-        await Scrollable.ensureVisible(
-          tester.element(header),
-          alignment: 0.25,
-        );
+        await Scrollable.ensureVisible(tester.element(header), alignment: 0.25);
         await tester.pumpAndSettle();
         await tester.tap(header);
         await tester.pumpAndSettle();
@@ -311,7 +323,7 @@ void main() {
         0,
         reason: 'manual history must not query the update service',
       );
-      final history = tester.widget<ListView>(find.byType(ListView).last);
+      final history = tester.widget<ListView>(historyList);
       expect(
         (history.padding! as EdgeInsets).bottom,
         greaterThanOrEqualTo(170),

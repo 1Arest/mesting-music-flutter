@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/actual_listening_counter.dart';
 import '../../../core/audio/playback_providers.dart';
+import '../../../core/diagnostics/local_music_diagnostics.dart';
 import '../../../core/persistence/app_preferences.dart';
 import '../../../shared/models/track.dart';
 import '../data/music_platform_api.dart';
@@ -14,6 +15,14 @@ import '../music_platform_providers.dart';
 import '../platform_backend_providers.dart';
 import 'netease_music_repository.dart';
 import 'netease_footprint.dart';
+import 'netease_native_journal.dart';
+
+/// A disabled experimental transport must not drain its old open/queued rows
+/// through either endpoint. Preserve their evidence until separately reviewed.
+bool holdNeteaseNativeRecord(
+  ListeningSyncEntry row, {
+  required bool nativeLogEnabled,
+}) => !nativeLogEnabled && row.number('protocolVersion') == 3;
 
 final neteaseFootprintProvider = FutureProvider.autoDispose<NeteaseFootprint?>((
   ref,
@@ -46,15 +55,20 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
           speed: state.speed,
         );
         _startWhenReady();
-        if (state.completed) _finish();
+        if (state.completed) _finish(endReason: 'playend');
       }),
     );
     _subscriptions.add(
-      feed.seeks.listen((seeking) => _counter?.update(seeking: seeking)),
+      feed.seeks.listen((seeking) {
+        _counter?.update(seeking: seeking);
+        // Decoder readiness can arrive before an awaited seek finishes. The
+        // seek-end edge must retry opening, without counting the seek itself.
+        if (!seeking) _startWhenReady();
+      }),
     );
     _subscriptions.add(
       feed.repeatBoundaries.listen((_) {
-        _finish();
+        _finish(endReason: 'playend');
         _track(feed.currentTrack, repeat: true);
       }),
     );
@@ -138,7 +152,9 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
           'id': NeteaseMusicRepository.songId(song.id),
           'title': song.title,
           'startlogtime': startedAt.millisecondsSinceEpoch ~/ 1000,
-          'protocolVersion': 2,
+          'protocolVersion': music.nativeLogEnabled ? 3 : 2,
+          if (music.nativeLogEnabled)
+            'eventlogtime': startedAt.millisecondsSinceEpoch ~/ 1000,
         },
         now: clock.now,
         state: ListeningSyncState.queued,
@@ -153,13 +169,22 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     final heard = counter.sample();
     final mediaMs = counter.sampleMediaMilliseconds();
     final startedAt = _startedAt;
+    final measuredAt = clock.now;
     _schedule(() async {
-      await _save(event, song, heard, mediaMs, startedAt, close: false);
+      await _save(
+        event,
+        song,
+        heard,
+        mediaMs,
+        startedAt,
+        measuredAt: measuredAt,
+        close: false,
+      );
       if (current()) await _verifyRecent();
     });
   }
 
-  void _finish() {
+  void _finish({String endReason = 'interrupt'}) {
     final song = _song, event = _event, counter = _counter;
     _counter = null;
     _event = null;
@@ -167,8 +192,18 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     final heard = counter.sample();
     final mediaMs = counter.sampleMediaMilliseconds();
     final startedAt = _startedAt;
+    final measuredAt = clock.now;
     _schedule(() async {
-      await _save(event, song, heard, mediaMs, startedAt, close: true);
+      await _save(
+        event,
+        song,
+        heard,
+        mediaMs,
+        startedAt,
+        measuredAt: measuredAt,
+        endReason: endReason,
+        close: true,
+      );
       if (current()) await _sendQueued();
     });
   }
@@ -182,6 +217,8 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     // Kept positional in the call sites so each queued save captures the
     // timestamp and durations before a later track changes controller state.
     required bool close,
+    required DateTime measuredAt,
+    String endReason = 'interrupt',
   }) async {
     if (heard < 1000 || owner.isEmpty) return;
     final payload = <String, Object?>{
@@ -191,7 +228,11 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
       if (startedAt != null)
         'startlogtime': startedAt.millisecondsSinceEpoch ~/ 1000,
       'mediaHeardMs': mediaMs,
-      'protocolVersion': 2,
+      'protocolVersion': music.nativeLogEnabled ? 3 : 2,
+      if (music.nativeLogEnabled) ...{
+        'eventlogtime': measuredAt.millisecondsSinceEpoch ~/ 1000,
+        'endReason': endReason,
+      },
       'heardMs': heard,
       'sourceid': 0,
       'title': song.title,
@@ -224,6 +265,12 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
       states: {ListeningSyncState.open},
     );
     for (final row in rows) {
+      if (holdNeteaseNativeRecord(
+        row,
+        nativeLogEnabled: music.nativeLogEnabled,
+      )) {
+        continue;
+      }
       if (row.id != _event) {
         await store.change(
           row,
@@ -242,9 +289,21 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
       kinds: {'netease-scrobble', 'netease-startplay'},
       states: {ListeningSyncState.queued},
     );
-    for (final row in rows) {
+    for (final pending in rows) {
       if (!current()) return;
-      if (!await store.change(
+      var row = pending;
+      if (holdNeteaseNativeRecord(
+        row,
+        nativeLogEnabled: music.nativeLogEnabled,
+      )) {
+        continue;
+      }
+      final native = row.number('protocolVersion') == 3;
+      if (native) {
+        final claimed = await claimNeteaseNativeLog(store, row, clock.now);
+        if (claimed == null) continue;
+        row = claimed;
+      } else if (!await store.change(
         row,
         ListeningSyncState.dispatched,
         clock.now,
@@ -252,6 +311,13 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
       )) {
         continue;
       }
+      final started = row.kind == 'netease-startplay';
+      final mediaSeconds = row.number('time');
+      final realSeconds = row.payload.containsKey('realtime')
+          ? row.number('realtime')
+          : row.number('heardMs') > 0
+          ? row.number('heardMs') ~/ 1000
+          : mediaSeconds;
       try {
         final epoch = RegExp(r'^netease-play:(\d+):').firstMatch(row.id);
         final originalStart = row.number('startlogtime') > 0
@@ -261,17 +327,22 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
             : epoch != null
             ? DateTime.fromMicrosecondsSinceEpoch(int.parse(epoch[1]!))
             : row.createdAt;
-        await music.reportPlayback(
+        final response = await music.reportPlayback(
           id: '${row.payload['id']}',
-          started: row.kind == 'netease-startplay',
-          seconds: row.number('time'),
+          started: started,
+          seconds: mediaSeconds,
           sourceId: '${row.payload['sourceid'] ?? 0}',
-          realSeconds: row.payload.containsKey('realtime')
-              ? row.number('realtime')
-              : row.number('heardMs') > 0
-              ? row.number('heardMs') ~/ 1000
-              : row.number('time'),
+          realSeconds: realSeconds,
           startedAt: originalStart,
+          nativeSequence: native ? row.number('nativeSequence') : null,
+          eventTime: native
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  row.number('eventlogtime') * 1000,
+                )
+              : null,
+          endReason: row.text('endReason').isEmpty
+              ? 'interrupt'
+              : row.text('endReason'),
         );
         await store.change(
           row,
@@ -279,16 +350,60 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
           clock.now,
           expected: ListeningSyncState.dispatched,
         );
+        _traceSubmit(
+          started: started,
+          mediaSeconds: mediaSeconds,
+          realSeconds: realSeconds,
+          outcome: ListeningSyncState.accepted,
+          businessCode: int.tryParse('${response['code']}'),
+          native: native,
+        );
       } catch (e) {
+        final outcome = e is MusicPlatformException && e.code.isNotEmpty
+            ? ListeningSyncState.rejected
+            : ListeningSyncState.unknown;
+        _traceSubmit(
+          started: started,
+          mediaSeconds: mediaSeconds,
+          realSeconds: realSeconds,
+          outcome: outcome,
+          native: native,
+          businessCode: e is MusicPlatformException
+              ? int.tryParse(e.code)
+              : null,
+        );
         await store.change(
           row,
-          e is MusicPlatformException && e.code.isNotEmpty
-              ? ListeningSyncState.rejected
-              : ListeningSyncState.unknown,
+          outcome,
           clock.now,
           expected: ListeningSyncState.dispatched,
         );
       }
+    }
+  }
+
+  /// Diagnostic builds emit measured durations and normalized outcomes only.
+  /// Never pass journal/account identifiers or transport objects to the logger.
+  void _traceSubmit({
+    required bool started,
+    required int mediaSeconds,
+    required int realSeconds,
+    required ListeningSyncState outcome,
+    int? businessCode,
+    bool native = false,
+  }) {
+    if (!LocalMusicDiagnostics.enabled) return;
+    try {
+      LocalMusicDiagnostics.record('netease.playback_submit', {
+        'started': started,
+        'mediaSeconds': mediaSeconds,
+        'realtimeSeconds': realSeconds,
+        'transport': native ? 'android-bi-v3' : 'weblog',
+        'outcome': outcome.name,
+        'businessCode': ?businessCode,
+      });
+    } catch (_) {
+      // Best-effort diagnostics must never change a journal/send outcome.
     }
   }
 
@@ -305,6 +420,10 @@ class NeteaseListeningReporter with WidgetsBindingObserver {
     final pending = entries
         .where(
           (row) =>
+              !holdNeteaseNativeRecord(
+                row,
+                nativeLogEnabled: music.nativeLogEnabled,
+              ) &&
               row.payload['cloudConfirmed'] != true &&
               row.number('verificationAttempts') < 3,
         )

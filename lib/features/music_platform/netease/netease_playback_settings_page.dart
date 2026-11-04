@@ -33,6 +33,17 @@ class _PlaybackSettingsState
       );
     }
     final rows = ref.watch(neteaseListeningJournalProvider).value ?? const [];
+    final nativeEnabled = ref
+        .watch(neteaseMusicRepositoryProvider)
+        .nativeLogEnabled;
+    final heldNative = rows
+        .where(
+          (r) =>
+              (r.state == ListeningSyncState.open ||
+                  r.state == ListeningSyncState.queued) &&
+              holdNeteaseNativeRecord(r, nativeLogEnabled: nativeEnabled),
+        )
+        .length;
     final accepted = rows
         .where((r) => r.state == ListeningSyncState.accepted)
         .length;
@@ -54,6 +65,7 @@ class _PlaybackSettingsState
         .where(
           (r) =>
               r.kind == 'netease-scrobble' &&
+              !holdNeteaseNativeRecord(r, nativeLogEnabled: nativeEnabled) &&
               (r.state == ListeningSyncState.queued ||
                   r.state == ListeningSyncState.open),
         )
@@ -125,6 +137,7 @@ class _PlaybackSettingsState
             ),
           ),
           BetaGlassButton(
+            // Held candidate rows are intentionally excluded from pending time.
             onPressed: !ref.watch(neteaseListeningEnabledProvider)
                 ? null
                 : () async {
@@ -134,6 +147,11 @@ class _PlaybackSettingsState
                   },
             child: const Text('同步确定未发送的记录'),
           ),
+          if (heldNative > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Text('候选版遗留的 $heldNative 条待核对记录已保留，不会自动重发或计入待同步时长。'),
+            ),
           const SizedBox(height: 16),
           BetaGlassButton(
             key: const ValueKey('netease-monthly-audit'),

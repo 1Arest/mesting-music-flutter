@@ -14,6 +14,7 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../auth/presentation/beta_account_card.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../experience/presentation/editorial_widgets.dart';
+import '../../themes/beta_appearance.dart';
 import '../../library/library_providers.dart';
 import '../data/cloud_library_repository.dart';
 import '../music_platform_providers.dart';
@@ -322,11 +323,13 @@ class _PersonalQuickActions extends StatelessWidget {
             '最近',
             CupertinoIcons.clock,
             () => context.push('/music/library?view=recent'),
+            tone: BetaFeatureTone.insights,
           ),
           _PersonalQuickLink(
             '已下载',
             CupertinoIcons.arrow_down_circle,
             () => openAudioDownloads(context, downloadedOnly: true),
+            tone: BetaFeatureTone.downloads,
           ),
           _PersonalQuickLink(
             '签到',
@@ -359,11 +362,13 @@ class _PersonalQuickLink extends StatelessWidget {
     this.icon,
     this.action, {
     this.loading = false,
+    this.tone = BetaFeatureTone.action,
   });
   final String title;
   final IconData icon;
   final VoidCallback? action;
   final bool loading;
+  final BetaFeatureTone tone;
   @override
   Widget build(BuildContext context) => Expanded(
     child: Padding(
@@ -376,7 +381,13 @@ class _PersonalQuickLink extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 22),
+            Icon(
+              icon,
+              size: 22,
+              color: action == null
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : BetaAppearance.feature(context, tone),
+            ),
             const SizedBox(height: 5),
             Text(
               title,
@@ -397,7 +408,10 @@ class _PersonalStorageEntry extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     key: const ValueKey('profile-download-storage'),
     contentPadding: const EdgeInsets.symmetric(horizontal: 26),
-    leading: const Icon(CupertinoIcons.folder),
+    leading: Icon(
+      CupertinoIcons.folder,
+      color: BetaAppearance.feature(context, BetaFeatureTone.downloads),
+    ),
     title: const Text('下载与存储', style: TextStyle(fontWeight: FontWeight.w500)),
     subtitle: const Text('下载任务、保存目录与文件管理'),
     trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
@@ -445,7 +459,10 @@ class _PersonalLikedPlaylist extends ConsumerWidget {
                 )
               : ColoredBox(
                   color: scheme.surfaceContainerLow,
-                  child: Icon(CupertinoIcons.heart_fill, color: scheme.primary),
+                  child: Icon(
+                    CupertinoIcons.heart_fill,
+                    color: BetaAppearance.favorite(scheme.brightness),
+                  ),
                 ),
         ),
       ),

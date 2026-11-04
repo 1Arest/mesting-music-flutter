@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'airpods_pro_glyph.dart';
 
 enum AppleAudioGlyphKind {
   route,
@@ -10,10 +11,9 @@ enum AppleAudioGlyphKind {
   check,
 }
 
-/// Playback-destination vectors. The earbud contour adapts Tabler's MIT-licensed
-/// device-airpods outline (see third_party/audio_glyphs/NOTICE.md), rather than
-/// bundling Apple's platform-restricted SF Symbols. A glyph never changes the
-/// real device name or claims that a non-Apple headset is an Apple product.
+/// Playback-destination vectors. The AirPods Pro symbol now uses its pinned
+/// original paths (see third_party/audio_glyphs/NOTICE.md). Native metadata
+/// retains the actual device name, independently of this presentation glyph.
 class AppleAudioGlyph extends StatelessWidget {
   const AppleAudioGlyph(
     this.kind, {
@@ -82,35 +82,7 @@ void paintAppleAudioGlyph(
         pen,
       );
     case AppleAudioGlyphKind.earphones:
-      canvas.scale(40 / 24);
-      pen
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.65
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-      for (final mirror in [false, true]) {
-        canvas.save();
-        if (mirror) {
-          canvas.translate(24, 0);
-          canvas.scale(-1, 1);
-        }
-        final bud = Path()
-          ..moveTo(6, 4)
-          ..arcToPoint(const Offset(10, 7.8), radius: const Radius.circular(4))
-          ..lineTo(10, 18.5)
-          ..arcToPoint(
-            const Offset(7, 18.5),
-            radius: const Radius.circular(1.5),
-          )
-          ..lineTo(7, 12)
-          ..lineTo(6, 12)
-          ..arcToPoint(const Offset(2, 8.2), radius: const Radius.circular(4))
-          ..lineTo(2, 8)
-          ..arcToPoint(const Offset(6, 4), radius: const Radius.circular(4))
-          ..close();
-        canvas.drawPath(bud, pen);
-        canvas.restore();
-      }
+      paintAirPodsProGlyph(canvas, const Size.square(40), color);
     case AppleAudioGlyphKind.phone:
       pen
         ..style = PaintingStyle.stroke

@@ -4,6 +4,14 @@ description: 封面主导、语义配色与共享播放控件的中文私人听�
 colors:
   beta-accent: "#0066D9"
   beta-accent-dark: "#0091FF"
+  beta-navigation: "#D60035"
+  beta-navigation-dark: "#FF375F"
+  beta-navigation-label: "#BC0032"
+  beta-navigation-label-dark: "#FF829B"
+  beta-together: "#7639C7"
+  beta-together-dark: "#BF8CFF"
+  beta-insights: "#A85B00"
+  beta-insights-dark: "#FFAA3D"
   beta-panel-light: "#F2F2F7"
   beta-panel-dark: "#1C1C1E"
   entry-coral: "#DE5757"
@@ -238,11 +246,13 @@ See docs/fixes-2026-10-27-beta19.md for physical-device evidence and limitations
 ## Colors
 
 ### Primary
-Beta 的 beta-accent / beta-accent-dark 使用蓝色语义色；浅色蓝针对中性分组面板上的小字加深。BetaAppearance 与 app_theme.dart 将它们接入 primary，中性浅灰/深灰面板接入 primaryContainer 和 surfaceContainerLow。四个目的地的选中图标与文字、个人页图标和相关选择使用这组颜色。正式 flavor 仍由既有主题种子与预设决定，primary-seed / primary-seed-dark 属于该保留系统。
+2026-11-02用户确认的局部扩展：底部四个目的地的选中图标改用beta-navigation / beta-navigation-dark，选中小字使用独立亮度的beta-navigation-label / beta-navigation-label-dark。选中玻璃仍为中性透明材质；浅色弱白指示层与深色低透明白指示层避免反向重灰覆盖红色文字。功能蓝继续负责通用操作、链接、输入及普通选择；一起听/音效入口使用紫色，下载入口/成功使用绿色，回顾/排行榜入口使用橙色，收藏入口及已选心形使用红粉色。颜色由BetaFeatureTone的用途显式分配，不依据列表顺序或翻译标题随机映射。
 
-entry-coral 仅负责欢迎伙伴、指南插画及品牌标题；指南进度和可选控件使用功能蓝，不能以品牌插画色替代导航的 beta-accent。入口暖色浅背景与暗色暖黑背景是该组表面的构图材料，不作为全应用页面底色。
+Beta 的 beta-accent / beta-accent-dark 保持蓝色语义色；浅色蓝针对中性分组面板上的小字加深。BetaAppearance 与 app_theme.dart 将它们接入 primary，中性浅灰/深灰面板接入 primaryContainer 和 surfaceContainerLow。正式 flavor 仍由既有主题种子与预设决定，primary-seed / primary-seed-dark 属于该保留系统。
 
-action-blue 是评论发送、新建/编辑歌单确认及 Beta.13 手机号登录的局部共享材质色，白色箭头/对勾/文字形成可辨操作；clear body 保留 alpha 蓝色及高光/折射；导航使用同一蓝色语义下的独立亮度适配值。歌单关闭使用中性主题玻璃与局部 onSurface 图标。editing-blue / editing-blue-dark 仅负责 Beta 浅/深色光标、Cupertino 选择手柄及其 22% 透明度选区，导航使用 beta-accent / beta-accent-dark。
+entry-coral 负责欢迎伙伴、指南插画及品牌标题；指南进度和可选控件使用功能蓝。导航红拥有独立语义，不复用品牌插画色。入口暖色浅背景与暗色暖黑背景是该组表面的构图材料，不作为全应用页面底色。
+
+action-blue 是评论发送、新建/编辑歌单确认及 Beta.13 手机号登录的局部共享材质色，白色箭头/对勾/文字形成可辨操作；clear body 保留 alpha 蓝色及高光/折射。歌单关闭使用中性主题玻璃与局部 onSurface 图标。editing-blue / editing-blue-dark 仅负责 Beta 浅/深色光标、Cupertino 选择手柄及其 22% 透明度选区；导航红与编辑蓝分别持有独立角色。
 
 ### Secondary
 favorite 保留为正式渠道收藏色；Beta 已选心形读取亮度适配的 beta-favorite / beta-favorite-dark，未选读取实际局部 onSurfaceVariant。显式 IP 进度图案/角色保留自身配色，选择外框用蓝色，标签保持 text-primary-*。
@@ -250,7 +260,11 @@ favorite 保留为正式渠道收藏色；Beta 已选心形读取亮度适配的
 ### Neutral
 canvas-* 是经典纯色背景，surface-* 对应基础表面。正文、说明、弱提示成组随亮度切换；深色半透明文字须结合实际背景判断。Beta 个人页与低阶内容面板使用 beta-panel-*；经典浅色的表面与分层容器为中性白灰，不从功能色 seed 自动生成彩色底层。播放器使用 player-base、白色文字、封面模糊和深色罩层；非当前歌词降亮度。
 
-**The Theme Ownership Rule.** Beta 蓝色拥有导航与选择 chrome，粉色拥有收藏，绿色拥有签到完成，歌曲封面拥有氛围，显式 IP 图案与角色拥有自身配色；正式 flavor 继续读取原主题。
+**The Theme Ownership Rule.** Beta 红色拥有底部导航选择，蓝色拥有通用操作与编辑，紫色拥有一起听/音效入口，橙色拥有回顾/排行入口，红粉色拥有收藏，绿色拥有下载入口与完成状态；歌曲封面拥有氛围，显式 IP 图案与角色拥有自身配色；正式 flavor 继续读取原主题。上方历史Beta.20“统一功能蓝”的说明保留原时点，不覆盖本段的新确认。
+
+2026-11-02一起听胶囊：网易云房间有效时，封面位置显示本人在左后、好友在右前的圆形叠放头像；等待好友时仅本人头像；退出/切换账号回到当前歌曲封面。房间监听只重建头像小区块，重复心跳不重建完整玻璃或播放控件，头像沿用ArtworkImage缓存。胶囊展开/紧凑布局共享此契约。
+
+2026-11-02音频输出：耳机图标采用用户明确指定的原始airpodspro矢量比例和路径，见third_party/audio_glyphs中的来源与声明。Beta点击图标直接进入既有“播放设备”列表，显示真实路由、当前勾选及系统音量，点设备仍等待原生确认；失败不得冒充切换成功。播放器与列表共用图形，设备名称继续读取真实元数据。Formal保留原概览与系统选择入口。
 
 **The Local Contrast Rule.** 经典灰色唱机的顶部收起/更多操作使用局部深色半透明底，底部加强深色罩层，歌手为不透明白字；共享上一首/播放/下一首仍是裸白色图标。
 

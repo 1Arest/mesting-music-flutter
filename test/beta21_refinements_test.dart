@@ -445,7 +445,7 @@ void main() {
           routes: routes,
         );
         await capture(tester, 'refinement-output-${dark ? 'dark' : 'light'}');
-        await tester.tap(find.text('切换设备'));
+        if (!DistributionChannel.isBeta) await tester.tap(find.text('切换设备'));
         await tester.pumpAndSettle();
         expect(find.text('本机'), findsOneWidget);
         expect(find.text('系统设备管理'), findsNothing);
@@ -462,7 +462,7 @@ void main() {
         size: const Size(320, 640),
         textScale: 1.5,
       );
-      await tester.tap(find.text('切换设备'));
+      if (!DistributionChannel.isBeta) await tester.tap(find.text('切换设备'));
       await tester.pumpAndSettle();
       await capture(tester, 'refinement-output-narrow-large');
       expect(tester.takeException(), isNull);
@@ -476,7 +476,7 @@ void main() {
     (tester) async {
       final routes = _Routes();
       await mount(tester, const PlayerOutputDialog(), routes: routes);
-      await tester.tap(find.text('切换设备'));
+      if (!DistributionChannel.isBeta) await tester.tap(find.text('切换设备'));
       await tester.pumpAndSettle();
       expect(routes.systems, 0);
       expect(find.byKey(const ValueKey('apple-output-picker')), findsOneWidget);
@@ -577,7 +577,7 @@ void main() {
       (tester) async {
         await mount(tester, const PlayerOutputDialog(), dark: dark);
         await capture(tester, 'output-${dark ? 'dark' : 'light'}');
-        await tester.tap(find.text('切换设备'));
+        if (!DistributionChannel.isBeta) await tester.tap(find.text('切换设备'));
         await tester.pumpAndSettle();
         await capture(tester, 'output-${dark ? 'dark' : 'light'}-routes');
         await tester.pumpWidget(const SizedBox());

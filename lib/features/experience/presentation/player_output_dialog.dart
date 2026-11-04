@@ -39,7 +39,9 @@ class PlayerOutputDialog extends ConsumerStatefulWidget {
 
 class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
   double? _drag;
-  bool _devices = false;
+  // Beta opens the real device list immediately; Formal keeps its existing
+  // summary followed by the platform picker. This never initiates a transfer.
+  final bool _devices = DistributionChannel.isBeta;
   @override
   Widget build(BuildContext context) {
     final output = ref.watch(audioOutputProvider);
@@ -262,14 +264,12 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                       key: const ValueKey('output-open-system-picker'),
                       color: const Color(0xFF0069D5),
                       borderRadius: BorderRadius.circular(25),
-                      onPressed: output.available
+                      onPressed: _devices || output.available
                           ? () {
                               if (_devices) {
                                 Navigator.of(context).pop(false);
-                              } else if (!DistributionChannel.isBeta) {
-                                Navigator.of(context).pop(true);
                               } else {
-                                setState(() => _devices = true);
+                                Navigator.of(context).pop(true);
                               }
                             }
                           : null,

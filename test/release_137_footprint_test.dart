@@ -12,7 +12,7 @@ import 'netease_v114_workflows_test.dart' show eapiBody;
 
 Map<String, Object?> footprintResponse({
   String month = '2026-11',
-  int seconds = 4680,
+  int minutes = 78,
   Map<String, Object?>? day,
 }) {
   final start = footprintMonthStart(month);
@@ -25,7 +25,7 @@ Map<String, Object?> footprintResponse({
           .subtract(const Duration(hours: 8, milliseconds: 1))
           .millisecondsSinceEpoch,
       'listenTimeDistributionBlock': {
-        'playDuration': seconds,
+        'playDuration': minutes,
         'durationDetails': [?day],
       },
     },
@@ -36,15 +36,16 @@ class FootprintFixture implements OfficialFootprintSource {
   int weekReads = 0, monthReads = 0, totalReads = 0, historyReads = 0;
   bool fail = false, failMonth = false;
   String day = '2026-11-02';
-  int dailySeconds = 1020, monthlySeconds = 4680, totalValue = 20193360;
+  // The wire report uses minutes; the separate total endpoint uses seconds.
+  int dailyMinutes = 17, monthlyMinutes = 78, totalValue = 20193360;
   Completer<OfficialListenPeriod>? weekPending;
   Completer<int>? totalPending;
   final Map<String, Completer<OfficialListenPeriod>> historyPending = {};
   OfficialListenPeriod period([String? month]) => OfficialListenPeriod.parse(
     footprintResponse(
       month: month ?? day.substring(0, 7),
-      seconds: monthlySeconds,
-      day: {'period': day, 'duration': dailySeconds},
+      minutes: monthlyMinutes,
+      day: {'period': day, 'duration': dailyMinutes},
     ),
   );
   @override
@@ -74,7 +75,7 @@ class FootprintFixture implements OfficialFootprintSource {
     if (fail) throw StateError('offline');
     return historyPending[month]?.future ??
         OfficialListenPeriod.parse(
-          footprintResponse(month: month, seconds: 36000),
+          footprintResponse(month: month, minutes: 600),
         );
   }
 }
@@ -95,8 +96,8 @@ void main() {
       expect(reader.month.key, '2026-11');
       now = now.add(const Duration(minutes: 2));
       source.day = '2026-12-01';
-      source.monthlySeconds = 60;
-      source.dailySeconds = 60;
+      source.monthlyMinutes = 1;
+      source.dailyMinutes = 1;
       await reader.refresh();
       expect(reader.month.key, '2026-12');
       expect(reader.month.value, 60);
@@ -106,15 +107,15 @@ void main() {
     },
   );
   test(
-    'official seconds and three daily categories do not reuse widget units',
+    'official report minutes normalize all three categories into internal seconds',
     () {
       final p = OfficialListenPeriod.parse(
         footprintResponse(
           day: {
             'period': '2026-11-02',
-            'duration': 900,
-            'podcastDuration': 60,
-            'audiobookDuration': 60,
+            'duration': 15,
+            'podcastDuration': 1,
+            'audiobookDuration': 1,
           },
         ),
       );
@@ -173,13 +174,13 @@ void main() {
       expect(() => wrong.forMonth('2026-10'), throwsFormatException);
       final zero = OfficialListenPeriod.parse(
         footprintResponse(
-          seconds: 0,
+          minutes: 0,
           day: {'period': '2026-11-02', 'duration': 0},
         ),
       );
       expect(zero.today('2026-11-02'), 0);
       expect(
-        () => OfficialListenPeriod.parse(footprintResponse(seconds: -1)),
+        () => OfficialListenPeriod.parse(footprintResponse(minutes: -1)),
         throwsFormatException,
       );
       final duplicate = footprintResponse(
@@ -341,7 +342,7 @@ void main() {
       await reader.readHistory('2026-09');
       source.historyPending['2026-10']!.complete(
         OfficialListenPeriod.parse(
-          footprintResponse(month: '2026-10', seconds: 9999),
+          footprintResponse(month: '2026-10', minutes: 9999),
         ),
       );
       await old;

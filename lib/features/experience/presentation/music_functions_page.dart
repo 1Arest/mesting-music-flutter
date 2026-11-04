@@ -15,6 +15,7 @@ import '../../music_platform/presentation/platform_recommendations_page.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import '../../music_platform/presentation/music_effects_page.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
 import 'music_home_catalogues.dart';
 
@@ -57,6 +58,7 @@ class MusicFunctionsPage extends ConsumerWidget {
         '排行榜',
         CupertinoIcons.chart_bar,
         () => openMusicHomeCatalogue(context, PlatformExploreKind.rank),
+        tone: BetaFeatureTone.insights,
       ),
       _FunctionEntry(
         '精选歌单',
@@ -86,11 +88,13 @@ class MusicFunctionsPage extends ConsumerWidget {
           '一起听',
           CupertinoIcons.person_2,
           () => context.push('/music/together'),
+          tone: BetaFeatureTone.together,
         ),
       _FunctionEntry(
         '听歌回顾',
         CupertinoIcons.clock,
         () => context.push('/music/replay'),
+        tone: BetaFeatureTone.insights,
       ),
       _FunctionEntry(
         '新碟上架',
@@ -101,6 +105,7 @@ class MusicFunctionsPage extends ConsumerWidget {
         '音效',
         CupertinoIcons.slider_horizontal_3,
         () => page(const MusicEffectsPage()),
+        tone: BetaFeatureTone.together,
       ),
       if (netease) ...[
         for (final entry in <(NeteaseFeed, IconData)>[
@@ -124,6 +129,13 @@ class MusicFunctionsPage extends ConsumerWidget {
             NeteaseFeaturesRepository.titles[entry.$1]!,
             entry.$2,
             () => openNeteaseFeed(context, entry.$1),
+            tone: switch (entry.$1) {
+              NeteaseFeed.week ||
+              NeteaseFeed.topAlbums ||
+              NeteaseFeed.historyDates => BetaFeatureTone.insights,
+              NeteaseFeed.intelligence => BetaFeatureTone.music,
+              _ => BetaFeatureTone.action,
+            },
           ),
       ],
     ];
@@ -132,6 +144,7 @@ class MusicFunctionsPage extends ConsumerWidget {
         '下载管理',
         CupertinoIcons.arrow_down_circle,
         () => openAudioDownloads(context),
+        tone: BetaFeatureTone.downloads,
       ),
       _FunctionEntry(
         '发现',
@@ -142,6 +155,7 @@ class MusicFunctionsPage extends ConsumerWidget {
         '收藏',
         CupertinoIcons.heart,
         () => context.push('/music/library?view=favorites'),
+        tone: BetaFeatureTone.music,
       ),
       _FunctionEntry(
         '本地音乐',
@@ -164,10 +178,16 @@ class MusicFunctionsPage extends ConsumerWidget {
 }
 
 class _FunctionEntry {
-  const _FunctionEntry(this.title, this.icon, this.open);
+  const _FunctionEntry(
+    this.title,
+    this.icon,
+    this.open, {
+    this.tone = BetaFeatureTone.action,
+  });
   final String title;
   final IconData icon;
   final VoidCallback open;
+  final BetaFeatureTone tone;
 }
 
 class _FunctionGrid extends StatelessWidget {
@@ -203,7 +223,7 @@ class _FunctionGrid extends StatelessWidget {
                 Icon(
                   item.icon,
                   size: 32,
-                  color: Theme.of(context).colorScheme.primary,
+                  color: BetaAppearance.feature(context, item.tone),
                 ),
                 const SizedBox(height: 13),
                 Text(

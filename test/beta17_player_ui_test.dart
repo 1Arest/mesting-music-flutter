@@ -150,7 +150,20 @@ void main() {
           chooses++;
           return true;
         }
-        return {'name': 'vivo TWS 5', 'kind': 'headphones', 'available': true};
+        return {
+          'name': 'vivo TWS 5',
+          'kind': 'headphones',
+          'available': true,
+          'routes': [
+            {
+              'id': 'earbuds',
+              'name': 'vivo TWS 5',
+              'kind': 'headphones',
+              'selected': true,
+              'selectable': false,
+            },
+          ],
+        };
       });
       messenger.setMockStreamHandler(
         AudioOutputController.events,
@@ -199,6 +212,15 @@ void main() {
         'name': '通勤耳机',
         'kind': 'headphones',
         'available': true,
+        'routes': [
+          {
+            'id': 'earbuds',
+            'name': '通勤耳机',
+            'kind': 'headphones',
+            'selected': true,
+            'selectable': false,
+          },
+        ],
       });
       await tester.pumpAndSettle();
       expect(find.text('通勤耳机'), findsOneWidget);
@@ -210,13 +232,17 @@ void main() {
       slider.onChangeEnd?.call(.8);
       await tester.pump();
       expect(volume, .8);
-      await tester.tap(find.byKey(const ValueKey('output-open-system-picker')));
-      await tester.pumpAndSettle();
       if (DistributionChannel.isBeta) {
         expect(chooses, 0);
         expect(find.text('播放设备'), findsOneWidget);
+        expect(find.text('切换设备'), findsNothing);
         expect(find.text('系统设备管理'), findsNothing);
         await tester.tap(find.text('完成'));
+        await tester.pumpAndSettle();
+      } else {
+        await tester.tap(
+          find.byKey(const ValueKey('output-open-system-picker')),
+        );
         await tester.pumpAndSettle();
       }
       expect(chooses, DistributionChannel.isBeta ? 0 : 1);

@@ -13,9 +13,15 @@ import 'netease_footprint.dart';
 /// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
 /// the same Track / catalogue models as Kugou, with provider-qualified IDs.
 class NeteaseMusicRepository {
-  NeteaseMusicRepository(this.api) : credential = api.session?.credentialId;
+  NeteaseMusicRepository(
+    this.api, {
+    this.nativeLogEnabled = const bool.fromEnvironment(
+      'MESTING_NATIVE_PLAYBACK_LOGGING',
+    ),
+  }) : credential = api.session?.credentialId;
   final NeteaseApi api;
   final String? credential;
+  final bool nativeLogEnabled;
 
   /// `startplay` updates recent plays; the separate `play` event carries only
   /// actual elapsed seconds. A 200 response is receipt, not proof of indexing.
@@ -28,23 +34,41 @@ class NeteaseMusicRepository {
     String sourceId = '0',
     int? realSeconds,
     DateTime? startedAt,
-  }) => api.request(
-    '/api/feedback/weblog',
-    {
-      'logs': jsonEncode([
-        neteasePlaybackLog(
-          id: id,
-          started: started,
-          mediaSeconds: seconds,
-          realSeconds: realSeconds ?? seconds,
-          startedAt: startedAt ?? DateTime.now(),
-          sourceId: sourceId,
-        ),
-      ]),
-    },
-    playbackLog: true,
-    expectedCredential: credential,
-  );
+    int? nativeSequence,
+    DateTime? eventTime,
+    String endReason = 'playend',
+  }) {
+    final log = neteasePlaybackLog(
+      id: id,
+      started: started,
+      mediaSeconds: seconds,
+      realSeconds: realSeconds ?? seconds,
+      startedAt: startedAt ?? DateTime.now(),
+      sourceId: sourceId,
+    );
+    if (nativeSequence != null) {
+      // Disabled builds never promote a retained native row to another write.
+      // The reporter normally holds it before claiming; keep this boundary too.
+      if (!nativeLogEnabled) {
+        return Future.error(const MusicPlatformException('候选原生上报已停用，记录保留待核对'));
+      }
+      if (!started) (log['json'] as Map)['end'] = endReason;
+      return api.reportNativePlayback(
+        log: log,
+        sequence: nativeSequence,
+        eventTime: eventTime ?? startedAt ?? DateTime.now(),
+        expectedCredential: credential,
+      );
+    }
+    return api.request(
+      '/api/feedback/weblog',
+      {
+        'logs': jsonEncode([log]),
+      },
+      playbackLog: true,
+      expectedCredential: credential,
+    );
+  }
 
   Future<NeteaseFootprint?> footprint() async => NeteaseFootprint.parse(
     await api.request(

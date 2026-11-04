@@ -98,11 +98,19 @@ class BetaMusicBottomBar extends StatelessWidget {
       horizontalPadding: 20,
       verticalPadding: 16,
       spacing: 8,
-      selectedIconColor: BetaAppearance.accent(Theme.of(context).brightness),
-      selectedLabelColor: BetaAppearance.accent(Theme.of(context).brightness),
+      selectedIconColor: BetaAppearance.navigation(
+        Theme.of(context).brightness,
+      ),
+      selectedLabelColor: BetaAppearance.navigationLabel(
+        Theme.of(context).brightness,
+      ),
       unselectedIconColor: foreground.withValues(alpha: .9),
       unselectedLabelColor: foreground.withValues(alpha: .9),
-      indicatorColor: foreground.withValues(alpha: .2),
+      // Keep the selected lens neutral and translucent; a heavy inverse tint
+      // behind the caption erases red-on-glass contrast in both appearances.
+      indicatorColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0x0DFFFFFF)
+          : const Color(0x33FFFFFF),
       labelFontSize: 10,
       iconSize: 28,
       iconLabelSpacing: 0,

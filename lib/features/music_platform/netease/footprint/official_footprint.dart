@@ -58,8 +58,12 @@ int _number(Object? value, {int max = 1000000000000}) {
   return n.toInt();
 }
 
-/// Unlike the legacy widget's hour/minute fields, these official page fields
-/// are seconds: the shipped page formatter divides totalDuration by 3600/60.
+/// The official report's `dp` formatter consumes minutes, while the historical
+/// total's `r8` formatter consumes seconds. Normalize report fields at their
+/// parser boundary so every reader/page value below uses seconds exactly once.
+int _reportSeconds(Object? minutes) => _number(minutes) * 60;
+
+/// Formats the normalized internal seconds shared by reports and totalDuration.
 String officialDuration(int seconds) {
   final h = seconds ~/ 3600, m = seconds % 3600 ~/ 60;
   return h > 0 ? '$h 小时 $m 分钟' : '$m 分钟';
@@ -90,7 +94,7 @@ class OfficialListenPeriod {
       throw const FormatException('官方报表日期范围无效');
     }
     final block = _object(data['listenTimeDistributionBlock']);
-    final seconds = _number(block['playDuration']);
+    final seconds = _reportSeconds(block['playDuration']);
     final days = <String, int>{};
     final details = block['durationDetails'];
     if (details != null && details is! List) {
@@ -112,9 +116,9 @@ class OfficialListenPeriod {
       // podcast/audiobook categories mean zero; a missing song duration is not
       // silently interpreted as a confirmed zero-minute reading.
       days[key] =
-          _number(d['duration']) +
-          _number(d['podcastDuration'] ?? 0) +
-          _number(d['audiobookDuration'] ?? 0);
+          _reportSeconds(d['duration']) +
+          _reportSeconds(d['podcastDuration'] ?? 0) +
+          _reportSeconds(d['audiobookDuration'] ?? 0);
     }
     return OfficialListenPeriod(
       start: start,

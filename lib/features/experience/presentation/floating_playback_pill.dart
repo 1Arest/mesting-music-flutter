@@ -9,12 +9,14 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../core/haptics/app_haptics.dart';
 import '../../../shared/widgets/track_artwork.dart';
+import '../../../shared/models/track.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../player/presentation/persistent_mini_player.dart'
     show MiniPlayerSwipeRegion, miniPlayerSwipeDistanceThreshold;
 import 'beta_bottom_bar.dart';
 import 'playback_pill_menu.dart';
 import 'playback_pill_track_motion.dart';
+import 'playback_pill_artwork.dart';
 
 /// Official Apple Music example's GlassButton.custom play pill (MIT), with live
 /// Mesting media/actions. The package owns press/spring/refraction, while the
@@ -170,20 +172,26 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
                           ),
                       child: Row(
                         children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutCubic,
-                            width: narrowCompact ? 24 : 32,
-                            height: narrowCompact ? 24 : 32,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: TrackArtwork(
-                                track: track,
-                                width: 32,
-                                height: 32,
+                          if (track.source == TrackSource.netease)
+                            PlaybackPillArtwork(
+                              track: track,
+                              dimension: narrowCompact ? 24 : 32,
+                            )
+                          else
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              width: narrowCompact ? 24 : 32,
+                              height: narrowCompact ? 24 : 32,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: TrackArtwork(
+                                  track: track,
+                                  width: 32,
+                                  height: 32,
+                                ),
                               ),
                             ),
-                          ),
                           SizedBox(width: narrowCompact ? 6 : 10),
                           Expanded(
                             child: Column(

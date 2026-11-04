@@ -3,6 +3,8 @@ import '../../../../shared/widgets/beta_content_insets.dart';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../../themes/beta_appearance.dart';
+import '../../../../core/platform/distribution_channel.dart';
 import '../../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -105,7 +107,17 @@ class NeteaseFullNavigation extends ConsumerWidget {
                 horizontalTitleGap: grouped ? null : 18,
                 leading: Icon(
                   _categoryIcon(category),
-                  color: grouped ? null : Theme.of(context).colorScheme.primary,
+                  color: !DistributionChannel.isBeta && grouped
+                      ? null
+                      : BetaAppearance.feature(context, switch (category) {
+                          '一起听' || '音效' => BetaFeatureTone.together,
+                          '下载管理' => BetaFeatureTone.downloads,
+                          '听歌回顾' ||
+                          '听歌排行' ||
+                          '听歌统计' => BetaFeatureTone.insights,
+                          '我的喜欢' => BetaFeatureTone.music,
+                          _ => BetaFeatureTone.action,
+                        }),
                 ),
                 title: Text(
                   categoryLabels[category] ??

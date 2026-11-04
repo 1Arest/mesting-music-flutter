@@ -44,8 +44,8 @@ void main() {
   setUp(() {
     source = FootprintFixture();
     second = FootprintFixture()
-      ..dailySeconds = 60
-      ..monthlySeconds = 3600
+      ..dailyMinutes = 1
+      ..monthlyMinutes = 60
       ..totalValue = 7200;
     now = DateTime.utc(2026, 11, 2);
     SharedPreferences.setMockInitialValues({});

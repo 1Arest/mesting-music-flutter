@@ -11,6 +11,7 @@ import '../data/music_platform_api.dart';
 import 'netease_crypto.dart';
 import 'netease_session.dart';
 import 'netease_extended_routes.dart';
+import 'netease_native_transport.dart';
 import 'messages/netease_message_protocol.dart';
 
 /// Embedded HTTPS transport. Only fixed upstream music hosts receive cookies;
@@ -28,6 +29,32 @@ class NeteaseApi {
   int _generation = 0;
   NeteaseSession? get session => _session;
   Map<String, String> get cookies => Map.unmodifiable(_cookies);
+
+  /// Request-local native candidate identity cannot mutate the account jar.
+  Future<Map<String, dynamic>> reportNativePlayback({
+    required Map<String, Object?> log,
+    required DateTime eventTime,
+    required int sequence,
+    required String? expectedCredential,
+  }) async {
+    final generation = _generation;
+    if (_session == null || _session?.credentialId != expectedCredential) {
+      throw const MusicPlatformException('账号已变化，请重新操作');
+    }
+    final response = await NeteaseNativeTransport.send(
+      client: client,
+      cookies: Map.from(_cookies),
+      deviceId: deviceId,
+      log: log,
+      eventTime: eventTime,
+      sequence: sequence,
+    );
+    if (generation != _generation ||
+        _session?.credentialId != expectedCredential) {
+      throw const MusicPlatformException('账号已变化，上报结果暂不确定');
+    }
+    return response;
+  }
 
   static String newDeviceId() {
     final random = Random.secure();
@@ -634,7 +661,13 @@ class NeteaseApi {
         jsonDecode(utf8.decode(response.bodyBytes)),
       );
       final code = int.tryParse('${result['code']}');
-      if (!allowBusinessError && code != null && code != 200) {
+      // A write with no recognizable receipt may already have reached the
+      // service. Keep it uncertain instead of claiming acceptance or retrying.
+      // Other API routes retain their existing optional-code contracts.
+      if (playbackLog && code == null) {
+        throw const MusicPlatformException('网易云播放上报回执不完整，结果暂不确定');
+      }
+      if ((!allowBusinessError || playbackLog) && code != null && code != 200) {
         final message = switch (code) {
           301 || 302 => '网易云登录已失效，请重新登录',
           415 || 405 => '网易云需要安全验证，请使用扫码登录或稍后重试',
