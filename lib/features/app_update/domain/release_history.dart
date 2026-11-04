@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.30': [
+    '首次搜索及未缓存页面统一等待首屏文字和封面解码就绪后共同显示，减少单项占位闪现。',
+    '下滑时保留已显示内容，临近的新一批内容与封面准备好后共同展示；封面失败支持单独重试。',
+    '搜索结果进入与退出使用相反方向的同一路径过渡，保留搜索首页状态，并将结果首次构建延后到进入动画结束。',
+  ],
   '1.0.29': [
     '双平台发现页在启动期间恢复本地缓存，先显示已缓存内容与封面，再在新内容及封面就绪后更新。',
     '搜索、胶囊播放器与歌曲页共享已加载封面，先复用缩略图，后台补高清图，减少重复请求与占位闪现。',

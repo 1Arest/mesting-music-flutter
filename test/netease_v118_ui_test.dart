@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:drift/native.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -520,7 +521,12 @@ void main() {
             .image,
         isNotNull,
       );
-      expect(find.byIcon(Icons.album_rounded), findsOneWidget);
+      if (DistributionChannel.isBeta) {
+        expect(find.text('重试'), findsOneWidget);
+        expect(find.byIcon(Icons.album_rounded), findsNothing);
+      } else {
+        expect(find.byIcon(Icons.album_rounded), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     },
   );

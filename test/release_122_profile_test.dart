@@ -13,6 +13,7 @@ import 'package:mesting_music/shared/widgets/beta_glass_controls.dart';
 import 'package:mesting_music/shared/widgets/beta_page_motion.dart';
 import 'package:mesting_music/shared/widgets/beta_scroll_behavior.dart';
 import 'support/personal_profile_fixture.dart';
+import 'support/pump_artwork_ready.dart';
 
 void main() {
   setUpAll(() => LiquidGlassWidgets.initialize());
@@ -71,6 +72,9 @@ void main() {
       ),
     );
     router.go('/profile');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await pumpArtworkReady(tester);
     await tester.pumpAndSettle();
     return (fixture, router);
   }

@@ -26,6 +26,7 @@ import 'package:mesting_music/shared/widgets/audio_resolving_wave.dart';
 import 'release_103_audio_test.dart' show TestEqualizerBridge;
 import 'support/deterministic_audio_player.dart';
 import 'support/personal_profile_fixture.dart';
+import 'support/pump_artwork_ready.dart';
 import 'support/test_tracks.dart';
 
 class _Account extends PlatformAccountController {
@@ -179,6 +180,7 @@ void main() {
             );
             await tester.pump();
             await tester.pump(const Duration(milliseconds: 700));
+            await pumpArtworkReady(tester);
           }
 
           Future<void> save(String name) async {
@@ -205,13 +207,18 @@ void main() {
           expect(find.text('社区人声 0').hitTestable(), findsOneWidget);
           expect(find.byType(BetaMusicBottomBar), findsOneWidget);
           await save('effects');
-          await tester.fling(find.byType(ListView).first,
-            const Offset(0, -2200), 2400);
+          await tester.fling(
+            find.byType(ListView).first,
+            const Offset(0, -2200),
+            2400,
+          );
           await tester.pumpAndSettle();
           expect(find.text('社区人声 7').hitTestable(), findsOneWidget);
-          expect(tester.getRect(find.text('社区人声 7')).bottom,
+          expect(
+            tester.getRect(find.text('社区人声 7')).bottom,
             lessThan(tester.getRect(find.byType(BetaMusicBottomBar)).top),
-            reason: 'The final content must scroll above the glass overlay');
+            reason: 'The final content must scroll above the glass overlay',
+          );
           await tester.tap(find.text('耳机'));
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 400));

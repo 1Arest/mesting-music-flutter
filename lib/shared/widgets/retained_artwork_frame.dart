@@ -17,11 +17,13 @@ class RetainedArtworkFrame extends StatefulWidget {
     this.height,
     this.onError,
     this.owner,
+    this.onReadinessChanged,
     super.key,
   });
   final String uri;
   final String scope;
   final String? owner;
+  final ValueChanged<bool>? onReadinessChanged;
   final ImageProvider<Object>? image;
   final Widget fallback;
   final double? width, height;
@@ -47,6 +49,7 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
     if (oldWidget.scope != widget.scope || oldWidget.owner != widget.owner) {
       final old = _frame;
       _frame = null;
+      widget.onReadinessChanged?.call(false);
       if (old != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
       }
@@ -95,6 +98,7 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
 
   void _replace(ImageInfo info, {required bool rebuild}) {
     final old = _frame;
+    widget.onReadinessChanged?.call(true);
     if (rebuild) {
       setState(() => _frame = info);
     } else {

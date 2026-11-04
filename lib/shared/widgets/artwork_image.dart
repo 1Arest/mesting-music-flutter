@@ -1,6 +1,8 @@
 import '../utils/media_uri.dart';
 import '../media/artwork_refresh_coordinator.dart';
 import 'retained_artwork_frame.dart';
+import 'artwork_reveal_boundary.dart';
+import 'beta_glass_controls.dart' show BetaActivityIndicator;
 import 'package:flutter/rendering.dart';
 import 'dart:async';
 import 'dart:io';
@@ -75,6 +77,11 @@ class _ArtworkImageState extends State<ArtworkImage> {
   String? _persistentNetworkIdentity;
   bool _persistentNetworkFailed = false;
   bool _handlingBrokenFile = false;
+  ArtworkRevealEntry? _reveal;
+  ArtworkRevealController? _revealController;
+  bool _decoded = false, _everFailed = false, _initialized = false;
+  bool _active = true;
+  Timer? _initialDeadline;
   String get _requestUri => sizedArtworkUri(
     canonicalArtworkUri(widget.uri),
     width: _thumbnailSize,
@@ -95,15 +102,123 @@ class _ArtworkImageState extends State<ArtworkImage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _resetPersistentNetworkImage();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!TickerMode.valuesOf(context).enabled) {
+      _initialDeadline?.cancel();
+      _initialDeadline = null;
+    }
+    final controller = ArtworkRevealBoundary.of(context);
+    if (_revealController != controller) {
+      _reveal?.dispose();
+      _revealController = controller;
+      _reveal = controller?.register(() {
+        if (!mounted || !_active) return null;
+        final render = context.findRenderObject();
+        return render is RenderBox ? render : null;
+      });
+    }
+    _reportReadiness();
+    _startDeadline();
+    if (!_initialized) {
+      _initialized = true;
+      _resetPersistentNetworkImage();
+    } else if (TickerMode.valuesOf(context).enabled &&
+        _persistentNetworkFile == null &&
+        !_persistentNetworkFailed) {
+      _loadPersistentNetworkImage();
+    }
+  }
+
+  void _reportReadiness() {
+    _reveal?.identity =
+        '${widget.persistentNetworkCacheKey ?? 'public-artwork-v1'}\n${widget.frameOwner ?? artworkContentIdentity(widget.uri)}';
+    _reveal?.update(
+      ready: _decoded || _everFailed || canonicalArtworkUri(widget.uri).isEmpty,
+      enabled: TickerMode.valuesOf(context).enabled,
+    );
+  }
+
+  void _failed() {
+    if (!mounted || _everFailed) return;
+    _everFailed = true;
+    _initialDeadline?.cancel();
+    // Image stream failures can arrive during build. Build the explicit error
+    // state next frame before releasing the surrounding content gate.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _startDeadline() {
+    if (_decoded || _everFailed || !TickerMode.valuesOf(context).enabled) {
+      return;
+    }
+    final uri = canonicalArtworkUri(widget.uri);
+    if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      _initialDeadline ??= Timer(const Duration(seconds: 20), _failed);
+    }
+  }
+
+  Widget _pendingOrError() {
+    if (!DistributionChannel.isBeta) {
+      return _ArtworkPlaceholder(width: widget.width, height: widget.height);
+    }
+    if (!_everFailed && widget.uri.trim().isNotEmpty) {
+      if (_reveal != null) {
+        // The viewport owns the only loading animation. Hidden rows must not
+        // each run another ticker while their bytes/first frame are prepared.
+        return SizedBox(width: widget.width, height: widget.height);
+      }
+      return SizedBox(
+        width: widget.width,
+        height: widget.height,
+        child: const Center(child: BetaActivityIndicator()),
+      );
+    }
+    final empty = widget.uri.trim().isEmpty;
+    return Tooltip(
+      message: empty ? '暂无封面' : '封面加载失败，点击重试',
+      child: Semantics(
+        button: !empty,
+        label: empty ? '暂无封面' : '重试加载封面',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: empty
+              ? null
+              : () {
+                  _retryTimer?.cancel();
+                  _networkRetry = 0;
+                  _persistentNetworkFailed = false;
+                  // This is an explicit failed item. Retrying it must not hide other
+                  // successful rows or restore a generic album placeholder.
+                  _resetPersistentNetworkImage();
+                  setState(() {});
+                },
+          child: SizedBox(
+            width: widget.width,
+            height: widget.height,
+            child: Center(
+              child: Text(
+                empty ? '无封面' : '重试',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   void didUpdateWidget(covariant ArtworkImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.uri == widget.uri &&
+        oldWidget.frameOwner == widget.frameOwner &&
         oldWidget.retryOnNetworkError == widget.retryOnNetworkError &&
         oldWidget.persistentNetworkCacheKey ==
             widget.persistentNetworkCacheKey &&
@@ -117,11 +232,39 @@ class _ArtworkImageState extends State<ArtworkImage> {
     _retryTimer?.cancel();
     _retryTimer = null;
     _networkRetry = 0;
+    if (oldWidget.frameOwner != widget.frameOwner ||
+        oldWidget.persistentNetworkCacheKey !=
+            widget.persistentNetworkCacheKey ||
+        artworkContentIdentity(oldWidget.uri) !=
+            artworkContentIdentity(widget.uri)) {
+      _decoded = false;
+      _everFailed = false;
+      _initialDeadline?.cancel();
+      _initialDeadline = null;
+      _reportReadiness();
+    }
     _resetPersistentNetworkImage();
+    _startDeadline();
+  }
+
+  @override
+  void deactivate() {
+    // Lazy slivers deactivate recycled elements before the end-of-frame
+    // disposal pass. Their BuildContext must not be queried while painting.
+    _active = false;
+    super.deactivate();
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _active = true;
   }
 
   @override
   void dispose() {
+    _initialDeadline?.cancel();
+    _reveal?.dispose();
     _retryTimer?.cancel();
     if (_registration != null) {
       artworkRefreshCoordinator.unregister(_registration!);
@@ -131,6 +274,9 @@ class _ArtworkImageState extends State<ArtworkImage> {
 
   @override
   Widget build(BuildContext context) {
+    // Publish failures only when their explicit retry UI is built, so a page
+    // can never reveal the previous frame's per-image loading indicator.
+    _reportReadiness();
     final uri = _requestUri;
     final hasExplicitDecodeSize =
         widget.decodeWidth != null || widget.decodeHeight != null;
@@ -147,7 +293,8 @@ class _ArtworkImageState extends State<ArtworkImage> {
       Object error,
       StackTrace? stackTrace,
     ) {
-      return _ArtworkPlaceholder(width: widget.width, height: widget.height);
+      _failed();
+      return _pendingOrError();
     }
 
     if (uri.startsWith('http://') || uri.startsWith('https://')) {
@@ -185,16 +332,18 @@ class _ArtworkImageState extends State<ArtworkImage> {
       }) => RetainedArtworkFrame(
         key: const ValueKey('retained-artwork-frame'),
         uri: uri,
-        owner: widget.frameOwner,
+        owner: widget.frameOwner ?? artworkContentIdentity(widget.uri),
+        onReadinessChanged: (value) {
+          _decoded = value;
+          if (value) _initialDeadline?.cancel();
+          _reportReadiness();
+        },
         scope: widget.persistentNetworkCacheKey ?? 'public-artwork-v1',
         image: provider,
         width: widget.width,
         height: widget.height,
         fit: widget.fit,
-        fallback: _ArtworkPlaceholder(
-          width: widget.width,
-          height: widget.height,
-        ),
+        fallback: _pendingOrError(),
         onError: onError,
       );
       Widget directNetwork() {
@@ -206,6 +355,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
         return frame(
           provider,
           onError: (error, stackTrace) {
+            _failed();
             LocalMusicDiagnostics.record('artwork.decode_network_failed', {
               ...LocalMusicDiagnostics.artwork(uri),
               'type': error.runtimeType.toString(),
@@ -233,6 +383,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
         return frame(
           ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, FileImage(file)),
           onError: (error, stackTrace) {
+            _failed();
             LocalMusicDiagnostics.record('artwork.decode_file_failed', {
               ...LocalMusicDiagnostics.artwork(uri),
               'type': error.runtimeType.toString(),
@@ -244,7 +395,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
       return directNetwork();
     }
     if (uri.isEmpty) {
-      return _ArtworkPlaceholder(width: widget.width, height: widget.height);
+      return _pendingOrError();
     }
     final localFile = _localFile(uri);
     if (localFile != null) {
@@ -255,6 +406,13 @@ class _ArtworkImageState extends State<ArtworkImage> {
         cacheWidth: cacheWidth,
         cacheHeight: cacheHeight,
         fit: widget.fit,
+        frameBuilder: (context, child, frame, sync) {
+          if (frame != null) {
+            _decoded = true;
+            _reportReadiness();
+          }
+          return child;
+        },
         errorBuilder: errorBuilder,
       );
     }
@@ -265,6 +423,13 @@ class _ArtworkImageState extends State<ArtworkImage> {
       cacheWidth: cacheWidth,
       cacheHeight: cacheHeight,
       fit: widget.fit,
+      frameBuilder: (context, child, frame, sync) {
+        if (frame != null) {
+          _decoded = true;
+          _reportReadiness();
+        }
+        return child;
+      },
       errorBuilder: errorBuilder,
     );
   }
@@ -351,6 +516,8 @@ class _ArtworkImageState extends State<ArtworkImage> {
     final identity = _persistentNetworkIdentity;
     final config = _persistentNetworkConfig;
     if (identity == null || config == null) return;
+    if (!TickerMode.valuesOf(context).enabled) return;
+    _startDeadline();
 
     config.cache.resolve(cacheKey: config.cacheKey, url: config.uri).then((
       file,
@@ -363,6 +530,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
         });
         return;
       }
+      _failed();
       setState(() => _persistentNetworkFailed = true);
       _schedulePersistentNetworkRetry();
     });

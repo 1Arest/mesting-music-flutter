@@ -7,6 +7,22 @@ related_targets: ["lib/features/search/presentation/music_search_page.dart","lib
 
 # Mesting Music Beta.12 categorized search and local Back
 
+## Direction contract — confirmed 1.0.30 extension
+
+THESIS: Preserve the established search, discovery, library and player language while presenting a complete visible batch of text and decoded covers together. One shared loading animation owns the unresolved first screen or next batch.
+
+OWN-WORLD: Existing themed neutral surfaces, blue/red selection rules, 52dp artwork rows, circular portraits and independent premium glass remain authoritative. No replacement palette, font, raster or screenshot-based content surface is introduced.
+
+STORY: Cached content is immediately useful. First-time or unvisited content waits as one batch; a failed image exposes an explicit retry without trapping successful results. Scrolling keeps the displayed prefix and prepares nearby content only.
+
+FIRST VIEWPORT: The search category rail and usable navigation remain outside the readiness gate. Actual lazy content lays out and decodes behind one centered loader. Ready text and artwork enter together; pagination keeps the original row coordinates.
+
+FORM: A precise, user-confirmed extension of the incumbent viewport and search transition. Entry direction is retained and exit reverses that same motion. Landing elements and scroll state persist; result-list mounting follows the final moving frame. No new direction seed applies.
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+Evidence boundary: host widgets, pixel/semantics/hit-testing and original-signature build checks only. No phone/ADB, real account or backend operations, Git publishing, or device smoothness certification is authorized. Historical evidence below stays at its original version.
+
 Mode: Operate. Job: find a genuine song, album, artist, public playlist or lyric match, act on its real identity, and return without losing the current task. Authority is the confirmed Beta.12 return-continuity plan together with the inherited Beta.11 category reference and Mesting/Apple Music world. Reference blue is not a new global accent. No separate AI comp, QUALITY BAR card or random FORM seed was produced.
 
 The first result viewport begins with the compact fixed-order **歌曲 / 专辑 / 歌手 / 歌单 / 歌词** rail and real results; it has no large “搜索结果” heading. Selected text uses the established Beta red. Songs keep the lazy 52dp-cover/identity/heart/More list and “共 N 首”. Album/playlist phone grids have two square-cover columns; artists use circular portraits and names; lyric rows use track identity and only snippets actually returned. No placeholder lyric or count is invented. Bottom search retains its real premium glass and safe-area/keyboard ownership.

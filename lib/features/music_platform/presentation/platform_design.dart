@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../../shared/widgets/beta_edge_back.dart';
 import '../../../shared/widgets/beta_secondary_music_layout.dart';
 import '../../../shared/widgets/overflow_marquee.dart';
@@ -9,8 +10,13 @@ import '../../themes/music_theme_tokens.dart';
 /// Shared visual adapter for all imported platform surfaces. Business widgets
 /// keep their own repositories; the adapter only reuses Mesting theme tokens.
 class PlatformStyle extends StatelessWidget {
-  const PlatformStyle({required this.child, super.key});
+  const PlatformStyle({
+    required this.child,
+    this.artworkReadiness = true,
+    super.key,
+  });
   final Widget child;
+  final bool artworkReadiness;
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -94,7 +100,7 @@ class PlatformStyle extends StatelessWidget {
           ),
         ),
       ),
-      child: child,
+      child: artworkReadiness ? ArtworkRevealBoundary(child: child) : child,
     );
   }
 }
@@ -146,6 +152,7 @@ class PlatformPageFrame extends StatelessWidget {
   Widget build(BuildContext context) => BetaSecondaryMusicLayout.wrap(
     context,
     PlatformStyle(
+      artworkReadiness: false,
       child: BetaEdgeBack(
         child: Scaffold(
           key: pageKey,
@@ -235,7 +242,7 @@ class PlatformPageFrame extends StatelessWidget {
                 Expanded(
                   child: ColoredBox(
                     color: Theme.of(context).colorScheme.surface,
-                    child: child,
+                    child: ArtworkRevealBoundary(child: child),
                   ),
                 ),
               ],

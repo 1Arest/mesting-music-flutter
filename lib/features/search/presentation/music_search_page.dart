@@ -4,6 +4,7 @@ import '../../../shared/widgets/beta_bottom_search.dart';
 import '../../../shared/widgets/beta_page_search_layout.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -240,11 +241,34 @@ class MusicSearchResultsBodyState extends ConsumerState<MusicSearchResultsBody>
     value: 1,
   );
   bool _returning = false;
+  bool _entering = false;
+  int _presentation = 0;
   @override
   void initState() {
     super.initState();
     // A landing-only visit has no AnimatedBuilder; initialize before disposal.
     _motion;
+  }
+
+  Future<void> _enterResults() async {
+    final generation = ++_presentation;
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    final start = reduced ? 1.0 : (_returning ? _motion.value : 0.0);
+    setState(() {
+      _returning = false;
+      _entering = !reduced;
+    });
+    try {
+      await _motion.forward(from: start).orCancel;
+      // The final moving frame is painted before mounting providers, lazy
+      // result rows and image decoders. Network requests can run in parallel.
+      await WidgetsBinding.instance.endOfFrame;
+      if (mounted && generation == _presentation) {
+        setState(() => _entering = false);
+      }
+    } on TickerCanceled {
+      // A return gesture or newer query owns this presentation now.
+    }
   }
 
   Future<void> returnToLanding(VoidCallback clear) async {
@@ -254,6 +278,7 @@ class MusicSearchResultsBodyState extends ConsumerState<MusicSearchResultsBody>
       clear();
       return;
     }
+    final generation = ++_presentation;
     setState(() => _returning = true);
     try {
       if (MediaQuery.disableAnimationsOf(context)) {
@@ -267,7 +292,12 @@ class MusicSearchResultsBodyState extends ConsumerState<MusicSearchResultsBody>
     } on TickerCanceled {
       // A newer query/navigation owns the presentation now.
     } finally {
-      if (mounted) setState(() => _returning = false);
+      if (mounted && generation == _presentation) {
+        setState(() {
+          _returning = false;
+          _entering = false;
+        });
+      }
     }
   }
 
@@ -279,16 +309,20 @@ class MusicSearchResultsBodyState extends ConsumerState<MusicSearchResultsBody>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(musicSearchControllerProvider);
+    final query = ref.watch(
+      musicSearchControllerProvider.select((s) => s.query),
+    );
     ref.listen(musicSearchControllerProvider.select((s) => s.query), (
       before,
       after,
     ) {
-      if (after.isNotEmpty && (before == null || before.isEmpty)) {
-        _motion.forward(from: MediaQuery.disableAnimationsOf(context) ? 1 : 0);
+      if (after.isNotEmpty &&
+          (before == null || before.isEmpty || _returning && before != after)) {
+        _enterResults();
       }
     });
     if (!DistributionChannel.isBeta) {
+      final state = ref.watch(musicSearchControllerProvider);
       return state.query.isEmpty
           ? _SearchLanding(onSearch: widget.onSearch)
           : state.isLoading
@@ -299,12 +333,32 @@ class MusicSearchResultsBodyState extends ConsumerState<MusicSearchResultsBody>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (state.query.isEmpty || _returning)
-            PlatformSearchLanding(onSearch: widget.onSearch),
-          if (state.query.isNotEmpty)
+          // Retain the landing's element, scroll position and ready frames.
+          // Offstage prevents hit testing, and TickerMode stops hidden work.
+          Offstage(
+            offstage: query.isNotEmpty && !_returning && !_entering,
+            child: TickerMode(
+              enabled: query.isEmpty || _returning,
+              child: RepaintBoundary(
+                child: ArtworkRevealBoundary(
+                  child: PlatformSearchLanding(onSearch: widget.onSearch),
+                ),
+              ),
+            ),
+          ),
+          if (query.isNotEmpty)
             AnimatedBuilder(
               animation: _motion,
-              child: const BetaCategorySearchResults(),
+              child: RepaintBoundary(
+                child: TickerMode(
+                  enabled: !_returning,
+                  child: _entering
+                      ? const Center(
+                          child: BetaActivityIndicator(label: '正在加载内容'),
+                        )
+                      : const BetaCategorySearchResults(),
+                ),
+              ),
               builder: (context, child) => IgnorePointer(
                 ignoring: _returning,
                 child: FractionalTranslation(

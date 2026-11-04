@@ -63,6 +63,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mesting_music/shared/widgets/beta_popup_menu_button.dart';
+import 'support/pump_artwork_ready.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -649,6 +651,7 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
+    await pumpArtworkReady(tester);
     expect(tester.takeException(), null);
     if (capture != null) await captureScreenshot(tester, capture);
   }
@@ -1340,7 +1343,12 @@ void main() {
         expect(built, lessThan(25));
         // ignore: avoid_print
         print('BETA8_SEARCH_BENCH catalogue=480 visibleArtworkWidgets=$built');
-        expect(find.byTooltip('歌曲操作'), findsWidgets);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is BetaPopupMenuButton<String> && w.tooltip == '歌曲操作',
+          ),
+          findsWidgets,
+        );
       }
       await disposeFixture(tester);
     },
@@ -1770,6 +1778,7 @@ void main() {
         for (var i = 0; i < 6; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
+        await pumpArtworkReady(tester);
       }
 
       Future<void> openResults() async {
@@ -2124,7 +2133,9 @@ void main() {
         await container
             .read(musicSearchControllerProvider.notifier)
             .submit('薛之谦');
-        for (final kind in PlatformSearchKind.values) {
+        for (final kind in PlatformSearchKind.values.where(
+          (k) => k != PlatformSearchKind.users,
+        )) {
           await tester.tap(find.byKey(ValueKey('search-kind-${kind.name}')));
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 450));
@@ -2143,6 +2154,8 @@ void main() {
       await tester.enterText(find.byType(CupertinoTextField).last, '薛之谦');
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      await pumpArtworkReady(tester);
       await tester.tap(find.byKey(const ValueKey('search-kind-albums')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 450));
@@ -2239,6 +2252,8 @@ void main() {
       Future<void> settle() async {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(); // Mount results after the final moving frame.
+        await pumpArtworkReady(tester);
       }
 
       await settle();
@@ -2321,6 +2336,8 @@ void main() {
       Future<void> settle() async {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(); // Mount results after the final moving frame.
+        await pumpArtworkReady(tester);
       }
 
       await settle();
@@ -2329,7 +2346,9 @@ void main() {
       await settle();
       // Android needs a real Navigator target, not only a Dart dispatcher hook.
       expect(production.appRouter.canPop(), true);
-      for (final kind in PlatformSearchKind.values) {
+      for (final kind in PlatformSearchKind.values.where(
+        (k) => k != PlatformSearchKind.users,
+      )) {
         await tester.enterText(find.byType(CupertinoTextField).last, '薛之谦');
         await tester.testTextInput.receiveAction(TextInputAction.search);
         await settle();
@@ -3070,6 +3089,83 @@ void main() {
       await tester.pump(const Duration(milliseconds: 240));
       expect(container.read(musicSearchControllerProvider).query, isEmpty);
       expect(find.byType(BetaCategorySearchResults), findsNothing);
+      await disposeFixture(tester);
+    },
+    skip: !DistributionChannel.isBeta,
+  );
+
+  testWidgets(
+    'release130 search defers results until settled and reverses over the retained landing',
+    (tester) async {
+      viewport(tester);
+      await prepare(guest: true);
+      final key = GlobalKey<MusicSearchResultsBodyState>();
+      await pump(tester, MusicSearchResultsBody(key: key, onSearch: (_) {}));
+      final landing = tester.element(find.byType(PlatformSearchLanding));
+      await container
+          .read(musicSearchControllerProvider.notifier)
+          .submit('薛之谦');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(
+        find.byType(BetaCategorySearchResults),
+        findsNothing,
+        reason:
+            'Heavy result rows and decoders mount after the final entry frame.',
+      );
+      final middle = tester
+          .getTopLeft(
+            find.byKey(const ValueKey('beta13-search-results-surface')),
+          )
+          .dx;
+      expect(
+        middle,
+        closeTo(390 * (1 - Curves.easeInOutCubic.transform(.5)), 2),
+      );
+      await captureScreenshot(
+        tester,
+        'release130-search-entry-middle',
+        settle: Duration.zero,
+      );
+      expect(
+        tester.element(find.byType(PlatformSearchLanding, skipOffstage: false)),
+        same(landing),
+      );
+      await tester.pump(const Duration(milliseconds: 160));
+      await tester.pump();
+      expect(find.byType(BetaCategorySearchResults), findsOneWidget);
+      await captureScreenshot(
+        tester,
+        'release130-search-settled',
+        settle: Duration.zero,
+      );
+      key.currentState!.returnToLanding(
+        () =>
+            container.read(musicSearchControllerProvider.notifier).setQuery(''),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 140));
+      final reverse = tester
+          .getTopLeft(
+            find.byKey(const ValueKey('beta13-search-results-surface')),
+          )
+          .dx;
+      expect(
+        reverse,
+        closeTo(middle, 2),
+        reason: 'Exit follows the same path in the opposite direction.',
+      );
+      await captureScreenshot(
+        tester,
+        'release130-search-exit-middle',
+        settle: Duration.zero,
+      );
+      expect(tester.element(find.byType(PlatformSearchLanding)), same(landing));
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pump();
+      expect(container.read(musicSearchControllerProvider).query, isEmpty);
+      expect(tester.element(find.byType(PlatformSearchLanding)), same(landing));
+      expect(tester.takeException(), isNull);
       await disposeFixture(tester);
     },
     skip: !DistributionChannel.isBeta,

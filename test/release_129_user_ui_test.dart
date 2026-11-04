@@ -26,6 +26,7 @@ import 'package:mesting_music/shared/widgets/beta_bottom_search.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_controls.dart';
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
+import 'support/pump_artwork_ready.dart';
 
 const user = PlatformSearchUser(
   id: '42',
@@ -220,6 +221,7 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
+    await pumpArtworkReady(tester);
     return c;
   }
 
@@ -236,8 +238,12 @@ void main() {
           )
           .toImage();
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final folder = Directory('.codex-artifacts/2026-11-01-release129/ui')
-        ..createSync(recursive: true);
+      final folder = Directory(
+        const String.fromEnvironment(
+          'USER_UI_SCREENSHOT_DIR',
+          defaultValue: '.codex-artifacts/2026-11-01-release129/ui',
+        ),
+      )..createSync(recursive: true);
       await File(
         '${folder.path}/$name.png',
       ).writeAsBytes(bytes!.buffer.asUint8List());

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/artwork_image.dart';
+import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../domain/platform_search_user.dart';
 import '../music_platform_providers.dart';
@@ -301,7 +302,9 @@ class _NeteaseUserProfilePageState
           if (_busy)
             const Padding(
               padding: EdgeInsets.all(20),
-              child: Center(child: BetaActivityIndicator()),
+              child: ArtworkPendingContent(
+                child: Center(child: BetaActivityIndicator()),
+              ),
             ),
           if (_playlistError != null)
             TextButton(onPressed: _loadMore, child: Text(_playlistError!))
@@ -445,7 +448,9 @@ class _NeteaseUserConnectionsPageState
                   if (_busy) {
                     return const Padding(
                       padding: EdgeInsets.all(24),
-                      child: Center(child: BetaActivityIndicator()),
+                      child: ArtworkPendingContent(
+                        child: Center(child: BetaActivityIndicator()),
+                      ),
                     );
                   }
                   if (_error != null) {

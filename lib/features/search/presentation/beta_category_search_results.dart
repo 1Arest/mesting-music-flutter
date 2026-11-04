@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/artwork_image.dart';
+import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../experience/presentation/player_content_transition.dart';
@@ -107,9 +108,9 @@ class _BetaCategorySearchResultsState
           Expanded(
             child: PlayerContentTransition(
               direction: _direction,
-              child: _CategoryPane(
+              child: ArtworkRevealBoundary(
                 key: ValueKey(selected.name),
-                kind: selected,
+                child: _CategoryPane(kind: selected),
               ),
             ),
           ),
@@ -120,7 +121,7 @@ class _BetaCategorySearchResultsState
 }
 
 class _CategoryPane extends ConsumerStatefulWidget {
-  const _CategoryPane({required this.kind, super.key});
+  const _CategoryPane({required this.kind});
   final PlatformSearchKind kind;
   @override
   ConsumerState<_CategoryPane> createState() => _CategoryPaneState();
@@ -173,7 +174,9 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
     Widget tail() => Padding(
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 190),
       child: slice.loading
-          ? const Center(child: BetaActivityIndicator())
+          ? const ArtworkPendingContent(
+              child: Center(child: BetaActivityIndicator()),
+            )
           : slice.error != null
           ? Center(
               child: TextButton(

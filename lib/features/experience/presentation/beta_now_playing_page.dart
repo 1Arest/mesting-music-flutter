@@ -21,6 +21,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/track_artwork.dart';
+import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../player/player_visual_style.dart';
 import '../../player/presentation/player_visual_stages.dart';
@@ -354,42 +355,48 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                         showNeteaseTogetherPanel(context),
                                   ),
                                 Expanded(
-                                  child: PlayerContentTransition(
-                                    direction: _direction,
-                                    child: _queue
-                                        ? const PlayerQueuePanel(
-                                            key: ValueKey('player-queue-panel'),
-                                          )
-                                        : _lyrics
-                                        ? ImmersiveLyrics(
-                                            referenceDesign: true,
-                                            key: ValueKey(
-                                              'immersive-lyrics-${track.id}',
-                                            ),
-                                          )
-                                        : Padding(
-                                            key: ValueKey(
-                                              'immersive-cover-${track.id}-${style.id}',
-                                            ),
-                                            padding: const EdgeInsets.fromLTRB(
-                                              26,
-                                              12,
-                                              26,
-                                              20,
-                                            ),
-                                            child: Semantics(
-                                              button: true,
-                                              label: '查看歌词',
-                                              child: GestureDetector(
-                                                onTap: () => _showLyrics(true),
-                                                child: PlayerArtworkStage(
-                                                  style: style,
-                                                  track: track,
-                                                  playing: playing,
+                                  child: ArtworkRevealBoundary(
+                                    child: PlayerContentTransition(
+                                      direction: _direction,
+                                      child: _queue
+                                          ? const PlayerQueuePanel(
+                                              key: ValueKey(
+                                                'player-queue-panel',
+                                              ),
+                                            )
+                                          : _lyrics
+                                          ? ImmersiveLyrics(
+                                              referenceDesign: true,
+                                              key: ValueKey(
+                                                'immersive-lyrics-${track.id}',
+                                              ),
+                                            )
+                                          : Padding(
+                                              key: ValueKey(
+                                                'immersive-cover-${track.id}-${style.id}',
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.fromLTRB(
+                                                    26,
+                                                    12,
+                                                    26,
+                                                    20,
+                                                  ),
+                                              child: Semantics(
+                                                button: true,
+                                                label: '查看歌词',
+                                                child: GestureDetector(
+                                                  onTap: () =>
+                                                      _showLyrics(true),
+                                                  child: PlayerArtworkStage(
+                                                    style: style,
+                                                    track: track,
+                                                    playing: playing,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
+                                    ),
                                   ),
                                 ),
                                 AnimatedSize(

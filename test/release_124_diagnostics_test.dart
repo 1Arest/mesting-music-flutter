@@ -384,6 +384,9 @@ Future<T> _pump<T>(WidgetTester tester, Future<T> future) async {
     },
   );
   for (var i = 0; i < 160 && !done; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 5)),
+    );
     await tester.pump(const Duration(milliseconds: 100));
   }
   expect(

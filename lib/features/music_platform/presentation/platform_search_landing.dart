@@ -88,7 +88,9 @@ class _PlatformSearchLandingState extends ConsumerState<PlatformSearchLanding> {
 
   @override
   Widget build(BuildContext context) {
-    final history = ref.watch(musicSearchControllerProvider).recentSearches;
+    final history = ref.watch(
+      musicSearchControllerProvider.select((s) => s.recentSearches),
+    );
     final boards = ref.watch(platformHotSearchProvider);
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 190),

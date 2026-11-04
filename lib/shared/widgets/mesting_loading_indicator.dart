@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:math_curve_loaders/math_curve_loaders.dart';
 import '../../core/platform/distribution_channel.dart';
+import 'artwork_reveal_boundary.dart';
 
 /// The shared, text-free loading animation used by content and page states.
 ///
@@ -27,15 +28,17 @@ class MestingLoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (DistributionChannel.isBeta) {
-      return Semantics(
-        label: semanticLabel,
-        liveRegion: true,
-        child: SizedBox.square(
-          dimension: size,
-          child: Center(
-            child: CupertinoActivityIndicator(
-              radius: (size * .18).clamp(8.0, 14.0),
-              color: color,
+      return ArtworkPendingContent(
+        child: Semantics(
+          label: semanticLabel,
+          liveRegion: true,
+          child: SizedBox.square(
+            dimension: size,
+            child: Center(
+              child: CupertinoActivityIndicator(
+                radius: (size * .18).clamp(8.0, 14.0),
+                color: color,
+              ),
             ),
           ),
         ),
