@@ -206,9 +206,15 @@ Future<void> mount148(
   await ready146(tester);
 }
 
-Future<void> shot148(WidgetTester tester, String name) async {
+Future<void> shot148(
+  WidgetTester tester,
+  String name, {
+  bool prepare = true,
+}) async {
   if (!_capture) return;
-  await ready146(tester);
+  // Intermediate motion frames already have decoded artwork. Waiting for
+  // readiness here would advance fake time until the animation had finished.
+  if (prepare) await ready146(tester);
   final frame = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(_boundary),
   );

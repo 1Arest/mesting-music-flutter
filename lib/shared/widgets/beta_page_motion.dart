@@ -1,5 +1,6 @@
 import 'beta_edge_back.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import '../../core/platform/distribution_channel.dart';
 
 /// The opaque surface moves with the content. A stationary full-screen cover
@@ -59,6 +60,12 @@ Route<T> betaContentRoute<T>(Widget page) => BetaContentRoute<T>(
     child: child,
   ),
 );
+
+/// Two legacy feature entries use Cupertino routes on Stable. On the current
+/// music UI they must join the same horizontal stack as every ordinary page.
+Route<T> mestingCupertinoRoute<T>(Widget page) => DistributionChannel.isBeta
+    ? betaContentRoute<T>(page)
+    : CupertinoPageRoute<T>(builder: (_) => page);
 
 /// GoRouter and Navigator share the same live, reversible surface. Keeping the
 /// route unsnapshotted is essential for inherited glass and retained list state.
@@ -159,6 +166,22 @@ class MestingPageRoute<T> extends MaterialPageRoute<T> {
       DistributionChannel.isBeta
       ? nextRoute is BetaContentRoute || nextRoute is MestingPageRoute
       : super.canTransitionTo(nextRoute);
+
+  // Keep the reciprocal ordinary-page contract explicit for mixed stacks.
+  @override
+  bool canTransitionFrom(TransitionRoute<dynamic> previousRoute) =>
+      DistributionChannel.isBeta
+      ? previousRoute is BetaContentRoute || previousRoute is MestingPageRoute
+      : super.canTransitionFrom(previousRoute);
+
+  // Flutter's Material route supplies a delegated builder even when the theme
+  // has no delegated transition. Flutter then proxies the previous route's
+  // secondary animation to zero, including when that builder returns null.
+  // Beta already coordinates both layers in BetaPageMotion; advertising no
+  // delegate preserves the real secondary animation for every route family.
+  @override
+  DelegatedTransitionBuilder? get delegatedTransition =>
+      DistributionChannel.isBeta ? null : super.delegatedTransition;
 }
 
 /// Only ordinary page pairs share a horizontal parent motion. Player vinyl,

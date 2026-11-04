@@ -992,7 +992,7 @@ packages:
       path: "third_party/ring_download_sdk"
       relative: true
     source: path
-    version: "1.1.0"
+    version: "1.1.2"
   riverpod:
     dependency: transitive
     description:

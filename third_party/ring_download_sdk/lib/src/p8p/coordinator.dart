@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'diagnostics.dart';
 import 'leases.dart';
 import 'ordered_writer.dart';
 import 'source_goodput.dart';
@@ -21,6 +22,7 @@ class _SourceState {
   bool closingRequested = false;
   int availableAfterMicros = 0;
   final jobs = <int, _Job>{};
+  final diagnosticEvents = <P8PDiagnosticCode>{};
 }
 
 class _Job {
@@ -43,10 +45,12 @@ class P8PCoordinator {
     this.requestTimeout = const Duration(seconds: 8),
     this.hedgeAfter = const Duration(seconds: 1),
     this.stopGrace = const Duration(seconds: 1),
+    this.onDiagnostic,
   });
   final P8POrderedWriter writer;
   final int Function() clockMicros;
   final Duration requestTimeout, hedgeAfter, stopGrace;
+  final P8PDiagnosticObserver? onDiagnostic;
   P8PLeaseBook get book => writer.book;
   final _sources = <String, _SourceState>{};
   final _jobs = <int, _Job>{};
@@ -74,6 +78,25 @@ class P8PCoordinator {
   void _notify() {
     if (_wake?.isCompleted == false) _wake!.complete();
   }
+
+  void _observe(_SourceState state, P8PDiagnosticCode reason, [_Job? job]) {
+    // At most one of each fixed event per source for this coordinator.
+    if (!state.diagnosticEvents.add(reason)) return;
+    observeP8P(
+      onDiagnostic,
+      P8PSourceDiagnostic(
+        reason,
+        alias: state.diagnosticAlias,
+        actualBytes: job?.request.receivedBytes,
+        expectedBytes: job?.request.lease.bytes,
+      ),
+    );
+  }
+
+  P8PDiagnosticCode _cancelReason(_Job job) =>
+      clockMicros() >= job.request.lease.deadlineMicros
+      ? P8PDiagnosticCode.requestDeadlineExceeded
+      : P8PDiagnosticCode.requestCancelled;
 
   bool add(P8PPieceSource source, {String? diagnosticAlias}) {
     if (_closed ||
@@ -187,7 +210,16 @@ class P8PCoordinator {
           },
           onError: (Object error) {
             if (!job.cancelled && !_closed) {
-              if (error is P8PSourceDeferred) {
+              if (error is P8PLeaseCancelled) {
+                // An adapter can observe ledger expiry and receive its cancel
+                // acknowledgement between polls. Preserve that provenance;
+                // an ordinary error with the same text is still a fault.
+                // The adapter's stopped future retains physical ownership.
+                state.diagnosticCancelled++;
+                job.cancelled = true;
+                job.cancelAt = clockMicros();
+                _observe(state, _cancelReason(job), job);
+              } else if (error is P8PSourceDeferred) {
                 state.availableAfterMicros = max(
                   state.availableAfterMicros,
                   clockMicros() + error.retryAfter.inMicroseconds,
@@ -197,7 +229,7 @@ class P8PCoordinator {
                 _count('source_failures');
                 state.diagnosticFailures++;
                 state.failed = true;
-                _closeSource(state);
+                _closeSource(state, P8PDiagnosticCode.sourceFailed, job);
               }
             }
             _notify();
@@ -224,12 +256,14 @@ class P8PCoordinator {
             state.diagnosticFailures++;
             state.failed = true;
             _count('cleanup_failures');
+            _observe(state, P8PDiagnosticCode.cleanupFailed, job);
             _notify();
           },
         ),
       );
       return request;
     } catch (_) {
+      _observe(state, P8PDiagnosticCode.sourceFailed);
       state.diagnosticFailures++;
       state.failed = true;
       book.cancel(lease);
@@ -244,10 +278,15 @@ class P8PCoordinator {
     }
   }
 
-  void _closeSource(_SourceState state) {
+  void _closeSource(
+    _SourceState state,
+    P8PDiagnosticCode reason, [
+    _Job? cause,
+  ]) {
     if (state.closingRequested) return;
     state.closingRequested = true;
     state.failed = true;
+    _observe(state, reason, cause);
     for (final job in state.jobs.values) {
       if (!job.cancelled && !job.verified) state.diagnosticCancelled++;
       job.cancelled = true;
@@ -278,11 +317,12 @@ class P8PCoordinator {
         job.source.diagnosticCancelled++;
         job.cancelled = true;
         job.cancelAt = clockMicros();
+        _observe(job.source, _cancelReason(job), job);
         job.request.cancel();
       } else if (job.cancelAt != null &&
           clockMicros() - job.cancelAt! >= stopGrace.inMicroseconds &&
           !job.source.closingRequested) {
-        _closeSource(job.source);
+        _closeSource(job.source, P8PDiagnosticCode.stopGraceExceeded, job);
       }
     }
   }
@@ -347,7 +387,11 @@ class P8PCoordinator {
                     _count('prefix_rescues');
                   }
                 } else {
-                  _closeSource(owners.single.source);
+                  _closeSource(
+                    owners.single.source,
+                    P8PDiagnosticCode.prefixRescued,
+                    owners.single,
+                  );
                   _count('prefix_rescues');
                 }
               }
@@ -391,6 +435,16 @@ class P8PCoordinator {
   Future<void> close() => _closing ??= _close();
   Future<void> _close() async {
     _closed = true;
+    for (final state in _sources.values) {
+      if (!state.closingRequested) {
+        _observe(
+          state,
+          book.complete
+              ? P8PDiagnosticCode.sourceCompleted
+              : P8PDiagnosticCode.sourceStopped,
+        );
+      }
+    }
     book.close();
     _notify();
     for (final job in _jobs.values) {

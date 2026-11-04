@@ -68,10 +68,14 @@ final appRouter = GoRouter(
     ..._musicShellRoutes(),
     GoRoute(
       path: '/auth',
-      builder: (context, state) => SensitiveScreen(
-        child: AuthPage(
-          initialMode: state.uri.queryParameters['mode'] ?? 'register',
-          redirect: state.uri.queryParameters['redirect'] ?? '/music/recommend',
+      pageBuilder: (context, state) => _ordinaryPage(
+        state,
+        SensitiveScreen(
+          child: AuthPage(
+            initialMode: state.uri.queryParameters['mode'] ?? 'register',
+            redirect:
+                state.uri.queryParameters['redirect'] ?? '/music/recommend',
+          ),
         ),
       ),
     ),
@@ -88,9 +92,13 @@ final appRouter = GoRouter(
               },
             ).toString()
           : null,
-      builder: (context, state) => SensitiveScreen(
-        child: ForgotPasswordPage(
-          redirect: state.uri.queryParameters['redirect'] ?? '/music/recommend',
+      pageBuilder: (context, state) => _ordinaryPage(
+        state,
+        SensitiveScreen(
+          child: ForgotPasswordPage(
+            redirect:
+                state.uri.queryParameters['redirect'] ?? '/music/recommend',
+          ),
         ),
       ),
     ),
@@ -424,8 +432,12 @@ List<RouteBase> _musicShellRoutes() {
   ];
   ShellRoute regular(List<RouteBase> children) => ShellRoute(
     observers: [if (DistributionChannel.isBeta) BetaPageRouteObserver()],
-    builder: (context, state, child) =>
-        MusicShell(location: state.uri.toString(), child: child),
+    pageBuilder: (context, state, child) {
+      final shell = MusicShell(location: state.uri.toString(), child: child);
+      return DistributionChannel.isBeta
+          ? BetaRootTransitionPage<void>(key: state.pageKey, child: shell)
+          : MaterialPage<void>(key: state.pageKey, child: shell);
+    },
     routes: children,
   );
   if (!DistributionChannel.isBeta) return [regular(routes)];
@@ -576,14 +588,19 @@ Page<void> _musicSlidePage({
     // The shell owns routed search's visible slide. Its content Navigator is
     // paused while that overlay is open; a second route animation would retain
     // an exiting stateful tab shell and duplicate its key when search closes.
-    if (tabIndex != null || child is MusicSearchPage) {
-      return NoTransitionPage<void>(
+    if (tabIndex != null) {
+      // The PageView owns root-to-root motion. A branch root still needs the
+      // secondary animation when ANY ordinary Navigator page is above it.
+      return BetaRootTransitionPage<void>(
         key: state.pageKey,
         child: SongListTools(
           listId: state.uri.toString(),
-          child: tabIndex != null ? BetaEdgeBack(child: child) : child,
+          child: BetaEdgeBack(child: child),
         ),
       );
+    }
+    if (child is MusicSearchPage) {
+      return NoTransitionPage<void>(key: state.pageKey, child: child);
     }
     return BetaContentTransitionPage<void>(
       key: state.pageKey,
@@ -616,7 +633,7 @@ Page<void> _profileEditTransitionPage({
   required GoRouterState state,
   required Widget child,
 }) {
-  if (DistributionChannel.isBeta) child = BetaEdgeBack(child: child);
+  if (DistributionChannel.isBeta) return _ordinaryPage(state, child);
   final intent = state.extra is MusicPageTransitionIntent
       ? state.extra! as MusicPageTransitionIntent
       : const MusicPageTransitionIntent.forward();
@@ -653,7 +670,6 @@ Page<void> _messagesTransitionPage({
       child: BetaEdgeBack(child: child),
     );
   }
-  if (DistributionChannel.isBeta) child = BetaEdgeBack(child: child);
   final intent = state.extra is MusicPageTransitionIntent
       ? state.extra! as MusicPageTransitionIntent
       : const MusicPageTransitionIntent.forward();
@@ -775,6 +791,7 @@ Page<void> _collectionRevealPage({
   required GoRouterState state,
   required Widget child,
 }) {
+  if (DistributionChannel.isBeta) return _ordinaryPage(state, child);
   return _SequencedMusicTransitionPage(
     key: ValueKey(state.uri.toString()),
     transitionDuration: collectionRevealDuration,
@@ -785,6 +802,17 @@ Page<void> _collectionRevealPage({
     child: child,
   );
 }
+
+/// Full-page flows outside the music list also use the ordinary route
+/// contract. Player/search/avatar preview keep their separate entry motions.
+Page<void> _ordinaryPage(GoRouterState state, Widget child) =>
+    DistributionChannel.isBeta
+    ? BetaContentTransitionPage<void>(
+        key: state.pageKey,
+        name: state.uri.toString(),
+        child: BetaEdgeBack(child: child),
+      )
+    : MaterialPage<void>(key: state.pageKey, child: child);
 
 /// A single-layer handoff used by glass-heavy music pages.
 ///

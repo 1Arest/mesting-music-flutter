@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:ring_download_sdk/ring_download_sdk.dart';
 import 'package:ring_download_sdk/src/sdk/engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,23 +33,18 @@ void main() {
   });
   tearDown(() async => directory.delete(recursive: true));
 
-  test('SDK status version matches source package metadata', () {
-    // Support both standalone SDK and Music-root test commands. Flutter's
-    // test VM cannot resolve package URIs through dart:isolate, so identify
-    // the actual SDK pubspec by package name before reading its version.
-    final metadata =
-        [
-          File('pubspec.yaml'),
-          File('third_party/ring_download_sdk/pubspec.yaml'),
-        ].firstWhere(
-          (file) =>
-              file.existsSync() &&
-              RegExp(
-                r'^name:\s*ring_download_sdk\s*$',
-                multiLine: true,
-              ).hasMatch(file.readAsStringSync()),
-        );
-    final source = metadata.readAsStringSync();
+  test('SDK status version matches source package metadata', () async {
+    // The same test may be invoked by a host project from its own root.
+    // Resolve the imported package instead of reading the host's pubspec.
+    final config = File('.dart_tool/package_config.json').absolute;
+    final packages = jsonDecode(config.readAsStringSync())['packages'] as List;
+    final package = packages.singleWhere(
+      (value) => value['name'] == 'ring_download_sdk',
+    );
+    final root = Directory.fromUri(config.uri.resolve(package['rootUri']));
+    final source = File.fromUri(
+      root.uri.resolve('pubspec.yaml'),
+    ).readAsStringSync();
     final packageVersion = RegExp(
       r'^version:\s*([^\r\n]+)',
       multiLine: true,
@@ -60,6 +57,25 @@ void main() {
       sharingOptIn: false,
     );
     expect(status.toJson()['sdkVersion'], packageVersion);
+  });
+
+  test('sharing waits for a positively resumed lifecycle state', () async {
+    final engine = _FakeEngine();
+    final sdk = RingDownloadSdk.withEngine(
+      const RingDownloadConfig(appId: 'alpha', allowSharing: true),
+      engine,
+    );
+    expect(
+      engine.lastForeground,
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+    );
+    sdk.didChangeAppLifecycleState(AppLifecycleState.inactive);
+    expect(engine.lastForeground, false);
+    sdk.didChangeAppLifecycleState(AppLifecycleState.resumed);
+    expect(engine.lastForeground, true);
+    sdk.didChangeAppLifecycleState(AppLifecycleState.paused);
+    expect(engine.lastForeground, false);
+    await sdk.dispose();
   });
 
   test(
@@ -393,8 +409,9 @@ class _FakeEngine implements RingTransferEngine {
     return result ?? File('not-used');
   }
 
+  bool? lastForeground;
   @override
-  void setForeground(bool foreground) {}
+  void setForeground(bool foreground) => lastForeground = foreground;
   @override
   void setSharingEnabled(bool enabled) {}
   @override

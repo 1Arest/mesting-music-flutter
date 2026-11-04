@@ -7,11 +7,13 @@ import 'package:mesting_music/app/router/beta_tab_shell.dart';
 import 'package:mesting_music/app/system_back_coordinator.dart';
 import 'package:mesting_music/features/music_platform/netease/messages/netease_messages_page.dart';
 import 'package:mesting_music/features/music_platform/netease/messages/netease_messages_repository.dart';
+import 'package:mesting_music/features/music_platform/netease/full/netease_full_page.dart';
+import 'package:mesting_music/features/music_platform/netease/full/netease_catalog.dart';
 import 'package:mesting_music/features/music_platform/platform_backend_providers.dart';
 import 'package:mesting_music/shared/widgets/beta_bottom_search.dart';
 import 'package:mesting_music/shared/widgets/beta_page_motion.dart';
 import 'support/personal_profile_fixture.dart';
-import 'support/release_144_qa.dart';
+import 'support/release_151_qa.dart';
 
 class _Messages extends NeteaseMessagesRepository {
   _Messages(super.music);
@@ -40,7 +42,7 @@ class _Messages extends NeteaseMessagesRepository {
 }
 
 void main() {
-  setUpAll(initialize144QA);
+  setUpAll(initialize151QA);
   for (final edge in [false, true]) {
     testWidgets(
       'actual inbox/chat retain My stack after two backs edge=$edge',
@@ -58,6 +60,9 @@ void main() {
           location: '/profile',
           openMusicSearch: () {},
         );
+        await tester.runAsync(
+          () => fixture.container.read(neteaseCatalogProvider.future),
+        );
         bool? handlesBack;
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -74,13 +79,21 @@ void main() {
           routes: betaTabShellRoutes([
             GoRoute(
               path: '/profile',
-              builder: (context, _) => Scaffold(
-                body: Center(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(
-                      context,
-                    ).push(betaContentRoute<void>(const NeteaseMessagesPage())),
-                    child: const Text('我的消息入口'),
+              // Use the production My-page link: it opens a Material route,
+              // whereas the old fixture manually opened a content route and
+              // could not detect the mixed-route delegated-animation defect.
+              pageBuilder: (context, state) => BetaRootTransitionPage<void>(
+                key: state.pageKey,
+                child: const Scaffold(
+                  backgroundColor: Colors.white,
+                  body: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('我的消息入口'),
+                        NeteaseFullNavigation(tab: '我的', categories: {'消息中心'}),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -102,18 +115,33 @@ void main() {
           UncontrolledProviderScope(
             container: fixture.container,
             child: MaterialApp.router(
-              theme: theme144(false),
+              theme: theme151(false),
               routerConfig: router,
-              builder: (_, child) => SystemBackCoordinator(
-                canPop: router.canPop,
-                child: BetaBottomSearchScope(host: host, child: child!),
+              builder: (_, child) => capture151Builder(
+                SystemBackCoordinator(
+                  canPop: router.canPop,
+                  child: BetaBottomSearchScope(host: host, child: child!),
+                ),
               ),
             ),
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('我的消息入口'));
+        if (!edge) await shot151(tester, 'messages-my');
+        await tester.tap(find.text('我的消息'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 90));
+        if (!edge) await shot151(tester, 'messages-enter');
+        expect(
+          tester.getTopLeft(find.byType(NeteaseMessagesPage)).dx,
+          greaterThan(0),
+        );
+        expect(
+          tester.getTopLeft(find.byType(NeteaseFullNavigation)).dx,
+          lessThan(0),
+        );
         await tester.pumpAndSettle();
+        if (!edge) await shot151(tester, 'messages-inbox');
         final inboxNavigator = Navigator.of(
           tester.element(find.byType(NeteaseMessagesPage)),
         );
@@ -125,16 +153,32 @@ void main() {
           same(inboxNavigator),
         );
         expect(handlesBack, true);
-        Future<void> back() async {
+        var backFrame = 0;
+        Future<void> back(Finder outgoing, Finder parent) async {
           if (edge) {
             await tester.dragFrom(const Offset(4, 340), const Offset(180, 0));
           } else {
             await tester.binding.handlePopRoute();
           }
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 80));
+          final leavingX = tester.getTopLeft(outgoing).dx;
+          final returningX = tester.getTopLeft(parent).dx;
+          if (!edge) {
+            await shot151(tester, 'messages-return-${backFrame++}');
+          }
+          expect(leavingX, greaterThan(0));
+          expect(returningX, lessThan(0));
+          await tester.pump(const Duration(milliseconds: 80));
+          expect(tester.getTopLeft(outgoing).dx, greaterThan(leavingX));
+          expect(tester.getTopLeft(parent).dx, greaterThan(returningX));
           await tester.pumpAndSettle();
         }
 
-        await back();
+        await back(
+          find.byType(NeteaseChatPage),
+          find.byType(NeteaseMessagesPage),
+        );
         expect(find.byType(NeteaseChatPage), findsNothing);
         expect(find.byType(NeteaseMessagesPage).hitTestable(), findsOneWidget);
         expect(router.canPop(), true);
@@ -143,7 +187,10 @@ void main() {
           true,
           reason: 'the second Android gesture must still be owned by Flutter',
         );
-        await back();
+        await back(
+          find.byType(NeteaseMessagesPage),
+          find.byType(NeteaseFullNavigation),
+        );
         expect(find.byType(NeteaseMessagesPage), findsNothing);
         expect(find.text('我的消息入口').hitTestable(), findsOneWidget);
         expect(router.canPop(), false);

@@ -1,0 +1,50 @@
+{
+  "version": "1.1.1",
+  "released_at": "2026-10-28",
+  "channel": "stable",
+  "candidate_version": "1.1.1-dev.1",
+  "candidate_commit": "749c7aebeb03f0dd21a30ce1032732716cfceca5",
+  "existing_candidate_validation": {
+    "tests": 338,
+    "failed": 0,
+    "static_analysis": "passed",
+    "record": "validation/candidate-1.1.1-dev.1-late-peers.json",
+    "scope": "Related controlled regressions with RTC doubles; no native-device speed comparison"
+  },
+  "formal_version_delta": {
+    "passed": true,
+    "version": "1.1.1",
+    "candidate_version": "1.1.1-dev.1",
+    "candidate_inputs": 68,
+    "runtime_files": 29,
+    "identical_runtime_files": 28,
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "transmission_runtime_changes": [],
+    "backend_only_docs_and_exact_static_allowlist": true,
+    "HTTP_range_capacity": 2,
+    "global_piece_slots": 4,
+    "comparison": "SHA-256 after CRLF to LF normalization, as recorded in candidate validation; byte line endings can differ"
+  },
+  "formal_contract_check": {
+    "passed": true,
+    "tests": 14,
+    "exit_code": 0,
+    "log": "validation/release-1.1.1/formal-contract.txt",
+    "sha256": "d61b8cccac617753660d32210bb161e2acd88f7817dde15e4e26ba4a740fb6b7",
+    "note": "Overlaps the candidate regression suite; counts are not additive"
+  },
+  "host_SDK_replaced": false,
+  "APK_built": false,
+  "node_upgraded": false,
+  "HTTPS_range_capacity": 2,
+  "global_piece_slots": 4,
+  "four_HTTPS_experiment_released": false,
+  "limitations": [
+    "No new real-device throughput, cellular/NAT or long-duration sample.",
+    "Late discovery runs only after P8P multi-source handoff; pure HTTPS does not wait.",
+    "App developers update their dependency and build/sign the host APK."
+  ],
+  "previous_P2P_baseline": "40420f35e7bd41e8e9fef51eee55093bbed60283"
+}

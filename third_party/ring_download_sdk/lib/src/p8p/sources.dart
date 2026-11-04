@@ -62,7 +62,7 @@ class P8PRtcPieceSource implements P8PPieceSource {
   @override
   String get id => receiver.source;
   @override
-  int get capacity => 2;
+  int get capacity => receiver.sourceCapacity;
   @override
   bool get closed => receiver.closed;
   @override
@@ -137,7 +137,7 @@ class P8PHttpPieceSource implements P8PPieceSource {
                 }
               });
         if (token.isCancelled || _closed || !writer.submit(lease, bytes)) {
-          throw StateError('p8p_request_cancelled');
+          throw P8PLeaseCancelled();
         }
         verified.complete();
       } catch (error, stack) {

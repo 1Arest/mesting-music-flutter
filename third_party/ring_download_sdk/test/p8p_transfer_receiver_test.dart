@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ring_download_sdk/compat.dart';
 import 'package:ring_download_sdk/src/p8p/leases.dart';
+import 'package:ring_download_sdk/src/p8p/diagnostics.dart';
 import 'package:ring_download_sdk/src/p8p/ordered_writer.dart';
 import 'package:ring_download_sdk/src/p8p/transfer_protocol.dart';
 import 'package:ring_download_sdk/src/p8p/transfer_receiver.dart';
@@ -25,6 +26,9 @@ void main() {
   Completer<void>? closeGate;
   var now = 0;
   var failClose = false;
+  var failObserver = false;
+  late List<P8PSourceDiagnostic> diagnostics;
+  var closedTransports = 0;
   Map<String, Object?> control(
     String type,
     int id, {
@@ -86,6 +90,9 @@ void main() {
   setUp(() async {
     now = 0;
     failClose = false;
+    failObserver = false;
+    diagnostics = [];
+    closedTransports = 0;
     closeGate = null;
     sent = [];
     directory = await Directory.systemTemp.createTemp('p8p-wire-');
@@ -137,8 +144,13 @@ void main() {
         }
       },
       closeTransport: () async {
+        closedTransports++;
         if (closeGate != null) await closeGate!.future;
         if (failClose) throw StateError('injected transport close failure');
+      },
+      onDiagnostic: (event) {
+        diagnostics.add(event);
+        if (failObserver) throw StateError('private observer failure');
       },
     );
     await receiver.connect(const Duration(seconds: 1));
@@ -167,6 +179,8 @@ void main() {
       expect(receiver.pending, 0);
       expect(receiver.bufferedBytes, 0);
       expect(store.metrics['piece_verify_calls'], 2);
+      await receiver.close();
+      expect(diagnostics, isEmpty, reason: 'Normal teardown is not a failure');
     },
   );
 
@@ -196,6 +210,7 @@ void main() {
       await ticket.stopped;
       expect(book.reservations, 0);
       expect(store.file.existsSync(), false);
+      expect(diagnostics, isEmpty, reason: 'Cancel acknowledgement is trusted');
     },
   );
 
@@ -246,7 +261,11 @@ void main() {
       );
       await receiver.close();
       await expectLater(ticket.verified, throwsFormatException);
-      expect(ticket.receivedBytes, 0, reason: 'Invalid offsets earn no progress');
+      expect(
+        ticket.receivedBytes,
+        0,
+        reason: 'Invalid offsets earn no progress',
+      );
       expect(store.file.existsSync(), false);
       expect(book.reservations, 0);
     },
@@ -254,8 +273,24 @@ void main() {
 
   test('checksum failure cannot become ready or persisted', () async {
     final ticket = await request(0);
+    closeGate = Completer<void>();
+    failObserver = true;
     deliver(ticket, corrupt: true);
+    expect(diagnostics, hasLength(1));
+    expect(diagnostics.single.reason, P8PDiagnosticCode.checksumMismatch);
+    expect(diagnostics.single.actualBytes, chunk);
+    expect(diagnostics.single.expectedBytes, chunk);
+    expect(book.reservations, 1);
+    expect(receiver.bufferedBytes, 0);
+    receiver.acceptBinary(Uint8List(20));
+    expect(
+      diagnostics,
+      hasLength(1),
+      reason: 'Late teardown cannot replace cause',
+    );
+    closeGate!.complete();
     await receiver.close();
+    expect(closedTransports, 1);
     await expectLater(ticket.verified, throwsA(isA<AppUpgradeP2PFailure>()));
     expect(book.persistedBytes, 0);
     expect(writer.bufferedPieces, 0);
@@ -290,6 +325,7 @@ void main() {
       await expectLater(ticket.stopped, throwsStateError);
       expect(book.reservations, 1);
       expect(book.leasePhase(ticket.lease), P8PLeasePhase.cancelling);
+      expect(diagnostics.single.reason, P8PDiagnosticCode.cleanupFailed);
     },
   );
 

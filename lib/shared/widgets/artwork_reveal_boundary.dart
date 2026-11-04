@@ -61,7 +61,9 @@ class _ArtworkRevealBoundaryState extends State<ArtworkRevealBoundary> {
         },
         child: NotificationListener<ScrollNotification>(
           onNotification: (event) {
-            if (event is ScrollUpdateNotification && event.scrollDelta != 0) {
+            if (event is ScrollUpdateNotification &&
+                event.metrics.axis == Axis.vertical &&
+                event.scrollDelta != 0) {
               controller.scrolled = true;
             }
             controller.invalidate();
@@ -582,6 +584,9 @@ class _RenderArtworkViewport extends RenderBox
         cutoff: _cutoff,
         extent: loader.size.height,
         refreshing: controller.refreshing,
+        // A slow later batch can temporarily cover the whole viewport. A zero
+        // cutoff alone must not misclassify that as a new first-screen load.
+        initialLoading: !_presented,
         refreshOrigin: _refreshTop(),
       );
       final data = loader.parentData! as _ArtworkParentData;

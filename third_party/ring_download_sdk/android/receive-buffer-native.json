@@ -1,0 +1,105 @@
+{
+  "status": "candidate_not_published",
+  "source_sha256": "a30c17a8e82fa630675654c23f55d791ae7d7054b885a6e7593839a91b5025db",
+  "NDK_version": "28.2.13676358",
+  "libraries": {
+    "arm64-v8a": {
+      "sha256": "b76fde1a5a5b2ed29f83670480d59a809d421a531da1e4bfc68d9e0fe820e823",
+      "bytes": 11136,
+      "API": 24,
+      "LOAD_alignment": 16384,
+      "target": "aarch64-linux-android24",
+      "flags": [
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fstack-protector-strong",
+        "-D_FORTIFY_SOURCE=2",
+        "-shared",
+        "-Wl,-z,max-page-size=16384",
+        "-Wl,-z,relro,-z,now",
+        "-Wl,--no-undefined",
+        "-Wl,--exclude-libs,ALL"
+      ]
+    },
+    "armeabi-v7a": {
+      "sha256": "fccaf9f147aa5d739daf2e21d8a66ac98b3c7e92bd1f189b98eb607f2c734aec",
+      "bytes": 10248,
+      "API": 24,
+      "LOAD_alignment": 16384,
+      "target": "armv7a-linux-androideabi24",
+      "flags": [
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fstack-protector-strong",
+        "-D_FORTIFY_SOURCE=2",
+        "-shared",
+        "-Wl,-z,max-page-size=16384",
+        "-Wl,-z,relro,-z,now",
+        "-Wl,--no-undefined",
+        "-Wl,--exclude-libs,ALL"
+      ]
+    },
+    "x86": {
+      "sha256": "0ee163fb464c3517800ad752cbcb605cef4acfa7a2931bcd9bbf02be19fefc5c",
+      "bytes": 9840,
+      "API": 24,
+      "LOAD_alignment": 16384,
+      "target": "i686-linux-android24",
+      "flags": [
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fstack-protector-strong",
+        "-D_FORTIFY_SOURCE=2",
+        "-shared",
+        "-Wl,-z,max-page-size=16384",
+        "-Wl,-z,relro,-z,now",
+        "-Wl,--no-undefined",
+        "-Wl,--exclude-libs,ALL"
+      ]
+    },
+    "x86_64": {
+      "sha256": "84af8e5a6249d238fa27503d41675fe5040c157cb045fd7d6a6c272783b46449",
+      "bytes": 11368,
+      "API": 24,
+      "LOAD_alignment": 16384,
+      "target": "x86_64-linux-android24",
+      "flags": [
+        "-std=c11",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fPIC",
+        "-fvisibility=hidden",
+        "-fstack-protector-strong",
+        "-D_FORTIFY_SOURCE=2",
+        "-shared",
+        "-Wl,-z,max-page-size=16384",
+        "-Wl,-z,relro,-z,now",
+        "-Wl,--no-undefined",
+        "-Wl,--exclude-libs,ALL"
+      ]
+    }
+  },
+  "root_required": false,
+  "global_configuration_changed": false,
+  "third_party_native_dependencies": [
+    "Android libc"
+  ],
+  "developer_NDK_required": false
+}

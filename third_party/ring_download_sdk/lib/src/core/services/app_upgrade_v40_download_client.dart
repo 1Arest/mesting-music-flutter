@@ -481,6 +481,8 @@ class AppUpgradeV40DownloadClient {
                   currentInfo.fileSize,
                 );
                 if (await bootstrapFile.length() < end) return null;
+                // The preceding length check already promotes this file on
+                // the host Dart SDK; no second assertion or transfer change.
                 final bytes = await bootstrapFile
                     .openRead(start, end)
                     .fold<BytesBuilder>(

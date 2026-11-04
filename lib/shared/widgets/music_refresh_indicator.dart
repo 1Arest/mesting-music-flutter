@@ -27,6 +27,8 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
   ArtworkRevealController? _viewport;
   bool _visible = false;
   bool _active = true;
+  bool _leadingPull = false;
+  RefreshIndicatorStatus? _phase;
   Future<void>? _refresh;
   RenderBox? _renderBox() {
     if (!mounted || !_active) return null;
@@ -45,11 +47,31 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
   }
 
   void _status(RefreshIndicatorStatus? status) {
+    _phase = status;
+    _synchronizeVisibility();
+  }
+
+  bool _notification(ScrollNotification notification) {
+    if (!widget.notificationPredicate(notification)) return false;
+    if (notification is ScrollStartNotification) _leadingPull = false;
+    if (notification is ScrollUpdateNotification &&
+        notification.dragDetails != null) {
+      // RefreshIndicator enters `drag` as soon as a gesture starts at the
+      // leading edge, even when the finger is about to scroll toward later
+      // songs. Paint the top indicator only after an actual leading pull.
+      _leadingPull =
+          notification.metrics.pixels < notification.metrics.minScrollExtent;
+      _synchronizeVisibility();
+    }
+    return true;
+  }
+
+  void _synchronizeVisibility() {
     final visible =
-        status == RefreshIndicatorStatus.drag ||
-        status == RefreshIndicatorStatus.armed ||
-        status == RefreshIndicatorStatus.snap ||
-        status == RefreshIndicatorStatus.refresh;
+        (_phase == RefreshIndicatorStatus.drag && _leadingPull) ||
+        _phase == RefreshIndicatorStatus.armed ||
+        _phase == RefreshIndicatorStatus.snap ||
+        _phase == RefreshIndicatorStatus.refresh;
     if (_visible == visible || !mounted) return;
     _viewport?.refreshActivity(_lease, visible, box: _renderBox);
     setState(() => _visible = visible);
@@ -76,6 +98,7 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
   @override
   void deactivate() {
     _active = false;
+    _viewport?.refreshActivity(_lease, false);
     super.deactivate();
   }
 
@@ -83,6 +106,7 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
   void activate() {
     super.activate();
     _active = true;
+    if (_visible) _viewport?.refreshActivity(_lease, true, box: _renderBox);
   }
 
   @override
@@ -112,7 +136,7 @@ class _MusicRefreshIndicatorState extends State<MusicRefreshIndicator> {
             child: RefreshIndicator.noSpinner(
               onRefresh: _run,
               onStatusChange: _status,
-              notificationPredicate: widget.notificationPredicate,
+              notificationPredicate: _notification,
               child: widget.child,
             ),
           ),

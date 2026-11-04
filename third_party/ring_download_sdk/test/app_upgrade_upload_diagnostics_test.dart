@@ -2,8 +2,33 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ring_download_sdk/compat.dart';
+import 'package:ring_download_sdk/src/p8p/diagnostics.dart';
 
 void main() {
+  test(
+    'all source stop reasons survive JSON without identities or exception text',
+    () {
+      for (final reason in P8PDiagnosticCode.values) {
+        final event = P8PSourceDiagnostic(
+          reason,
+          alias: 'private-session-token',
+          actualBytes: -1,
+          expectedBytes: 1 << 30,
+        );
+        expect(event.alias, isNull);
+        final json = AppUpgradeP2PDiagnostic(
+          stage: 'transfer',
+          code: reason.code,
+          actualBytes: event.actualBytes,
+          expectedBytes: event.expectedBytes,
+        ).toJson();
+        expect(json['code'], reason.code);
+        expect(json['actual_bytes'], 0);
+        expect(json['expected_bytes'], 1048576);
+        expect(json.toString(), isNot(contains('private-session-token')));
+      }
+    },
+  );
   test('each fixed source profile is a small complete JSON record', () {
     for (final alias in ['peer1', 'peer2', 'seed', 'https']) {
       final event = AppUpgradeP2PDiagnostic(

@@ -8,6 +8,8 @@ import 'package:mesting_music/features/profile/presentation/profile_page.dart';
 import 'package:mesting_music/features/experience/presentation/player_queue_panel.dart';
 import 'package:mesting_music/features/player/presentation/shinchan_progress_walker.dart';
 import 'package:mesting_music/shared/widgets/beta_text_editing.dart';
+import 'package:mesting_music/shared/widgets/song_list_tools.dart';
+import 'package:mesting_music/features/music_platform/presentation/platform_profile_edit_page.dart';
 import 'package:mesting_music/features/experience/presentation/player_chrome_reveal.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
 import 'package:mesting_music/features/auth/presentation/beta_entry_coordinator.dart';
@@ -1353,9 +1355,7 @@ void main() {
         // ignore: avoid_print
         print('BETA8_SEARCH_BENCH catalogue=480 visibleArtworkWidgets=$built');
         expect(
-          find.byWidgetPredicate(
-            (w) => w is SongActionsButton,
-          ),
+          find.byWidgetPredicate((w) => w is SongActionsButton),
           findsWidgets,
         );
       }
@@ -2037,7 +2037,9 @@ void main() {
       expect(
         tester
             .widget<ColoredBox>(
-              find.byKey(const ValueKey('beta10-route-surface')).last,
+              // Routed search uses the shell's own moving, opaque surface;
+              // retained roots intentionally have no primary page transition.
+              find.byKey(const ValueKey('beta10-search-surface')).last,
             )
             .color
             .a,
@@ -3522,6 +3524,110 @@ void main() {
         expect(tester.takeException(), isNull);
         await disposeFixture(tester);
       }
+    },
+    skip: !DistributionChannel.isBeta,
+  );
+
+  testWidgets(
+    'release151 production router reverses every ordinary route family above retained roots',
+    (tester) async {
+      viewport(tester);
+      await prepare(guest: true);
+      await container.read(betaEntryFlowProvider.notifier).finish();
+      production.appRouter.go('/music/recommend');
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: production.appRouter,
+            theme: buildMestingTheme(musicThemePresetById('classic')),
+            builder: (_, child) => SystemBackCoordinator(
+              canPop: production.appRouter.canPop,
+              child: BetaEntryCoordinator(
+                backDispatcher: production.appRouter.backButtonDispatcher,
+                child: child!,
+              ),
+            ),
+          ),
+        ),
+      );
+      Future<void> settle() async {
+        for (var i = 0; i < 9; i++) {
+          await tester.pump(const Duration(milliseconds: 80));
+        }
+      }
+
+      Finder tools(String id) => find.byWidgetPredicate(
+        (widget) => widget is SongListTools && widget.listId == id,
+      );
+      await settle();
+      for (final root in [
+        '/music/recommend',
+        '/music',
+        '/music/library',
+        '/profile',
+      ]) {
+        production.appRouter.go(root);
+        await settle();
+        for (final path in [
+          '/music?view=daily',
+          '/music?view=favorites',
+          '/music?view=recent',
+          '/music/queue',
+          '/music/settings',
+          '/music/themes',
+          '/profile/edit',
+        ]) {
+          unawaited(production.appRouter.push<void>(path));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 90));
+          // Browser URLs intentionally omit imperative pushes. Match the
+          // actual content view, including production's root/query alias.
+          final uri = Uri.parse(path);
+          final actual = uri.hasQuery
+              ? uri.replace(path: '${uri.path}/view').toString()
+              : path;
+          final incoming = path == '/profile/edit'
+              ? find.byType(PlatformProfileEditPage)
+              : tools(actual);
+          expect(
+            tester.getTopLeft(incoming).dx,
+            greaterThan(0),
+            reason: '$root -> $path',
+          );
+          expect(
+            tester.getTopLeft(tools(root)).dx,
+            lessThan(0),
+            reason: 'retained parent $root -> $path',
+          );
+          await settle();
+          await tester.binding.handlePopRoute();
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 80));
+          final outgoing = tester.getTopLeft(incoming).dx;
+          final returning = tester.getTopLeft(tools(root)).dx;
+          expect(
+            outgoing,
+            greaterThan(0),
+            reason: '$path returns toward the right',
+          );
+          expect(returning, lessThan(0), reason: '$root returns from the left');
+          await tester.pump(const Duration(milliseconds: 80));
+          expect(tester.getTopLeft(incoming).dx, greaterThan(outgoing));
+          expect(tester.getTopLeft(tools(root)).dx, greaterThan(returning));
+          await settle();
+          expect(
+            production.appRouter.routeInformationProvider.value.uri.toString(),
+            root,
+          );
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: '$root -> $path -> $root',
+          );
+        }
+      }
+      await disposeFixture(tester);
     },
     skip: !DistributionChannel.isBeta,
   );

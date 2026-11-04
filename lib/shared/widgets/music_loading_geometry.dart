@@ -37,12 +37,13 @@ class MusicLoadingGeometry {
     required double cutoff,
     required double extent,
     required bool refreshing,
+    bool initialLoading = true,
     double refreshOrigin = 0,
   }) {
     final maximum = math.max(top, bottom - extent - chromeGap);
     final requested = refreshing
         ? math.max(top, refreshOrigin) + 18
-        : cutoff == 0
+        : initialLoading && cutoff == 0
         ? top + (bottom - top - extent) / 2
         : maximum;
     return requested.clamp(top, maximum);

@@ -88,6 +88,10 @@ android {
 
 androidComponents {
     onVariants(selector().withBuildType("release")) { variant ->
+        // SDK 1.1.2 also ships an x86 receive buffer. Formal Music APKs keep
+        // their existing two ARM ABIs; an isolated x86 SDK library would not
+        // have a matching Flutter engine and must not advertise x86 support.
+        variant.packaging.jniLibs.excludes.add("lib/x86/**")
         variant.packaging.jniLibs.excludes.add("lib/x86_64/**")
     }
 }

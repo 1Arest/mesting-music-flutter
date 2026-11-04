@@ -146,7 +146,7 @@ void main() {
         expect(find.byKey(const ValueKey('song-list-top')), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('song-list-top')));
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 1100));
         await tester.pump();
         expect(scroll.offset, closeTo(0, 1));
         expect(plays, 0);
