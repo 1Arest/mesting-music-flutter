@@ -42,6 +42,7 @@ class ArtworkImage extends StatefulWidget {
     this.persistentNetworkCacheKey,
     this.networkImageCache,
     this.onNetworkError,
+    this.frameOwner,
     super.key,
   });
 
@@ -55,6 +56,10 @@ class ArtworkImage extends StatefulWidget {
   final String? persistentNetworkCacheKey;
   final PersistentNetworkImageCache? networkImageCache;
   final VoidCallback? onNetworkError;
+
+  /// Stable song identity prevents the previous song's retained pixels from
+  /// following a recycled player widget during a rapid recording change.
+  final String? frameOwner;
 
   @override
   State<ArtworkImage> createState() => _ArtworkImageState();
@@ -72,10 +77,22 @@ class _ArtworkImageState extends State<ArtworkImage> {
   bool _handlingBrokenFile = false;
   String get _requestUri => sizedArtworkUri(
     canonicalArtworkUri(widget.uri),
-    width: ((widget.decodeWidth ?? widget.width ?? 256) * 3).ceil(),
-    height: ((widget.decodeHeight ?? widget.height ?? widget.width ?? 256) * 3)
-        .ceil(),
+    width: _thumbnailSize,
+    height: _thumbnailSize,
   );
+
+  /// Search/mini-player share one thumbnail bucket; the foreground cover and
+  /// its blurred background share an HD bucket. Widget-specific decoding stays
+  /// bounded below, but must not create a new HTTP download for every dp size.
+  int get _thumbnailSize {
+    final width = widget.decodeWidth ?? widget.width ?? 256;
+    final height = widget.decodeHeight ?? widget.height ?? width;
+    final edge = (width > height ? width : height) * 3;
+    for (final size in const [192, 384, 768, 1024]) {
+      if (edge <= size) return size;
+    }
+    return 1024;
+  }
 
   @override
   void initState() {
@@ -168,6 +185,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
       }) => RetainedArtworkFrame(
         key: const ValueKey('retained-artwork-frame'),
         uri: uri,
+        owner: widget.frameOwner,
         scope: widget.persistentNetworkCacheKey ?? 'public-artwork-v1',
         image: provider,
         width: widget.width,
@@ -316,14 +334,16 @@ class _ArtworkImageState extends State<ArtworkImage> {
         : '${config.cacheKey}\n${config.uri}';
     if (config == null) return;
 
-    final cached = config.cache.peek(
-      cacheKey: config.cacheKey,
-      url: config.uri,
-    );
-    if (cached != null) {
-      _persistentNetworkFile = cached;
+    final exact = config.cache.peek(cacheKey: config.cacheKey, url: config.uri);
+    final cached =
+        exact ??
+        config.cache.peekContent(cacheKey: config.cacheKey, url: config.uri);
+    _persistentNetworkFile = cached;
+    if (exact != null) {
       return;
     }
+    // The first build immediately resolves the existing thumbnail. Upgrading
+    // its bytes never replaces it with a null provider or a placeholder.
     _loadPersistentNetworkImage();
   }
 

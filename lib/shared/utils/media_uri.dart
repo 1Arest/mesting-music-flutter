@@ -114,7 +114,12 @@ String artworkContentIdentity(String source) {
             )
             .toList()
           ..sort();
-    return '${uri.host}$path?${Uri(queryParameters: {for (final k in keys) k: uri.queryParameters[k]!}).query}';
+    // Public NetEase p1/p2/... image shards serve the same immutable picture
+    // path. Search and song-detail responses may choose different shards.
+    final host = RegExp(r'^p[0-9]+\.music\.126\.net$').hasMatch(uri.host)
+        ? 'artwork.music.126.net'
+        : uri.host;
+    return '$host$path?${Uri(queryParameters: {for (final k in keys) k: uri.queryParameters[k]!}).query}';
   } on FormatException {
     return source;
   }

@@ -80,40 +80,47 @@ class NeteaseHomeShelf extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = NeteaseFeaturesRepository.titles[feed]!;
+    // A restored provider already has pixels/data. Route deferral is for live
+    // work only; blanking a restored shelf until an animation settles causes a
+    // second cold-start flash despite successfully restored disk snapshots.
+    final restored = ref.watch(neteaseFeedPreviewProvider(feed)).hasValue;
+    Widget contents(BuildContext context) => Consumer(
+      builder: (context, ref, _) => ref
+          .watch(neteaseFeedPreviewProvider(feed))
+          .when(
+            loading: () => const PlatformFeedbackState(loading: true),
+            error: (_, _) => EditorialEmpty(
+              '$title暂时无法加载',
+              onRetry: () => ref.invalidate(neteaseFeedPreviewProvider(feed)),
+            ),
+            data: (batch) => batch.items.isEmpty
+                ? EditorialEmpty('暂无$title')
+                : EditorialShelf(
+                    height: 248,
+                    children: [
+                      for (final item in batch.items.take(12))
+                        EditorialCover(
+                          cover: item.cover,
+                          title: item.name,
+                          subtitle: item.subtitle,
+                          width: 170,
+                          onTap: () => openNeteaseItem(context, item),
+                        ),
+                    ],
+                  ),
+          ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         EditorialSection(title, onTap: () => openNeteaseFeed(context, feed)),
-        RouteSettledContent(
-          placeholder: const SizedBox(height: 248),
-          builder: (_) => Consumer(
-            builder: (context, ref, _) => ref
-                .watch(neteaseFeedPreviewProvider(feed))
-                .when(
-                  loading: () => const PlatformFeedbackState(loading: true),
-                  error: (_, _) => EditorialEmpty(
-                    '$title暂时无法加载',
-                    onRetry: () =>
-                        ref.invalidate(neteaseFeedPreviewProvider(feed)),
-                  ),
-                  data: (batch) => batch.items.isEmpty
-                      ? EditorialEmpty('暂无$title')
-                      : EditorialShelf(
-                          height: 248,
-                          children: [
-                            for (final item in batch.items.take(12))
-                              EditorialCover(
-                                cover: item.cover,
-                                title: item.name,
-                                subtitle: item.subtitle,
-                                width: 170,
-                                onTap: () => openNeteaseItem(context, item),
-                              ),
-                          ],
-                        ),
-                ),
+        if (restored)
+          contents(context)
+        else
+          RouteSettledContent(
+            placeholder: const SizedBox(height: 248),
+            builder: contents,
           ),
-        ),
       ],
     );
   }

@@ -10,6 +10,13 @@ typedef BrowseJson = Map<String, dynamic>;
 typedef BrowseDirectory = Future<Directory> Function();
 const _observerZoneKey = #mestingBrowseCacheObserver;
 const _liveZoneKey = #mestingBrowseCacheLive;
+const _restoreOnlyZoneKey = #mestingBrowseCacheRestoreOnly;
+
+/// Cold-start hydration may read durable snapshots, but must never wait for a
+/// network miss. The normal provider is retried outside this zone afterwards.
+class BrowseSnapshotUnavailable implements Exception {
+  const BrowseSnapshotUnavailable();
+}
 
 /// Disposable page data, independent of playback state and account credentials.
 /// Each successful response is committed immediately: process termination does
@@ -20,6 +27,8 @@ class BrowseResponseCache {
       Zone.current[_liveZoneKey] != true;
   static Future<T> live<T>(Future<T> Function() load) =>
       runZoned(load, zoneValues: {_liveZoneKey: true});
+  static Future<T> restoreOnly<T>(Future<T> Function() load) =>
+      runZoned(load, zoneValues: {_restoreOnlyZoneKey: true});
   BrowseResponseCache({
     BrowseDirectory? directory,
     this.initializeOnRead = false,
@@ -49,6 +58,7 @@ class BrowseResponseCache {
   int _active = 0;
   final _pending = <String, Future<BrowseJson>>{};
   final _checked = <String, DateTime>{};
+  final _routes = <String, String>{};
   final _listeners = <String, Set<void Function()>>{};
   final _epochs = <String, int>{};
 
@@ -114,28 +124,37 @@ class BrowseResponseCache {
     final scopeHash = _hash(scope);
     final id =
         '${scopeHash}_${_hash('$route\n${jsonEncode(_canonical(query))}')}';
+    _routes[id] = route;
     final epoch = _epochs[scopeHash] ?? 0;
     final transportIdentity = _hash(requestIdentity);
     final observer = Zone.current[_observerZoneKey] as BrowseCacheWatch?;
+    final restoring = Zone.current[_restoreOnlyZoneKey] == true;
     if (observer == null || Zone.current[_liveZoneKey] == true) return load();
     // The application warms its cache alongside native startup. Other entry
     // points keep the original live path until explicitly initialized; a page
     // request must not unexpectedly block on platform storage/plugin startup.
-    if (_root == null && !initializeOnRead) return load();
+    if (_root == null && !initializeOnRead) {
+      if (restoring) throw const BrowseSnapshotUnavailable();
+      return load();
+    }
     await initialize();
     checkCurrent();
-    if (_root == null) return load();
+    if (_root == null) {
+      if (restoring) throw const BrowseSnapshotUnavailable();
+      return load();
+    }
     if ((_epochs[scopeHash] ?? 0) != epoch) return load();
     final cached = await _restore(id);
     checkCurrent();
     if (cached != null) {
       observer._observe(this, id);
-      await prepareCached?.call(cached);
+      if (!restoring) await prepareCached?.call(cached);
       checkCurrent();
       final checked = _checked[id];
-      if (observer.forceRefresh ||
-          checked == null ||
-          DateTime.now().difference(checked) >= refreshInterval) {
+      if (!restoring &&
+          (observer.forceRefresh ||
+              checked == null ||
+              DateTime.now().difference(checked) >= refreshInterval)) {
         unawaited(
           _refresh(
             id,
@@ -149,6 +168,7 @@ class BrowseResponseCache {
       }
       return _copy(cached);
     }
+    if (restoring) throw const BrowseSnapshotUnavailable();
     final fresh = await _refresh(
       id,
       scopeHash,
@@ -288,6 +308,7 @@ class BrowseResponseCache {
               jsonEncode({
                 'version': 1,
                 'id': id,
+                'route': _routes[id],
                 'hash': _hash(encoded),
                 'body': body,
               }),
@@ -360,6 +381,7 @@ class BrowseResponseCache {
       _memory.remove(id);
       _memorySizes.remove(id);
       _checked.remove(id);
+      _routes.remove(id);
       bytes -= file.bytes;
       try {
         await file.file.delete();
@@ -371,7 +393,10 @@ class BrowseResponseCache {
 
   /// Successful library/profile edits invalidate the owner's prior snapshots.
   /// Epochs prevent an earlier in-flight read from restoring those old bytes.
-  Future<void> invalidateScope(String scope) async {
+  Future<void> invalidateScope(
+    String scope, {
+    bool Function(String route)? preserveRoute,
+  }) async {
     final hash = _hash(scope);
     _epochs[hash] = (_epochs[hash] ?? 0) + 1;
     if (_root == null && !initializeOnRead) return;
@@ -380,10 +405,18 @@ class BrowseResponseCache {
       ..._files.keys,
       ..._memory.keys,
     }.where((key) => key.startsWith('${hash}_')).toList()) {
+      // Playback counts/library edits do not invalidate an already displayed
+      // discovery feed. Its old durable snapshot remains a valid offline view;
+      // only the API's explicit read policy can opt a route into this exception.
+      if (preserveRoute?.call(_routes[id] ?? '') == true) {
+        _checked.remove(id);
+        continue;
+      }
       final file = _files.remove(id);
       _memory.remove(id);
       _memorySizes.remove(id);
       _checked.remove(id);
+      _routes.remove(id);
       if (file != null) {
         try {
           await file.file.delete();

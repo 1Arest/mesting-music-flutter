@@ -6,6 +6,7 @@ import '../data/platform_explore.dart';
 import '../data/platform_search_repository.dart';
 import '../domain/platform_audio_quality.dart';
 import 'netease_api.dart';
+import '../domain/platform_search_user.dart';
 
 /// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
 /// the same Track / catalogue models as Kugou, with provider-qualified IDs.
@@ -137,6 +138,7 @@ class NeteaseMusicRepository {
       PlatformSearchKind.artists => (100, 'artists', 'artistCount'),
       PlatformSearchKind.playlists => (1000, 'playlists', 'playlistCount'),
       PlatformSearchKind.lyrics => (1006, 'songs', 'songCount'),
+      PlatformSearchKind.users => (1002, 'userprofiles', 'userprofileCount'),
       _ => (1, 'songs', 'songCount'),
     };
     final result = object(
@@ -144,30 +146,51 @@ class NeteaseMusicRepository {
         'keywords': query,
         'type': type,
         'offset': (page - 1) * 30,
+        'limit': 30,
       }, abort))['result'],
     );
     final values = rows(result[field]);
-    final items = values.map((row) {
-      final song =
-          kind == PlatformSearchKind.lyrics || kind == PlatformSearchKind.songs
-          ? track(row)
-          : null;
-      final creator = object(row['creator'] ?? row['artist']);
-      final lyric = row['lyrics'];
-      return PlatformSearchHit(
-        kind: kind,
-        id: song?.id ?? '${row['id']}',
-        globalId: '${row['id']}',
-        title: song?.title ?? clean(row['name']),
-        subtitle: song?.artist ?? clean(creator['nickname'] ?? creator['name']),
-        cover:
-            song?.coverAsset ??
-            '${row['coverImgUrl'] ?? row['picUrl'] ?? row['img1v1Url'] ?? ''}',
-        count: int.tryParse('${row['trackCount']}'),
-        track: song,
-        lyric: lyric is List ? lyric.map(clean).join('\n') : clean(lyric),
-      );
-    }).toList();
+    final items = values
+        .map((row) {
+          if (kind == PlatformSearchKind.users) {
+            final user = PlatformSearchUser.fromNetease(row);
+            return PlatformSearchHit(
+              kind: kind,
+              id: user.id,
+              title: user.nickname,
+              subtitle: user.signature,
+              cover: user.avatar,
+              user: user,
+            );
+          }
+          final song =
+              kind == PlatformSearchKind.lyrics ||
+                  kind == PlatformSearchKind.songs
+              ? track(row)
+              : null;
+          final creator = object(row['creator'] ?? row['artist']);
+          final lyric = row['lyrics'];
+          return PlatformSearchHit(
+            kind: kind,
+            id: song?.id ?? '${row['id']}',
+            globalId: '${row['id']}',
+            title: song?.title ?? clean(row['name']),
+            subtitle:
+                song?.artist ?? clean(creator['nickname'] ?? creator['name']),
+            cover:
+                song?.coverAsset ??
+                '${row['coverImgUrl'] ?? row['picUrl'] ?? row['img1v1Url'] ?? ''}',
+            count: int.tryParse('${row['trackCount']}'),
+            track: song,
+            lyric: lyric is List ? lyric.map(clean).join('\n') : clean(lyric),
+          );
+        })
+        .where(
+          (hit) =>
+              kind != PlatformSearchKind.users ||
+              RegExp(r'^[1-9][0-9]*$').hasMatch(hit.id),
+        )
+        .toList();
     final total = int.tryParse('${result[count]}');
     return PlatformCategoryPage(
       items,

@@ -18,6 +18,7 @@ import 'core/audio/mesting_audio_handler.dart';
 import 'core/audio/playback_providers.dart';
 import 'core/platform/distribution_channel.dart';
 import 'features/music_platform/platform_credits.dart';
+import 'features/music_platform/discovery_startup_cache.dart';
 import 'core/database/app_database.dart';
 import 'core/persistence/app_preferences.dart';
 import 'core/persistence/playback_persistence_controller.dart';
@@ -162,6 +163,14 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
         audioHandler: audioHandler,
         playbackPersistence: playbackPersistence,
       );
+      // Hydrate into the container that the app will actually mount. Restoring
+      // only a directory index leaves every FutureProvider in AsyncLoading on
+      // the first routed frame, even when its response already exists on disk.
+      if (DistributionChannel.isBeta) {
+        dependencies.discoveryCache = await DiscoveryStartupCache.prepare(
+          dependencies.container,
+        );
+      }
       StartupTimingProbe.mark('dependencies_ready');
 
       // Start persistence after the real app has rendered its first frame.
@@ -189,6 +198,12 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
   @override
   void dispose() {
     _staticVisibility.dispose();
+    unawaited(
+      _dependencies.then((d) {
+        d.discoveryCache?.dispose();
+        d.container.dispose();
+      }, onError: (Object _) {}),
+    );
     super.dispose();
   }
 
@@ -254,20 +269,12 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               StartupTimingProbe.mark('bootstrap_app_frame');
               dependencies.playbackPersistence.start();
+              dependencies.discoveryCache?.resume();
             });
           }
-          child = ProviderScope(
+          child = UncontrolledProviderScope(
             key: const ValueKey('mesting-music-app'),
-            overrides: [
-              audioHandlerProvider.overrideWithValue(dependencies.audioHandler),
-              appDatabaseProvider.overrideWithValue(dependencies.database),
-              sharedPreferencesProvider.overrideWithValue(
-                dependencies.preferences,
-              ),
-              playbackPersistenceControllerProvider.overrideWithValue(
-                dependencies.playbackPersistence,
-              ),
-            ],
+            container: dependencies.container,
             child: const MestingMusicApp(),
           );
         }
@@ -285,12 +292,24 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
 }
 
 class _MestingDependencies {
-  const _MestingDependencies({
+  _MestingDependencies({
     required this.database,
     required this.preferences,
     required this.audioHandler,
     required this.playbackPersistence,
   });
+
+  late final container = ProviderContainer(
+    overrides: [
+      audioHandlerProvider.overrideWithValue(audioHandler),
+      appDatabaseProvider.overrideWithValue(database),
+      sharedPreferencesProvider.overrideWithValue(preferences),
+      playbackPersistenceControllerProvider.overrideWithValue(
+        playbackPersistence,
+      ),
+    ],
+  );
+  DiscoveryStartupCache? discoveryCache;
 
   final AppDatabase database;
   final SharedPreferences preferences;

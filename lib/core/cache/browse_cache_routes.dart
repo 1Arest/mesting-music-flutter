@@ -2,6 +2,34 @@
 /// Kugou repositories. Authentication, stream URLs, live room state and message
 /// reads use their live transport. A GET name alone never implies cache safety.
 class BrowseCacheRoutes {
+  /// Retain displayable discovery data through unrelated successful writes.
+  /// User libraries/profiles are intentionally absent: their edited fields
+  /// still invalidate normally. Account epochs continue to reject late loads.
+  static bool discoveryRead(String route) =>
+      route.startsWith('ui-recommendation-v1:') ||
+      const {
+        '/recommend/songs',
+        '/recommend/resource',
+        '/personalized',
+        '/top/playlist/highquality',
+        '/top/artists',
+        '/toplist',
+        '/toplist/artist',
+        '/top/song',
+        '/album/new',
+        '/album/newest',
+        '/top/album',
+        '/mv/first',
+        '/mv/all',
+        '/everyday/recommend',
+        '/home/discover',
+        '/top/playlist',
+        '/rank/list',
+        '/theme/playlist',
+        '/scene/lists',
+        '/scene/module',
+        '/scene/collection/list',
+      }.contains(route);
   static const neteaseReads = <String>{
     '/aidj/content/rcmd',
     '/album',

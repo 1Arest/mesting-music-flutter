@@ -91,7 +91,16 @@ class NeteaseApi {
     check();
     if (BrowseCacheRoutes.neteaseMutations.contains(route) &&
         (result['code'] == null || '${result['code']}' == '200')) {
-      await browseCache.invalidateScope(scope);
+      if (route == '/follow' || route == '/playlist/update/playcount') {
+        // A relationship write does not invalidate the user's offline music
+        // feed. Revalidate its reads without destroying the last good snapshot.
+        browseCache.revalidateScope(scope);
+      } else {
+        await browseCache.invalidateScope(
+          scope,
+          preserveRoute: BrowseCacheRoutes.discoveryRead,
+        );
+      }
     }
     return result;
   }

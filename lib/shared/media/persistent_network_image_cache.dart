@@ -40,6 +40,7 @@ class PersistentNetworkImageCache {
   final _validated = <String>{};
   final _disk = <String, ({int bytes, DateTime used})>{};
   final _contentFiles = <String, String>{};
+  final _contentEdges = <String, int>{};
   bool _contentIndexDirty = false;
   Future<void> _maintenance = Future.value();
   final Map<String, File> _memoryFiles = <String, File>{};
@@ -62,9 +63,14 @@ class PersistentNetworkImageCache {
         if (await index.exists() && await index.length() <= 1024 * 1024) {
           final saved = jsonDecode(await index.readAsString()) as Map;
           for (final item in saved.entries.take(maxFiles)) {
+            final value = item.value;
+            final file = value is Map ? value['file'] : value;
             if (RegExp(r'^[a-f0-9]{64}$').hasMatch('${item.key}') &&
-                RegExp(r'^[a-f0-9]{64}$').hasMatch('${item.value}')) {
-              _contentFiles['${item.key}'] = '${item.value}';
+                RegExp(r'^[a-f0-9]{64}$').hasMatch('$file')) {
+              _contentFiles['${item.key}'] = '$file';
+              _contentEdges['${item.key}'] = value is Map
+                  ? int.tryParse('${value['edge']}') ?? 0
+                  : 0;
             }
           }
         }
@@ -179,11 +185,21 @@ class PersistentNetworkImageCache {
     final key = sha256
         .convert(utf8.encode('$owner\n${artworkContentIdentity(url)}'))
         .toString();
-    if (_contentFiles[key] == fileKey) return;
+    final edge = _thumbnailEdge(url);
+    final existing = _memoryFiles[_contentFiles[key]];
+    if (existing != null &&
+        existing.existsSync() &&
+        (_contentEdges[key] ?? 0) > edge) {
+      return;
+    }
+    if (_contentFiles[key] == fileKey && _contentEdges[key] == edge) return;
     _contentFiles.remove(key);
     _contentFiles[key] = fileKey;
+    _contentEdges[key] = edge;
     while (_contentFiles.length > maxFiles) {
-      _contentFiles.remove(_contentFiles.keys.first);
+      final oldest = _contentFiles.keys.first;
+      _contentFiles.remove(oldest);
+      _contentEdges.remove(oldest);
     }
     _contentIndexDirty = true;
   }
@@ -194,7 +210,10 @@ class PersistentNetworkImageCache {
   Future<void> flush() {
     if (!_contentIndexDirty) return _maintenance;
     _contentIndexDirty = false;
-    final encoded = jsonEncode(_contentFiles);
+    final encoded = jsonEncode({
+      for (final entry in _contentFiles.entries)
+        entry.key: {'file': entry.value, 'edge': _contentEdges[entry.key] ?? 0},
+    });
     final write = _maintenance.then((_) async {
       final root = _root;
       if (root == null) return;
@@ -220,6 +239,25 @@ class PersistentNetworkImageCache {
     if (memoryFile != null && _validated.contains(key)) {
       return flush().then((_) => memoryFile);
     }
+    // Only a known public thumbnail CDN has a reliable size/content contract.
+    // A larger cached thumbnail can serve a smaller widget, while a requested
+    // HD upgrade still gets its own deduplicated transfer. Private signed URLs
+    // and semantic image versions retain their existing exact-key behavior.
+    final edge = _thumbnailEdge(url);
+    if (edge > 0) {
+      final content = sha256
+          .convert(utf8.encode('$cacheKey\n${artworkContentIdentity(url)}'))
+          .toString();
+      final file = _memoryFiles[_contentFiles[content]];
+      if ((_contentEdges[content] ?? 0) >= edge &&
+          file != null &&
+          file.existsSync()) {
+        final fileKey = _contentFiles[content]!;
+        return _validated.contains(fileKey)
+            ? Future.value(file)
+            : _validateReusable(file, fileKey, content, cacheKey, url);
+      }
+    }
 
     final pending = _pendingLoads[key];
     if (pending != null) return pending;
@@ -234,6 +272,48 @@ class PersistentNetworkImageCache {
     _pendingLoads[key] = load;
     unawaited(load.whenComplete(() => _pendingLoads.remove(key)));
     return load;
+  }
+
+  Future<File?> _validateReusable(
+    File file,
+    String fileKey,
+    String content,
+    String owner,
+    String url,
+  ) async {
+    try {
+      await validateAvatarImage(file.path);
+      _validated.add(fileKey);
+      return file;
+    } on Object {
+      // An indexed HD alias is acceleration only. Corrupt bytes must be
+      // removed under their real file key, not under a smaller caller's URL.
+      _validated.remove(fileKey);
+      _memoryFiles.remove(fileKey);
+      _disk.remove(fileKey);
+      if (_contentFiles[content] == fileKey) {
+        _contentFiles.remove(content);
+        _contentEdges.remove(content);
+        _contentIndexDirty = true;
+      }
+      try {
+        if (await file.exists()) await file.delete();
+      } on Object {
+        /* Retry normally. */
+      }
+      await flush();
+      return resolve(cacheKey: owner, url: url);
+    }
+  }
+
+  int _thumbnailEdge(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.host.endsWith('.music.126.net')) return 0;
+    final parts = (uri.queryParameters['param'] ?? '').split('y');
+    if (parts.length != 2) return 0;
+    final width = int.tryParse(parts[0]) ?? 0;
+    final height = int.tryParse(parts[1]) ?? 0;
+    return width < height ? width : height;
   }
 
   /// Removes a broken cache entry so a later retry can fetch a clean image.

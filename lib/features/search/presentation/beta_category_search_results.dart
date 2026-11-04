@@ -13,6 +13,8 @@ import '../../music_platform/platform_category_search_providers.dart';
 import '../../music_platform/platform_artist_portrait.dart';
 import '../search_providers.dart';
 import 'apple_search_results.dart';
+import '../../music_platform/platform_backend_providers.dart';
+import '../../music_platform/netease/netease_user_page.dart';
 
 /// One compact category rail above a lazy result pane. Queries and paging live
 /// outside widgets; a pane owns its own scroll controller even during a rapid
@@ -47,55 +49,57 @@ class _BetaCategorySearchResultsState
             child: Row(
               children: [
                 for (final kind in PlatformSearchKind.values)
-                  Expanded(
-                    child: Semantics(
-                      selected: selected == kind,
-                      button: true,
-                      child: InkWell(
-                        key: ValueKey('search-kind-${kind.name}'),
-                        onTap: () {
-                          setState(
-                            () => _direction = kind.index >= selected.index
-                                ? 1
-                                : -1,
-                          );
-                          ref
-                              .read(categorySearchProvider.notifier)
-                              .select(kind);
-                        },
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              height: 48,
-                              child: Center(
-                                child: Text(
-                                  kind.label,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: selected == kind
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: selected == kind
-                                        ? accent
-                                        : ink.withValues(alpha: .8),
+                  if (kind != PlatformSearchKind.users ||
+                      ref.watch(usesNeteaseProvider))
+                    Expanded(
+                      child: Semantics(
+                        selected: selected == kind,
+                        button: true,
+                        child: InkWell(
+                          key: ValueKey('search-kind-${kind.name}'),
+                          onTap: () {
+                            setState(
+                              () => _direction = kind.index >= selected.index
+                                  ? 1
+                                  : -1,
+                            );
+                            ref
+                                .read(categorySearchProvider.notifier)
+                                .select(kind);
+                          },
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                height: 48,
+                                child: Center(
+                                  child: Text(
+                                    kind.label,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: selected == kind
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: selected == kind
+                                          ? accent
+                                          : ink.withValues(alpha: .8),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 220),
-                              height: 3,
-                              width: selected == kind ? 28 : 0,
-                              decoration: BoxDecoration(
-                                color: accent,
-                                borderRadius: BorderRadius.circular(3),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 220),
+                                height: 3,
+                                width: selected == kind ? 28 : 0,
+                                decoration: BoxDecoration(
+                                  color: accent,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
               ],
             ),
           ),
@@ -164,7 +168,8 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
         categoryState.pages[widget.kind] ?? const CategorySearchSlice();
     final list =
         widget.kind == PlatformSearchKind.artists ||
-        widget.kind == PlatformSearchKind.lyrics;
+        widget.kind == PlatformSearchKind.lyrics ||
+        widget.kind == PlatformSearchKind.users;
     Widget tail() => Padding(
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 190),
       child: slice.loading
@@ -193,7 +198,7 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(22, 14, 22, 6),
                 child: Text(
-                  '共 ${slice.total} ${widget.kind == PlatformSearchKind.artists
+                  '共 ${slice.total} ${widget.kind == PlatformSearchKind.artists || widget.kind == PlatformSearchKind.users
                       ? '位'
                       : widget.kind == PlatformSearchKind.lyrics
                       ? '首'
@@ -206,7 +211,12 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
           if (list)
             SliverList.builder(
               itemCount: slice.items.length,
-              itemBuilder: (_, index) => _ResultRow(hit: slice.items[index]),
+              itemBuilder: (_, index) {
+                final hit = slice.items[index];
+                return hit.user != null
+                    ? NeteaseSearchUserRow(user: hit.user!)
+                    : _ResultRow(hit: hit);
+              },
             )
           else
             SliverPadding(

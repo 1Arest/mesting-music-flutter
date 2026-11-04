@@ -3,13 +3,15 @@ import 'embedded_kugou_music_source.dart';
 import 'music_platform_api.dart';
 import 'platform_artwork.dart';
 import 'platform_catalog.dart';
+import '../domain/platform_search_user.dart';
 
 enum PlatformSearchKind {
   songs('歌曲', '/search'),
   albums('专辑', '/search/album'),
   artists('歌手', '/search/artist'),
   playlists('歌单', '/search/special'),
-  lyrics('歌词', '/search');
+  lyrics('歌词', '/search'),
+  users('用户', '/search');
 
   const PlatformSearchKind(this.label, this.path);
   final String label, path;
@@ -26,11 +28,13 @@ class PlatformSearchHit {
     this.count,
     this.track,
     this.lyric = '',
+    this.user,
   });
   final PlatformSearchKind kind;
   final String id, title, subtitle, cover, globalId, lyric;
   final int? count;
   final Track? track;
+  final PlatformSearchUser? user;
 }
 
 class PlatformCategoryPage {
@@ -66,6 +70,9 @@ class PlatformCategorySearchRepository {
     int page = 1,
     Future<void>? abortTrigger,
   }) async {
+    if (kind == PlatformSearchKind.users) {
+      throw const MusicPlatformException('用户搜索仅支持网易云');
+    }
     final identity = api.session;
     const size = 30;
     final result = await api.get(

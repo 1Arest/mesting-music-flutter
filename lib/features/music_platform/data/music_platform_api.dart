@@ -231,6 +231,7 @@ class MusicPlatformApi {
               decoded['error_code'].toString() == '0')) {
         await browseCache.invalidateScope(
           'kugou:${identity?.userId ?? "guest"}',
+          preserveRoute: BrowseCacheRoutes.discoveryRead,
         );
       }
       return decoded;

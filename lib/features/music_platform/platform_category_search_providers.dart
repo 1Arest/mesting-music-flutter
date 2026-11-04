@@ -87,7 +87,12 @@ class CategorySearchController extends Notifier<CategorySearchState> {
     final previous = state;
     state = CategorySearchState(
       query,
-      selected: query.isEmpty ? PlatformSearchKind.songs : previous.selected,
+      selected:
+          query.isEmpty ||
+              previous.selected == PlatformSearchKind.users &&
+                  !ref.read(usesNeteaseProvider)
+          ? PlatformSearchKind.songs
+          : previous.selected,
       pages: {
         if (retainResults && query.isNotEmpty)
           for (final entry in previous.pages.entries)

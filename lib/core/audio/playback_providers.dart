@@ -83,7 +83,7 @@ final currentTrackProvider = Provider<Track>((ref) {
       );
   if (DistributionChannel.isBeta &&
       track.source == TrackSource.kugou &&
-      !track.coverAsset.startsWith('assets/')) {
+      track.coverAsset.trim().isEmpty) {
     final cover = ref.watch(platformArtworkProvider(track)).value;
     if (cover?.isNotEmpty == true) return track.copyWith(coverAsset: cover);
   }

@@ -16,10 +16,12 @@ class RetainedArtworkFrame extends StatefulWidget {
     this.width,
     this.height,
     this.onError,
+    this.owner,
     super.key,
   });
   final String uri;
   final String scope;
+  final String? owner;
   final ImageProvider<Object>? image;
   final Widget fallback;
   final double? width, height;
@@ -42,7 +44,7 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
   @override
   void didUpdateWidget(covariant RetainedArtworkFrame oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scope != widget.scope) {
+    if (oldWidget.scope != widget.scope || oldWidget.owner != widget.owner) {
       final old = _frame;
       _frame = null;
       if (old != null) {
@@ -50,6 +52,7 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
       }
     }
     if (oldWidget.scope != widget.scope ||
+        oldWidget.owner != widget.owner ||
         oldWidget.uri != widget.uri ||
         oldWidget.image != widget.image) {
       _resolve();

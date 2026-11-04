@@ -51,6 +51,7 @@ class _TrackArtworkState extends ConsumerState<TrackArtwork> {
         : null;
     final uri = restored?.isNotEmpty == true ? restored! : original;
     return ArtworkImage(
+      frameOwner: '${track.source.name}:${track.id}',
       uri: uri,
       width: widget.width,
       height: widget.height,
