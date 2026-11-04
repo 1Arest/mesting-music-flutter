@@ -1,5 +1,21 @@
 # Mesting Music
 
+**最新维护交付：1.0.49 / Android code70（Beta 安装通道）。** [Latest Release](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.49) · [分通道下载目录](docs/apk-downloads.md) · [版本目录](docs/versions.md)。
+
+| 安装通道 | 包名 | 导航 |
+| --- | --- | --- |
+| 正式稳定版 | `com.mesting.music` | [历史包按版本倒序](docs/apk-downloads.md#正式稳定版) |
+| Beta | `com.mesting.music.beta` | [正式交付按版本倒序](docs/apk-downloads.md#beta-通道正式交付)、[早期实验系列](docs/apk-downloads.md#早期-beta-实验系列) |
+| Java/MySQL 测试 | `com.mesting.music.javatest` 等 | [独立测试包](docs/apk-downloads.md#javamysql-独立测试包) |
+
+本次补齐 1.0.25～1.0.37、1.0.39～1.0.49 共24版的独立源码提交、标签和正式 GitHub Release，263个附件均保持原始字节。1.0.38 的私有候选不公开。安装通道按真实包名分组，与 Release 的正式/预发布状态分别记录；1.0.49 设为 GitHub Latest，应用内更新后台未改动。
+
+当前页面位于 `main` 分支。`beta` 维护当前产品；`main` 保留原产品源码，仅同步本下载导航。新电脑继续开发应从 [beta 分支接续](https://github.com/Mesting42/mesting-music-flutter/blob/beta/docs/CONTINUE-BETA.md)。设备、账号和历史时长的未完成验收如实保留，GitHub 归档不替代它们。
+
+---
+
+下面保留此前产品介绍的历史原文；其中旧版本状态和下载提示请以本页上方目录为准。
+
 一款面向 Android 的 Flutter 音乐应用，提供本地与在线音乐浏览、播放控制、歌词、主题换肤，以及好友音乐互动体验。
 
 当前稳定源码版本：**1.0.37+46**<br>
