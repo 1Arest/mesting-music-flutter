@@ -123,6 +123,10 @@ class MestingAudioHandler extends BaseAudioHandler
       StreamController<Track>.broadcast();
   final StreamController<String> _userCommandController =
       StreamController<String>.broadcast();
+  // Together distinguishes originating user/media controls from its own
+  // received commands before async stream delivery can blur that boundary.
+  final StreamController<String> _togetherUserCommandController =
+      StreamController<String>.broadcast(sync: true);
   final StreamController<bool> _seekingController =
       StreamController<bool>.broadcast(sync: true);
   bool _isSeeking = false;
@@ -304,6 +308,27 @@ class MestingAudioHandler extends BaseAudioHandler
 
   /// A modal MV may resume only while no later transport command supersedes it.
   int get transportRevision => _userCommandEpoch;
+
+  /// Invalidates only the transport still owned by one Together application.
+  /// A timeout cannot cancel a newer tap, account request or normally playing
+  /// source. Epoch invalidation stops a late lookup from loading/autoplaying;
+  /// it intentionally never issues a delayed stop against the next selection.
+  bool cancelPendingTogetherPlayback(int expectedTransportRevision) {
+    if (_userCommandEpoch != expectedTransportRevision) return false;
+    ++_userCommandEpoch;
+    ++_transportIntentEpoch;
+    ++_queueLoadEpoch;
+    if (_pendingQueueEpoch != null) {
+      _pendingQueueEpoch = null;
+      _resolutionError = '一起听播放同步等待重试';
+      _cancelPlaybackStartGuard();
+      _broadcastState(_player.playbackEvent);
+    }
+    return true;
+  }
+
+  bool _togetherCurrent(bool Function()? guard, int revision) =>
+      guard == null || guard() && transportRevision == revision;
   Stream<PlaybackMode> get playbackModeStream async* {
     yield _mode;
     yield* _modeController.stream;
@@ -321,6 +346,8 @@ class MestingAudioHandler extends BaseAudioHandler
   /// Emits only when the audio engine reaches the natural end of a track.
   Stream<Track> get completedTrackStream => _completedTrackController.stream;
   Stream<String> get userCommandStream => _userCommandController.stream;
+  Stream<String> get togetherUserCommandStream =>
+      _togetherUserCommandController.stream;
 
   PlaybackMode get playbackMode => _mode;
   Duration get currentPosition =>
@@ -350,6 +377,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _consumptionTimer?.cancel();
     await _pauseFadeController.cancel();
     await _userCommandController.close();
+    await _togetherUserCommandController.close();
     await _seekingController.close();
     await _player.dispose();
   }
@@ -1023,20 +1051,28 @@ class MestingAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> play() async {
+  Future<void> play({bool Function()? togetherGuard}) async {
+    if (togetherGuard?.call() == false) return;
     final restartAfterSleep = _sleepStoppedAtCompletion;
-    _markUserCommand('play');
+    _markUserCommand('play', together: togetherGuard != null);
+    final togetherRevision = transportRevision;
     await _ready;
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (restartAfterSleep) {
       _completionGate.reset();
       await _seekPlayer(Duration.zero);
+      if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
       await _applyPlaybackOrder();
+      if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     }
     _consecutiveLoadFailures = 0;
     if (_resolutionError != null || mediaItem.value?.id != _loadedTrackId) {
       final applied = await _loadQueue(_tracks);
-      if (!applied) return;
+      if (!applied || !_togetherCurrent(togetherGuard, togetherRevision)) {
+        return;
+      }
     }
     _startPlayer();
   }
@@ -1067,10 +1103,21 @@ class MestingAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> pause() async {
-    _markUserCommand('pause');
+  Future<void> pause({bool Function()? togetherGuard}) async {
+    if (togetherGuard?.call() == false) return;
+    _markUserCommand('pause', together: togetherGuard != null);
+    final togetherRevision = transportRevision;
     await _ready;
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     _cancelPlaybackStartGuard();
+    if (togetherGuard != null) {
+      // A received pause is already a settled peer intent. Apply it directly
+      // rather than keeping the room's command queue behind a UI-style fade.
+      await _pauseFadeController.cancel();
+      if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
+      await _player.pause();
+      return;
+    }
     if (!_player.playing || _player.processingState != ProcessingState.ready) {
       await _pauseFadeController.cancel();
       _trace(
@@ -1101,10 +1148,14 @@ class MestingAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> seek(Duration position) async {
-    _markUserCommand('seek');
+  Future<void> seek(Duration position, {bool Function()? togetherGuard}) async {
+    if (togetherGuard?.call() == false) return;
+    _markUserCommand('seek', together: togetherGuard != null);
+    final togetherRevision = transportRevision;
     await _ready;
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     final current = _player.position;
     _completionGate.onSeek(from: current, to: position);
     await _seekPlayer(position);
@@ -1884,7 +1935,9 @@ class MestingAudioHandler extends BaseAudioHandler
     Duration initialPosition = Duration.zero,
     bool autoplay = true,
     bool recommendationContext = false,
+    bool Function()? togetherGuard,
   }) async {
+    if (togetherGuard?.call() == false) return;
     if (!recommendationContext) _onExplicitPlayback?.call();
     _recommendedUpcomingIds
       ..clear()
@@ -1894,21 +1947,24 @@ class MestingAudioHandler extends BaseAudioHandler
             : const <String>[],
       );
     _explicitPlaybackContext = !recommendationContext;
-    _markUserCommand('replaceQueue');
+    _markUserCommand('replaceQueue', together: togetherGuard != null);
+    final togetherRevision = transportRevision;
     final transportEpoch = _transportIntentEpoch;
     _consecutiveLoadFailures = 0;
     if (tracks.isNotEmpty) {
       _replacePlaybackContext(tracks);
     }
     await _ready;
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     final applied = await _loadQueue(
       tracks,
       initialIndex: initialIndex,
       initialPosition: initialPosition,
       requiredTransportIntentEpoch: transportEpoch,
     );
-    if (!applied) return;
+    if (!applied || !_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (_order.shuffle) {
       // A newly selected album keeps the tapped recording active and shuffles
       // only its new pending recordings, without losing their original order.
@@ -1919,6 +1975,7 @@ class MestingAudioHandler extends BaseAudioHandler
       _publishUpcomingQueue();
     }
     await _applyPlaybackOrder();
+    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (autoplay && tracks.isNotEmpty) _startPlayer();
   }
 
@@ -2077,7 +2134,7 @@ class MestingAudioHandler extends BaseAudioHandler
     // directly; later calls await the same completed future in their caller.
   }
 
-  void _markUserCommand(String command) {
+  void _markUserCommand(String command, {bool together = false}) {
     if (command != 'pause') _sleepStoppedAtCompletion = false;
     if (const {
       'play',
@@ -2101,6 +2158,9 @@ class MestingAudioHandler extends BaseAudioHandler
     _userCommandEpoch += 1;
     if (!_userCommandController.isClosed) {
       _userCommandController.add(command);
+    }
+    if (!together && !_togetherUserCommandController.isClosed) {
+      _togetherUserCommandController.add(command);
     }
     _trace('user-command=$command epoch=$_userCommandEpoch');
   }

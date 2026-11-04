@@ -23,6 +23,7 @@ import '../platform_catalog_providers.dart';
 import '../../auth/account_capabilities.dart';
 import 'platform_comments_page.dart';
 import 'platform_design.dart';
+import 'retained_platform_snapshot.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../experience/presentation/editorial_widgets.dart';
 
@@ -39,17 +40,14 @@ class PlatformDiscoveryPage extends ConsumerWidget {
     final daily = ref.watch(platformDailyProvider);
     return PlatformStyle(
       child: MusicRefreshIndicator(
-        onRefresh: () async {
-          revalidateBrowse(ref);
-          ref.invalidate(platformDailyProvider);
-          ref.invalidate(platformDiscoveryProvider);
-          ref.invalidate(platformFeaturedProvider);
-          ref.invalidate(hotMusicControllerProvider);
-          // Each section renders its own error, including a failed refresh.
-          await ref
-              .read(platformDailyProvider.future)
-              .then<void>((_) {}, onError: (Object _) {});
-        },
+        onRefresh: () => refreshBrowse(ref, [
+          () => ref.refresh(platformDailyProvider.future),
+          if (!dailyOnly) ...[
+            () => ref.refresh(platformDiscoveryProvider.future),
+            () => ref.refresh(platformFeaturedProvider.future),
+            () => ref.refresh(hotMusicControllerProvider.future),
+          ],
+        ]),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.fromLTRB(
@@ -87,20 +85,20 @@ class PlatformDiscoveryPage extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               const _SectionTitle('实时榜单'),
-              ref
-                  .watch(hotMusicControllerProvider)
-                  .when(
-                    loading: () => const PlatformFeedbackState(loading: true),
-                    error: (error, stack) => _Retry(
-                      retry: () => ref.invalidate(hotMusicControllerProvider),
-                    ),
-                    data: (snapshot) => snapshot.tracks.isEmpty
-                        ? _Retry(
-                            retry: () =>
-                                ref.invalidate(hotMusicControllerProvider),
-                          )
-                        : _TrackList(tracks: snapshot.tracks),
-                  ),
+              RetainedPlatformSnapshot(
+                value: ref.watch(hotMusicControllerProvider),
+                artwork: (snapshot) =>
+                    snapshot.tracks.map((track) => track.coverAsset),
+                loading: () => const PlatformFeedbackState(loading: true),
+                error: (error, stack) => _Retry(
+                  retry: () => ref.invalidate(hotMusicControllerProvider),
+                ),
+                data: (snapshot) => snapshot.tracks.isEmpty
+                    ? _Retry(
+                        retry: () => ref.invalidate(hotMusicControllerProvider),
+                      )
+                    : _TrackList(tracks: snapshot.tracks),
+              ),
             ],
           ],
         ),
@@ -142,7 +140,9 @@ class PlatformSongs extends StatelessWidget {
   Widget wrap(Widget child) =>
       sliver ? SliverToBoxAdapter(child: child) : child;
   @override
-  Widget build(BuildContext context) => value.when(
+  Widget build(BuildContext context) => RetainedPlatformSnapshot(
+    value: value,
+    artwork: (tracks) => tracks.map((track) => track.coverAsset),
     loading: () => wrap(const PlatformFeedbackState(loading: true)),
     error: (error, stack) => wrap(_Retry(retry: retry)),
     data: (tracks) => tracks.isEmpty
@@ -257,60 +257,63 @@ class _TrackList extends ConsumerWidget {
 
 class _FeaturedPlaylists extends ConsumerWidget {
   @override
-  Widget build(BuildContext context, WidgetRef ref) => ref
-      .watch(platformFeaturedProvider)
-      .when(
-        loading: () => const PlatformFeedbackState(loading: true),
-        error: (error, stack) =>
-            _Retry(retry: () => ref.invalidate(platformFeaturedProvider)),
-        data: (rows) {
-          final playlists = rows
-              .where(
-                (row) => '${row['global_collection_id'] ?? row['gid'] ?? ''}'
-                    .isNotEmpty,
-              )
-              .toList();
-          if (playlists.isEmpty) {
-            return _Retry(
-              retry: () => ref.invalidate(platformFeaturedProvider),
-              empty: true,
-            );
-          }
-          return Column(
-            children: [
-              for (final row in playlists)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: ArtworkImage(
-                      uri:
-                          '${row['sizable_cover'] ?? row['imgurl'] ?? row['pic'] ?? ''}'
-                              .replaceAll('{size}', '400'),
-                      width: 56,
-                      height: 56,
-                    ),
-                  ),
-                  title: Text(
-                    '${row['name'] ?? row['specialname'] ?? '精选歌单'}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: const Text('酷狗概念版'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => PlatformPublicPlaylistPage(
-                        id: '${row['global_collection_id'] ?? row['gid']}',
-                        name: '${row['name'] ?? row['specialname'] ?? '精选歌单'}',
-                      ),
-                    ),
+  Widget build(BuildContext context, WidgetRef ref) => RetainedPlatformSnapshot(
+    value: ref.watch(platformFeaturedProvider),
+    artwork: (rows) => rows.map(
+      (row) => '${row['sizable_cover'] ?? row['imgurl'] ?? row['pic'] ?? ''}'
+          .replaceAll('{size}', '400'),
+    ),
+    loading: () => const PlatformFeedbackState(loading: true),
+    error: (error, stack) =>
+        _Retry(retry: () => ref.invalidate(platformFeaturedProvider)),
+    data: (rows) {
+      final playlists = rows
+          .where(
+            (row) =>
+                '${row['global_collection_id'] ?? row['gid'] ?? ''}'.isNotEmpty,
+          )
+          .toList();
+      if (playlists.isEmpty) {
+        return _Retry(
+          retry: () => ref.invalidate(platformFeaturedProvider),
+          empty: true,
+        );
+      }
+      return Column(
+        children: [
+          for (final row in playlists)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ArtworkImage(
+                  uri:
+                      '${row['sizable_cover'] ?? row['imgurl'] ?? row['pic'] ?? ''}'
+                          .replaceAll('{size}', '400'),
+                  width: 56,
+                  height: 56,
+                ),
+              ),
+              title: Text(
+                '${row['name'] ?? row['specialname'] ?? '精选歌单'}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: const Text('酷狗概念版'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PlatformPublicPlaylistPage(
+                    id: '${row['global_collection_id'] ?? row['gid']}',
+                    name: '${row['name'] ?? row['specialname'] ?? '精选歌单'}',
                   ),
                 ),
-            ],
-          );
-        },
+              ),
+            ),
+        ],
       );
+    },
+  );
 }
 
 class PlatformPublicPlaylistPage extends ConsumerWidget {

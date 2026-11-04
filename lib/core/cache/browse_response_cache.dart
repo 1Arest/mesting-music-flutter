@@ -434,6 +434,23 @@ class BrowseResponseCache {
     _checked.removeWhere((key, _) => key.startsWith(prefix));
   }
 
+  /// Cached reads return the old snapshot immediately. A pull-to-refresh must
+  /// still await its network, cover preparation and atomic publication, rather
+  /// than dismissing the indicator as soon as that old cached read completes.
+  /// Failures retain existing snapshots and settle this activity normally.
+  Future<void> settleRefreshes(String scope) async {
+    final prefix = '${_hash(scope)}_';
+    while (true) {
+      final requests = [
+        for (final entry in _pending.entries)
+          if (entry.key.startsWith(prefix))
+            entry.value.then<void>((_) {}, onError: (Object _) {}),
+      ];
+      if (requests.isEmpty) return;
+      await Future.wait(requests);
+    }
+  }
+
   void Function() _listen(String id, void Function() listener) {
     (_listeners[id] ??= {}).add(listener);
     return () {

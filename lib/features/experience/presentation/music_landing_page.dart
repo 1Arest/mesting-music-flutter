@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../music_platform/platform_browse_cache.dart';
+import '../../music_platform/presentation/retained_platform_snapshot.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,20 +41,16 @@ class MusicLandingPage extends ConsumerWidget {
     final featured = ref.watch(platformFeaturedProvider);
     return PlatformStyle(
       child: EditorialScroll(
-        onRefresh: () async {
-          revalidateBrowse(ref);
-          ref.invalidate(platformDailyProvider);
-          ref.invalidate(platformNewSongsProvider);
-          ref.invalidate(platformDiscoveryProvider);
-          ref.invalidate(platformFeaturedProvider);
-          ref.invalidate(hotMusicControllerProvider);
-          for (final kind in PlatformExploreKind.values) {
-            ref.invalidate(platformExploreProvider(kind));
-          }
-          await ref
-              .read(platformDailyProvider.future)
-              .then<void>((_) {}, onError: (Object _) {});
-        },
+        onRefresh: () => refreshBrowse(ref, [
+          () => ref.refresh(platformDailyProvider.future),
+          () => ref.refresh(platformNewSongsProvider.future),
+          () => ref.refresh(platformDiscoveryProvider.future),
+          () => ref.refresh(platformFeaturedProvider.future),
+          if (ref.exists(platformExploreProvider(PlatformExploreKind.rank)))
+            () => ref.refresh(
+              platformExploreProvider(PlatformExploreKind.rank).future,
+            ),
+        ]),
         children: [
           const EditorialHeader('发现'),
           if (!discovery) ...[
@@ -61,7 +58,9 @@ class MusicLandingPage extends ConsumerWidget {
               '为你精选',
               onTap: () => context.push('/music?view=daily'),
             ),
-            daily.when(
+            RetainedPlatformSnapshot(
+              value: daily,
+              artwork: (tracks) => tracks.map((track) => track.coverAsset),
               loading: () => const PlatformFeedbackState(loading: true),
               error: (_, _) => EditorialEmpty(
                 '推荐暂时未能加载',
@@ -133,7 +132,9 @@ class MusicLandingPage extends ConsumerWidget {
             ),
           ] else ...[
             const EditorialSection('新鲜上架'),
-            newSongs.when(
+            RetainedPlatformSnapshot(
+              value: newSongs,
+              artwork: (tracks) => tracks.map((track) => track.coverAsset),
               loading: () => const PlatformFeedbackState(loading: true),
               error: (_, _) => EditorialEmpty(
                 '新歌暂时无法加载',
@@ -237,7 +238,13 @@ class MusicLandingPage extends ConsumerWidget {
             onTap: () =>
                 openMusicHomeCatalogue(context, PlatformExploreKind.playlist),
           ),
-          featured.when(
+          RetainedPlatformSnapshot(
+            value: featured,
+            artwork: (rows) => rows.map(
+              (row) =>
+                  '${row['sizable_cover'] ?? row['imgurl'] ?? row['pic'] ?? ''}'
+                      .replaceAll('{size}', '400'),
+            ),
             loading: () => const PlatformFeedbackState(loading: true),
             error: (_, _) => EditorialEmpty(
               '歌单暂时无法加载',
@@ -329,26 +336,26 @@ class MusicLandingPage extends ConsumerWidget {
             ),
           ] else ...[
             const EditorialSection('热门歌曲'),
-            ref
-                .watch(hotMusicControllerProvider)
-                .when(
-                  loading: () => const PlatformFeedbackState(loading: true),
-                  error: (_, _) => EditorialEmpty(
-                    '榜单暂时无法加载',
-                    onRetry: () => ref.invalidate(hotMusicControllerProvider),
-                  ),
-                  data: (snapshot) => Column(
-                    children: [
-                      for (final (index, track)
-                          in snapshot.tracks.take(10).indexed)
-                        EditorialTrackRow(
-                          track: track,
-                          contextTracks: snapshot.tracks,
-                          rank: index + 1,
-                        ),
-                    ],
-                  ),
-                ),
+            RetainedPlatformSnapshot(
+              value: ref.watch(hotMusicControllerProvider),
+              artwork: (snapshot) =>
+                  snapshot.tracks.map((track) => track.coverAsset),
+              loading: () => const PlatformFeedbackState(loading: true),
+              error: (_, _) => EditorialEmpty(
+                '榜单暂时无法加载',
+                onRetry: () => ref.invalidate(hotMusicControllerProvider),
+              ),
+              data: (snapshot) => Column(
+                children: [
+                  for (final (index, track) in snapshot.tracks.take(10).indexed)
+                    EditorialTrackRow(
+                      track: track,
+                      contextTracks: snapshot.tracks,
+                      rank: index + 1,
+                    ),
+                ],
+              ),
+            ),
           ],
         ],
       ),
@@ -361,7 +368,9 @@ class _SongGroups extends StatelessWidget {
   final AsyncValue<List<Track>> value;
   final VoidCallback retry;
   @override
-  Widget build(BuildContext context) => value.when(
+  Widget build(BuildContext context) => RetainedPlatformSnapshot(
+    value: value,
+    artwork: (tracks) => tracks.map((track) => track.coverAsset),
     loading: () => const PlatformFeedbackState(loading: true),
     error: (_, _) => EditorialEmpty('歌曲暂时无法加载', onRetry: retry),
     data: (tracks) => tracks.isEmpty

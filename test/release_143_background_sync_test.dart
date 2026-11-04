@@ -69,7 +69,10 @@ void main() {
         call,
       ) async {
         configurations.add(Map<Object?, Object?>.from(call.arguments as Map));
-        return null;
+        return {
+          'accepted': true,
+          'revision': (call.arguments as Map)['revision'],
+        };
       });
       final room = SyntheticTogetherRoom();
       final music = room.music('8');
@@ -162,7 +165,10 @@ void main() {
             configurations.add(
               Map<Object?, Object?>.from(call.arguments as Map),
             );
-            return null;
+            return {
+              'accepted': true,
+              'revision': (call.arguments as Map)['revision'],
+            };
           },
         );
         TogetherBackgroundBinding? binding;
@@ -246,7 +252,10 @@ void main() {
         call,
       ) async {
         configurations.add(Map<Object?, Object?>.from(call.arguments as Map));
-        return null;
+        return {
+          'accepted': true,
+          'revision': (call.arguments as Map)['revision'],
+        };
       });
       _background(tester);
       var first = 0, second = 0;

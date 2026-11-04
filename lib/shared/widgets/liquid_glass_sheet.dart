@@ -30,6 +30,7 @@ Future<T?> showLiquidGlassBottomSheet<T>({
   Color? surfaceColor,
   Color Function(BuildContext context)? surfaceColorBuilder,
   Color? barrierColor,
+  ThemeData Function(BuildContext context)? themeBuilder,
   AnimationStyle? sheetAnimationStyle,
 }) {
   assert(surfaceColor == null || surfaceColorBuilder == null);
@@ -59,23 +60,31 @@ Future<T?> showLiquidGlassBottomSheet<T>({
           duration: Duration(milliseconds: 320),
           reverseDuration: Duration(milliseconds: 240),
         ),
-    builder: (sheetContext) => LiquidGlassSurface(
-      key: liquidGlassSheetSurfaceKey,
-      borderRadius:
-          borderRadius ??
-          const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-      showDragHandle: showDragHandle ?? false,
-      showTopHighlight: showTopHighlight,
-      showShadow: showShadow,
-      showDecorativeGlow: showDecorativeGlow,
-      blurSigma: blurSigma,
-      surfaceColor: surfaceColor,
-      surfaceColorBuilder: surfaceColorBuilder,
-      child: builder(sheetContext),
-    ),
+    builder: (sheetContext) {
+      final surface = LiquidGlassSurface(
+        key: liquidGlassSheetSurfaceKey,
+        borderRadius:
+            borderRadius ??
+            const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+        showDragHandle: showDragHandle ?? false,
+        showTopHighlight: showTopHighlight,
+        showShadow: showShadow,
+        showDecorativeGlow: showDecorativeGlow,
+        blurSigma: blurSigma,
+        surfaceColor: surfaceColor,
+        surfaceColorBuilder: surfaceColorBuilder,
+        child: builder(sheetContext),
+      );
+      // Application-owned sheets can opt out of a captured player palette.
+      // Resolve inside the route so a system appearance change also updates
+      // the glass surface, not just its foreground content.
+      return themeBuilder == null
+          ? surface
+          : Theme(data: themeBuilder(sheetContext), child: surface);
+    },
   );
 }
 

@@ -312,7 +312,8 @@ class _RecordingHandler extends MestingAudioHandler {
   final seeks = <Duration>[];
 
   @override
-  Future<void> seek(Duration position) async {
+  Future<void> seek(Duration position, {bool Function()? togetherGuard}) async {
+    if (togetherGuard?.call() == false) return;
     seeks.add(position);
   }
 }

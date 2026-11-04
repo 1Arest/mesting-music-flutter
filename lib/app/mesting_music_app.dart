@@ -11,6 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/themes/app_theme.dart';
+import '../features/themes/music_application_theme.dart';
 import '../features/themes/theme_controller.dart';
 import '../features/auth/presentation/first_launch_auth_coordinator.dart';
 import '../features/legal/presentation/disclaimer_dialog.dart';
@@ -160,17 +161,20 @@ class MestingMusicApp extends ConsumerWidget {
           : null,
       theme: buildMestingTheme(musicTheme),
       routerConfig: appRouter,
-      builder: (context, child) => SystemBackCoordinator(
-        canPop: appRouter.canPop,
-        child: FirstLaunchDisclaimerCoordinator(
-          child: FirstLaunchAuthCoordinator(
-            betaBackDispatcher: appRouter.backButtonDispatcher,
-            onBetaLogout: () => appRouter.go('/music/recommend'),
-            child: AppUpdateCoordinator(
-              navigatorKey: appRootNavigatorKey,
-              child: SocialAttentionCoordinator(
-                child: LyricsOverlayCoordinator(
-                  child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => MusicApplicationTheme(
+        data: Theme.of(context),
+        child: SystemBackCoordinator(
+          canPop: appRouter.canPop,
+          child: FirstLaunchDisclaimerCoordinator(
+            child: FirstLaunchAuthCoordinator(
+              betaBackDispatcher: appRouter.backButtonDispatcher,
+              onBetaLogout: () => appRouter.go('/music/recommend'),
+              child: AppUpdateCoordinator(
+                navigatorKey: appRootNavigatorKey,
+                child: SocialAttentionCoordinator(
+                  child: LyricsOverlayCoordinator(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),

@@ -8,6 +8,7 @@ import '../../../shared/models/track.dart';
 import '../domain/platform_session.dart';
 import 'music_platform_api.dart';
 import 'platform_catalog.dart';
+import 'kugou_favorite_playlist.dart';
 
 /// Implements the existing library boundary with the active Kugou cloud.
 /// Nothing is copied into the guest/CloudBase database or uploaded implicitly.
@@ -40,8 +41,9 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }
 
   @override
-  bool canManage(String id) =>
-      _snapshot.any((row) => _id(row) == id && _owned(row) && !_likes(row));
+  bool canManage(String id) => _snapshot.any(
+    (row) => _id(row) == id && _owned(row) && !_systemPlaylist(row),
+  );
 
   @override
   Future<String> commentId(String id) async {
@@ -141,8 +143,12 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }
 
   bool _likes(Map<String, dynamic> row) =>
-      '${row['is_def']}' == '2' ||
-      ['我喜欢', '我喜欢的音乐', '默认收藏'].contains(row['name']);
+      KugouFavoritePlaylist.priority(row, identity.userId) > 0;
+
+  // Default collection keeps its existing system-list protection, while no
+  // longer being selected as the destination of the liked-song heart button.
+  bool _systemPlaylist(Map<String, dynamic> row) =>
+      _likes(row) || row['name'] == '默认收藏';
   bool _owned(Map<String, dynamic> row) {
     final creator = '${row['list_create_userid'] ?? ''}';
     if (creator.isNotEmpty) return creator == identity.userId;
@@ -172,8 +178,13 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }
 
   Future<Map<String, dynamic>> _favoriteRow() async {
-    for (final row in await _loadLists()) {
-      if (_likes(row)) return row;
+    final candidates = KugouFavoritePlaylist.candidates(
+      await _loadLists(),
+      identity.userId,
+    );
+    if (candidates.length == 1) return candidates.single;
+    if (candidates.length > 1) {
+      throw const MusicPlatformException('未能确认唯一的酷狗「我喜欢」歌单，请刷新音乐库后重试');
     }
     throw const MusicPlatformException('未找到酷狗「我喜欢」歌单，请先在酷狗客户端初始化');
   }
@@ -397,7 +408,9 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   Future<void> deletePlaylist(String id) => _write(() async {
     final row = await _row(id);
     _requireOwned(row);
-    if (_likes(row)) throw const MusicPlatformException('「我喜欢」是系统歌单，不能删除');
+    if (_systemPlaylist(row)) {
+      throw const MusicPlatformException('系统收藏歌单不能在此删除');
+    }
     await _get('/playlist/del', {'listid': '${row['listid']}', 'type': '1'});
     _invalidate();
   });
@@ -454,7 +467,9 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   }) async {
     final row = await _row(id);
     _requireOwned(row);
-    if (_likes(row)) throw const MusicPlatformException('系统收藏歌单不能在此修改封面');
+    if (_systemPlaylist(row)) {
+      throw const MusicPlatformException('系统收藏歌单不能在此修改封面');
+    }
     final picture = await _uploadCover(coverAsset, row);
     final snapshot = await _get('/user/playlist', {
       'page': '1',

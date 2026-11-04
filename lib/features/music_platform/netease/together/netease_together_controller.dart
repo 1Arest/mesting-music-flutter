@@ -9,6 +9,7 @@ import '../../../../shared/models/track.dart';
 import '../../data/music_platform_api.dart';
 import '../../platform_backend_providers.dart';
 import '../netease_music_repository.dart';
+import '../netease_fallback.dart';
 import '../messages/netease_messages_repository.dart';
 import '../full/netease_manual_routes.dart';
 import 'together_presence.dart';
@@ -26,7 +27,10 @@ final neteaseTogetherControllerProvider = Provider<NeteaseTogetherController?>((
   final music = ref.read(neteaseMusicRepositoryProvider);
   final controller = NeteaseTogetherController(
     music: music,
-    player: _HandlerTogetherPlayer(ref.watch(audioHandlerProvider)),
+    player: _HandlerTogetherPlayer(
+      ref.watch(audioHandlerProvider),
+      () => ref.read(neteasePlaybackRequestsProvider).cancel(),
+    ),
     messages: ref.read(neteaseMessagesRepositoryProvider),
     isCurrent: () => music.api.session?.credentialId == music.credential,
   );
@@ -63,9 +67,31 @@ abstract interface class NeteaseTogetherPlayer {
   );
 }
 
-class _HandlerTogetherPlayer implements NeteaseTogetherPlayer {
-  _HandlerTogetherPlayer(this.handler);
+/// Optional cancellation boundary; old platform/fake adapters keep the stable
+/// [NeteaseTogetherPlayer] contract. Production invalidates its exact transport
+/// and source-request generation before another remote application can start.
+abstract interface class NeteaseTogetherCancelablePlayer {
+  void cancelPendingApplication();
+}
+
+class _HandlerTogetherPlayer
+    implements NeteaseTogetherPlayer, NeteaseTogetherCancelablePlayer {
+  _HandlerTogetherPlayer(this.handler, this.cancelSourceRequest);
   final MestingAudioHandler handler;
+  final VoidCallback cancelSourceRequest;
+  int _application = 0;
+  int? _ownedTransportRevision;
+
+  @override
+  void cancelPendingApplication() {
+    ++_application;
+    final owned = _ownedTransportRevision;
+    _ownedTransportRevision = null;
+    if (owned != null && handler.cancelPendingTogetherPlayback(owned)) {
+      cancelSourceRequest();
+    }
+  }
+
   @override
   Track? get track => handler.trackForId(handler.mediaItem.value?.id ?? '');
   @override
@@ -78,7 +104,7 @@ class _HandlerTogetherPlayer implements NeteaseTogetherPlayer {
   @override
   Duration get position => handler.currentPosition;
   @override
-  Stream<String> get commands => handler.userCommandStream;
+  Stream<String> get commands => handler.togetherUserCommandStream;
   @override
   Stream<String> get trackChanges =>
       handler.mediaItem.map((m) => m?.id ?? '').distinct();
@@ -89,21 +115,43 @@ class _HandlerTogetherPlayer implements NeteaseTogetherPlayer {
     Duration position,
     bool playing,
   ) async {
+    final application = ++_application;
+    _ownedTransportRevision = handler.transportRevision;
+    bool current() =>
+        application == _application &&
+        handler.transportRevision == _ownedTransportRevision;
+    Future<void> own(Future<void> Function() action) {
+      // The dedicated handler stream labels origin before async delivery.
+      // Real media/user controls remain visible during a remote source load.
+      final operation = action();
+      _ownedTransportRevision = handler.transportRevision;
+      return operation;
+    }
+
     if (track?.platformSongId != songId) {
       final index = queue.indexWhere((t) => t.platformSongId == songId);
       if (index < 0) return;
-      await handler.replaceQueue(
-        queue,
-        initialIndex: index,
-        initialPosition: position,
-        autoplay: playing,
+      await own(
+        () => handler.replaceQueue(
+          queue,
+          initialIndex: index,
+          initialPosition: position,
+          autoplay: playing,
+          togetherGuard: current,
+        ),
       );
     } else {
       if ((handler.currentPosition - position).inMilliseconds.abs() > 1500) {
-        await handler.seek(position);
+        await own(() => handler.seek(position, togetherGuard: current));
       }
-      if (playing && !this.playing) await handler.play();
-      if (!playing && this.playing) await handler.pause();
+      if (!current()) return;
+      if (playing && !this.playing) {
+        await own(() => handler.play(togetherGuard: current));
+      }
+      if (!current()) return;
+      if (!playing && this.playing) {
+        await own(() => handler.pause(togetherGuard: current));
+      }
     }
   }
 }
@@ -147,6 +195,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     required this.isCurrent,
     this.automaticTimer = true,
     this.locationGateway = const TogetherLocationGateway(),
+    this.remoteApplicationTimeout = const Duration(seconds: 30),
     TogetherCumulativeClock? cumulativeClock,
   }) : _cumulativeClock = cumulativeClock ?? TogetherCumulativeClock();
   final NeteaseMusicRepository music;
@@ -154,6 +203,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   final NeteaseMessagesRepository messages;
   final bool Function() isCurrent;
   final bool automaticTimer;
+  final Duration remoteApplicationTimeout;
   final TogetherLocationGateway locationGateway;
   TogetherDistance distance = const TogetherDistance();
   String? presenceNotice;
@@ -168,6 +218,11 @@ class NeteaseTogetherController extends ChangeNotifier {
   );
   List<NeteasePerson> get peers =>
       members.where((p) => p.id.isNotEmpty && p.id != self.id).toList();
+
+  /// Ordinary Together rooms have two seats. Keep the action contract in the
+  /// controller too, so a stale menu or another navigation entry cannot send
+  /// an invitation after a friend has joined.
+  bool get canInvitePeer => !ending && peers.isEmpty;
   Duration? get togetherDuration => current ? _cumulativeClock.duration : null;
   bool get togetherDurationIsStale => _cumulativeClock.isStale;
   String get togetherDurationLabel {
@@ -189,6 +244,20 @@ class NeteaseTogetherController extends ChangeNotifier {
   int? _highestRemoteSequence;
   final _pendingRemote = <String>{};
   Future<void> _remoteTail = Future.value();
+  int _applicationRevision = 0;
+  Completer<void>? _applicationAbort;
+  String? _activeRemoteToken;
+  int? _activeRemoteSequence;
+  TogetherPlaybackCommand? _activeRemoteCommand;
+  int _remoteReceived = 0, _remoteApplied = 0, _remoteTimeouts = 0;
+  bool _remoteApplicationFailed = false;
+
+  /// Diagnostics expose counts only, with no room, account, friend or song.
+  Map<String, int> get synchronizationDiagnostics => {
+    'remoteReceived': _remoteReceived,
+    'remoteApplied': _remoteApplied,
+    'remoteTimeouts': _remoteTimeouts,
+  };
   Timer? _timer;
   DateTime? _lastPoll;
   final _subscriptions = <StreamSubscription<dynamic>>[];
@@ -425,8 +494,20 @@ class NeteaseTogetherController extends ChangeNotifier {
           'inviterId': music.api.session!.userId,
         }).toString();
   Future<void> invite(NeteasePerson peer) => _action(() async {
+    if (!canInvitePeer) {
+      notice = '已有好友正在一起听';
+      return;
+    }
     await _ensureRoom();
     if (!current || roomId == null) return;
+    // Membership may change while creating/restoring the room. Re-read before
+    // the explicit user's send, and never substitute a different invitee.
+    await _refresh();
+    if (!current || roomId == null) return;
+    if (!canInvitePeer) {
+      notice = '已有好友正在一起听';
+      return;
+    }
     await messages.sendText(
       peer.id,
       '邀请你一起听${player.track == null ? '' : '《${player.track!.title}》'}\n$invitationLink',
@@ -513,7 +594,10 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (_syncCurrent(epoch) && roomId == room) sharedTracks = queue;
   }
 
-  Future<void> _refresh({bool forcePresence = false}) async {
+  Future<void> _refresh({
+    bool forcePresence = false,
+    bool waitForPlayback = true,
+  }) async {
     final epoch = _syncEpoch;
     final data = NeteaseMusicRepository.object(
       (await _call('/listentogether/status'))['data'],
@@ -549,12 +633,21 @@ class NeteaseTogetherController extends ChangeNotifier {
         (await _call('/listentogether/room/check', {'roomId': roomId}))['data'],
       );
       if (!_syncCurrent(epoch)) return;
-      await _remote(check);
+      await _remote(check, waitForPlayback: waitForPlayback);
       if (!_syncCurrent(epoch)) return;
     }
-    await _remote({...data, ...room});
+    await _remote({...data, ...room}, waitForPlayback: waitForPlayback);
     if (peers.isEmpty || error != null) _cumulativeClock.markStale();
-    if (_syncCurrent(epoch)) await _refreshPresence(force: forcePresence);
+    if (_syncCurrent(epoch)) {
+      final presence = _refreshPresence(force: forcePresence);
+      if (waitForPlayback) {
+        await presence;
+      } else {
+        // Statistics/location may wait on their own network request. Neither
+        // owns the room's command reception or protocol heartbeat cadence.
+        unawaited(presence);
+      }
+    }
   }
 
   Future<void> _loadQueue({bool applyRemote = true}) async {
@@ -592,7 +685,14 @@ class NeteaseTogetherController extends ChangeNotifier {
     _formerSong = player.track?.platformSongId ?? '-1';
     _subscriptions.add(
       player.commands.listen((command) {
-        if (_applying || !current || roomId == null) return;
+        if (!current || roomId == null) return;
+        if (_applying) {
+          if (player is _HandlerTogetherPlayer) {
+            _cancelRemoteApplication();
+          } else {
+            return;
+          }
+        }
         final action = command == 'seek'
             ? 'seek'
             : command == 'pause'
@@ -641,7 +741,11 @@ class NeteaseTogetherController extends ChangeNotifier {
         });
   }
 
-  Future<void> _report(String action, {bool heartbeat = false}) async {
+  Future<void> _report(
+    String action, {
+    bool heartbeat = false,
+    bool waitForPlayback = true,
+  }) async {
     final epoch = _syncEpoch;
     final track = player.track;
     if (!_syncCurrent(epoch) ||
@@ -649,12 +753,20 @@ class NeteaseTogetherController extends ChangeNotifier {
         track?.source != TrackSource.netease) {
       return;
     }
+    // Command reception is independent of decoder completion. Until the
+    // selected peer command settles, heartbeat its synchronization snapshot;
+    // publishing the superseded local song/state here could undo that command.
+    // Listening-history accounting continues to use actual audio exclusively.
+    final pending = heartbeat ? _activeRemoteCommand : null;
+    final reportedSong = pending?.songId ?? track!.platformSongId;
+    final reportedPosition = pending?.position ?? player.position;
+    final reportedPlaying = pending?.playing ?? player.playing;
     final r = await _call(
       heartbeat ? '/listentogether/heatbeat' : '/listentogether/play/command',
       {
         'roomId': roomId,
-        'songId': track!.platformSongId,
-        'progress': player.position.inMilliseconds,
+        'songId': reportedSong,
+        'progress': reportedPosition.inMilliseconds,
         // Native pause fades complete after the intent event. Report what the
         // user requested, not that still-playing audio snapshot. Heartbeats
         // continue to report the actual settled player state.
@@ -662,20 +774,23 @@ class NeteaseTogetherController extends ChangeNotifier {
             ? 'PAUSE'
             : !heartbeat && action == 'PLAY'
             ? 'PLAY'
-            : player.playing
+            : reportedPlaying
             ? 'PLAY'
             : 'PAUSE',
         if (!heartbeat) ...{
           'commandType': action,
           'formerSongId': _formerSong,
-          'targetSongId': track.platformSongId,
+          'targetSongId': track!.platformSongId,
           'clientSeq': _sequence++,
         },
       },
     );
     if (!_syncCurrent(epoch)) return;
-    _formerSong = track.platformSongId;
-    await _remote(NeteaseMusicRepository.object(r['data']));
+    _formerSong = reportedSong;
+    await _remote(
+      NeteaseMusicRepository.object(r['data']),
+      waitForPlayback: waitForPlayback,
+    );
   }
 
   /// Both background engine pulses and the Dart fallback use one cadence.
@@ -688,19 +803,23 @@ class NeteaseTogetherController extends ChangeNotifier {
       return;
     }
     _lastPoll = now;
-    await tick();
+    await tick(waitForPlayback: false);
   }
 
-  Future<void> tick() async {
+  Future<void> tick({bool waitForPlayback = true}) async {
     if (_ticking || busy || !current || roomId == null) return;
     final epoch = _syncEpoch;
     _ticking = true;
     try {
-      await _refresh();
+      await _refresh(waitForPlayback: waitForPlayback);
       if (roomId != null && _syncCurrent(epoch)) {
-        await _report('PLAY', heartbeat: true);
+        await _report(
+          'PLAY',
+          heartbeat: true,
+          waitForPlayback: waitForPlayback,
+        );
       }
-      if (_syncCurrent(epoch)) error = null;
+      if (_syncCurrent(epoch) && !_remoteApplicationFailed) error = null;
     } catch (_) {
       if (_syncCurrent(epoch) && roomId != null) {
         error = '一起听连接暂时中断，正在重连';
@@ -715,7 +834,10 @@ class NeteaseTogetherController extends ChangeNotifier {
   /// Servers may include a command in room/status/heartbeat responses. Apply
   /// only an explicit versioned command, never infer a play state from member
   /// data, and suppress local echoes while applying it to the audio handler.
-  Future<void> _remote(Map<String, dynamic> data) async {
+  Future<void> _remote(
+    Map<String, dynamic> data, {
+    bool waitForPlayback = true,
+  }) async {
     final epoch = _syncEpoch, room = roomId;
     if (!_syncCurrent(epoch) || room == null) return;
     final command = TogetherPlaybackCommand.parse(data, room);
@@ -734,32 +856,47 @@ class NeteaseTogetherController extends ChangeNotifier {
       // Own acknowledgements are barriers too: an older peer packet cannot
       // undo a newer local action already accepted by the server.
       _highestRemoteSequence = sequence;
+      if (_activeRemoteToken != null &&
+          _activeRemoteSequence != null &&
+          sequence > _activeRemoteSequence!) {
+        _cancelRemoteApplication();
+      }
     }
     if (command.token == _lastRemote ||
         _pendingRemote.contains(command.token) ||
         command.userId == music.api.session?.userId) {
       return;
     }
+    // Opaque version tokens are supported by the existing wire decoder too.
+    // A distinct accepted command still invalidates an active old operation;
+    // do not leave its audio guard alive merely because it is not numeric.
+    if (_activeRemoteToken != null && _activeRemoteToken != command.token) {
+      _cancelRemoteApplication();
+    }
     _pendingRemote.add(command.token);
+    _remoteReceived++;
+    final application = ++_applicationRevision;
+    final abort = Completer<void>();
+    _applicationAbort = abort;
+    _activeRemoteToken = command.token;
+    _activeRemoteSequence = sequence;
+    _activeRemoteCommand = command;
+    bool valid() =>
+        _syncCurrent(epoch) &&
+        roomId == room &&
+        application == _applicationRevision &&
+        !(sequence != null &&
+            _highestRemoteSequence != null &&
+            sequence < _highestRemoteSequence!);
     final operation = _remoteTail.then((_) async {
-      if (!_syncCurrent(epoch) ||
-          roomId != room ||
-          sequence != null &&
-              _highestRemoteSequence != null &&
-              sequence < _highestRemoteSequence!) {
-        return;
-      }
+      if (!valid()) return;
       _applying = true;
       try {
         if (!sharedTracks.any((t) => t.platformSongId == command.songId)) {
           await _loadQueue(applyRemote: false);
         }
-        if (!_syncCurrent(epoch) ||
-            roomId != room ||
-            !sharedTracks.any((t) => t.platformSongId == command.songId) ||
-            sequence != null &&
-                _highestRemoteSequence != null &&
-                sequence < _highestRemoteSequence!) {
+        if (!valid() ||
+            !sharedTracks.any((t) => t.platformSongId == command.songId)) {
           return;
         }
         await player.apply(
@@ -771,28 +908,71 @@ class NeteaseTogetherController extends ChangeNotifier {
                   : Duration.zero),
           command.playing,
         );
-        if (_syncCurrent(epoch) && roomId == room) {
+        if (valid()) {
           _formerSong = command.songId;
           // Consume only successfully applied state. A failed source lookup
           // can retry the same server command on the next read.
           _lastRemote = command.token;
+          _remoteApplied++;
+          _remoteApplicationFailed = false;
         }
       } finally {
-        _applying = false;
+        if (application == _applicationRevision) _applying = false;
       }
     });
-    // Keep later applications running after one failure, while propagating the
-    // original failure to this caller's connection/retry state.
-    _remoteTail = operation.catchError((Object _) {});
-    try {
-      await operation;
-    } finally {
-      _pendingRemote.remove(command.token);
+    // The background receiver/heartbeat never waits for an audio decoder.
+    // Timeout means invalidate that exact audio/source generation, rather than
+    // merely abandoning a Future that could autoplay an old selection later.
+    Object? applicationFailure;
+    final bounded = Future.any<void>([operation, abort.future])
+        .timeout(remoteApplicationTimeout)
+        .catchError((Object failure) {
+          if (!valid()) return;
+          applicationFailure = failure;
+          _remoteApplicationFailed = true;
+          if (failure is TimeoutException) {
+            _remoteTimeouts++;
+            _cancelRemoteApplication();
+          }
+          error = '一起听播放同步暂未完成，正在重试';
+          _notify();
+        })
+        .whenComplete(() {
+          _pendingRemote.remove(command.token);
+          if (application == _applicationRevision) {
+            _applicationAbort = null;
+            _activeRemoteToken = null;
+            _activeRemoteSequence = null;
+            _activeRemoteCommand = null;
+          }
+        });
+    _remoteTail = bounded;
+    if (waitForPlayback) {
+      await bounded;
+      final failure = applicationFailure;
+      if (failure != null) throw failure;
     }
+  }
+
+  void _cancelRemoteApplication() {
+    ++_applicationRevision;
+    final abort = _applicationAbort;
+    _applicationAbort = null;
+    if (abort?.isCompleted == false) abort!.complete();
+    final adapter = player;
+    if (adapter is NeteaseTogetherCancelablePlayer) {
+      (adapter as NeteaseTogetherCancelablePlayer).cancelPendingApplication();
+    }
+    _activeRemoteToken = null;
+    _activeRemoteSequence = null;
+    _activeRemoteCommand = null;
+    _applying = false;
+    _remoteTail = Future.value();
   }
 
   Future<void> settle() => _tail;
   void _stop() {
+    if (_activeRemoteToken != null) _cancelRemoteApplication();
     _lastPoll = null;
     _timer?.cancel();
     _timer = null;

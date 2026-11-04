@@ -540,6 +540,8 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
                                   },
                             child: const Text('刷新网易云登录状态'),
                           ),
+                        if (session?.platform == MusicPlatform.netease)
+                          const SizedBox(height: 16),
                         BetaGlassButton(
                           loading: _busy && _busyAction == 'logout',
                           onPressed: _busy ? null : _logout,

@@ -519,6 +519,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                     appHaptic(context, AppHapticEvent.selection);
                     if (index == selected &&
                         _mini &&
+                        !_tabNavigation.hasSecondaryPages(index) &&
                         !searching &&
                         _rootTab(widget.location) != null) {
                       _mini = false;

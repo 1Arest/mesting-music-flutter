@@ -71,6 +71,7 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
         width: widget.menuWidth,
         label: '关闭更多菜单',
         fromInnerEdge: true,
+        motion: BetaMenuMotion.player,
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, update) => SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 6),

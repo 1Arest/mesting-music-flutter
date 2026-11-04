@@ -12,6 +12,7 @@ import 'beta_swipe_pages.dart';
 import 'beta_text_editing.dart';
 import 'beta_glass_action.dart';
 import 'beta_content_insets.dart';
+import 'beta_tab_navigation.dart';
 import 'keyboard_visibility_builder.dart';
 
 /// Root-Navigator music pages have no persistent shell ancestor. Compose the
@@ -73,11 +74,14 @@ class _SecondaryLayoutState extends ConsumerState<BetaSecondaryMusicLayout> {
   void _navigate(String destination) {
     final router = GoRouter.maybeOf(context);
     if (router == null) return;
+    final navigation = ref.read(betaTabNavigationProvider);
     // Dismiss imperative pages above the declarative root before choosing a tab.
     Navigator.of(
       context,
       rootNavigator: true,
     ).popUntil((route) => route.isFirst);
+    final index = betaMusicRoutes.indexOf(destination);
+    if (index >= 0) navigation.returnToRoot(index);
     router.go(destination);
   }
 

@@ -10,6 +10,40 @@ const betaMenuCloseDuration = Duration(milliseconds: 240);
 const double betaMenuAnchorGap = 8;
 const double _menuSeparationProgress = .72;
 
+/// Motion is selected by the surface that owns the menu. Text editing keeps its
+/// established timings and geometry; the player's tall menu needs a quicker
+/// reveal and a dismissal that begins moving immediately instead of reversing
+/// an ease-out curve from its nearly motionless end.
+class BetaMenuMotion {
+  const BetaMenuMotion({
+    this.openDuration = betaMenuOpenDuration,
+    this.closeDuration = betaMenuCloseDuration,
+    this.progressCurve = Curves.linear,
+    this.reverseProgressCurve = Curves.linear,
+    this.geometryCurve = Curves.easeOutCubic,
+    this.foregroundCurve = const Interval(.22, .76, curve: Curves.easeOutCubic),
+    this.separationProgress = _menuSeparationProgress,
+  });
+
+  static const standard = BetaMenuMotion();
+  static const player = BetaMenuMotion(
+    openDuration: Duration(milliseconds: 320),
+    closeDuration: Duration(milliseconds: 220),
+    progressCurve: Curves.easeOutCubic,
+    reverseProgressCurve: Curves.easeInCubic,
+    geometryCurve: Curves.linear,
+    foregroundCurve: Interval(.12, .72, curve: Curves.easeOutCubic),
+    separationProgress: .90,
+  );
+
+  final Duration openDuration, closeDuration;
+  final Curve progressCurve,
+      reverseProgressCurve,
+      geometryCurve,
+      foregroundCurve;
+  final double separationProgress;
+}
+
 /// The pill's actual optical material, shared by playback and editing menus.
 /// Every popover owns one premium layer; nested surfaces would lose refraction.
 class BetaGlassMenuSurface extends StatelessWidget {
@@ -49,11 +83,13 @@ class BetaLiquidMenu extends StatefulWidget {
     required this.animation,
     required this.layout,
     required this.child,
+    this.motion = BetaMenuMotion.standard,
     super.key,
   });
   final Animation<double> animation;
   final BetaMenuLayout layout;
   final Widget child;
+  final BetaMenuMotion motion;
 
   @override
   State<BetaLiquidMenu> createState() => _BetaLiquidMenuState();
@@ -61,26 +97,41 @@ class BetaLiquidMenu extends StatefulWidget {
 
 class _BetaLiquidMenuState extends State<BetaLiquidMenu> {
   bool _connected = true;
+  late CurvedAnimation _progress;
+
+  void _bindProgress() {
+    // CurvedAnimation retains the in-flight direction when interrupted. A
+    // dismiss during opening therefore reverses the currently painted path,
+    // while a fully open menu uses the calibrated reverse curve from rest.
+    _progress = CurvedAnimation(
+      parent: widget.animation,
+      curve: widget.motion.progressCurve,
+      reverseCurve: widget.motion.reverseProgressCurve,
+    );
+    _connected = _progress.value < widget.motion.separationProgress;
+    _progress.addListener(_connectionChanged);
+  }
 
   @override
   void initState() {
     super.initState();
-    _connected = widget.animation.value < _menuSeparationProgress;
-    widget.animation.addListener(_connectionChanged);
+    _bindProgress();
   }
 
   @override
   void didUpdateWidget(covariant BetaLiquidMenu oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.animation != widget.animation) {
-      oldWidget.animation.removeListener(_connectionChanged);
-      widget.animation.addListener(_connectionChanged);
+    if (oldWidget.animation != widget.animation ||
+        oldWidget.motion != widget.motion) {
+      _progress.removeListener(_connectionChanged);
+      _progress.dispose();
+      _bindProgress();
     }
-    _connected = widget.animation.value < _menuSeparationProgress;
+    _connected = _progress.value < widget.motion.separationProgress;
   }
 
   void _connectionChanged() {
-    final connected = widget.animation.value < _menuSeparationProgress;
+    final connected = _progress.value < widget.motion.separationProgress;
     // Only rebuild at the separation boundary. Motion ticks continue to be
     // render transforms, and the menu rows retain their existing elements.
     if (connected != _connected) setState(() => _connected = connected);
@@ -88,7 +139,8 @@ class _BetaLiquidMenuState extends State<BetaLiquidMenu> {
 
   @override
   void dispose() {
-    widget.animation.removeListener(_connectionChanged);
+    _progress.removeListener(_connectionChanged);
+    _progress.dispose();
     super.dispose();
   }
 
@@ -98,20 +150,17 @@ class _BetaLiquidMenuState extends State<BetaLiquidMenu> {
     final settings = betaMusicPillGlass(context);
     final foreground = reduced
         ? kAlwaysCompleteAnimation
-        : widget.animation.drive(
-            CurveTween(
-              curve: const Interval(.22, .76, curve: Curves.easeOutCubic),
-            ),
-          );
+        : _progress.drive(CurveTween(curve: widget.motion.foregroundCurve));
     return AdaptiveLiquidGlassLayer(
       quality: GlassQuality.premium,
       settings: settings.copyWith(blur: settings.blur + 2),
       blendAmount: 16,
       child: _LiquidMenuMotion(
         key: const ValueKey('beta105-liquid-menu-flow'),
-        animation: widget.animation,
+        animation: _progress,
         layout: widget.layout,
         reduced: reduced,
+        motion: widget.motion,
         children: [
           BetaGlassMenuSurface(
             grouped: true,
@@ -150,20 +199,22 @@ class _LiquidMenuMotion extends MultiChildRenderObjectWidget {
     required this.animation,
     required this.layout,
     required this.reduced,
+    required this.motion,
     required super.children,
     super.key,
   });
   final Animation<double> animation;
   final BetaMenuLayout layout;
   final bool reduced;
+  final BetaMenuMotion motion;
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderLiquidMenu(animation, layout, reduced);
+      _RenderLiquidMenu(animation, layout, reduced, motion);
   @override
   void updateRenderObject(
     BuildContext context,
     _RenderLiquidMenu renderObject,
-  ) => renderObject.update(animation, layout, reduced);
+  ) => renderObject.update(animation, layout, reduced, motion);
 }
 
 class _MenuParentData extends ContainerBoxParentData<RenderBox> {}
@@ -172,16 +223,23 @@ class _RenderLiquidMenu extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _MenuParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _MenuParentData> {
-  _RenderLiquidMenu(this.animation, this._menuLayout, this.reduced);
+  _RenderLiquidMenu(
+    this.animation,
+    this._menuLayout,
+    this.reduced,
+    this.motion,
+  );
   Animation<double> animation;
   BetaMenuLayout _menuLayout;
   bool reduced;
+  BetaMenuMotion motion;
   double? _cachedProgress;
   List<Rect>? _cachedBounds;
   void update(
     Animation<double> next,
     BetaMenuLayout nextLayout,
     bool nextReduced,
+    BetaMenuMotion nextMotion,
   ) {
     if (animation != next) {
       if (attached) animation.removeListener(markNeedsPaint);
@@ -191,6 +249,7 @@ class _RenderLiquidMenu extends RenderBox
     if (_menuLayout.shouldRelayout(nextLayout)) markNeedsLayout();
     _menuLayout = nextLayout;
     reduced = nextReduced;
+    motion = nextMotion;
     _cachedBounds = null;
     markNeedsPaint();
   }
@@ -241,14 +300,14 @@ class _RenderLiquidMenu extends RenderBox
     // One position function in both directions makes an interrupted opening
     // reverse continuously, without switching curves or replaying a new route.
     final raw = progress;
-    final t = Curves.easeOutCubic.transform(raw);
+    final t = motion.geometryCurve.transform(raw);
     final rect = Rect.lerp(start, target, t)!;
 
     // The seam thins to zero before the menu reaches its final gap. The reverse
     // trajectory reconnects the meniscus before the menu merges into its source.
     final join = reduced
         ? 0.0
-        : (1 - raw / _menuSeparationProgress).clamp(0.0, 1.0);
+        : (1 - raw / motion.separationProgress).clamp(0.0, 1.0);
     final source = start.center;
     final edge = Offset(
       source.dx.clamp(
@@ -471,6 +530,7 @@ Future<T?> showBetaGlassPopover<T>({
   String label = '关闭菜单',
   bool fromInnerEdge = false,
   bool requestFocus = true,
+  BetaMenuMotion motion = BetaMenuMotion.standard,
 }) async {
   appHaptic(context, AppHapticEvent.impact);
   final media = MediaQuery.of(context);
@@ -484,11 +544,13 @@ Future<T?> showBetaGlassPopover<T>({
     requestFocus: requestFocus,
     label: label,
     reduceMotion: media.disableAnimations,
+    motion: motion,
     pageBuilder: (dialog, animation, _) => Theme(
       data: Theme.of(context),
       child: BetaLiquidMenu(
         animation: animation,
         layout: layout,
+        motion: motion,
         child: builder(dialog),
       ),
     ),
@@ -504,21 +566,21 @@ class _BetaGlassPopoverRoute<T> extends RawDialogRoute<T> {
     super.requestFocus,
     required String label,
     required this.reduceMotion,
+    required this.motion,
   }) : super(
          barrierDismissible: true,
          barrierLabel: label,
          barrierColor: Colors.black.withValues(alpha: .08),
-         transitionDuration: reduceMotion
-             ? Duration.zero
-             : betaMenuOpenDuration,
+         transitionDuration: reduceMotion ? Duration.zero : motion.openDuration,
          transitionBuilder: (_, _, _, child) => child,
        );
 
   final bool reduceMotion;
+  final BetaMenuMotion motion;
 
   @override
   Duration get reverseTransitionDuration =>
-      reduceMotion ? Duration.zero : betaMenuCloseDuration;
+      reduceMotion ? Duration.zero : motion.closeDuration;
 }
 
 /// Also used by selection toolbars, whose anchors are supplied by EditableText.

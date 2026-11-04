@@ -15,21 +15,29 @@ import 'netease_together_controller.dart';
 import 'netease_together_player_header.dart';
 import 'netease_together_exit.dart';
 import '../../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../../themes/music_application_theme.dart';
+import 'together_room_members.dart';
 
 Future<void> showNeteaseTogetherPanel(
   BuildContext context, {
   NeteasePerson? invitee,
   String? invitation,
-}) => showLiquidGlassBottomSheet<void>(
-  context: context,
-  useRootNavigator: true,
-  isScrollControlled: true,
-  useSafeArea: true,
-  builder: (context) => SizedBox(
-    height: MediaQuery.sizeOf(context).height * .86,
-    child: NeteaseTogetherPanel(invitee: invitee, invitation: invitation),
-  ),
-);
+}) {
+  // A player forces its artwork chrome dark; this account/room sheet follows
+  // the application's selected appearance, including its optical surface.
+  final applicationContext = Navigator.of(context, rootNavigator: true).context;
+  return showLiquidGlassBottomSheet<void>(
+    context: applicationContext,
+    themeBuilder: MusicApplicationTheme.of,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (context) => SizedBox(
+      height: MediaQuery.sizeOf(context).height * .86,
+      child: NeteaseTogetherPanel(invitee: invitee, invitation: invitation),
+    ),
+  );
+}
 
 class NeteaseTogetherPanel extends ConsumerStatefulWidget {
   const NeteaseTogetherPanel({this.invitee, this.invitation, super.key});
@@ -104,248 +112,266 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
     }
     return ListenableBuilder(
       listenable: controller,
-      builder: (context, _) => PlatformPageFrame(
-        title: '一起听',
-        subtitle: controller.active ? '房间成员与共享设置' : '邀请朋友，一起分享此刻的音乐',
-        actions: [
-          BetaGlassAction(
-            label: '刷新一起听',
-            icon: CupertinoIcons.refresh,
-            blue: false,
-            loading: controller.busy,
-            onPressed: controller.restore,
-          ),
-        ],
-        child: ListView(
-          padding: BetaContentInsets.musicPaddingOf(
-            context,
-            const EdgeInsets.fromLTRB(22, 12, 22, 32),
-          ),
-          children: [
-            if (track.source == TrackSource.netease)
-              EditorialTrackRow(track: track, contextTracks: [track]),
-            if (controller.active) ...[
-              const SizedBox(height: 16),
-              PlatformPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '正在一起听',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+      builder: (context, _) => Theme(
+        data: MusicApplicationTheme.of(context),
+        child: PlatformPageFrame(
+          title: '一起听',
+          subtitle: controller.active ? '房间成员与共享设置' : '邀请朋友，一起分享此刻的音乐',
+          actions: [
+            BetaGlassAction(
+              label: '刷新一起听',
+              icon: CupertinoIcons.refresh,
+              blue: false,
+              loading: controller.busy,
+              onPressed: controller.restore,
+            ),
+          ],
+          child: ListView(
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              const EdgeInsets.fromLTRB(22, 12, 22, 32),
+            ),
+            children: [
+              if (track.source == TrackSource.netease)
+                EditorialTrackRow(track: track, contextTracks: [track]),
+              if (controller.active) ...[
+                const SizedBox(height: 16),
+                PlatformPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '正在一起听',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (controller.members.isEmpty) const Text('等待朋友加入…'),
-                    for (final person in controller.members)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: NeteasePersonAvatar(person, size: 40),
-                        title: Text(person.name),
+                      const SizedBox(height: 12),
+                      TogetherRoomMembers(
+                        self:
+                            controller.members
+                                .where((p) => p.id == controller.self.id)
+                                .firstOrNull ??
+                            controller.self,
+                        peer: controller.peers.firstOrNull,
                       ),
-                    const SizedBox(height: 10),
-                    const Text('离开此页面后仍会继续同步，退出一起听后停止同步。'),
-                    const SizedBox(height: 14),
-                    BetaGlassButton(
-                      key: const ValueKey('together-panel-exit'),
-                      loading: controller.ending,
-                      onPressed: controller.busy
-                          ? null
-                          : () =>
-                                confirmNeteaseTogetherExit(context, controller),
-                      child: const Text('退出一起听'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  controller.locationEnabled
-                      ? controller.distance.label
-                      : '双方距离',
-                ),
-                subtitle: Text(
-                  controller.presenceNotice ??
-                      (controller.locationEnabled
-                          ? '当前房间已开启位置共享'
-                          : '双方开启位置后显示距离'),
-                ),
-                trailing: TextButton(
-                  onPressed: controller.locating
-                      ? null
-                      : controller.locationEnabled
-                      ? controller.disableLocation
-                      : () => requestTogetherLocation(context, controller),
-                  child: Text(
-                    controller.locating
-                        ? '获取中…'
-                        : controller.locationEnabled
-                        ? '关闭共享'
-                        : '开启位置',
+                      if (controller.peers.isEmpty) ...[
+                        const SizedBox(height: 10),
+                        const Text('等待朋友加入…'),
+                      ],
+                      const SizedBox(height: 10),
+                      const Text('离开此页面后仍会继续同步，退出一起听后停止同步。'),
+                      const SizedBox(height: 14),
+                      BetaGlassButton(
+                        key: const ValueKey('together-panel-exit'),
+                        loading: controller.ending,
+                        onPressed: controller.busy
+                            ? null
+                            : () => confirmNeteaseTogetherExit(
+                                context,
+                                controller,
+                              ),
+                        child: const Text('退出一起听'),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              if (controller.locationEnabled)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
+                const SizedBox(height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    controller.locationEnabled
+                        ? controller.distance.label
+                        : '双方距离',
+                  ),
+                  subtitle: Text(
+                    controller.presenceNotice ??
+                        (controller.locationEnabled
+                            ? '当前房间已开启位置共享'
+                            : '双方开启位置后显示距离'),
+                  ),
+                  trailing: TextButton(
                     onPressed: controller.locating
                         ? null
-                        : controller.enableLocation,
-                    icon: const Icon(CupertinoIcons.refresh, size: 18),
-                    label: const Text('刷新当前位置'),
+                        : controller.locationEnabled
+                        ? controller.disableLocation
+                        : () => requestTogetherLocation(context, controller),
+                    child: Text(
+                      controller.locating
+                          ? '获取中…'
+                          : controller.locationEnabled
+                          ? '关闭共享'
+                          : '开启位置',
+                    ),
                   ),
                 ),
-              BetaGlassButton(
-                onPressed: controller.busy
-                    ? null
-                    : () async {
-                        await Clipboard.setData(
-                          ClipboardData(text: controller.invitationLink),
-                        );
-                        if (mounted) {
-                          setState(() => _localNotice = '邀请链接已复制，可发送给网易云官版好友');
-                        }
-                      },
-                child: const Text('复制邀请链接'),
-              ),
-              const SizedBox(height: 12),
-              BetaGlassButton(
-                onPressed: controller.busy
-                    ? null
-                    : controller.shareCurrentQueue,
-                child: const Text('共享当前待播列表'),
-              ),
-            ],
-            if (_invitation != null && !controller.active) ...[
-              const SizedBox(height: 16),
-              PlatformPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                if (controller.locationEnabled)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: controller.locating
+                          ? null
+                          : controller.enableLocation,
+                      icon: const Icon(CupertinoIcons.refresh, size: 18),
+                      label: const Text('刷新当前位置'),
+                    ),
+                  ),
+                if (controller.canInvitePeer)
+                  BetaGlassButton(
+                    onPressed: controller.busy
+                        ? null
+                        : () async {
+                            await Clipboard.setData(
+                              ClipboardData(text: controller.invitationLink),
+                            );
+                            if (mounted) {
+                              setState(
+                                () => _localNotice = '邀请链接已复制，可发送给网易云官版好友',
+                              );
+                            }
+                          },
+                    child: const Text('复制邀请链接'),
+                  ),
+                if (controller.canInvitePeer) const SizedBox(height: 12),
+                BetaGlassButton(
+                  onPressed: controller.busy
+                      ? null
+                      : controller.shareCurrentQueue,
+                  child: const Text('共享当前待播列表'),
+                ),
+              ],
+              if (_invitation != null && !controller.active) ...[
+                const SizedBox(height: 16),
+                PlatformPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('朋友邀请你一起听'),
+                      const SizedBox(height: 12),
+                      BetaGlassButton(
+                        blue: true,
+                        loading: controller.busy,
+                        onPressed: () => controller.join(_invitation!),
+                        child: const Text('接受邀请'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (controller.canInvitePeer) ...[
+                const SizedBox(height: 22),
+                Row(
                   children: [
-                    const Text('朋友邀请你一起听'),
-                    const SizedBox(height: 12),
-                    BetaGlassButton(
-                      blue: true,
-                      loading: controller.busy,
-                      onPressed: () => controller.join(_invitation!),
-                      child: const Text('接受邀请'),
+                    const Expanded(
+                      child: Text(
+                        '邀请好友',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    BetaGlassAction(
+                      label: '查找朋友',
+                      icon: CupertinoIcons.search,
+                      blue: false,
+                      onPressed: controller.busy
+                          ? null
+                          : () => _chooseFriend(controller),
                     ),
                   ],
                 ),
-              ),
-            ],
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '邀请好友',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                if (widget.invitee != null)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: NeteasePersonAvatar(widget.invitee!),
+                    title: Text(
+                      widget.invitee!.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: BetaGlassAction(
+                      label: '邀请${widget.invitee!.name}一起听',
+                      icon: CupertinoIcons.add,
+                      onPressed: controller.busy
+                          ? null
+                          : () => controller.invite(widget.invitee!),
+                    ),
                   ),
-                ),
-                BetaGlassAction(
-                  label: '查找朋友',
-                  icon: CupertinoIcons.search,
-                  blue: false,
+                if (_loadingFriends)
+                  const Padding(
+                    padding: EdgeInsets.all(22),
+                    child: Center(child: BetaActivityIndicator()),
+                  ),
+                if (_friendError != null)
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(_friendError!),
+                  ),
+                for (final friend in _friends.where(
+                  (p) => p.id != widget.invitee?.id,
+                ))
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: NeteasePersonAvatar(friend),
+                    title: Text(
+                      friend.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: BetaGlassAction(
+                      label: '邀请${friend.name}一起听',
+                      icon: CupertinoIcons.add,
+                      onPressed: controller.busy
+                          ? null
+                          : () => controller.invite(friend),
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                BetaGlassButton(
                   onPressed: controller.busy
                       ? null
                       : () => _chooseFriend(controller),
+                  child: const Text('选择更多朋友'),
                 ),
               ],
-            ),
-            if (widget.invitee != null)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: NeteasePersonAvatar(widget.invitee!),
-                title: Text(
-                  widget.invitee!.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              if (!controller.active) ...[
+                const SizedBox(height: 12),
+                BetaGlassButton(
+                  onPressed: controller.busy ? null : _pasteInvitation,
+                  child: const Text('粘贴邀请链接加入'),
                 ),
-                trailing: BetaGlassAction(
-                  label: '邀请${widget.invitee!.name}一起听',
-                  icon: CupertinoIcons.add,
-                  onPressed: controller.busy
-                      ? null
-                      : () => controller.invite(widget.invitee!),
+                const SizedBox(height: 12),
+                BetaGlassButton(
+                  onPressed: controller.busy ? null : controller.create,
+                  child: const Text('开始一起听'),
                 ),
-              ),
-            if (_loadingFriends)
-              const Padding(
-                padding: EdgeInsets.all(22),
-                child: Center(child: BetaActivityIndicator()),
-              ),
-            if (_friendError != null)
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(_friendError!),
-              ),
-            for (final friend in _friends.where(
-              (p) => p.id != widget.invitee?.id,
-            ))
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: NeteasePersonAvatar(friend),
-                title: Text(
-                  friend.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              ],
+              if (controller.sharedTracks.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                const Text(
+                  '共享待播列表',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
-                trailing: BetaGlassAction(
-                  label: '邀请${friend.name}一起听',
-                  icon: CupertinoIcons.add,
-                  onPressed: controller.busy
-                      ? null
-                      : () => controller.invite(friend),
+                for (final song in controller.sharedTracks)
+                  EditorialTrackRow(
+                    track: song,
+                    contextTracks: controller.sharedTracks,
+                  ),
+              ],
+              if (controller.notice != null || _localNotice != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Text(controller.notice ?? _localNotice!),
                 ),
-              ),
-            const SizedBox(height: 12),
-            BetaGlassButton(
-              onPressed: controller.busy
-                  ? null
-                  : () => _chooseFriend(controller),
-              child: const Text('选择更多朋友'),
-            ),
-            if (!controller.active) ...[
-              const SizedBox(height: 12),
-              BetaGlassButton(
-                onPressed: controller.busy ? null : _pasteInvitation,
-                child: const Text('粘贴邀请链接加入'),
-              ),
-              const SizedBox(height: 12),
-              BetaGlassButton(
-                onPressed: controller.busy ? null : controller.create,
-                child: const Text('开始一起听'),
-              ),
-            ],
-            if (controller.sharedTracks.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              const Text(
-                '共享待播列表',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-              ),
-              for (final song in controller.sharedTracks)
-                EditorialTrackRow(
-                  track: song,
-                  contextTracks: controller.sharedTracks,
+              if (controller.error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Text(controller.error!),
                 ),
             ],
-            if (controller.notice != null || _localNotice != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Text(controller.notice ?? _localNotice!),
-              ),
-            if (controller.error != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                child: Text(controller.error!),
-              ),
-          ],
+          ),
         ),
       ),
     );

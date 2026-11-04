@@ -59,7 +59,9 @@ class SelectionHandler implements MestingAudioHandler {
     Duration initialPosition = Duration.zero,
     bool autoplay = true,
     bool recommendationContext = false,
+    bool Function()? togetherGuard,
   }) async {
+    if (togetherGuard?.call() == false) return;
     all = tracks;
   }
 }

@@ -6,6 +6,23 @@ import 'package:flutter/widgets.dart';
 class BetaPageRouteObserver extends NavigatorObserver with ChangeNotifier {
   final _routes = <Route<dynamic>>[];
 
+  /// A tab's declarative root remains mounted so its scroll and loaded data
+  /// survive. Only ordinary Navigator.push pages above it are disposable when
+  /// a destination is selected; GoRouter still owns all Page-based routes.
+  bool get hasSecondaryPages =>
+      _routes.skip(1).any((route) => route.settings is! Page && route.isActive);
+
+  void returnToRoot() {
+    final owner = navigator;
+    if (owner == null) return;
+    // Remove, rather than pop, because the tab viewport owns this transition.
+    // A reverse detail animation would briefly expose the old page over the
+    // target tab, especially when the user switches back within one frame.
+    for (final route in _routes.skip(1).toList().reversed) {
+      if (route.settings is! Page && route.isActive) owner.removeRoute(route);
+    }
+  }
+
   static BetaPageRouteObserver? maybeOf(BuildContext context) =>
       Navigator.maybeOf(
         context,

@@ -11,6 +11,8 @@ import '../music_platform_providers.dart';
 import '../platform_backend_providers.dart';
 import '../platform_catalog_providers.dart';
 import '../platform_recommendation_providers.dart';
+import '../platform_browse_cache.dart';
+import 'retained_platform_snapshot.dart';
 import '../../auth/presentation/beta_login_navigation.dart';
 import 'platform_design.dart';
 import 'platform_feedback.dart';
@@ -25,15 +27,16 @@ class PlatformRecommendationHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => PlatformStyle(
     child: EditorialScroll(
-      onRefresh: () async {
-        ref.invalidate(platformFmProvider);
-        ref.invalidate(platformDailyProvider);
-        ref.invalidate(platformDiscoveryProvider);
-        ref.invalidate(platformNewSongsProvider);
-        await ref
-            .read(platformDiscoveryProvider.future)
-            .then<void>((_) {}, onError: (Object _) {});
-      },
+      onRefresh: () => refreshBrowse(ref, [
+        if (ref.exists(platformFmProvider))
+          () => ref.refresh(platformFmProvider.future),
+        if (ref.exists(platformDailyProvider))
+          () => ref.refresh(platformDailyProvider.future),
+        if (ref.exists(platformDiscoveryProvider))
+          () => ref.refresh(platformDiscoveryProvider.future),
+        if (ref.exists(platformNewSongsProvider))
+          () => ref.refresh(platformNewSongsProvider.future),
+      ]),
       children: const [
         EditorialHeader('发现'),
         PlatformFmSection(),
@@ -141,7 +144,9 @@ class PlatformRecommendedSection extends ConsumerWidget {
               ),
             ),
           ),
-        value.when(
+        RetainedPlatformSnapshot(
+          value: value,
+          artwork: (tracks) => tracks.map((track) => track.coverAsset),
           loading: () => const PlatformFeedbackState(loading: true),
           error: (_, _) => EditorialEmpty(
             '暂时无法获取推荐',

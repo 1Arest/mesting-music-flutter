@@ -9,6 +9,7 @@ import '../../music_platform/data/platform_explore.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/platform_explore_providers.dart';
 import '../../music_platform/presentation/platform_design.dart';
+import '../../music_platform/presentation/retained_platform_snapshot.dart';
 import '../../music_platform/presentation/platform_search_landing.dart'
     show PlatformExploreSongsPage;
 import '../../themes/music_theme_tokens.dart';
@@ -66,7 +67,9 @@ class MusicHomeCatalogueShelf extends ConsumerWidget {
           title,
           onTap: () => openMusicHomeCatalogue(context, kind),
         ),
-        value.when(
+        RetainedPlatformSnapshot(
+          value: value,
+          artwork: (items) => items.map((item) => item.cover),
           loading: () => const PlatformFeedbackState(loading: true),
           error: (_, _) => EditorialEmpty(
             '$title暂时无法加载',

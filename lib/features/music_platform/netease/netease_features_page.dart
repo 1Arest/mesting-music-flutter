@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import '../../../core/cache/cached_browse_loader.dart';
 import '../../../core/cache/cached_browse_provider.dart';
 import '../platform_browse_cache.dart';
+import '../platform_catalog_providers.dart';
+import '../platform_recommendation_providers.dart';
+import '../presentation/retained_platform_snapshot.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
@@ -56,11 +59,26 @@ class NeteaseDiscoveryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => PlatformStyle(
     child: EditorialScroll(
-      onRefresh: () async {
-        revalidateBrowse(ref);
-        ref.invalidate(neteaseFeedPreviewProvider);
-        ref.invalidate(neteaseMusicRepositoryProvider);
-      },
+      onRefresh: () => refreshBrowse(ref, [
+        () => ref.refresh(platformDailyProvider.future),
+        if (ref.exists(platformFmProvider))
+          () => ref.refresh(platformFmProvider.future),
+        if (ref.exists(platformNewSongsProvider))
+          () => ref.refresh(platformNewSongsProvider.future),
+        if (ref.exists(platformExploreProvider(PlatformExploreKind.rank)))
+          () => ref.refresh(
+            platformExploreProvider(PlatformExploreKind.rank).future,
+          ),
+        for (final feed in [
+          NeteaseFeed.recommended,
+          NeteaseFeed.premium,
+          NeteaseFeed.albums,
+          NeteaseFeed.artists,
+          NeteaseFeed.mvs,
+        ])
+          if (ref.exists(neteaseFeedPreviewProvider(feed)))
+            () => ref.refresh(neteaseFeedPreviewProvider(feed).future),
+      ]),
       children: const [
         EditorialHeader('发现'),
         PlatformRecommendedSection(title: '每日推荐'),
@@ -89,30 +107,30 @@ class NeteaseHomeShelf extends ConsumerWidget {
     // second cold-start flash despite successfully restored disk snapshots.
     final restored = ref.watch(neteaseFeedPreviewProvider(feed)).hasValue;
     Widget contents(BuildContext context) => Consumer(
-      builder: (context, ref, _) => ref
-          .watch(neteaseFeedPreviewProvider(feed))
-          .when(
-            loading: () => const PlatformFeedbackState(loading: true),
-            error: (_, _) => EditorialEmpty(
-              '$title暂时无法加载',
-              onRetry: () => ref.invalidate(neteaseFeedPreviewProvider(feed)),
-            ),
-            data: (batch) => batch.items.isEmpty
-                ? EditorialEmpty('暂无$title')
-                : EditorialShelf(
-                    height: 248,
-                    children: [
-                      for (final item in batch.items.take(12))
-                        EditorialCover(
-                          cover: item.cover,
-                          title: item.name,
-                          subtitle: item.subtitle,
-                          width: 170,
-                          onTap: () => openNeteaseItem(context, item),
-                        ),
-                    ],
-                  ),
-          ),
+      builder: (context, ref, _) => RetainedPlatformSnapshot(
+        value: ref.watch(neteaseFeedPreviewProvider(feed)),
+        artwork: (batch) => batch.items.map((item) => item.cover),
+        loading: () => const PlatformFeedbackState(loading: true),
+        error: (_, _) => EditorialEmpty(
+          '$title暂时无法加载',
+          onRetry: () => ref.invalidate(neteaseFeedPreviewProvider(feed)),
+        ),
+        data: (batch) => batch.items.isEmpty
+            ? EditorialEmpty('暂无$title')
+            : EditorialShelf(
+                height: 248,
+                children: [
+                  for (final item in batch.items.take(12))
+                    EditorialCover(
+                      cover: item.cover,
+                      title: item.name,
+                      subtitle: item.subtitle,
+                      width: 170,
+                      onTap: () => openNeteaseItem(context, item),
+                    ),
+                ],
+              ),
+      ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

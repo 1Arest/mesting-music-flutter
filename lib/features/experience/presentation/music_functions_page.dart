@@ -15,6 +15,7 @@ import '../../music_platform/presentation/platform_recommendations_page.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import '../../music_platform/presentation/music_effects_page.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_application_theme.dart';
 import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
 import 'music_home_catalogues.dart';
@@ -163,15 +164,20 @@ class MusicFunctionsPage extends ConsumerWidget {
         () => context.push('/music/local'),
       ),
     ];
-    return PlatformStyle(
-      child: EditorialScroll(
-        children: [
-          const EditorialHeader('功能'),
-          _FunctionGrid(entries),
-          const EditorialSection('常用'),
-          _FunctionGrid(common),
-          if (netease) const NeteaseFullNavigation(tab: '功能'),
-        ],
+    // The launchpad is an application destination. A retained route must not
+    // inherit a player/menu-local dark palette after the app switches to light.
+    return Theme(
+      data: MusicApplicationTheme.of(context),
+      child: PlatformStyle(
+        child: EditorialScroll(
+          children: [
+            const EditorialHeader('功能'),
+            _FunctionGrid(entries),
+            const EditorialSection('常用'),
+            _FunctionGrid(common),
+            if (netease) const NeteaseFullNavigation(tab: '功能'),
+          ],
+        ),
       ),
     );
   }
