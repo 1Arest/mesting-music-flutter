@@ -11,6 +11,7 @@ import '../data/music_platform_api.dart';
 import 'netease_crypto.dart';
 import 'netease_session.dart';
 import 'netease_extended_routes.dart';
+import 'messages/netease_message_protocol.dart';
 
 /// Embedded HTTPS transport. Only fixed upstream music hosts receive cookies;
 /// no loopback process, external API deployment, or JavaScript runtime is used.
@@ -540,12 +541,12 @@ class NeteaseApi {
       '__remember_me': 'true',
       ..._cookies,
       // Desktop history can contain only a compatibility sentence for mobile
-      // cards. The existing Android client version is request-local; no login,
+      // cards. The modern Android client version is request-local; no login,
       // cookie jar or send operation adopts this identity.
       if (mobileMessages) ...{
         'os': 'android',
-        'appver': '9.0.65',
-        'osver': '14',
+        'appver': NeteaseMessageProtocol.appVersion,
+        'osver': NeteaseMessageProtocol.osVersion,
       },
       // This request-local client identity is required by the upstream vivid
       // stream contract; it never mutates the retained account cookie jar.
@@ -565,7 +566,9 @@ class NeteaseApi {
     };
     final header = <String, String>{
       ...cookie,
-      'versioncode': mobileMessages ? '9006053' : '140',
+      'versioncode': mobileMessages
+          ? NeteaseMessageProtocol.versionCode
+          : '140',
       'resolution': mobileMessages ? '1080x2400' : '1920x1080',
       'buildver': '${DateTime.now().millisecondsSinceEpoch ~/ 1000}',
       'channel': 'netease',
@@ -595,6 +598,8 @@ class NeteaseApi {
             ? 'NeteaseMusic/3.1.10.5100 (Macintosh; OS X 15.5)'
             : weapi
             ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36'
+            : mobileMessages
+            ? NeteaseMessageProtocol.userAgent
             : 'NeteaseMusic/9.0.65.240416212826(9006053); Dalvik/2.1.0',
         'Cookie': (weapi ? cookie : header).entries
             .map((e) => '${e.key}=${e.value}')

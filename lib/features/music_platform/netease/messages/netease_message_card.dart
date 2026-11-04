@@ -39,14 +39,66 @@ class NeteaseMessageCard {
     if (value is Map) value = value['title'] ?? value['text'];
     if (value is! String) return '';
     final text = value.trim();
-    if (text.isEmpty || text.length > limit || _compatibilityText(text)) {
+    if (text.isEmpty || text.length > limit || isCompatibilityText(text)) {
       return '';
     }
     return text;
   }
 
-  static bool _compatibilityText(String value) =>
-      value.contains('不支持') || (value.contains('升级') && value.contains('消息'));
+  static bool isCompatibilityText(String value) =>
+      value.contains('不支持') ||
+      (value.contains('升级') && value.contains('消息')) ||
+      (value.contains('无法显示') && RegExp('信息|消息|内容').hasMatch(value)) ||
+      value.contains('请前往移动端查看');
+
+  /// Use one boundary for history, conversation previews and nested payloads.
+  /// Previously several supported containers were dropped before parse() saw
+  /// them. Profiles remain outside this boundary even if they contain titles.
+  static const contentFields = [
+    'generalMsg',
+    'body',
+    'msgBody',
+    'json',
+    'jsonMsg',
+    'msgContent',
+    'customMsg',
+    'data',
+    'content',
+    'listenTogether',
+    'listenTogetherRecord',
+    'listenTogetherInfo',
+    'msg',
+    'lastMsg',
+    'message',
+    'extInfo',
+    'extJsonInfo',
+    'ext',
+    'extra',
+    'payload',
+    'card',
+    'cardInfo',
+    'report',
+    'record',
+    'cards',
+    'richMsg',
+  ];
+
+  static Map<String, dynamic> messageEnvelope(Map<String, dynamic> row) => {
+    for (final field in [
+      ...contentFields,
+      'nativeUrl',
+      'actionUrl',
+      'reportUrl',
+      'recordUrl',
+      'webUrl',
+      'url',
+      'linkUrl',
+      'targetUrl',
+      'msgType',
+      'type',
+    ])
+      if (row[field] != null) field: row[field],
+  };
 
   /// A WebView may navigate only to an already-unwrapped HTTPS target.
   /// Both parse failures must never accidentally compare equal as nulls.
@@ -104,29 +156,6 @@ class NeteaseMessageCard {
   /// supports historical and current envelopes without guessing a numeric type
   /// or treating a free-form roomId as a record. Unknown fields are not shown.
   static NeteaseMessageCard? parse(Map<String, dynamic> envelope) {
-    const containers = [
-      'generalMsg',
-      'body',
-      'msgBody',
-      'json',
-      'data',
-      'content',
-      'listenTogether',
-      'listenTogetherRecord',
-      'listenTogetherInfo',
-      'msg',
-      'message',
-      'extInfo',
-      'extJsonInfo',
-      'extra',
-      'payload',
-      'card',
-      'cardInfo',
-      'report',
-      'record',
-      'cards',
-      'richMsg',
-    ];
     final queue = <({Object? value, int depth, Uri? inheritedUrl})>[
       (value: envelope, depth: 0, inheritedUrl: null),
     ];
@@ -137,11 +166,14 @@ class NeteaseMessageCard {
       final node = queue.removeAt(0);
       if (node.depth > 5) continue;
       Object? value = node.value;
-      if (value is String && value.length <= 32768) {
+      // Some transports put a JSON string inside a JSON string. Decode only a
+      // bounded number of layers; malformed bodies never break the chat list.
+      var decodedLayers = 0;
+      while (value is String && value.length <= 32768 && decodedLayers++ < 3) {
         try {
           value = jsonDecode(value);
         } on FormatException {
-          continue;
+          break;
         }
       }
       if (value is List) {
@@ -237,7 +269,7 @@ class NeteaseMessageCard {
           bestScore = score;
         }
       }
-      for (final key in containers) {
+      for (final key in contentFields) {
         if (value[key] != null) {
           queue.add((
             value: value[key],

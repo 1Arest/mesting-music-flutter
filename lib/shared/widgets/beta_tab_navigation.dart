@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// debounce: the first tap navigates immediately and the final intent is kept.
 class BetaTabNavigation {
   /// Route motion records the actual departure, including a coalesced tap.
-  /// Increasing tab indices move content to the right, as requested by design.
+  /// Increasing tab indices bring the new page from the right (1.0.27).
   final motion = ValueNotifier<BetaTabMotion?>(null);
   final progress = ValueNotifier<double>(1);
   int? _entering, _pending;
@@ -63,7 +63,7 @@ class BetaTabNavigation {
 class BetaTabMotion {
   const BetaTabMotion(this.from, this.to);
   final int from, to;
-  double get direction => to > from ? 1 : -1;
+  double get direction => to > from ? -1 : 1;
 }
 
 final betaTabNavigationProvider = Provider((ref) {

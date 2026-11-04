@@ -64,31 +64,30 @@ void main() {
             )
             .translation
             .dx;
-        go(3);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 180));
-        if (!reduced) {
-          expect(offset(3), lessThan(0));
-          expect(offset(0), greaterThan(0));
-          expect(offset(0) - offset(3), closeTo(1, .001));
-        } else {
-          expect(
-            find.byKey(const ValueKey('beta-root-tab-motion-3')),
-            findsNothing,
-          );
+        // Exercise every adjacent direction and jumps in the actual page
+        // replacement, not only the sign of a helper's direction getter.
+        for (final target in [1, 2, 3, 2, 1, 0, 3, 0]) {
+          final previous = selected;
+          go(target);
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 180));
+          if (!reduced) {
+            final sign = target > previous ? 1 : -1;
+            expect(offset(target) * sign, greaterThan(0));
+            expect(offset(previous) * sign, lessThan(0));
+            expect(
+              (offset(target) - offset(previous)) * sign,
+              closeTo(1, .001),
+            );
+          } else {
+            expect(
+              find.byKey(ValueKey('beta-root-tab-motion-$target')),
+              findsNothing,
+            );
+          }
+          await tester.pumpAndSettle();
+          expect(find.text('tab-$target'), findsOneWidget);
         }
-        await tester.pumpAndSettle();
-        expect(find.text('tab-3'), findsOneWidget);
-        go(0);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 180));
-        if (!reduced) {
-          expect(offset(0), greaterThan(0));
-          expect(offset(3), lessThan(0));
-          expect(offset(0) - offset(3), closeTo(1, .001));
-        }
-        await tester.pumpAndSettle();
-        expect(find.text('tab-0'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         queue.dispose();

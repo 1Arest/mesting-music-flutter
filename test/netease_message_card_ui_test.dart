@@ -78,6 +78,7 @@ void main() {
     bool dark = false,
     bool compact = false,
     bool storageError = false,
+    bool unsupported = false,
     PlatformSession? saved = _saved,
   }) async {
     requests.clear();
@@ -95,7 +96,11 @@ void main() {
               'time': 1793433000000,
               'fromUser': {'userId': 8, 'nickname': '合成测试好友'},
               'toUser': {'userId': 7},
-              'msg': jsonEncode(recordEnvelope()),
+              'msg': jsonEncode(
+                unsupported
+                    ? {'type': 24, 'msg': '当前版本无法显示该信息，请在应用市场下载最新版app'}
+                    : recordEnvelope(),
+              ),
             },
           ],
         }),
@@ -184,8 +189,12 @@ void main() {
       );
       final image = await boundary.toImage(pixelRatio: 2);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final dir = Directory('.codex-artifacts/2026-10-31-v124-followup/ui')
-        ..createSync(recursive: true);
+      final dir = Directory(
+        const String.fromEnvironment(
+          'FOLLOWUP_CAPTURE_DIR',
+          defaultValue: '.codex-artifacts/2026-10-31-v124-followup/ui',
+        ),
+      )..createSync(recursive: true);
       await File(
         '${dir.path}/$file.png',
       ).writeAsBytes(bytes!.buffer.asUint8List());
@@ -284,6 +293,35 @@ void main() {
       );
     }
   }
+  testWidgets(
+    'unsupported chat offers explicit diagnostic export without more requests',
+    (tester) async {
+      await mount(
+        tester,
+        const NeteaseChatPage(peer: NeteasePerson('8', '合成测试好友')),
+        unsupported: true,
+        compact: true,
+      );
+      final action = find.byKey(
+        const ValueKey('netease-message-export-diagnostic'),
+      );
+      expect(action.hitTestable(), findsOneWidget);
+      expect(find.text('查看一起听记录'), findsNothing);
+      await capture(tester, 'unsupported-chat-compact');
+      final count = requests.length;
+      await tester.tap(action);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('导出此条消息诊断'), findsOneWidget);
+      await capture(tester, 'unsupported-diagnostic-compact');
+      await tester.tap(find.text('取消'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(requests.length, count);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   testWidgets('saved-login read failure is visible instead of logged out', (
     tester,
   ) async {

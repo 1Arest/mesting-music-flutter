@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.27': [
+    '更新网易云私信读取的客户端兼容参数，修正一起听记录消息体字段丢失和多层JSON解析。',
+    '无法识别的单条消息可手动预览、复制脱敏结构诊断，便于反馈，不自动上传。',
+    '调整底部Tab过渡：发现到我的，新页面从右侧进入；反向从左侧进入，新旧页面同步移动。',
+  ],
   '1.0.26': [
     '移除手机、扫码等登录页底部插画，恢复原有登录表单布局。',
     '网易云私信读取补充移动端消息协议，完善一起听结束记录卡片、会话预览与详情解析。',

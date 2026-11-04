@@ -1,6 +1,7 @@
 import 'netease_message_reads.dart';
 import 'netease_message_counts.dart';
 import 'netease_message_card.dart';
+import 'netease_message_diagnostics.dart';
 import '../../../../core/diagnostics/local_music_diagnostics.dart';
 import '../../../../core/persistence/app_preferences.dart';
 import 'dart:convert';
@@ -49,40 +50,34 @@ class NeteaseChatMessage {
     this.link = '',
     this.resource = const {},
     this.card,
+    this.diagnostics,
   });
   final String id, text, image, link;
   final NeteasePerson from, to;
   final DateTime time;
   final Map<String, dynamic> resource;
   final NeteaseMessageCard? card;
+  final NeteaseMessageDiagnostics? diagnostics;
   factory NeteaseChatMessage.parse(Map<String, dynamic> row) {
     final legacy = _map(row['msg'] ?? row['lastMsg']);
-    final content = legacy.isNotEmpty
-        ? legacy
-        : _map(row['msgBody'] ?? row['body']);
-    final card = NeteaseMessageCard.parse({
-      ...content,
-      // Only message envelope fields cross this boundary. Sender/recipient
-      // profiles can contain arbitrary titles or links and are not messages.
-      for (final key in [
-        'body',
-        'data',
-        'content',
-        'msgBody',
-        'json',
-        'nativeUrl',
-        'msgType',
-        'generalMsg',
-        'listenTogetherRecord',
-        'listenTogetherInfo',
-        'listenTogether',
-        'extInfo',
-        'extJsonInfo',
-        'card',
-        'cardInfo',
-      ])
-        if (row[key] != null) key: row[key],
-    });
+    final modern = _map(row['msgBody'] ?? row['body']);
+    final modernContent = {
+      ...modern,
+      ..._map(modern['body'] ?? modern['msgBody']),
+    };
+    // A legacy compatibility sentence must not hide a modern text/image body.
+    // Cards inspect both envelopes instead of discarding one at this boundary.
+    final content =
+        modernContent.isNotEmpty &&
+            (legacy.isEmpty ||
+                NeteaseMessageCard.isCompatibilityText(
+                  '${legacy['msg'] ?? ''}',
+                ))
+        ? modernContent
+        : legacy;
+    final card = NeteaseMessageCard.parse(
+      NeteaseMessageCard.messageEnvelope(row),
+    );
     final pic = _map(
       content['picInfo'] ?? content['picinfo'] ?? content['pic'],
     );
@@ -100,7 +95,7 @@ class NeteaseChatMessage {
                 ? raw
                 : image.isNotEmpty
                 ? '[图片]'
-                : '[分享内容]')}';
+                : legacy['msg'] ?? '[分享内容]')}';
     return NeteaseChatMessage(
       id: '${row['id'] ?? row['msgId'] ?? row['time'] ?? ''}',
       from: NeteasePerson.parse(row['fromUser']),
@@ -110,6 +105,9 @@ class NeteaseChatMessage {
       link: '${content['url'] ?? content['linkUrl'] ?? ''}',
       resource: res,
       card: card,
+      diagnostics: card == null && NeteaseMessageCard.isCompatibilityText(text)
+          ? NeteaseMessageDiagnostics.fromRow(row)
+          : null,
       time: DateTime.fromMillisecondsSinceEpoch(
         int.tryParse('${row['time'] ?? row['lastMsgTime']}') ?? 0,
       ),

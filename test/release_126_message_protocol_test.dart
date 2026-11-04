@@ -78,8 +78,13 @@ void main() {
           final data = _body(request);
           expect(data['userId'], '8');
           expect(data['header']['os'], 'android');
-          expect(data['header']['appver'], '9.0.65');
-          expect(data['header']['versioncode'], '9006053');
+          expect(data['header']['appver'], '9.5.61');
+          expect(data['header']['versioncode'], '9005061');
+          expect(data['header']['osver'], '12');
+          expect(
+            request.headers['user-agent'],
+            contains('9.5.61.260802021928(9005061)'),
+          );
           expect(request.headers['cookie'], contains('os=android'));
           return http.Response(
             jsonEncode({
@@ -91,7 +96,7 @@ void main() {
             200,
             headers: {
               'content-type': 'application/json',
-              'set-cookie': 'os=android; Path=/, appver=9.0.65; Path=/',
+              'set-cookie': 'os=android; Path=/, appver=9.5.61; Path=/',
             },
           );
         }),

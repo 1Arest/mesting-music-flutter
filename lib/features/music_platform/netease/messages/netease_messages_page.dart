@@ -22,6 +22,7 @@ import '../full/netease_entity_picker.dart';
 import 'netease_messages_repository.dart';
 import 'netease_emojis.dart';
 import 'netease_message_card_view.dart';
+import 'netease_message_diagnostic_action.dart';
 import '../../../../shared/widgets/beta_popup_menu_button.dart';
 
 Future<T?> _open<T>(BuildContext context, Widget page) => Navigator.of(
@@ -879,6 +880,11 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                                           ),
                                           child: const Text('加入一起听'),
                                         ),
+                                      ),
+                                    if (message.diagnostics != null)
+                                      NeteaseMessageDiagnosticAction(
+                                        report: message.diagnostics!,
+                                        isCurrent: () => current,
                                       ),
                                   ],
                                 ),
