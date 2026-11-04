@@ -1,3 +1,4 @@
+import '../../library/favorite_pins_provider.dart';
 import 'favorite_tracks_search.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -35,7 +36,7 @@ class MusicLibraryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repository = ref.watch(libraryRepositoryProvider);
     final cloud = repository is CloudLibraryRepository;
-    final favorites = ref.watch(favoriteTracksProvider);
+    final favorites = ref.watch(favoriteDisplayTracksProvider);
     final playlists = ref.watch(playlistsProvider);
     final directory = ref.exists(playlistDirectoryWindowProvider)
         ? ref.watch(playlistDirectoryWindowProvider)
@@ -413,11 +414,20 @@ class _CollectionTracks extends ConsumerWidget {
                                 ? ref.read(favoriteTrackWindowProvider)
                                 : null;
                             try {
-                              final all = loadComplete != null
+                              var all = loadComplete != null
                                   ? await loadComplete!()
                                   : favoriteCollection && window != null
                                   ? await window.complete()
                                   : tracks;
+                              if (favoriteCollection) {
+                                all = ref
+                                    .read(favoritePinsProvider)
+                                    .apply(
+                                      ref.read(activeLibraryOwnerProvider),
+                                      all,
+                                      all.map((t) => t.id).toSet(),
+                                    );
+                              }
                               if (context.mounted && all.isNotEmpty) {
                                 await playBetaSelection(
                                   context,

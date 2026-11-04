@@ -1,3 +1,4 @@
+import 'song_list_bookmark_capsule.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
@@ -325,7 +326,7 @@ class _SongListToolsState extends State<SongListTools> {
                           math.max(12, constraints.maxHeight - 150),
                         ),
                     width: math.min(
-                      300,
+                      238,
                       math.max(100, constraints.maxWidth - 36),
                     ),
                     child: Column(
@@ -347,66 +348,27 @@ class _SongListToolsState extends State<SongListTools> {
                           ),
                         if (showTop && showHint) const SizedBox(height: 8),
                         if (showHint)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: BetaGlassButton(
-                                  key: const ValueKey('song-list-last-played'),
-                                  onPressed: _locating
-                                      ? null
-                                      : () => _locate(bookmark),
-                                  loading: _locating,
-                                  height:
-                                      48 +
-                                      (MediaQuery.textScalerOf(
-                                                context,
-                                              ).scale(14) -
-                                              14)
-                                          .clamp(0, 16),
-                                  horizontalPadding: 12,
-                                  label: '定位上次播放的歌曲：${bookmark.title}',
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        '上次播放到这首',
-                                        style: TextStyle(fontSize: 11),
-                                      ),
-                                      Text(
-                                        bookmark.title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              BetaGlassButton(
-                                key: const ValueKey('song-list-dismiss'),
-                                onPressed: () => setState(() {
-                                  // Dismiss also cancels a pending locate after
-                                  // its current request; no further pages run.
-                                  _epoch++;
-                                  _locating = false;
-                                  _dismissed = bookmark.updatedAt;
-                                }),
-                                width: 44,
-                                height: 44,
-                                horizontalPadding: 0,
-                                label: '关闭上次播放提示',
-                                child: const Icon(
-                                  CupertinoIcons.xmark,
-                                  size: 16,
-                                ),
-                              ),
-                            ],
+                          SongListBookmarkCapsule(
+                            title: bookmark.title,
+                            cover:
+                                _tracks()
+                                    .where(
+                                      (t) =>
+                                          t.id == bookmark.trackId &&
+                                          t.coverAsset.isNotEmpty,
+                                    )
+                                    .firstOrNull
+                                    ?.coverAsset ??
+                                bookmark.cover,
+                            locating: _locating,
+                            onLocate: () => _locate(bookmark),
+                            onDismiss: () => setState(() {
+                              // Stop after the in-flight request, without erasing
+                              // the bookmark or starting any playback command.
+                              _epoch++;
+                              _locating = false;
+                              _dismissed = bookmark.updatedAt;
+                            }),
                           ),
                       ],
                     ),

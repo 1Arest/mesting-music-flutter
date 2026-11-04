@@ -11,13 +11,16 @@ class SongListBookmark {
     required this.trackId,
     required this.title,
     required this.updatedAt,
+    this.cover = '',
   });
   final String trackId, title;
+  final String cover;
   final int updatedAt;
   Map<String, Object> toJson() => {
     'id': trackId,
     'title': title,
     'at': updatedAt,
+    'cover': cover,
   };
 }
 
@@ -37,6 +40,7 @@ class SongListMemory extends ChangeNotifier {
               trackId: row['id'],
               title: row['title'],
               updatedAt: row['at'],
+              cover: row['cover'] is String ? row['cover'] : '',
             );
           }
         }
@@ -59,6 +63,7 @@ class SongListMemory extends ChangeNotifier {
       trackId: track.id,
       title: track.title,
       updatedAt: DateTime.now().microsecondsSinceEpoch,
+      cover: track.coverAsset,
     );
     while (_records.length > 256) {
       _records.remove(_records.keys.first);

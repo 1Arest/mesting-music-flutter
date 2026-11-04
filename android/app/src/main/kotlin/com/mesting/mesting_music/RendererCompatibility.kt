@@ -21,7 +21,10 @@ object RendererCompatibility {
             return context.getString(R.string.mesting_benchmark_backend)
                 .takeIf { it == "opengles" || it == "vulkan" } ?: "auto"
         }
-        if (context.packageName != "com.mesting.music.beta" || Build.VERSION.SDK_INT < 31) return "auto"
+        // The beta flavor supplies the patched engine even though public
+        // releases now install as com.mesting.music. Do not lose recovery
+        // merely because the user chose the public package identity.
+        if (BuildConfig.FLAVOR != "beta" || Build.VERSION.SDK_INT < 31) return "auto"
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val savedOs = prefs.getString("os", null)
         val sameOs = savedOs == Build.FINGERPRINT

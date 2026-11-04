@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
@@ -368,6 +369,8 @@ class _HistoryTrackRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (DistributionChannel.isBeta)
+              SongActionsButton(track: item.track),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,

@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
@@ -1064,19 +1065,33 @@ class _PlaylistTrackRow extends StatelessWidget {
                           compact: true,
                         ),
                       ),
+                      if (DistributionChannel.isBeta)
+                        SongActionsButton(
+                          track: track,
+                          extras: [
+                            SongMenuExtraAction(
+                              '从歌单移除',
+                              Icons.remove_circle_outline,
+                              onRemove,
+                              destructive: true,
+                            ),
+                          ],
+                        ),
                       const SizedBox(width: 5),
-                      _TrackActionButton(
-                        tooltip: '从歌单移除',
-                        icon: Icons.remove_rounded,
-                        onTap: onRemove,
-                      ),
+                      if (!DistributionChannel.isBeta)
+                        _TrackActionButton(
+                          tooltip: '从歌单移除',
+                          icon: Icons.remove_rounded,
+                          onTap: onRemove,
+                        ),
                       const SizedBox(width: 5),
-                      _TrackActionButton(
-                        tooltip: '添加至播放列表',
-                        icon: Icons.add_rounded,
-                        onTap: onAdd,
-                        positive: true,
-                      ),
+                      if (!DistributionChannel.isBeta)
+                        _TrackActionButton(
+                          tooltip: '添加至播放列表',
+                          icon: Icons.add_rounded,
+                          onTap: onAdd,
+                          positive: true,
+                        ),
                     ],
                   ),
                 ),

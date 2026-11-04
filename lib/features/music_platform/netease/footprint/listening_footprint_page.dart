@@ -1,3 +1,4 @@
+import '../../presentation/song_actions_sheet.dart';
 import '../../../../shared/widgets/song_list_tools.dart';
 import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_swipe_pages.dart';
@@ -636,6 +637,7 @@ class _ListeningFootprintPageState
           tracks: tracks,
           child: _TodaySongRow(
             song: songs[index],
+            track: tracks[index],
             onTap: () async {
               // A retained prior-day row remains an honest song entry. Selecting
               // it starts only that song via the app's normal playback owner.
@@ -990,7 +992,12 @@ class _UnavailableReport extends StatelessWidget {
 }
 
 class _TodaySongRow extends StatelessWidget {
-  const _TodaySongRow({required this.song, required this.onTap});
+  const _TodaySongRow({
+    required this.song,
+    required this.track,
+    required this.onTap,
+  });
+  final Track track;
   final OfficialFootprintSong song;
   final VoidCallback onTap;
   @override
@@ -1002,57 +1009,57 @@ class _TodaySongRow extends StatelessWidget {
       key: ValueKey('footprint-song-${song.id}'),
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 9),
       onPressed: onTap,
-      child: ExcludeSemantics(
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(9),
-              child: ArtworkImage(
-                uri: song.cover,
-                width: 52,
-                height: 52,
-                decodeWidth: 80,
-                decodeHeight: 80,
-              ),
+      // Keep the new independent menu target exposed to assistive services.
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: ArtworkImage(
+              uri: song.cover,
+              width: 52,
+              height: 52,
+              decodeWidth: 80,
+              decodeHeight: 80,
             ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  song.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    song.artists.join(' / '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  song.artists.join(' / '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              _clock(song.lastPlayedAt),
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+          ),
+          SongActionsButton(track: track),
+          const SizedBox(width: 10),
+          Text(
+            _clock(song.lastPlayedAt),
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );

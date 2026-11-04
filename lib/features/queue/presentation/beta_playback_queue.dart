@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/models/track.dart';
 import 'dart:async';
@@ -363,6 +364,23 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                                       fontSize: 11,
                                     ),
                                   ),
+                                  if (track != null)
+                                    SongActionsButton(
+                                      track: track,
+                                      extras: [
+                                        SongMenuExtraAction(
+                                          '从待播列表移除',
+                                          CupertinoIcons.delete,
+                                          () async {
+                                            await handler
+                                                .removeFromUpcomingQueue(
+                                                  track.id,
+                                                );
+                                          },
+                                          destructive: true,
+                                        ),
+                                      ],
+                                    ),
                                   ReorderableDragStartListener(
                                     key: ValueKey('queue-drag-${item.id}'),
                                     index: index,

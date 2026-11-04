@@ -1,3 +1,4 @@
+import 'package:mesting_music/features/music_platform/presentation/song_actions_sheet.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_action.dart';
 import 'package:mesting_music/features/experience/presentation/player_toolbar_glyphs.dart';
 import 'package:mesting_music/features/experience/presentation/immersive_lyrics.dart';
@@ -63,7 +64,6 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mesting_music/shared/widgets/beta_popup_menu_button.dart';
 import 'support/pump_artwork_ready.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -1354,7 +1354,7 @@ void main() {
         print('BETA8_SEARCH_BENCH catalogue=480 visibleArtworkWidgets=$built');
         expect(
           find.byWidgetPredicate(
-            (w) => w is BetaPopupMenuButton<String> && w.tooltip == '歌曲操作',
+            (w) => w is SongActionsButton,
           ),
           findsWidgets,
         );

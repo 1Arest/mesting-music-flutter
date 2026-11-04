@@ -493,3 +493,8 @@ frame diagnostics preserve that distinction.
 在现有 Apple Music 参考、明暗语义色、胶囊和完整玻璃下做性能与结构修正。集合 30 条一批，公共足迹头部只参与竖向收起；横向移动仅作用于报告。保持原图文缓存、失败旧内容、完整收藏及显式播放/下载全部语义。
 
 两轮有界主机检查已完成：首轮新夹具缺少图标字体，第二轮加载测试字体后 26 帧全部核对，包含明暗搜索、3000 收藏首批/末尾搜索、新歌首批、下载任务及横滑中头部固定。最终判定为本地主机检查通过；不表示 Android IME/GPU/帧率或真实账号验收。未更改产品字体、原材质或动画来换取性能。
+
+
+## 1.0.50 approved refinement (2026-11-04)
+
+Preserve the existing premium glass, colors, type, motion forms and native audio owner. Ordinary page pairs enter toward the left and reverse toward the right, including the retained parent; the tab viewport remains the only root-tab primary animation. Bookmark controls use one compact cover/text/close capsule (238dp maximum width, 52dp base height, 34dp real cover, at least 44dp close target) instead of a full-width hint plus detached close. Song-row actions use vertical three dots, opening the shared rounded glass bottom-sheet with real track identity, source/context-aware operations and verified people/album information. Screenshot references guide the NetEase hierarchy; local older Kugou static evidence does not establish the newer capsule exact dimensions. Host software captures do not certify physical Android composition.

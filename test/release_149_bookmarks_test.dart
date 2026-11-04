@@ -35,7 +35,7 @@ void main() {
       final data =
           jsonDecode(store.preferences.getString(SongListMemory.storageKey)!)
               as Map;
-      expect((data.values.first as Map).keys.toSet(), {'id', 'title', 'at'});
+      expect((data.values.first as Map).keys.toSet(), {'id', 'title', 'at', 'cover'});
       restored.dispose();
       store.dispose();
     },

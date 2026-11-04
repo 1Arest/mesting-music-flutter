@@ -10,11 +10,13 @@ class BetaPageMotion extends StatelessWidget {
     required this.animation,
     required this.child,
     this.linear = false,
+    this.secondaryAnimation = kAlwaysDismissedAnimation,
     super.key,
   });
   final Animation<double> animation;
   final Widget child;
   final bool linear;
+  final Animation<double> secondaryAnimation;
   @override
   Widget build(BuildContext context) {
     final surface = RepaintBoundary(
@@ -32,19 +34,30 @@ class BetaPageMotion extends StatelessWidget {
             CurveTween(curve: linear ? Curves.linear : Curves.easeInOutCubic),
           ),
         ),
-        child: surface,
+        // The parent travels left when a deeper page arrives and returns from
+        // the left when it leaves, matching the retained tab viewport. Use the
+        // same animation coordinates in both directions, not a new entry tween
+        // selected from AnimationStatus.reverse halfway through a pop.
+        child: BetaParentPageMotion(
+          animation: secondaryAnimation,
+          linear: linear,
+          child: surface,
+        ),
       ),
     );
   }
 }
 
-Route<T> betaContentRoute<T>(Widget page) => PageRouteBuilder<T>(
+Route<T> betaContentRoute<T>(Widget page) => BetaContentRoute<T>(
   allowSnapshotting: false,
   pageBuilder: (_, _, _) => BetaEdgeBack(child: page),
   transitionDuration: const Duration(milliseconds: 360),
   reverseTransitionDuration: const Duration(milliseconds: 320),
-  transitionsBuilder: (context, animation, _, child) =>
-      BetaPageMotion(animation: animation, child: child),
+  transitionsBuilder: (context, animation, secondary, child) => BetaPageMotion(
+    animation: animation,
+    secondaryAnimation: secondary,
+    child: child,
+  ),
 );
 
 /// GoRouter and Navigator share the same live, reversible surface. Keeping the
@@ -53,14 +66,17 @@ class BetaContentTransitionPage<T> extends Page<T> {
   const BetaContentTransitionPage({required this.child, super.key, super.name});
   final Widget child;
   @override
-  Route<T> createRoute(BuildContext context) => PageRouteBuilder<T>(
+  Route<T> createRoute(BuildContext context) => BetaContentRoute<T>(
     settings: this,
     allowSnapshotting: false,
     pageBuilder: (_, _, _) => child,
     transitionDuration: const Duration(milliseconds: 360),
     reverseTransitionDuration: const Duration(milliseconds: 320),
-    transitionsBuilder: (_, animation, _, child) =>
-        BetaPageMotion(animation: animation, child: child),
+    transitionsBuilder: (_, animation, secondary, child) => BetaPageMotion(
+      animation: animation,
+      secondaryAnimation: secondary,
+      child: child,
+    ),
   );
 }
 
@@ -78,8 +94,53 @@ class BetaPageTransitionsBuilder extends PageTransitionsBuilder {
   ) => BetaPageMotion(
     animation: animation,
     linear: route.popGestureInProgress,
+    secondaryAnimation: secondaryAnimation,
     child: BetaEdgeBack(child: child),
   );
+}
+
+/// Root tabs have no entry animation (their PageView owns tab motion), but the
+/// shell must participate as the parent of pages pushed above its Navigator.
+/// Otherwise returning from a subpage remounts an apparently forward-moving
+/// destination while the real parent remains static beneath it.
+class BetaRootTransitionPage<T> extends Page<T> {
+  const BetaRootTransitionPage({required this.child, super.key});
+  final Widget child;
+  @override
+  Route<T> createRoute(BuildContext context) => BetaContentRoute<T>(
+    settings: this,
+    allowSnapshotting: false,
+    // Root selection is already animated by PageView. A nonzero primary
+    // duration can freeze the newly selected branch's readiness TickerMode.
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+    pageBuilder: (_, _, _) => child,
+    transitionsBuilder: (_, _, secondary, child) =>
+        BetaParentPageMotion(animation: secondary, child: child),
+  );
+}
+
+class BetaParentPageMotion extends StatelessWidget {
+  const BetaParentPageMotion({
+    required this.animation,
+    required this.child,
+    this.linear = false,
+    super.key,
+  });
+  final Animation<double> animation;
+  final Widget child;
+  final bool linear;
+  @override
+  Widget build(BuildContext context) => MediaQuery.disableAnimationsOf(context)
+      ? child
+      : SlideTransition(
+          position: animation.drive(
+            Tween<Offset>(begin: Offset.zero, end: const Offset(-1, 0)).chain(
+              CurveTween(curve: linear ? Curves.linear : Curves.easeInOutCubic),
+            ),
+          ),
+          child: child,
+        );
 }
 
 /// Retain Material route semantics on Stable and the existing Beta transition
@@ -92,4 +153,43 @@ class MestingPageRoute<T> extends MaterialPageRoute<T> {
     super.fullscreenDialog,
     super.requestFocus,
   }) : super(allowSnapshotting: !DistributionChannel.isBeta);
+
+  @override
+  bool canTransitionTo(TransitionRoute<dynamic> nextRoute) =>
+      DistributionChannel.isBeta
+      ? nextRoute is BetaContentRoute || nextRoute is MestingPageRoute
+      : super.canTransitionTo(nextRoute);
+}
+
+/// Only ordinary page pairs share a horizontal parent motion. Player vinyl,
+/// avatar zooms, search expansion and modal sheets own their special underlay;
+/// feeding those into the parent slide would change their approved entry.
+class BetaContentRoute<T> extends PageRouteBuilder<T> {
+  BetaContentRoute({
+    required super.pageBuilder,
+    required super.transitionsBuilder,
+    super.settings,
+    super.allowSnapshotting = false,
+    super.transitionDuration = const Duration(milliseconds: 360),
+    super.reverseTransitionDuration = const Duration(milliseconds: 320),
+  });
+  @override
+  bool canTransitionTo(TransitionRoute<dynamic> nextRoute) =>
+      nextRoute is BetaContentRoute || nextRoute is MestingPageRoute;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    // Navigator updates a declarative Route's settings while retaining its
+    // State. A constructor closure captures the FIRST page forever, including
+    // a StatefulNavigationShell with its original tab index. Read the latest
+    // Page instead, as GoRouter's own CustomTransitionPage route does.
+    final page = settings;
+    if (page is BetaRootTransitionPage) return page.child;
+    if (page is BetaContentTransitionPage) return page.child;
+    return super.buildPage(context, animation, secondaryAnimation);
+  }
 }

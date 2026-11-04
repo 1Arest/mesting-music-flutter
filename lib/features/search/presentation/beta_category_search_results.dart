@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
@@ -371,6 +372,7 @@ class _ResultRow extends ConsumerWidget {
             ),
             if (hit.track != null)
               FavoriteToggleButton(track: hit.track!, compact: true),
+            if (hit.track != null) SongActionsButton(track: hit.track!),
           ],
         ),
       ),

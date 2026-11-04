@@ -34,6 +34,11 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Renderer recovery follows the native flavor, not the public package ID.
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.mesting.music"
         // You can update the following values to match your application needs.
@@ -62,12 +67,13 @@ android {
             dimension = "distribution"
             applicationIdSuffix = ".javatest"
         }
-        // Keep the integration sandbox installable beside both existing apps.
-        // Native md3Music libraries live in src/beta, never in stable/main.
+        // The flavor still selects the existing UI/native libraries. From
+        // 1.0.50 daily releases use the requested public package identity;
+        // only isolated profile benchmarks retain their separate sandbox.
         create("beta") {
             dimension = "distribution"
             applicationIdSuffix = if (benchmarkBuild)
-                ".beta.benchmark" else ".beta"
+                ".beta.benchmark" else ""
         }
     }
 

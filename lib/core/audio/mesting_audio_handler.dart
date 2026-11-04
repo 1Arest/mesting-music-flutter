@@ -1868,6 +1868,17 @@ class MestingAudioHandler extends BaseAudioHandler
     return true;
   }
 
+  /// Queue next without replacing the playing recording, transport, progress
+  /// or the remaining manual queue. Rebase by identity after asynchronous
+  /// artwork resolution: playback may have advanced while appending.
+  Future<bool> playNextInQueue(Track track) async {
+    await appendToUpcomingQueue(track);
+    final index = _upcomingMediaItems.indexWhere((item) => item.id == track.id);
+    if (index < 0 || mediaItem.value?.id == track.id) return false;
+    await reorderUpcoming(index, 0);
+    return true;
+  }
+
   Future<bool> removeFromUpcomingQueue(String id) async {
     _markUserCommand('removeUpcoming');
     await _ready;

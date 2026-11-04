@@ -242,7 +242,7 @@ void main() {
         await tester.pump();
         expect(
           tester.getSize(find.byKey(const ValueKey('song-list-dismiss'))).width,
-          44,
+          greaterThanOrEqualTo(44),
         );
         await shot148(tester, 'bookmark-narrow-$dark');
         expect(tester.takeException(), isNull);

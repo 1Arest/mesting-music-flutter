@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
@@ -6,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/audio/playback_providers.dart';
 import '../../../shared/utils/duration_format.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -94,80 +94,44 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
     }
   }
 
-  Future<void> _actions(LocalMusicEntry entry) async {
-    final choice = await showCupertinoModalPopup<String>(
+  Future<void> _actions(LocalMusicEntry entry) => showSongActions(
+    context,
+    ref,
+    entry.track,
+    playable: entry.available,
+    prepareForQueue: () async =>
+        (await ref.read(localMusicRepositoryProvider).prepare(entry)).track,
+    extras: [
+      SongMenuExtraAction(
+        '从本地音乐移除',
+        CupertinoIcons.delete,
+        () => _removeLocal(entry),
+        destructive: true,
+      ),
+    ],
+  );
+
+  Future<void> _removeLocal(LocalMusicEntry entry) async {
+    final confirmed = await showCupertinoDialog<bool>(
       context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
-        title: Text(entry.title),
+      builder: (dialogContext) => CupertinoAlertDialog(
+        title: const Text('移除这首音乐？'),
+        content: const Text('手机中的原文件会保留，之后可以重新扫描或导入。'),
         actions: [
-          if (entry.available)
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(sheetContext, 'queue'),
-              child: const Text('添加到待播列表'),
-            ),
-          CupertinoActionSheetAction(
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          CupertinoDialogAction(
             isDestructiveAction: true,
-            onPressed: () => Navigator.pop(sheetContext, 'remove'),
-            child: const Text('从本地音乐移除'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('移除'),
           ),
         ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
-          child: const Text('取消'),
-        ),
       ),
     );
-    if (!mounted || choice == null) return;
-    if (choice == 'remove') {
-      final confirmed = await showCupertinoDialog<bool>(
-        context: context,
-        builder: (dialogContext) => CupertinoAlertDialog(
-          title: const Text('移除这首音乐？'),
-          content: const Text('手机中的原文件会保留，之后可以重新扫描或导入。'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('取消'),
-            ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('移除'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed == true && mounted) {
-        await ref.read(localMusicControllerProvider.notifier).remove(entry.id);
-      }
-    } else if (choice == 'queue') {
-      try {
-        final prepared = await ref
-            .read(localMusicRepositoryProvider)
-            .prepare(entry);
-        final added = await ref
-            .read(audioHandlerProvider)
-            .appendToUpcomingQueue(prepared.track);
-        if (mounted) {
-          showMusicNotice(
-            context,
-            icon: CupertinoIcons.music_note_list,
-            title: added ? '已添加到待播列表' : '歌曲已在播放队列中',
-            message: '',
-          );
-        }
-      } on Object catch (error) {
-        if (mounted) {
-          showMusicNotice(
-            context,
-            icon: CupertinoIcons.exclamationmark_circle,
-            title: '添加未完成',
-            message: error is LocalMusicException
-                ? error.message
-                : '请重新导入这个音频文件',
-          );
-        }
-      }
+    if (confirmed == true && mounted) {
+      await ref.read(localMusicControllerProvider.notifier).remove(entry.id);
     }
   }
 
@@ -533,7 +497,7 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                                       label: '${entry.title}的更多操作',
                                       button: true,
                                       child: const Icon(
-                                        CupertinoIcons.ellipsis,
+                                        Icons.more_vert_rounded,
                                         size: 23,
                                       ),
                                     ),
