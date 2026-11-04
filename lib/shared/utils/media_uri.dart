@@ -65,3 +65,57 @@ String sizedArtworkUri(String value, {int width = 768, int height = 768}) {
       )
       .toString();
 }
+
+String artworkContentIdentity(String source) {
+  try {
+    final uri = Uri.tryParse(normalizeArtworkUri(source));
+    if (uri == null) return source;
+    var path = uri.path.replaceAll('{size}', ':size');
+    if (uri.host.contains('kgimg.com') || uri.host.endsWith('.kugou.com')) {
+      path = path.replaceAllMapped(RegExp(r'/(?:\d{2,4}|\{size\})/'), (m) {
+        final number = int.tryParse(m[0]!.replaceAll('/', ''));
+        return number != null && number > 2048 ? m[0]! : '/:size/';
+      });
+    }
+    const volatile = {
+      'param',
+      'width',
+      'height',
+      'size',
+      'w',
+      'h',
+      'sign',
+      'signature',
+      'token',
+      'expires',
+      'expire',
+      'e',
+      'timestamp',
+      'auth_key',
+    };
+    final publicCdn =
+        uri.host.endsWith('.music.126.net') ||
+        uri.host.endsWith('.kgimg.com') ||
+        uri.host == 'imge.kugou.com';
+    final keys =
+        uri.queryParameters.keys
+            .where(
+              (k) =>
+                  !volatile.contains(k.toLowerCase()) ||
+                  !publicCdn &&
+                      !{
+                        'param',
+                        'width',
+                        'height',
+                        'size',
+                        'w',
+                        'h',
+                      }.contains(k.toLowerCase()),
+            )
+            .toList()
+          ..sort();
+    return '${uri.host}$path?${Uri(queryParameters: {for (final k in keys) k: uri.queryParameters[k]!}).query}';
+  } on FormatException {
+    return source;
+  }
+}

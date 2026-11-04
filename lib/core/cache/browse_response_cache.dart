@@ -33,6 +33,12 @@ class BrowseResponseCache {
   final bool initializeOnRead;
   final int maxBytes, maxEntryBytes, maxEntries;
   final Duration refreshInterval;
+
+  /// Optional presentation hooks, installed by the app after image storage is
+  /// ready. Core persistence has no dependency on Flutter or image decoding.
+  Future<bool> Function(BrowseJson previous, BrowseJson incoming)?
+  prepareRefresh;
+  Future<void> Function(BrowseJson cached)? prepareCached;
   Directory? _root;
   Future<void>? _initializing;
   Future<void> _writes = Future.value();
@@ -124,6 +130,8 @@ class BrowseResponseCache {
     checkCurrent();
     if (cached != null) {
       observer._observe(this, id);
+      await prepareCached?.call(cached);
+      checkCurrent();
       final checked = _checked[id];
       if (observer.forceRefresh ||
           checked == null ||
@@ -261,6 +269,14 @@ class BrowseResponseCache {
         final previous = await _restore(id);
         checkCurrent();
         if (previous != null && jsonEncode(previous) == encoded) return body;
+        if (previous != null && prepareRefresh != null) {
+          final ready = await prepareRefresh!(previous, body);
+          checkCurrent();
+          if ((_epochs[scopeHash] ?? 0) != epoch) return body;
+          // A valid JSON response is not yet a renderable replacement. Leave
+          // the old durable snapshot and subscribers untouched on image error.
+          if (!ready) return _copy(previous);
+        }
         final task = _writes.then((_) async {
           checkCurrent();
           if ((_epochs[scopeHash] ?? 0) != epoch) return;

@@ -1,4 +1,7 @@
 import '../utils/media_uri.dart';
+import '../media/artwork_refresh_coordinator.dart';
+import 'retained_artwork_frame.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -60,6 +63,7 @@ class ArtworkImage extends StatefulWidget {
 class _ArtworkImageState extends State<ArtworkImage> {
   static const _maxNetworkRetries = 3;
 
+  ArtworkRefreshRegistration? _registration;
   Timer? _retryTimer;
   int _networkRetry = 0;
   File? _persistentNetworkFile;
@@ -102,6 +106,9 @@ class _ArtworkImageState extends State<ArtworkImage> {
   @override
   void dispose() {
     _retryTimer?.cancel();
+    if (_registration != null) {
+      artworkRefreshCoordinator.unregister(_registration!);
+    }
     super.dispose();
   }
 
@@ -127,36 +134,69 @@ class _ArtworkImageState extends State<ArtworkImage> {
     }
 
     if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      if (DistributionChannel.isBeta) {
+        final registration = _registration ??= artworkRefreshCoordinator
+            .register(() {
+              if (!mounted) return false;
+              final box = context.findRenderObject();
+              if (box is! RenderBox || !box.attached || !box.hasSize) {
+                return false;
+              }
+              final viewport = RenderAbstractViewport.maybeOf(box);
+              if (viewport != null) {
+                final rect = MatrixUtils.transformRect(
+                  box.getTransformTo(viewport),
+                  Offset.zero & box.size,
+                );
+                return rect.overlaps(viewport.paintBounds);
+              }
+              return (box.localToGlobal(Offset.zero) & box.size).overlaps(
+                Offset.zero & MediaQuery.sizeOf(context),
+              );
+            });
+        registration
+          ..source = canonicalArtworkUri(widget.uri)
+          ..requestUri = uri
+          ..width = cacheWidth
+          ..height = cacheHeight
+          ..cache = widget.networkImageCache ?? persistentNetworkImageCache
+          ..cacheKey = widget.persistentNetworkCacheKey ?? 'public-artwork-v1';
+      }
+      Widget frame(
+        ImageProvider<Object>? provider, {
+        void Function(Object, StackTrace?)? onError,
+      }) => RetainedArtworkFrame(
+        key: const ValueKey('retained-artwork-frame'),
+        uri: uri,
+        scope: widget.persistentNetworkCacheKey ?? 'public-artwork-v1',
+        image: provider,
+        width: widget.width,
+        height: widget.height,
+        fit: widget.fit,
+        fallback: _ArtworkPlaceholder(
+          width: widget.width,
+          height: widget.height,
+        ),
+        onError: onError,
+      );
       Widget directNetwork() {
         final provider = ResizeImage.resizeIfNeeded(
           cacheWidth,
           cacheHeight,
           networkArtworkProvider(uri),
         );
-        return Image(
-          key: ValueKey('network-artwork-retry-$_networkRetry'),
-          image: provider,
-          width: widget.width,
-          height: widget.height,
-          fit: widget.fit,
-          gaplessPlayback: true,
-          errorBuilder: (context, error, stackTrace) {
+        return frame(
+          provider,
+          onError: (error, stackTrace) {
             LocalMusicDiagnostics.record('artwork.decode_network_failed', {
               ...LocalMusicDiagnostics.artwork(uri),
               'type': error.runtimeType.toString(),
-              // Keep only the status, never the exception's URL/message. This
-              // distinguishes CDN rejection from a decoding or network error.
               if (error is NetworkImageLoadException)
                 'status': error.statusCode,
             });
             widget.onNetworkError?.call();
             _scheduleNetworkRetry(provider);
-            return errorBuilder(context, error, stackTrace);
           },
-          frameBuilder: (context, child, frame, synchronous) =>
-              synchronous || frame != null
-              ? child
-              : _ArtworkPlaceholder(width: widget.width, height: widget.height),
         );
       }
 
@@ -165,42 +205,21 @@ class _ArtworkImageState extends State<ArtworkImage> {
         final file = _persistentNetworkFile;
         if (file == null) {
           if (!_persistentNetworkFailed) {
-            return _ArtworkPlaceholder(
-              width: widget.width,
-              height: widget.height,
-            );
+            return frame(null);
           }
           // A failed disk cache must not leave a permanently empty cover. Let
           // Flutter load the same public image directly while the bounded cache
           // retry runs; this also works when app-private storage is unavailable.
           return directNetwork();
         }
-        return Image.file(
-          file,
-          key: ValueKey('cached-network-artwork-$_persistentNetworkIdentity'),
-          width: widget.width,
-          height: widget.height,
-          cacheWidth: cacheWidth,
-          cacheHeight: cacheHeight,
-          fit: widget.fit,
-          gaplessPlayback: true,
-          errorBuilder: (context, error, stackTrace) {
+        return frame(
+          ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, FileImage(file)),
+          onError: (error, stackTrace) {
             LocalMusicDiagnostics.record('artwork.decode_file_failed', {
               ...LocalMusicDiagnostics.artwork(uri),
               'type': error.runtimeType.toString(),
             });
             _recoverBrokenFile(file);
-            // A file can pass the header check yet fail full decoding. The
-            // live image path must recover immediately, even after disk retry
-            // exhaustion; a non-null File is not proof of a usable image.
-            return directNetwork();
-          },
-          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-            if (wasSynchronouslyLoaded || frame != null) {
-              _retryTimer?.cancel();
-              _retryTimer = null;
-            }
-            return child;
           },
         );
       }

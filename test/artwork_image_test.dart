@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mesting_music/shared/widgets/artwork_image.dart';
+import 'package:mesting_music/shared/widgets/retained_artwork_frame.dart';
 
 void main() {
   test('legacy packaged artwork paths resolve to optimized assets', () {
@@ -54,13 +55,17 @@ void main() {
       }
 
       await tester.pumpWidget(app('https://cdn.example/avatar?token=first'));
-      final first = tester.widget<Image>(find.byType(Image));
+      final first = tester.widget<RetainedArtworkFrame>(
+        find.byType(RetainedArtworkFrame),
+      );
 
       await tester.pumpWidget(app('https://cdn.example/avatar?token=second'));
-      final second = tester.widget<Image>(find.byType(Image));
+      final second = tester.widget<RetainedArtworkFrame>(
+        find.byType(RetainedArtworkFrame),
+      );
 
       expect(first.key, second.key);
-      expect(second.gaplessPlayback, isTrue);
+      expect(second.image, isNotNull);
     },
   );
 

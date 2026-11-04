@@ -102,7 +102,7 @@ void main() {
       final files = await Directory(
         '${root.path}/mesting_network_image_cache',
       ).list().toList();
-      expect(files.length, 2);
+      expect(files.where((f) => f.path.endsWith('.avatar')).length, 2);
     },
   );
   test(

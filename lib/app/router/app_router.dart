@@ -1,5 +1,5 @@
 import '../../shared/widgets/beta_page_motion.dart';
-import '../../shared/widgets/beta_tab_navigation.dart';
+import 'beta_tab_shell.dart';
 import '../../features/experience/presentation/player_dismiss_motion.dart';
 import '../../features/experience/presentation/playback_pill_menu.dart';
 import '../../features/music_platform/data/platform_category_search.dart';
@@ -59,331 +59,7 @@ import '../../features/music_platform/platform_capabilities.dart';
 final appRouter = GoRouter(
   initialLocation: '/music/recommend',
   routes: [
-    ShellRoute(
-      builder: (context, state, child) =>
-          MusicShell(location: state.uri.toString(), child: child),
-      routes: [
-        GoRoute(
-          path: '/music/recommend',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const RecommendationPage()),
-        ),
-        GoRoute(
-          path: '/music',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const MusicHomePage()),
-        ),
-        GoRoute(
-          path: '/music/library',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: MusicLibraryPage(view: state.uri.queryParameters['view']),
-          ),
-        ),
-        GoRoute(
-          path: '/music/local',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const LocalMusicPage()),
-        ),
-        GoRoute(
-          path: '/music/audiobooks',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const PlatformFeatureGate(
-              feature: PlatformFeature.audiobooks,
-              child: AudiobooksPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/together',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const PlatformFeatureGate(
-              feature: PlatformFeature.together,
-              child: TogetherPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/recognize',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const PlatformFeatureGate(
-              feature: PlatformFeature.recognition,
-              child: SongRecognitionPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/replay',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const ListeningReplayPage()),
-        ),
-        GoRoute(
-          path: '/music/queue',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const QueuePage()),
-        ),
-        GoRoute(
-          path: '/music/search',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const MusicSearchPage()),
-        ),
-        GoRoute(
-          path: '/music/catalog/:kind/:id',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: PlatformCatalogDetailPage(
-              hit: state.extra is PlatformSearchHit
-                  ? state.extra! as PlatformSearchHit
-                  : PlatformSearchHit(
-                      kind: PlatformSearchKind.values.firstWhere(
-                        (k) => k.name == state.pathParameters['kind'],
-                        orElse: () => PlatformSearchKind.albums,
-                      ),
-                      id: state.pathParameters['id']!,
-                      title: '音乐详情',
-                    ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/discover',
-          redirect: (context, state) =>
-              DistributionChannel.isBeta ? '/music' : null,
-          pageBuilder: (context, state) =>
-              _collectionRevealPage(state: state, child: const DiscoverPage()),
-        ),
-        GoRoute(
-          path: '/music/discover/:playlistId',
-          redirect: (context, state) =>
-              DistributionChannel.isBeta ? '/music' : null,
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: CuratedPlaylistPage(
-              playlistId: state.pathParameters['playlistId']!,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/playlists',
-          redirect: (context, state) => '/music?view=playlists',
-        ),
-        GoRoute(
-          path: '/music/playlists/:playlistId',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看和编辑个人歌单。',
-              allowBetaLocalLibrary: true,
-              redirect: state.uri.toString(),
-              child: PlaylistDetailPage(
-                playlistId: state.pathParameters['playlistId']!,
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/music/themes',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const ThemeGalleryPage()),
-        ),
-        GoRoute(
-          path: '/music/settings',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const SettingsPage()),
-        ),
-        GoRoute(
-          path: '/legal',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const LegalDocumentsPage()),
-        ),
-        GoRoute(
-          path: '/legal/user-agreement',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const LegalDocumentPage(
-              documentType: LegalDocumentType.userAgreement,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/legal/privacy-policy',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const LegalDocumentPage(
-              documentType: LegalDocumentType.privacyPolicy,
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile',
-          pageBuilder: (context, state) =>
-              _musicSlidePage(state: state, child: const ProfilePage()),
-        ),
-        GoRoute(
-          path: '/profile/edit',
-          pageBuilder: (context, state) => _profileEditTransitionPage(
-            state: state,
-            child: SensitiveScreen(
-              child: DistributionChannel.isBeta
-                  ? const PlatformProfileEditPage()
-                  : const AuthProtectedPage(
-                      reason: '登录后才能编辑头像和个人资料。',
-                      redirect: '/profile/edit',
-                      child: ProfileEditPage(),
-                    ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile/avatar',
-          pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
-            key: ValueKey(state.uri.toString()),
-            avatarFocused: true,
-            child: AuthProtectedPage(
-              reason: '登录后才能预览和管理头像。',
-              redirect: state.uri.toString(),
-              child: const AvatarPreviewPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile/background',
-          pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
-            key: ValueKey(state.uri.toString()),
-            child: AuthProtectedPage(
-              reason: '登录后才能预览和管理个人主页背景。',
-              redirect: state.uri.toString(),
-              child: const ProfileBackgroundPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile/listening',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看听歌排行和最近播放。',
-              redirect: state.uri.toString(),
-              child: const ListeningHistoryPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile/account',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const SensitiveScreen(
-              child: AuthProtectedPage(
-                reason: '登录后才能管理账号绑定。',
-                redirect: '/profile/account',
-                child: AccountBindingsPage(),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/profile/delete-account',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: const SensitiveScreen(
-              child: AuthProtectedPage(
-                reason: '登录后才能注销账号。',
-                redirect: '/profile/delete-account',
-                child: AccountDeletionPage(),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看关注、粉丝和好友。',
-              redirect: state.uri.toString(),
-              child: SocialConnectionsPage(
-                initialTab:
-                    int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/messages',
-          pageBuilder: (context, state) => _messagesTransitionPage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看好友消息。',
-              redirect: state.uri.toString(),
-              child: const SocialMessagesPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/saved-messages',
-          pageBuilder: (context, state) => _messagesTransitionPage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看收藏消息。',
-              redirect: state.uri.toString(),
-              child: const SavedMessagesPage(),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/saved-messages/:messageId',
-          pageBuilder: (context, state) => _messagesTransitionPage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看收藏消息。',
-              redirect: state.uri.toString(),
-              child: SavedMessageDetailPage(
-                messageId: state.pathParameters['messageId']!,
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/users/:uid',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: AuthProtectedPage(
-              reason: '登录后才能查看用户主页。',
-              redirect: state.uri.toString(),
-              child: PublicProfilePage(uid: state.pathParameters['uid']!),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/chat/:uid',
-          pageBuilder: (context, state) => _musicSlidePage(
-            state: state,
-            child: SensitiveScreen(
-              child: AuthProtectedPage(
-                reason: '登录后才能与好友聊天。',
-                redirect: state.uri.toString(),
-                child: ChatPage(uid: state.pathParameters['uid']!),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/player',
-          pageBuilder: (context, state) => _NowPlayingTransitionPage(
-            key: state.pageKey,
-            child: NowPlayingPage(
-              showLyricsInitially: state.extra is PlaybackPillLyricsIntent,
-              vinylOrigin: state.extra is NowPlayingTransitionIntent
-                  ? (state.extra! as NowPlayingTransitionIntent).vinylOrigin
-                  : null,
-            ),
-          ),
-        ),
-      ],
-    ),
+    ..._musicShellRoutes(),
     GoRoute(
       path: '/auth',
       builder: (context, state) => SensitiveScreen(
@@ -414,6 +90,348 @@ final appRouter = GoRouter(
     ),
   ],
 );
+
+// Root tabs have independent retained Navigators; ordinary detail/player
+// routes keep their established shell and back behavior. A tab switch changes
+// the selected branch immediately; its viewport alone owns interruptible motion.
+List<RouteBase> _musicShellRoutes() {
+  final routes = <GoRoute>[
+    GoRoute(
+      path: '/music/recommend',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const RecommendationPage()),
+    ),
+    GoRoute(
+      path: '/music',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const MusicHomePage()),
+    ),
+    GoRoute(
+      path: '/music/library',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: MusicLibraryPage(view: state.uri.queryParameters['view']),
+      ),
+    ),
+    GoRoute(
+      path: '/music/local',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const LocalMusicPage()),
+    ),
+    GoRoute(
+      path: '/music/audiobooks',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const PlatformFeatureGate(
+          feature: PlatformFeature.audiobooks,
+          child: AudiobooksPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/together',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const PlatformFeatureGate(
+          feature: PlatformFeature.together,
+          child: TogetherPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/recognize',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const PlatformFeatureGate(
+          feature: PlatformFeature.recognition,
+          child: SongRecognitionPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/replay',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const ListeningReplayPage()),
+    ),
+    GoRoute(
+      path: '/music/queue',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const QueuePage()),
+    ),
+    GoRoute(
+      path: '/music/search',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const MusicSearchPage()),
+    ),
+    GoRoute(
+      path: '/music/catalog/:kind/:id',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: PlatformCatalogDetailPage(
+          hit: state.extra is PlatformSearchHit
+              ? state.extra! as PlatformSearchHit
+              : PlatformSearchHit(
+                  kind: PlatformSearchKind.values.firstWhere(
+                    (k) => k.name == state.pathParameters['kind'],
+                    orElse: () => PlatformSearchKind.albums,
+                  ),
+                  id: state.pathParameters['id']!,
+                  title: '音乐详情',
+                ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/discover',
+      redirect: (context, state) =>
+          DistributionChannel.isBeta ? '/music' : null,
+      pageBuilder: (context, state) =>
+          _collectionRevealPage(state: state, child: const DiscoverPage()),
+    ),
+    GoRoute(
+      path: '/music/discover/:playlistId',
+      redirect: (context, state) =>
+          DistributionChannel.isBeta ? '/music' : null,
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: CuratedPlaylistPage(
+          playlistId: state.pathParameters['playlistId']!,
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/playlists',
+      redirect: (context, state) => '/music?view=playlists',
+    ),
+    GoRoute(
+      path: '/music/playlists/:playlistId',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看和编辑个人歌单。',
+          allowBetaLocalLibrary: true,
+          redirect: state.uri.toString(),
+          child: PlaylistDetailPage(
+            playlistId: state.pathParameters['playlistId']!,
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/music/themes',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const ThemeGalleryPage()),
+    ),
+    GoRoute(
+      path: '/music/settings',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const SettingsPage()),
+    ),
+    GoRoute(
+      path: '/legal',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const LegalDocumentsPage()),
+    ),
+    GoRoute(
+      path: '/legal/user-agreement',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const LegalDocumentPage(
+          documentType: LegalDocumentType.userAgreement,
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/legal/privacy-policy',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const LegalDocumentPage(
+          documentType: LegalDocumentType.privacyPolicy,
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile',
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const ProfilePage()),
+    ),
+    GoRoute(
+      path: '/profile/edit',
+      pageBuilder: (context, state) => _profileEditTransitionPage(
+        state: state,
+        child: SensitiveScreen(
+          child: DistributionChannel.isBeta
+              ? const PlatformProfileEditPage()
+              : const AuthProtectedPage(
+                  reason: '登录后才能编辑头像和个人资料。',
+                  redirect: '/profile/edit',
+                  child: ProfileEditPage(),
+                ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/avatar',
+      pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
+        key: ValueKey(state.uri.toString()),
+        avatarFocused: true,
+        child: AuthProtectedPage(
+          reason: '登录后才能预览和管理头像。',
+          redirect: state.uri.toString(),
+          child: const AvatarPreviewPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/background',
+      pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
+        key: ValueKey(state.uri.toString()),
+        child: AuthProtectedPage(
+          reason: '登录后才能预览和管理个人主页背景。',
+          redirect: state.uri.toString(),
+          child: const ProfileBackgroundPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/listening',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看听歌排行和最近播放。',
+          redirect: state.uri.toString(),
+          child: const ListeningHistoryPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/account',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const SensitiveScreen(
+          child: AuthProtectedPage(
+            reason: '登录后才能管理账号绑定。',
+            redirect: '/profile/account',
+            child: AccountBindingsPage(),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/profile/delete-account',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const SensitiveScreen(
+          child: AuthProtectedPage(
+            reason: '登录后才能注销账号。',
+            redirect: '/profile/delete-account',
+            child: AccountDeletionPage(),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看关注、粉丝和好友。',
+          redirect: state.uri.toString(),
+          child: SocialConnectionsPage(
+            initialTab:
+                int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social/messages',
+      pageBuilder: (context, state) => _messagesTransitionPage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看好友消息。',
+          redirect: state.uri.toString(),
+          child: const SocialMessagesPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social/saved-messages',
+      pageBuilder: (context, state) => _messagesTransitionPage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看收藏消息。',
+          redirect: state.uri.toString(),
+          child: const SavedMessagesPage(),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social/saved-messages/:messageId',
+      pageBuilder: (context, state) => _messagesTransitionPage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看收藏消息。',
+          redirect: state.uri.toString(),
+          child: SavedMessageDetailPage(
+            messageId: state.pathParameters['messageId']!,
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social/users/:uid',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: AuthProtectedPage(
+          reason: '登录后才能查看用户主页。',
+          redirect: state.uri.toString(),
+          child: PublicProfilePage(uid: state.pathParameters['uid']!),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/social/chat/:uid',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: SensitiveScreen(
+          child: AuthProtectedPage(
+            reason: '登录后才能与好友聊天。',
+            redirect: state.uri.toString(),
+            child: ChatPage(uid: state.pathParameters['uid']!),
+          ),
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/player',
+      pageBuilder: (context, state) => _NowPlayingTransitionPage(
+        key: state.pageKey,
+        child: NowPlayingPage(
+          showLyricsInitially: state.extra is PlaybackPillLyricsIntent,
+          vinylOrigin: state.extra is NowPlayingTransitionIntent
+              ? (state.extra! as NowPlayingTransitionIntent).vinylOrigin
+              : null,
+        ),
+      ),
+    ),
+  ];
+  ShellRoute regular(List<RouteBase> children) => ShellRoute(
+    builder: (context, state, child) =>
+        MusicShell(location: state.uri.toString(), child: child),
+    routes: children,
+  );
+  if (!DistributionChannel.isBeta) return [regular(routes)];
+  const roots = ['/music/recommend', '/music', '/music/library', '/profile'];
+  return [
+    regular([
+      ...betaTabShellRoutes([
+        for (final path in roots) routes.singleWhere((r) => r.path == path),
+      ]),
+      ...routes.where((r) => !roots.contains(r.path)),
+    ]),
+  ];
+}
 
 class _NowPlayingTransitionPage extends Page<void> {
   const _NowPlayingTransitionPage({required this.child, super.key});
@@ -548,27 +566,22 @@ Page<void> _musicSlidePage({
       '/profile' => 3,
       _ => null,
     };
+    // The shell owns routed search's visible slide. Its content Navigator is
+    // paused while that overlay is open; a second route animation would retain
+    // an exiting stateful tab shell and duplicate its key when search closes.
+    if (tabIndex != null || child is MusicSearchPage) {
+      return NoTransitionPage<void>(
+        key: state.pageKey,
+        child: tabIndex != null ? BetaEdgeBack(child: child) : child,
+      );
+    }
     return CustomTransitionPage<void>(
       key: state.pageKey,
       transitionDuration: const Duration(milliseconds: 360),
       reverseTransitionDuration: const Duration(milliseconds: 320),
-      child: tabIndex != null
-          ? BetaTabRouteReady(
-              index: tabIndex,
-              child: BetaEdgeBack(child: child),
-            )
-          : child is MusicSearchPage
-          ? child
-          : BetaEdgeBack(child: child),
+      child: child is MusicSearchPage ? child : BetaEdgeBack(child: child),
       transitionsBuilder: (context, animation, secondary, child) =>
-          tabIndex != null
-          ? BetaRootTabMotion(
-              index: tabIndex,
-              animation: animation,
-              secondary: secondary,
-              child: child,
-            )
-          : BetaPageMotion(animation: animation, child: child),
+          BetaPageMotion(animation: animation, child: child),
     );
   }
   final intent = state.extra is MusicPageTransitionIntent

@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.28': [
+    '双平台缓存刷新在新内容及对应封面可显示后更新，图片失败时保留原内容，减少占位图闪现。',
+    '优化封面缩略图索引恢复，保留已解码画面直到新封面就绪，继续限制缓存与预加载容量。',
+    '底部Tab支持快速连点和中途反向切换，保留页面状态、搜索归属、原有过渡方向及完整玻璃效果。',
+  ],
   '1.0.27': [
     '更新网易云私信读取的客户端兼容参数，修正一起听记录消息体字段丢失和多层JSON解析。',
     '无法识别的单条消息可手动预览、复制脱敏结构诊断，便于反馈，不自动上传。',

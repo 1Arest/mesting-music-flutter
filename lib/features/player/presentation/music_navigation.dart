@@ -46,18 +46,30 @@ int musicBottomNavigationIndexForLocation(String location) {
 /// the final shell route, where Android would otherwise return to the launcher.
 String? betaMusicBackDestination(String location, {required String tabRoot}) {
   final uri = Uri.parse(location);
-  final path = uri.path;
+  final alias = {
+    '/music/view',
+    '/music/library/view',
+    '/music/recommend/view',
+    '/profile/view',
+  }.contains(uri.path);
+  final path = alias
+      ? uri.path.substring(0, uri.path.length - '/view'.length)
+      : uri.path;
   if (path == '/music') {
     return switch (uri.queryParameters['view']) {
       'daily' => '/music/recommend',
       'favorites' || 'playlists' => '/profile',
-      _ => null,
+      _ => alias ? '/music' : null,
     };
   }
   if (path == '/music/library') {
-    return uri.queryParameters['view'] == null ? null : '/music/library';
+    return !alias && uri.queryParameters['view'] == null
+        ? null
+        : '/music/library';
   }
-  if (path == '/music/recommend' || path == '/profile') return null;
+  if (path == '/music/recommend' || path == '/profile') {
+    return alias ? path : null;
+  }
   if (path.startsWith('/legal')) return '/music/settings';
   if (path == '/profile/delete-account') return '/music/settings';
   if (path.startsWith('/profile/')) return '/profile';

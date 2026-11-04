@@ -38,6 +38,7 @@ import 'package:mesting_music/features/settings/presentation/settings_page.dart'
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/shared/widgets/artwork_image.dart';
+import 'package:mesting_music/shared/widgets/retained_artwork_frame.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_menu_item.dart';
 import 'package:mesting_music/shared/widgets/beta_scroll_behavior.dart';
 import 'package:mesting_music/shared/media/persistent_network_image_cache.dart';
@@ -512,7 +513,13 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 30));
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(RetainedArtworkFrame), findsOneWidget);
+      expect(
+        tester
+            .widget<RetainedArtworkFrame>(find.byType(RetainedArtworkFrame))
+            .image,
+        isNotNull,
+      );
       expect(find.byIcon(Icons.album_rounded), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
@@ -561,6 +568,6 @@ void main() {
     expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
     expect(find.byIcon(Icons.album_rounded), findsNothing);
     expect(tester.takeException(), isNull);
-      debugNetworkImageHttpClientProvider = null;
+    debugNetworkImageHttpClientProvider = null;
   });
 }

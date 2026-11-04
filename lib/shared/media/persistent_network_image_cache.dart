@@ -39,6 +39,8 @@ class PersistentNetworkImageCache {
   Directory? _root;
   final _validated = <String>{};
   final _disk = <String, ({int bytes, DateTime used})>{};
+  final _contentFiles = <String, String>{};
+  bool _contentIndexDirty = false;
   Future<void> _maintenance = Future.value();
   final Map<String, File> _memoryFiles = <String, File>{};
   final Map<String, Future<File?>> _pendingLoads = <String, Future<File?>>{};
@@ -55,9 +57,27 @@ class PersistentNetworkImageCache {
       );
       await root.create(recursive: true);
       _root = root;
+      final index = File('${root.path}/content-index-v1.json');
+      try {
+        if (await index.exists() && await index.length() <= 1024 * 1024) {
+          final saved = jsonDecode(await index.readAsString()) as Map;
+          for (final item in saved.entries.take(maxFiles)) {
+            if (RegExp(r'^[a-f0-9]{64}$').hasMatch('${item.key}') &&
+                RegExp(r'^[a-f0-9]{64}$').hasMatch('${item.value}')) {
+              _contentFiles['${item.key}'] = '${item.value}';
+            }
+          }
+        }
+      } on Object {
+        /* A corrupt optional index cannot invalidate images. */
+      }
       await for (final entry in root.list(followLinks: false)) {
         if (entry is! File) continue;
         final name = entry.uri.pathSegments.last;
+        if (name == 'content-index-v1.json.tmp') {
+          await entry.delete();
+          continue;
+        }
         if (RegExp(r'^[a-f0-9]{64}\.avatar\.[0-9]+\.tmp$').hasMatch(name)) {
           await entry.delete();
           continue;
@@ -106,6 +126,7 @@ class PersistentNetworkImageCache {
     final file = _memoryFiles[key];
     if (file == null) return null;
     if (file.existsSync()) {
+      _noteContent(cacheKey, url, key);
       final metadata = _disk[key];
       if (metadata != null) {
         _disk[key] = (bytes: metadata.bytes, used: DateTime.now());
@@ -116,19 +137,100 @@ class PersistentNetworkImageCache {
     return null;
   }
 
+  /// Restore a previously viewed thumbnail when the caller knows only the
+  /// original cover URL. The index contains hashes only, never URL/token data.
+  File? peekContent({required String cacheKey, required String url}) {
+    final exact = peek(cacheKey: cacheKey, url: url);
+    if (exact != null) return exact;
+    final content = sha256
+        .convert(utf8.encode('$cacheKey\n${artworkContentIdentity(url)}'))
+        .toString();
+    final key = _contentFiles[content];
+    final indexed = _memoryFiles[key];
+    if (indexed != null && indexed.existsSync()) return indexed;
+    // Migration for 1.0.26/27: old filenames do not retain their source URL.
+    // Resolve established square thumbnail sizes from the in-memory index.
+    for (final size in [
+      192,
+      216,
+      240,
+      288,
+      324,
+      360,
+      384,
+      480,
+      540,
+      600,
+      720,
+      768,
+      960,
+      1024,
+    ]) {
+      final found = peek(
+        cacheKey: cacheKey,
+        url: sizedArtworkUri(url, width: size, height: size),
+      );
+      if (found != null) return found;
+    }
+    return null;
+  }
+
+  void _noteContent(String owner, String url, String fileKey) {
+    final key = sha256
+        .convert(utf8.encode('$owner\n${artworkContentIdentity(url)}'))
+        .toString();
+    if (_contentFiles[key] == fileKey) return;
+    _contentFiles.remove(key);
+    _contentFiles[key] = fileKey;
+    while (_contentFiles.length > maxFiles) {
+      _contentFiles.remove(_contentFiles.keys.first);
+    }
+    _contentIndexDirty = true;
+  }
+
+  /// Display-time peek stays synchronous and never starts filesystem writes.
+  /// Successful resolves and presentation preparation explicitly flush the
+  /// optional index, avoiding outstanding writers after a consumer is disposed.
+  Future<void> flush() {
+    if (!_contentIndexDirty) return _maintenance;
+    _contentIndexDirty = false;
+    final encoded = jsonEncode(_contentFiles);
+    final write = _maintenance.then((_) async {
+      final root = _root;
+      if (root == null) return;
+      final target = File('${root.path}/content-index-v1.json');
+      final temp = File('${target.path}.tmp');
+      try {
+        await temp.writeAsString(encoded, flush: true);
+        await temp.rename(target.path);
+      } on Object {
+        _contentIndexDirty = true;
+        /* An optional acceleration index can be rebuilt. */
+      }
+    });
+    _maintenance = write.then<void>((_) {}, onError: (Object _) {});
+    return _maintenance;
+  }
+
   /// Reads a cached image first, downloading and validating it only on a miss.
   Future<File?> resolve({required String cacheKey, required String url}) {
     final key = _cacheFileKey(cacheKey: cacheKey, url: url);
     if (key == null) return Future<File?>.value();
     final memoryFile = peek(cacheKey: cacheKey, url: url);
     if (memoryFile != null && _validated.contains(key)) {
-      return Future<File?>.value(memoryFile);
+      return flush().then((_) => memoryFile);
     }
 
     final pending = _pendingLoads[key];
     if (pending != null) return pending;
 
-    final load = _load(cacheKey: key, url: url);
+    final load = _load(cacheKey: key, url: url).then((file) async {
+      if (file != null) {
+        _noteContent(cacheKey, url, key);
+        await flush();
+      }
+      return file;
+    });
     _pendingLoads[key] = load;
     unawaited(load.whenComplete(() => _pendingLoads.remove(key)));
     return load;

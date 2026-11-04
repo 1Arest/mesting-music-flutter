@@ -179,6 +179,8 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     if (widget.location != oldWidget.location) {
       if (_rootTab(widget.location) == null) {
         _tabNavigation.cancel();
+      } else {
+        _tabNavigation.settled(_rootTab(widget.location)!);
       }
       _closingSearchRoute = false;
       _pageSearchHost.current?.focus.unfocus();

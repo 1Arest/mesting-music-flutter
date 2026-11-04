@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'beta_root_tab_viewport.dart';
 
 /// A page supplies search behavior; the persistent shell supplies the one
 /// official glass field. No music/book repository or route is owned here.
@@ -165,17 +166,28 @@ class _BetaBottomSearchBindingState extends State<BetaBottomSearchBinding> {
     if (host != _host) {
       _host?.unregister(this);
       _host = host;
-      _location = host == null ? null : Uri.parse(host.location).path;
+      _location = host == null
+          ? null
+          : context
+                    .getInheritedWidgetOfExactType<BetaTabVisibility>()
+                    ?.location ??
+                Uri.parse(host.location).path;
     }
     _register();
   }
 
-  void _register() => _host?.register(
-    this,
-    widget.controller,
-    location: _location!,
-    route: ModalRoute.of(context),
-  );
+  void _register() {
+    if (!BetaTabVisibility.of(context)) {
+      _host?.unregister(this);
+      return;
+    }
+    _host?.register(
+      this,
+      widget.controller,
+      location: _location!,
+      route: ModalRoute.of(context),
+    );
+  }
 
   @override
   void didUpdateWidget(covariant BetaBottomSearchBinding oldWidget) {

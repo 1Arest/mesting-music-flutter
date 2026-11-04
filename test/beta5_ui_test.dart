@@ -2396,12 +2396,20 @@ void main() {
             ),
           ),
         );
+        var backCheckStep = 0;
         Future<void> settle() async {
           // Route completion, local history and native Back reporting each
           // schedule frames. Advance frame-sized steps rather than one jump.
           for (var frame = 0; frame < 8; frame++) {
             await tester.pump(const Duration(milliseconds: 100));
           }
+          backCheckStep++;
+          expect(
+            tester.takeException(),
+            isNull,
+            reason:
+                'back step $backCheckStep at ${production.appRouter.routeInformationProvider.value.uri}',
+          );
         }
 
         await settle();

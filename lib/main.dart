@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'shared/media/persistent_network_image_cache.dart';
+import 'shared/media/artwork_refresh_coordinator.dart';
 import 'core/cache/browse_response_cache.dart';
 
 import 'package:audio_service/audio_service.dart';
@@ -137,6 +138,12 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
           persistentNetworkImageCache.initialize(),
         if (DistributionChannel.isBeta) browseResponseCache.initialize(),
       ]);
+      if (DistributionChannel.isBeta) {
+        browseResponseCache.prepareRefresh =
+            artworkRefreshCoordinator.prepareRefresh;
+        browseResponseCache.prepareCached =
+            artworkRefreshCoordinator.prepareCached;
+      }
       final audioHandler = initialized.first as MestingAudioHandler;
       final playbackPersistence = PlaybackPersistenceController(
         database: database,

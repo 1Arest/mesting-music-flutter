@@ -1,3 +1,4 @@
+import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
 import 'dart:io';
@@ -414,7 +415,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     mine: mine,
                     avatarUser: mine ? currentSocialUser : peerSocialUser,
                     onAvatarTap: () => mine
-                        ? context.push('/profile')
+                        ? context.push(
+                            DistributionChannel.isBeta
+                                ? '/profile/view'
+                                : '/profile',
+                          )
                         : context.push(
                             '/social/users/${Uri.encodeComponent(widget.uid)}',
                           ),

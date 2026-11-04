@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mesting_music/shared/widgets/beta_tab_navigation.dart';
 import 'package:mesting_music/shared/widgets/beta_scroll_chrome.dart';
@@ -28,38 +27,41 @@ void main() {
     expect(chrome.value, isFalse);
     expect(chrome.requestedCompact, isFalse);
   });
+  test('burst immediately dispatches every changed destination', () {
+    final queue = BetaTabNavigation(), calls = <int>[];
+    void request(int index) =>
+        queue.request(index: index, currentIndex: 0, navigate: calls.add);
+    request(2);
+    request(3);
+    request(0);
+    request(1);
+    expect(calls, [2, 3, 0, 1]);
+    queue.settled(3); // A departed/stale route must not release another intent.
+    expect(calls, [2, 3, 0, 1]);
+    queue.settled(2);
+    expect(calls, [2, 3, 0, 1]);
+    queue.settled(1);
+    expect(calls, [2, 3, 0, 1]);
+  });
   test(
-    'burst keeps the first immediate route and the latest final destination',
+    'same-frame reselect returns immediately to the selected destination',
     () {
       final queue = BetaTabNavigation(), calls = <int>[];
-      void request(int index) =>
-          queue.request(index: index, currentIndex: 0, navigate: calls.add);
-      request(2);
-      request(3);
-      request(0);
-      request(1);
-      expect(calls, [2]);
-      queue.settled(
-        3,
-      ); // A departed/stale route must not release another intent.
-      expect(calls, [2]);
+      for (final i in [2, 3, 2]) {
+        queue.request(index: i, currentIndex: 0, navigate: calls.add);
+      }
       queue.settled(2);
-      expect(calls, [2, 1]);
-      queue.settled(1);
-      expect(calls, [2, 1]);
+      expect(calls, [2, 3, 2]);
+      queue.cancel();
+      queue.request(index: 2, currentIndex: -1, navigate: calls.add);
+      expect(calls, [
+        2,
+        3,
+        2,
+        2,
+      ], reason: 'A detail can return to its own root tab.');
     },
   );
-  test('same-tab reselect cancels an intervening pending destination', () {
-    final queue = BetaTabNavigation(), calls = <int>[];
-    for (final i in [2, 3, 2]) {
-      queue.request(index: i, currentIndex: 0, navigate: calls.add);
-    }
-    queue.settled(2);
-    expect(calls, [2]);
-    queue.cancel();
-    queue.request(index: 2, currentIndex: -1, navigate: calls.add);
-    expect(calls, [2, 2], reason: 'A detail can return to its own root tab.');
-  });
   test('detail or disposal discards pending tab callbacks', () {
     final queue = BetaTabNavigation(), calls = <int>[];
     for (final i in [2, 3]) {
@@ -67,39 +69,14 @@ void main() {
     }
     queue.cancel();
     queue.settled(2);
-    expect(calls, [2]);
-  });
-  testWidgets('route gate drains only after its real animation completes', (
-    tester,
-  ) async {
-    final queue = BetaTabNavigation(), calls = <int>[];
-    final nav = GlobalKey<NavigatorState>();
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [betaTabNavigationProvider.overrideWithValue(queue)],
-        child: MaterialApp(navigatorKey: nav, home: const SizedBox()),
-      ),
-    );
-    queue.request(
-      index: 2,
-      currentIndex: 0,
-      navigate: (index) {
-        calls.add(index);
-        nav.currentState!.push(
-          PageRouteBuilder<void>(
-            transitionDuration: const Duration(milliseconds: 360),
-            pageBuilder: (_, _, _) =>
-                const BetaTabRouteReady(index: 2, child: SizedBox()),
-          ),
-        );
-      },
-    );
-    queue.request(index: 3, currentIndex: 2, navigate: calls.add);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 110));
-    expect(calls, [2]);
-    await tester.pumpAndSettle();
     expect(calls, [2, 3]);
+  });
+  test('duplicate destination is ignored without delaying a return tap', () {
+    final navigation = BetaTabNavigation(), calls = <int>[];
+    for (final i in [2, 2, 0]) {
+      navigation.request(index: i, currentIndex: 0, navigate: calls.add);
+    }
+    expect(calls, [2, 0]);
   });
   testWidgets('rapid player changes retain only two content trees and settle', (
     tester,
