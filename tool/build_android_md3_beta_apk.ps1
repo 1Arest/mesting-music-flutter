@@ -1,7 +1,7 @@
 param(
     # Public releases retain this internal flavor/package for in-place upgrades.
-    [string]$VersionName = '1.0.46',
-    [ValidateRange(1, 2147483647)][int]$VersionCode = 67,
+    [string]$VersionName = '1.0.48',
+    [ValidateRange(1, 2147483647)][int]$VersionCode = 69,
     [ValidateSet('debug', 'profile', 'release')][string]$Mode = 'release',
     [string]$TargetPlatform = 'android-arm,android-arm64',
     [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,

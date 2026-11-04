@@ -74,6 +74,7 @@ class PersonalProfileFixture {
   );
 
   static Future<PersonalProfileFixture> create({
+    NeteaseMusicRepository? musicRepository,
     LibraryRepository? browsingLibrary,
     FavoriteTrackWindow? favoritesWindow,
     MestingAudioHandler? audioHandler,
@@ -137,7 +138,9 @@ class PersonalProfileFixture {
         platformAccountProvider.overrideWith(
           accountFactory ?? SyntheticProfileAccount.new,
         ),
-        neteaseMusicRepositoryProvider.overrideWithValue(music),
+        neteaseMusicRepositoryProvider.overrideWithValue(
+          musicRepository ?? music,
+        ),
         platformProfileProvider.overrideWith(
           (ref) async => const PlatformProfileInfo(
             '固定测试账号',

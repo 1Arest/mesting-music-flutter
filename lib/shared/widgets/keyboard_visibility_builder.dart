@@ -13,6 +13,7 @@ class KeyboardVisibilityBuilder extends StatefulWidget {
 class _KeyboardVisibilityState extends State<KeyboardVisibilityBuilder>
     with WidgetsBindingObserver {
   bool _visible = false;
+  double _bottom = 0;
   @override
   void initState() {
     super.initState();
@@ -23,13 +24,19 @@ class _KeyboardVisibilityState extends State<KeyboardVisibilityBuilder>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _visible = View.of(context).viewInsets.bottom > 0;
+    _bottom = View.of(context).viewInsets.bottom;
   }
 
   @override
   void didChangeMetrics() {
     if (!mounted) return;
-    final visible = View.of(context).viewInsets.bottom > 0;
-    if (visible != _visible) setState(() => _visible = visible);
+    final bottom = View.of(context).viewInsets.bottom;
+    if (bottom != _bottom) {
+      setState(() {
+        _bottom = bottom;
+        _visible = bottom > 0;
+      });
+    }
   }
 
   @override

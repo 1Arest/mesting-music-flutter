@@ -211,11 +211,24 @@ class MestingAudioHandler extends BaseAudioHandler
   /// playback mode or consumed-track timer. Resolve while the old stream keeps
   /// playing; a newer seek/pause/skip/account reset makes this result stale.
   /// Only this audio owner may swap sources. UI never creates another player.
-  Future<bool> refreshCurrentSource() async {
+  Future<bool> refreshCurrentSource() => _refreshCurrentSource();
+
+  /// Keep the original refresh contract for other controllers. Only this audio
+  /// owner may install a preflighted quality source, using the same epoch gate.
+  Future<bool> refreshVerifiedSource(TrackPlaybackResolver resolve) =>
+      _refreshCurrentSource(resolveSource: resolve);
+
+  Future<bool> _refreshCurrentSource({
+    TrackPlaybackResolver? resolveSource,
+  }) async {
     await _ready;
     final current = trackForId(mediaItem.value?.id ?? '');
-    final resolver = _trackPlaybackResolver;
+    final resolver = resolveSource ?? _trackPlaybackResolver;
     if (current == null || resolver == null) return false;
+    if (resolveSource != null &&
+        (_resolutionError != null || current.id != _loadedTrackId)) {
+      return false;
+    }
     if (_resolutionError != null || current.id != _loadedTrackId) {
       await playSingleTrack(current);
       return mediaItem.value?.id == current.id &&
@@ -230,6 +243,7 @@ class MestingAudioHandler extends BaseAudioHandler
         epoch == _queueLoadEpoch &&
         mediaItem.value?.id == current.id;
     final resolved = await resolver(current);
+    if (resolved.id != current.id) return false;
     if (!currentRequest()) return false;
     final item = await _mediaItemFor(resolved);
     final source = await _audioSourceFor(resolved, item);

@@ -44,6 +44,8 @@ class ArtworkImage extends StatefulWidget {
     this.persistentNetworkCacheKey,
     this.networkImageCache,
     this.onNetworkError,
+    this.onLoadFailure,
+    this.onRetry,
     this.frameOwner,
     super.key,
   });
@@ -58,6 +60,10 @@ class ArtworkImage extends StatefulWidget {
   final String? persistentNetworkCacheKey;
   final PersistentNetworkImageCache? networkImageCache;
   final VoidCallback? onNetworkError;
+
+  /// Optional metadata recovery after any final image failure (disk or HTTP).
+  final VoidCallback? onLoadFailure;
+  final VoidCallback? onRetry;
 
   /// Stable song identity prevents the previous song's retained pixels from
   /// following a recycled player widget during a rapid recording change.
@@ -146,7 +152,10 @@ class _ArtworkImageState extends State<ArtworkImage> {
     // Image stream failures can arrive during build. Build the explicit error
     // state next frame before releasing the surrounding content gate.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        widget.onLoadFailure?.call();
+      }
     });
     WidgetsBinding.instance.ensureVisualUpdate();
   }
@@ -194,6 +203,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
                   // This is an explicit failed item. Retrying it must not hide other
                   // successful rows or restore a generic album placeholder.
                   _resetPersistentNetworkImage();
+                  widget.onRetry?.call();
                   setState(() {});
                 },
           child: SizedBox(

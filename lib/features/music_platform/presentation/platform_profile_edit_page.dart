@@ -363,7 +363,7 @@ class _PlatformProfileEditPageState
             : details!.when(
                 loading: () => const Center(child: BetaActivityIndicator()),
                 error: (_, _) => MusicFeatureMessage(
-                  message: '暂时无法读取酷狗资料。请重试，避免覆盖尚未读取的字段。',
+                  message: '暂时无法读取${_owner.platformLabel}资料。请重试，避免覆盖尚未读取的字段。',
                   onRetry: () =>
                       ref.invalidate(platformEditableProfileProvider(_owner)),
                 ),
@@ -493,7 +493,7 @@ class _PlatformProfileEditPageState
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        '修改将同步到当前酷狗账号。头像提交后需由平台审核。',
+                        '修改将同步到当前${_owner.platformLabel}账号。头像提交后需由平台审核。',
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
                           fontSize: 13,

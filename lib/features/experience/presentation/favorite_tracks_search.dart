@@ -7,6 +7,7 @@ import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/keyboard_overlay_layout.dart';
 import '../../library/library_providers.dart';
 import '../../library/data/favorite_track_window.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
@@ -164,9 +165,8 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
     final more = searching ? _searchMore : window?.hasMore ?? false;
     final error = searching ? _searchError : window?.error;
     Future<void> loadMore() => searching
-        ? _search(_searchGeneration)
+        ? _search(_searchGeneration, append: true)
         : window?.loadMore() ?? Future.value();
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
     return BetaMusicChromeCover(
       enabled: _editing,
       child: PopScope(
@@ -174,108 +174,114 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
         onPopInvokedWithResult: (didPop, _) {
           if (!didPop && _editing) _close();
         },
-        child: Stack(
-          children: [
-            MusicRefreshIndicator(
-              onRefresh: widget.onRefresh,
-              child: AutomaticSongPaging(
-                enabled: more && !loading && error == null,
-                onLoadMore: loadMore,
-                child: ListView.builder(
-                  key: const ValueKey('favorite-search-results'),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.paddingOf(context).top + 14,
-                    bottom: _editing
-                        ? 88 + MediaQuery.viewPaddingOf(context).bottom
-                        : BetaContentInsets.musicBottomOf(context, 12),
-                  ),
-                  itemCount: tracks.length + 3,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return EditorialHeader(
-                        '我的喜欢',
-                        back: true,
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: '新建歌单',
-                              onPressed: widget.onCreatePlaylist,
-                              icon: const Icon(
-                                Icons.add_circle_outline_rounded,
+        child: KeyboardOverlayLayout(
+          builder: (context, lift, keyboard) => Stack(
+            children: [
+              MusicRefreshIndicator(
+                onRefresh: widget.onRefresh,
+                child: AutomaticSongPaging(
+                  enabled: more && !loading && error == null,
+                  onLoadMore: loadMore,
+                  child: ListView.builder(
+                    key: const ValueKey('favorite-search-results'),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.paddingOf(context).top + 14,
+                      bottom: _editing
+                          ? lift + 88 + MediaQuery.viewPaddingOf(context).bottom
+                          : BetaContentInsets.musicBottomOf(context, 12),
+                    ),
+                    itemCount: tracks.length + 3,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return EditorialHeader(
+                          '我的喜欢',
+                          back: true,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: '新建歌单',
+                                onPressed: widget.onCreatePlaylist,
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              tooltip: _editing ? '关闭收藏搜索' : '搜索我的喜欢',
-                              icon: Icon(
-                                _editing
-                                    ? CupertinoIcons.xmark
-                                    : CupertinoIcons.search,
+                              IconButton(
+                                tooltip: _editing ? '关闭收藏搜索' : '搜索我的喜欢',
+                                icon: Icon(
+                                  _editing
+                                      ? CupertinoIcons.xmark
+                                      : CupertinoIcons.search,
+                                ),
+                                onPressed: () => _editing
+                                    ? _close()
+                                    : setState(() => _editing = true),
                               ),
-                              onPressed: () => _editing
-                                  ? _close()
-                                  : setState(() => _editing = true),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    if (index == 1) return widget.header;
-                    if (index == tracks.length + 2) {
-                      if (loading) {
-                        return const PlatformFeedbackState(loading: true);
-                      }
-                      if (error != null) {
-                        return TextButton(
-                          onPressed: loadMore,
-                          child: const Text('加载未完成，点击重试'),
+                            ],
+                          ),
                         );
                       }
-                      if (more) return const SizedBox(height: 12);
-                      return tracks.isEmpty
-                          ? EditorialEmpty(
-                              _query.isEmpty ? '还没有收藏的歌曲' : '收藏中没有找到匹配歌曲',
-                            )
-                          : const MusicListEnd();
-                    }
-                    return EditorialTrackRow(
-                      track: tracks[index - 2],
-                      contextTracks: tracks,
-                    );
-                  },
+                      if (index == 1) return widget.header;
+                      if (index == tracks.length + 2) {
+                        if (loading) {
+                          return const PlatformFeedbackState(loading: true);
+                        }
+                        if (error != null) {
+                          return TextButton(
+                            onPressed: loadMore,
+                            child: const Text('加载未完成，点击重试'),
+                          );
+                        }
+                        if (more) return const SizedBox(height: 12);
+                        return tracks.isEmpty
+                            ? EditorialEmpty(
+                                _query.isEmpty ? '还没有收藏的歌曲' : '收藏中没有找到匹配歌曲',
+                              )
+                            : const MusicListEnd();
+                      }
+                      return EditorialTrackRow(
+                        track: tracks[index - 2],
+                        contextTracks: tracks,
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            if (_editing)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: SafeArea(
-                  top: false,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: PlatformCommentComposer(
-                      controller: _text,
-                      sending: false,
-                      keyboardVisible: keyboard,
-                      hintText: '搜索收藏的歌名、歌手、专辑',
-                      singleLine: true,
-                      autofocus: true,
-                      expandOnPress: false,
-                      actionIcon: CupertinoIcons.search,
-                      sendLabel: '搜索我的喜欢',
-                      onChanged: _setQuery,
-                      onSubmitted: _setQuery,
-                      onSend: () {
-                        _setQuery(_text.text);
-                        FocusScope.of(context).unfocus();
-                      },
+              if (_editing)
+                Positioned(
+                  key: const ValueKey('favorite-keyboard-composer'),
+                  left: 0,
+                  right: 0,
+                  bottom: lift,
+                  child: SafeArea(
+                    top: false,
+                    bottom: !keyboard,
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: PlatformCommentComposer(
+                        controller: _text,
+                        sending: false,
+                        keyboardVisible: keyboard,
+                        hintText: '搜索收藏的歌名、歌手、专辑',
+                        singleLine: true,
+                        autofocus: true,
+                        expandOnPress: false,
+                        actionIcon: CupertinoIcons.search,
+                        sendLabel: '搜索我的喜欢',
+                        onChanged: _setQuery,
+                        onSubmitted: _setQuery,
+                        onSend: () {
+                          _setQuery(_text.text);
+                          FocusScope.of(context).unfocus();
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

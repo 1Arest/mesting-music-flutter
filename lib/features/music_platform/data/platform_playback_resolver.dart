@@ -158,6 +158,7 @@ class PlatformPlaybackResolver {
         // A permitted preview's short stream length is not the song's total.
         duration: isPreview ? null : PlatformTrackDuration.fromFields(data),
         audioAsset: mediaUrl(data),
+        audioOrigin: AudioOrigin(AudioOrigin.kugou, track.id),
         coverAsset: PlatformArtwork.fromPayload(data).isEmpty
             ? track.coverAsset
             : PlatformArtwork.fromPayload(data),

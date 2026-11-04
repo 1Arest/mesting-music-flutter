@@ -3,6 +3,7 @@ import '../../../shared/utils/media_uri.dart';
 import '../../../core/diagnostics/local_music_diagnostics.dart';
 import '../data/music_platform_api.dart';
 import 'netease_music_repository.dart';
+import 'netease_song_metadata.dart';
 
 enum NeteaseFeed {
   recommended,
@@ -308,7 +309,10 @@ class NeteaseFeaturesRepository {
           }))['playlist'],
         );
         if (lists.isEmpty) return const NeteaseBatch([]);
-        final songs = await music.playlist('${lists.first['id']}');
+        final songs = (await music.playlistPage(
+          '${lists.first['id']}',
+          limit: 1,
+        )).items;
         if (songs.isEmpty) return const NeteaseBatch([]);
         route = '/playmode/intelligence/list';
         kind = NeteaseEntity.song;
@@ -378,6 +382,9 @@ class NeteaseFeaturesRepository {
           else
             row,
       ];
+    }
+    if (feed == NeteaseFeed.intelligence) {
+      rows = await music.hydrateSparseSongs(rows);
     }
     final items = rows
         .map(
@@ -470,9 +477,7 @@ class NeteaseFeaturesRepository {
             : null,
       );
     }
-    final song = NeteaseMusicRepository.object(
-      r['song'] ?? r['simpleSongInfo'] ?? r['songInfo'] ?? r,
-    );
+    final song = neteaseSongMetadata(r);
     var track = kind == NeteaseEntity.song
         ? NeteaseMusicRepository.track(song)
         : null;
@@ -528,16 +533,7 @@ class NeteaseFeaturesRepository {
           ),
       kind: kind,
       track: track,
-      cover:
-          track?.coverAsset ??
-          firstArtworkUri([
-            r['coverImgUrl'],
-            r['coverUrl'],
-            r['picUrl'],
-            r['avatarUrl'],
-            r['img1v1Url'],
-            r['cover'],
-          ]),
+      cover: track?.coverAsset ?? neteaseArtwork(r),
       subtitle:
           track?.artist ??
           NeteaseMusicRepository.clean(

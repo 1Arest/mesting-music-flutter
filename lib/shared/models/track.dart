@@ -1,4 +1,6 @@
 import 'package:audio_service/audio_service.dart';
+import 'audio_origin.dart';
+export 'audio_origin.dart';
 
 enum TrackSource { local, kugou, netease, audius, jamendo }
 
@@ -37,6 +39,7 @@ class Track {
     this.playbackQuality = '',
     this.audioHeaders = const {},
     this.audioBitrate = 0,
+    this.audioOrigin,
   }) : _sourceTitle = title;
 
   final String id;
@@ -71,6 +74,10 @@ class Track {
   /// must never be placed here: tracks also travel through history/media items.
   final Map<String, String> audioHeaders;
   final int audioBitrate;
+
+  /// The resolved transport may differ from [source], which remains the
+  /// catalogue/library identity used by likes, lyrics and listening reports.
+  final AudioOrigin? audioOrigin;
 
   /// A saved recording keeps its original platform identity for library and
   /// listening synchronization, while its transport can be entirely offline.
@@ -117,6 +124,7 @@ class Track {
       'playbackQuality': playbackQuality,
       'audioHeaders': publicAudioHeaders(audioHeaders),
       'audioBitrate': audioBitrate,
+      if (audioOrigin != null) 'audioOrigin': audioOrigin!.toJson(),
     };
   }
 
@@ -143,6 +151,7 @@ class Track {
       playbackQuality: json['playbackQuality'] as String? ?? '',
       audioHeaders: publicAudioHeaders(json['audioHeaders']),
       audioBitrate: json['audioBitrate'] as int? ?? 0,
+      audioOrigin: AudioOrigin.fromJson(json['audioOrigin']),
     );
   }
 
@@ -174,6 +183,7 @@ class Track {
         'playbackQuality': playbackQuality,
         'audioHeaders': publicAudioHeaders(audioHeaders),
         'audioBitrate': audioBitrate,
+        if (audioOrigin != null) 'audioOrigin': audioOrigin!.toJson(),
       },
     );
   }
@@ -189,6 +199,7 @@ class Track {
     String? playbackQuality,
     Map<String, String>? audioHeaders,
     int? audioBitrate,
+    AudioOrigin? audioOrigin,
   }) {
     return Track(
       id: id,
@@ -209,6 +220,7 @@ class Track {
       playbackQuality: playbackQuality ?? this.playbackQuality,
       audioHeaders: audioHeaders ?? this.audioHeaders,
       audioBitrate: audioBitrate ?? this.audioBitrate,
+      audioOrigin: audioOrigin ?? this.audioOrigin,
     );
   }
 }

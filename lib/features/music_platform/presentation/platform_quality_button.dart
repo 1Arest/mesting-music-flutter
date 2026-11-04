@@ -11,12 +11,20 @@ import '../../themes/beta_appearance.dart';
 import '../domain/platform_audio_quality.dart';
 import '../platform_quality_providers.dart';
 import 'platform_feedback.dart';
-import '../netease/netease_playback_options.dart';
+import '../data/playback_quality_catalog.dart';
 
 class _QualitySelection {
-  const _QualitySelection(this.trackId, this.tier);
+  const _QualitySelection(this.trackId, this.tier, this.catalog);
   final String trackId;
   final PlatformAudioQuality tier;
+  final VerifiedPlaybackQualities catalog;
+}
+
+/// A retry must refresh resource metadata as well as the verified stream list;
+/// otherwise rebuilding the outer provider can reuse its dependency's error.
+void _reloadQualities(WidgetRef ref, Track track) {
+  ref.invalidate(platformSongQualitiesProvider(track.id));
+  ref.invalidate(platformPlaybackQualitiesProvider(track));
 }
 
 /// The live dialog follows song changes. A returned selection is bound to its
@@ -37,7 +45,7 @@ Future<void> showPlatformQualityPicker(
   try {
     final applied = await ref
         .read(platformQualityProvider.notifier)
-        .select(selected.tier);
+        .select(selected.tier, catalog: selected.catalog);
     if (!context.mounted) return;
     final handler = ref.read(audioHandlerProvider);
     final updated = handler.trackForId(handler.mediaItem.value?.id ?? '');
@@ -52,7 +60,7 @@ Future<void> showPlatformQualityPicker(
           ? '平台当前提供试听片段'
           : actual == null
           ? '已切换音源，音质待平台确认'
-          : '已切换为${updated.source == TrackSource.netease ? actual.neteaseLabel : actual.label}',
+          : '已切换为${playbackAudioOrigin(updated)?.isNetease == true ? actual.neteaseLabel : actual.label}',
       message: '',
     );
   } catch (error) {
@@ -69,15 +77,17 @@ class _QualityDialog extends ConsumerWidget {
       platformQualityProvider.select((s) => s.switching),
     );
     final supported =
-        (track.source == TrackSource.kugou && track.id.startsWith('kugou_')) ||
-        (track.source == TrackSource.netease &&
-            track.id.startsWith('netease_'));
+        !track.hasLocalAudio &&
+        ((track.source == TrackSource.kugou && track.id.startsWith('kugou_')) ||
+            (track.source == TrackSource.netease &&
+                track.id.startsWith('netease_')));
     final actual = PlatformAudioQuality.fromCode(track.playbackQuality);
+    final origin = playbackAudioOrigin(track);
     final dark = Theme.of(context).brightness == Brightness.dark;
     final ink = dark ? Colors.white : const Color(0xFF202024);
     final accent = BetaAppearance.accent(Theme.of(context).brightness);
     final qualities = supported
-        ? ref.watch(platformSongQualitiesProvider(track.id))
+        ? ref.watch(platformPlaybackQualitiesProvider(track))
         : null;
     return Dialog(
       key: const ValueKey('apple-quality-picker'),
@@ -103,12 +113,11 @@ class _QualityDialog extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                if (track.source == TrackSource.netease &&
-                    ref.watch(neteaseLocalSvipProvider))
+                if (origin != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
-                      '网易云音质 · 可用档位因歌曲、账号与设备而异，切换以实际文件为准',
+                      '${origin.adapter} · 仅显示当前歌曲与账号已确认可用的音质',
                       style: TextStyle(color: ink, fontSize: 12),
                     ),
                   ),
@@ -127,9 +136,7 @@ class _QualityDialog extends ConsumerWidget {
                         children: [
                           Text('暂未获取到歌曲音质信息', style: TextStyle(color: ink)),
                           TextButton(
-                            onPressed: () => ref.invalidate(
-                              platformSongQualitiesProvider(track.id),
-                            ),
+                            onPressed: () => _reloadQualities(ref, track),
                             child: const Text('重新加载'),
                           ),
                         ],
@@ -140,12 +147,12 @@ class _QualityDialog extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             for (final quality
-                                in (track.source == TrackSource.netease
+                                in (origin?.isNetease == true
                                         ? PlatformAudioQuality.neteaseOrder
                                         : PlatformAudioQuality.values.where(
                                             (q) => !q.neteaseOnly,
                                           ))
-                                    .where(available.contains))
+                                    .where(available.values.containsKey))
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 5),
                                 child: Material(
@@ -160,7 +167,7 @@ class _QualityDialog extends ConsumerWidget {
                                     ),
                                     minVerticalPadding: 10,
                                     title: Text(
-                                      track.source == TrackSource.netease
+                                      origin?.isNetease == true
                                           ? quality.neteaseLabel
                                           : quality.label,
                                       style: TextStyle(
@@ -185,11 +192,28 @@ class _QualityDialog extends ConsumerWidget {
                                             _QualitySelection(
                                               track.id,
                                               quality,
+                                              available,
                                             ),
                                           ),
                                   ),
                                 ),
                               ),
+                            if (available.values.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                child: Text(
+                                  '当前音源暂无已确认可切换的档位',
+                                  style: TextStyle(color: ink),
+                                ),
+                              ),
+                            TextButton(
+                              onPressed: switching
+                                  ? null
+                                  : () => _reloadQualities(ref, track),
+                              child: const Text('重新检测可用音质'),
+                            ),
                           ],
                         ),
                       ),
@@ -226,7 +250,7 @@ class PlatformQualityButton extends ConsumerWidget {
         ? '切换中'
         : track.isPreview
         ? '试听'
-        : (track.source == TrackSource.netease
+        : (playbackAudioOrigin(track)?.isNetease == true
                   ? actual?.neteaseLabel
                   : actual?.label) ??
               '音质';

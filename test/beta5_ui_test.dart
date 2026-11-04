@@ -308,7 +308,20 @@ void main() {
                     ],
                   }
                 : {},
-          '/song/url' => {},
+          // The picker now verifies entitlement and delivered quality instead
+          // of treating a metadata hash as a playable tier. This synthetic URL
+          // is consumed only by the mocked resolver, never by a real network.
+          '/song/url' => {
+            'url':
+                'https://quality-fixture.invalid/${request.url.queryParameters['quality']}',
+            'quality': request.url.queryParameters['quality'],
+            'bitrate': switch (request.url.queryParameters['quality']) {
+              '128' => 128000,
+              '320' => 320000,
+              _ => 960000,
+            },
+            'fileSize': 4000000,
+          },
           '/user/playlist' => {
             'info': [
               {

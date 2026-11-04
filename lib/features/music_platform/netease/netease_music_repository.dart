@@ -11,6 +11,7 @@ import '../data/platform_explore.dart';
 import '../data/platform_search_repository.dart';
 import '../domain/platform_audio_quality.dart';
 import 'netease_api.dart';
+import 'netease_song_metadata.dart';
 import '../domain/platform_search_user.dart';
 import 'netease_playback_log.dart';
 import 'netease_footprint.dart';
@@ -123,6 +124,7 @@ class NeteaseMusicRepository {
   }
 
   static Track? track(Map<String, dynamic> row) {
+    row = neteaseSongMetadata(row);
     final id = '${row['id'] ?? ''}';
     if (!RegExp(r'^\d+$').hasMatch(id)) return null;
     final album = object(row['al'] ?? row['album']);
@@ -139,7 +141,10 @@ class NeteaseMusicRepository {
         milliseconds: int.tryParse('${row['dt'] ?? row['duration'] ?? 0}') ?? 0,
       ),
       audioAsset: 'mesting-platform://netease/$id',
-      coverAsset: '${album['picUrl'] ?? row['picUrl'] ?? ''}',
+      coverAsset: neteaseArtwork({
+        ...row,
+        ...{'al': album},
+      }),
       lyricsAsset: 'mesting-lyrics://netease/$id',
       source: TrackSource.netease,
       provider: '网易云音乐',
@@ -151,6 +156,39 @@ class NeteaseMusicRepository {
 
   static List<Track> tracks(Object? values) =>
       rows(values).map(track).whereType<Track>().toList();
+
+  /// Sparse heart-mode IDs are enriched in bounded batches, once before rows
+  /// are published. Detail responses are joined by ID, never response order.
+  Future<List<Map<String, dynamic>>> hydrateSparseSongs(
+    List<Map<String, dynamic>> values,
+  ) async {
+    final normalized = values.map(neteaseSongMetadata).toList();
+    final missing = normalized
+        .where((row) {
+          final value = track(row);
+          return value != null &&
+              (value.title.isEmpty ||
+                  value.artist.isEmpty ||
+                  value.coverAsset.isEmpty);
+        })
+        .map((row) => '${row['id']}')
+        .toSet()
+        .toList();
+    final details = <String, Map<String, dynamic>>{};
+    for (var start = 0; start < missing.length; start += 200) {
+      final ids = missing.sublist(
+        start,
+        (start + 200).clamp(0, missing.length),
+      );
+      final result = await call('/song/detail', {'ids': ids});
+      for (final row in rows(result['songs'])) {
+        if (ids.contains('${row['id']}')) details['${row['id']}'] = row;
+      }
+    }
+    return [
+      for (final row in normalized) {...row, ...?details['${row['id']}']},
+    ];
+  }
 
   static Future<List<Track>> tracksAsync(Object? value) {
     final values = rows(value);
@@ -543,6 +581,7 @@ class NeteaseMusicRepository {
             track.duration.inMilliseconds > deliveredMs + 2000);
     return track.copyWith(
       audioAsset: url,
+      audioOrigin: AudioOrigin(AudioOrigin.netease, track.id),
       audioHeaders: const {},
       audioBitrate: int.tryParse('${row['br']}') ?? 0,
       playbackQuality: delivered,

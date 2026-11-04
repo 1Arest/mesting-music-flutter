@@ -14,7 +14,6 @@ import '../presentation/retained_platform_snapshot.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
-import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/route_settled_content.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -33,6 +32,9 @@ import '../../experience/presentation/music_home_catalogues.dart';
 import 'netease_cloud_upload.dart';
 import 'netease_features_repository.dart';
 import 'netease_membership_page.dart';
+import 'netease_item_artwork.dart';
+import '../presentation/platform_play_all_button.dart';
+import '../../player/presentation/beta_playback_actions.dart';
 import '../data/platform_comments_repository.dart';
 import '../presentation/platform_comments_page.dart';
 import 'netease_comments_repository.dart';
@@ -275,7 +277,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
   final _browse = CachedBrowseLoader();
   final _items = <NeteaseItem>[];
   int _page = 0, _cursor = 0, _generation = 0;
-  bool _busy = false, _more = true, _writing = false;
+  bool _busy = false, _more = true, _writing = false, _playingAll = false;
   String? _error, _owner, _token;
   String _area = 'ALL';
   int _artistArea = 1;
@@ -356,7 +358,10 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
         _items.addAll(added);
         _page++;
         _cursor = batch.cursor;
-        _more = batch.more && added.isNotEmpty;
+        _more = batch.more;
+        if (batch.more && batch.items.isEmpty) {
+          _error = '来源未返回下一页歌曲，请重试';
+        }
       });
     } catch (error) {
       if (mounted && generation == _generation && _current) {
@@ -418,6 +423,38 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
     }
   }
 
+  /// Complete this feed's ordered collection before replacing the queue. A
+  /// failed page never silently turns Play All into Play Loaded.
+  Future<void> _playAll() async {
+    if (_busy || _playingAll || !_current) return;
+    final generation = _generation;
+    setState(() => _playingAll = true);
+    try {
+      while (_more && mounted && _current && generation == _generation) {
+        final before = _page;
+        final itemCount = _items.length;
+        await _load();
+        if (_error != null) throw StateError(_error!);
+        if (_more && _page == before) throw StateError('完整歌曲列表尚未加载，请重试');
+        if (_more && _items.length == itemCount) {
+          throw StateError('来源重复返回相同内容，未更改播放队列，请重试');
+        }
+      }
+      if (!mounted || !_current || generation != _generation) return;
+      final tracks = _items
+          .map((item) => item.track)
+          .whereType<Track>()
+          .toList();
+      if (tracks.isNotEmpty) {
+        await playBetaSelection(context, ref, tracks.first, playAll: tracks);
+      }
+    } catch (error) {
+      if (mounted) showPlatformFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _playingAll = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(platformAccountProvider);
@@ -428,7 +465,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
           : MusicRefreshIndicator(
               onRefresh: () => _load(reset: true),
               child: AutomaticSongPaging(
-                enabled: _more && !_busy && _error == null,
+                enabled: _more && !_busy && !_playingAll && _error == null,
                 onLoadMore: _load,
                 child: ListView.builder(
                   cacheExtent: MediaQuery.sizeOf(context).height,
@@ -461,22 +498,33 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                                 ),
                               ),
                             if (_items.any((i) => i.track != null))
-                              TextButton.icon(
-                                icon: const Icon(
-                                  CupertinoIcons.arrow_down_circle,
-                                ),
-                                label: const Text('下载已加载歌曲'),
-                                onPressed: () {
-                                  if (!_current) return;
-                                  enqueueAudioDownloads(
-                                    context,
-                                    ref,
-                                    _items
-                                        .map((i) => i.track)
-                                        .whereType<Track>()
-                                        .toList(),
-                                  );
-                                },
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  PlatformPlayAllButton(
+                                    loading: _playingAll,
+                                    onPressed: _busy ? null : _playAll,
+                                  ),
+                                  TextButton.icon(
+                                    icon: const Icon(
+                                      CupertinoIcons.arrow_down_circle,
+                                    ),
+                                    label: const Text('下载已加载歌曲'),
+                                    onPressed: () {
+                                      if (!_current) return;
+                                      enqueueAudioDownloads(
+                                        context,
+                                        ref,
+                                        _items
+                                            .map((i) => i.track)
+                                            .whereType<Track>()
+                                            .toList(),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             if (widget.feed == NeteaseFeed.cloud)
                               BetaGlassButton(
@@ -643,18 +691,12 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                         horizontal: 22,
                         vertical: 8,
                       ),
-                      leading: item.cover.isEmpty
-                          ? const Icon(CupertinoIcons.music_note_list)
-                          : ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                item.kind == NeteaseEntity.artist ? 32 : 12,
-                              ),
-                              child: ArtworkImage(
-                                uri: item.cover,
-                                width: 60,
-                                height: 60,
-                              ),
-                            ),
+                      leading: NeteaseItemArtwork(
+                        key: ValueKey(
+                          'netease-item-art-${item.kind.name}-${item.id}',
+                        ),
+                        item: item,
+                      ),
                       title: Text(item.name),
                       subtitle: item.subtitle.isEmpty
                           ? null
@@ -974,18 +1016,20 @@ class _NeteaseResourceActionsState
         key: ValueKey('resource-action-$id'),
         label: label,
         onPressed: action,
-        height: 72,
+        height: 52,
         horizontalPadding: 3,
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 23),
-            const SizedBox(height: 6),
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12),
+            Icon(icon, size: 20),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
             ),
           ],
         ),
@@ -1065,18 +1109,10 @@ class _NeteaseResourceActionsState
               ],
             ],
           ),
-          if (widget.item.kind == NeteaseEntity.artist)
-            for (final feed in [
-              NeteaseFeed.artistSongs,
-              NeteaseFeed.artistAlbums,
-              NeteaseFeed.artistMvs,
-              NeteaseFeed.similarArtists,
-            ])
-              TextButton(
-                onPressed: () =>
-                    openNeteaseFeed(context, feed, id: widget.item.id),
-                child: Text(NeteaseFeaturesRepository.titles[feed]!),
-              ),
+          if (widget.item.kind == NeteaseEntity.artist) ...[
+            const SizedBox(height: 8),
+            _ArtistNavigation(id: widget.item.id),
+          ],
           if (widget.item.kind == NeteaseEntity.mv)
             TextButton(
               onPressed: () => openNeteaseFeed(
@@ -1090,6 +1126,49 @@ class _NeteaseResourceActionsState
       ),
     );
   }
+}
+
+/// One compact row normally, two columns for large text/narrow windows. Full
+/// destination names remain in semantics rather than taking four header rows.
+class _ArtistNavigation extends StatelessWidget {
+  const _ArtistNavigation({required this.id});
+  final String id;
+  static const entries = {
+    NeteaseFeed.artistSongs: '歌曲',
+    NeteaseFeed.artistAlbums: '专辑',
+    NeteaseFeed.artistMvs: 'MV',
+    NeteaseFeed.similarArtists: '相似歌手',
+  };
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      final large = MediaQuery.textScalerOf(context).scale(14) > 18;
+      final columns = box.maxWidth < 280 || large ? 2 : 4;
+      final width = (box.maxWidth - (columns - 1) * 4) / columns;
+      return Wrap(
+        key: const ValueKey('artist-navigation-compact'),
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          for (final entry in entries.entries)
+            SizedBox(
+              width: width,
+              child: Tooltip(
+                message: NeteaseFeaturesRepository.titles[entry.key]!,
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: const Size(48, 48),
+                  ),
+                  onPressed: () => openNeteaseFeed(context, entry.key, id: id),
+                  child: Text(entry.value, maxLines: 1),
+                ),
+              ),
+            ),
+        ],
+      );
+    },
+  );
 }
 
 /// A single compact navigation row; menu entries retain the original routes.

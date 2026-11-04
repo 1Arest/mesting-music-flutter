@@ -345,6 +345,7 @@ class NeteaseFallbackResolver {
     required bool Function() current,
     String? requiredQuality,
     String? onlySource,
+    String? requiredRecordingId,
     Future<void>? abortTrigger,
   }) async {
     final clients = <NeteaseFallbackSource, NeteaseSourceClient>{};
@@ -372,6 +373,7 @@ class NeteaseFallbackResolver {
             (sessionCurrent?.call() ?? true) &&
             current(),
         requiredQuality: requiredQuality,
+        requiredRecordingId: requiredRecordingId,
         activeSources: [...sources, ...clients.keys]
             .where((source) => onlySource == null || source.label == onlySource)
             .toList(),
@@ -390,9 +392,10 @@ class NeteaseFallbackResolver {
     required Map<NeteaseFallbackSource, NeteaseSourceClient> clients,
     required http.Client cacheProbeClient,
     String? requiredQuality,
+    String? requiredRecordingId,
   }) async {
     final key =
-        '${original.id}|${original.title}|${original.artist}|${original.album}|${original.duration.inMilliseconds}|${original.playbackQuality}|$requiredQuality|${activeSources.map((s) => s.label).join(',')}';
+        '${original.id}|${original.title}|${original.artist}|${original.album}|${original.duration.inMilliseconds}|${original.playbackQuality}|$requiredQuality|$requiredRecordingId|${activeSources.map((s) => s.label).join(',')}';
     final cached = options.cache ? _cache[key] : null;
     if (cached != null && cached.until.isAfter(DateTime.now()) && current()) {
       try {
@@ -457,7 +460,12 @@ class NeteaseFallbackResolver {
                         ),
                       ),
                 )
-                .where((candidate) => seen.add(candidate.id))
+                .where(
+                  (candidate) =>
+                      (requiredRecordingId == null ||
+                          candidate.id == requiredRecordingId) &&
+                      seen.add(candidate.id),
+                )
                 .toList();
             matchCount = (matchCount ?? 0) + matched.length;
             if (matchCount == 0) {
@@ -581,6 +589,7 @@ class NeteaseFallbackResolver {
           if (!valid()) return null;
           return original.copyWith(
             audioAsset: resolved.audioAsset,
+            audioOrigin: AudioOrigin(source.label, candidate.id),
             audioHeaders: publicAudioHeaders(resolved.audioHeaders),
             audioBitrate: bitrate,
             isPreview: false,

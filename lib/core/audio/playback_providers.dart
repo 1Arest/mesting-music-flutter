@@ -76,6 +76,7 @@ final currentTrackProvider = Provider<Track>((ref) {
         lyricsAsset: item?.extras?['lyricsAsset']?.toString() ?? '',
         platformSongId: item?.extras?['platformSongId']?.toString() ?? '',
         playbackQuality: item?.extras?['playbackQuality']?.toString() ?? '',
+        audioOrigin: AudioOrigin.fromJson(item?.extras?['audioOrigin']),
         source: TrackSource.values.firstWhere(
           (source) => source.name == item?.extras?['source'],
           orElse: () => TrackSource.local,

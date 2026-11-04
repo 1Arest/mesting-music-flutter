@@ -376,11 +376,32 @@ void main() {
       (tester) async {
         final response = Completer<http.Response>();
         var calls = 0;
-        final api = _api((_) {
+        final api = _api((request) {
+          // Resource hashes alone no longer establish account playback rights.
+          // Keep loading asynchronous, then supply strictly matching synthetic
+          // streams for the new preflight without opening a real connection.
+          if (request.url.path == '/song/url') {
+            final quality = request.url.queryParameters['quality'];
+            return Future.value(
+              _reply({
+                'status': 1,
+                'data': {
+                  'url': 'https://quality-fixture.invalid/$quality',
+                  'quality': quality,
+                  'fileSize': 4000000,
+                  'bitrate': quality == '128'
+                      ? 128000
+                      : quality == '320'
+                      ? 320000
+                      : 960000,
+                },
+              }),
+            );
+          }
           calls++;
           return response.future;
         });
-        await pump(
+        final c = await pump(
           tester,
           Scaffold(
             body: Consumer(
@@ -403,6 +424,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
         expect(find.text('Hi-Res'), findsOneWidget);
+        final verifiedCalls = calls;
         final reveal = find.byType(BetaContentReveal);
         final opacity = tester.widget<Opacity>(
           find.descendant(of: reveal, matching: find.byType(Opacity)).first,
@@ -417,8 +439,10 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 250));
         expect(find.byType(CupertinoActivityIndicator), findsNothing);
-        expect(calls, 1);
+        expect(calls, verifiedCalls);
         await tester.pumpWidget(const SizedBox());
+        // Dispose cached capability leases before widget-test timer invariants.
+        c.dispose();
       },
     );
     testWidgets(

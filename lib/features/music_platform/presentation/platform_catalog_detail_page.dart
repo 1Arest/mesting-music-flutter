@@ -16,6 +16,9 @@ import '../data/music_platform_api.dart';
 import 'platform_design.dart';
 import '../netease/netease_features_page.dart';
 import '../netease/netease_features_repository.dart';
+import 'platform_play_all_button.dart';
+import '../../player/presentation/beta_playback_actions.dart';
+import 'platform_feedback.dart';
 
 /// Read-only real catalogue details; selected songs use the shared audio owner
 /// and account-guarded library actions. No surrounding list is an implicit queue.
@@ -31,7 +34,7 @@ class _PlatformCatalogDetailPageState
     extends ConsumerState<PlatformCatalogDetailPage> {
   final _browse = CachedBrowseLoader();
   final _tracks = <Track>[];
-  bool _busy = false, _more = true;
+  bool _busy = false, _more = true, _playingAll = false;
   int _page = 0;
   String? _error;
   int _sourceOffset = 0;
@@ -166,6 +169,39 @@ class _PlatformCatalogDetailPageState
     super.dispose();
   }
 
+  Future<void> _playAll() async {
+    if (_busy || _playingAll) return;
+    setState(() => _playingAll = true);
+    bool current() =>
+        mounted &&
+        ref.read(platformAccountProvider).value?.ownerId == _owner &&
+        ref.read(platformAccountProvider).value?.token == _token;
+    try {
+      while (_more && current()) {
+        final before = _page;
+        final itemCount = _tracks.length;
+        await _load();
+        if (_error != null) throw StateError(_error!);
+        if (_more && _page == before) throw StateError('完整歌曲列表尚未加载，请重试');
+        if (_more && _tracks.length == itemCount) {
+          throw StateError('来源重复返回相同内容，未更改播放队列，请重试');
+        }
+      }
+      if (mounted && current() && _tracks.isNotEmpty) {
+        await playBetaSelection(
+          context,
+          ref,
+          _tracks.first,
+          playAll: List.of(_tracks),
+        );
+      }
+    } catch (error) {
+      if (mounted) showPlatformFailure(context, error);
+    } finally {
+      if (mounted) setState(() => _playingAll = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final account = ref.watch(platformAccountProvider).value;
@@ -178,7 +214,7 @@ class _PlatformCatalogDetailPageState
     return PlatformPageFrame(
       title: widget.hit.title,
       child: AutomaticSongPaging(
-        enabled: _more && !_busy && _error == null,
+        enabled: _more && !_busy && !_playingAll && _error == null,
         onLoadMore: _load,
         child: ListView.builder(
           cacheExtent: MediaQuery.sizeOf(context).height,
@@ -206,12 +242,32 @@ class _PlatformCatalogDetailPageState
                           ),
                           child: ArtworkImage(
                             uri: widget.hit.cover,
-                            width: 100,
-                            height: 100,
+                            width: 80,
+                            height: 80,
                           ),
                         ),
                         const SizedBox(width: 18),
-                        Expanded(child: Text(widget.hit.subtitle)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.hit.subtitle.isNotEmpty) ...[
+                                Text(
+                                  widget.hit.subtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              PlatformPlayAllButton(
+                                loading: _playingAll,
+                                onPressed: _busy || _tracks.isEmpty
+                                    ? null
+                                    : _playAll,
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                     if (ref.watch(usesNeteaseProvider) &&
