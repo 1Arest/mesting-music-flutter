@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -98,7 +99,7 @@ class DiscoverPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: SizedBox(
               key: ValueKey('discover-bottom-clearance'),
-              height: bottomClearance,
+              height: BetaContentInsets.bottomOf(context, bottomClearance),
             ),
           ),
         ],

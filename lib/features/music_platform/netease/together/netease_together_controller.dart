@@ -141,6 +141,7 @@ class NeteaseTogetherController extends ChangeNotifier {
   String? presenceNotice;
   bool locationEnabled = false, locating = false;
   Duration? _togetherDuration;
+  bool _durationIsStale = false;
   final _presenceClock = Stopwatch();
   DateTime? _presenceFetchedAt;
   int _locationEpoch = 0;
@@ -151,9 +152,17 @@ class NeteaseTogetherController extends ChangeNotifier {
   );
   List<NeteasePerson> get peers =>
       members.where((p) => p.id.isNotEmpty && p.id != self.id).toList();
-  Duration? get togetherDuration => _togetherDuration == null
+  Duration? get togetherDuration => !current || _togetherDuration == null
       ? null
       : _togetherDuration! + _presenceClock.elapsed;
+  bool get togetherDurationIsStale => _durationIsStale;
+  String get togetherDurationLabel {
+    final duration = togetherDuration;
+    if (duration == null) return '累计时长暂未获取';
+    final label = formatTogetherDuration(duration);
+    return _durationIsStale ? '$label（上次同步）' : label;
+  }
+
   String? roomId, error, notice;
   List<NeteasePerson> members = [];
   List<Track> sharedTracks = [];
@@ -174,6 +183,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     locationEnabled = locating = false;
     presenceNotice = null;
     _togetherDuration = null;
+    _durationIsStale = false;
     _presenceClock.reset();
     _presenceClock.stop();
     _presenceFetchedAt = null;
@@ -270,20 +280,26 @@ class NeteaseTogetherController extends ChangeNotifier {
         'roomUserIds': [peer.id],
       });
       if (!valid()) return;
-      final data = NeteaseMusicRepository.object(response['data']);
-      // Official total/currentConnectionTime fields are seconds, not ms.
-      // Never infer historical time from when this widget happened to mount.
-      final seconds = int.tryParse(
-        '${data['totalConnectionTime'] ?? data['currentConnectionTime']}',
-      );
-      if (seconds != null && seconds >= 0 && seconds < 100 * 366 * 86400) {
-        _togetherDuration = Duration(seconds: seconds);
+      final cumulative = parseTogetherCumulativeDuration(response['data']);
+      if (cumulative != null) {
+        // Replace this account/friend snapshot, never accumulate refreshes or
+        // add a session value already represented in the official total.
+        _togetherDuration = cumulative;
+        _durationIsStale = false;
         _presenceClock
           ..reset()
           ..start();
+      } else {
+        _presenceClock.stop();
+        _durationIsStale = _togetherDuration != null;
       }
     } catch (_) {
-      /* Presence failure must not stop audio synchronization. */
+      // Keep a same-friend confirmed value as visibly stale; do not continue
+      // inventing time while statistics are unavailable. Audio is independent.
+      if (valid()) {
+        _presenceClock.stop();
+        _durationIsStale = _togetherDuration != null;
+      }
     }
     if (locationEnabled && valid()) {
       try {
@@ -336,7 +352,9 @@ class NeteaseTogetherController extends ChangeNotifier {
   }
 
   Future<void> restore() => _action(() async {
-    await _refresh();
+    // Explicit refresh/entry may retry missing totals immediately. Background
+    // room polling retains its 30-second statistics throttle.
+    await _refresh(forcePresence: true);
     if (roomId != null) {
       await _loadQueue();
       _start();
@@ -468,7 +486,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (_syncCurrent(epoch) && roomId == room) sharedTracks = queue;
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refresh({bool forcePresence = false}) async {
     final epoch = _syncEpoch;
     final data = NeteaseMusicRepository.object(
       (await _call('/listentogether/status'))['data'],
@@ -497,6 +515,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     if (!setEquals(previousPeers, nextPeers)) {
       distance = const TogetherDistance();
       _togetherDuration = null;
+      _durationIsStale = false;
       _presenceClock
         ..stop()
         ..reset();
@@ -512,7 +531,7 @@ class NeteaseTogetherController extends ChangeNotifier {
     }
     await _remote({...data, ...room});
     if (peers.isEmpty || error != null) _presenceClock.stop();
-    if (_syncCurrent(epoch)) await _refreshPresence();
+    if (_syncCurrent(epoch)) await _refreshPresence(force: forcePresence);
   }
 
   Future<void> _loadQueue() async {
@@ -630,6 +649,7 @@ class NeteaseTogetherController extends ChangeNotifier {
       if (_syncCurrent(epoch) && roomId != null) {
         error = '一起听连接暂时中断，正在重连';
         _presenceClock.stop();
+        _durationIsStale = _togetherDuration != null;
       }
     } finally {
       _ticking = false;

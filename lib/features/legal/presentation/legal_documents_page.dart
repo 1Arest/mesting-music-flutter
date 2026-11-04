@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,7 +16,12 @@ class LegalDocumentsPage extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, top + 14, 20, 42),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            top + 14,
+            20,
+            BetaContentInsets.bottomOf(context, 42),
+          ),
           sliver: SliverList.list(
             children: [
               _LegalPageHeader(
@@ -84,7 +90,12 @@ class LegalDocumentPage extends StatelessWidget {
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, top + 14, 20, 48),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            top + 14,
+            20,
+            BetaContentInsets.bottomOf(context, 48),
+          ),
           sliver: SliverList.list(
             children: [
               _LegalPageHeader(

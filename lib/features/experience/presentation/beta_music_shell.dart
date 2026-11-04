@@ -7,6 +7,7 @@ import '../../../shared/widgets/beta_edge_back.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/beta_bottom_search.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_tab_navigation.dart';
 import '../../../shared/widgets/beta_scroll_chrome.dart';
 import '../../../shared/widgets/beta_swipe_pages.dart';
@@ -583,7 +584,12 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     // before the nested navigator attempts to leave its root page.
     final scopedShell = BetaBottomSearchScope(
       host: _pageSearchHost,
-      child: shell,
+      child: BetaContentInsets(
+        bottom: widget.chromeVisible
+            ? BetaContentInsets.musicChromeBottomOf(context)
+            : 0,
+        child: shell,
+      ),
     );
     if (Router.maybeOf(context) == null) return scopedShell;
     return BackButtonListener(

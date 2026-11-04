@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:convert';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
@@ -94,7 +95,10 @@ class _PlatformSearchLandingState extends ConsumerState<PlatformSearchLanding> {
     );
     final boards = ref.watch(platformHotSearchProvider);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 190),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(22, 20, 22, 190),
+      ),
       children: [
         if (history.isNotEmpty) ...[
           Row(
@@ -417,7 +421,10 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
         enabled: _more && !_busy && _error == null,
         onLoadMore: _load,
         child: ListView.builder(
-          padding: const EdgeInsets.only(bottom: 190),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.only(bottom: 190),
+          ),
           itemCount:
               (collectionScene ? _collections.length : _tracks.length) + 2,
           itemBuilder: (context, index) {

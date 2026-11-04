@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -101,7 +102,10 @@ class _MessageCardDetailState
     return PlatformPageFrame(
       title: card.togetherRecord ? '一起听记录' : '消息详情',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 40),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          const EdgeInsets.fromLTRB(22, 16, 22, 40),
+        ),
         children: [
           if (card.cover.isNotEmpty) ...[
             ClipRRect(

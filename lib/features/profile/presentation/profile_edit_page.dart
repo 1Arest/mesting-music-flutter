@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,10 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
         type: MaterialType.transparency,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16, topInset + 12, 16, 170),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.fromLTRB(16, topInset + 12, 16, 170),
+          ),
           child: Form(
             key: _formKey,
             child: Column(

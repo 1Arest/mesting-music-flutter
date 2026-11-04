@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -153,7 +154,10 @@ class _SavedMessagesPageState extends ConsumerState<SavedMessagesPage> {
         Expanded(
           child: messages.isEmpty
               ? ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 170),
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    EdgeInsets.fromLTRB(16, 8, 16, 170),
+                  ),
                   children: const [
                     SocialEmptyState(
                       icon: Icons.bookmark_outline_rounded,
@@ -164,7 +168,10 @@ class _SavedMessagesPageState extends ConsumerState<SavedMessagesPage> {
                 )
               : ListView.separated(
                   key: const ValueKey('saved-messages-list'),
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 170),
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    EdgeInsets.fromLTRB(16, 2, 16, 170),
+                  ),
                   itemCount: messages.length,
                   separatorBuilder: (context, index) =>
                       const SizedBox(height: 9),
@@ -247,7 +254,10 @@ class SavedMessageDetailPage extends ConsumerWidget {
         Expanded(
           child: message == null
               ? ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 170),
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    EdgeInsets.fromLTRB(16, 8, 16, 170),
+                  ),
                   children: const [
                     SocialEmptyState(
                       icon: Icons.bookmark_remove_outlined,
@@ -258,7 +268,10 @@ class SavedMessageDetailPage extends ConsumerWidget {
                 )
               : ListView(
                   key: const ValueKey('saved-message-detail'),
-                  padding: const EdgeInsets.fromLTRB(16, 2, 16, 170),
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    EdgeInsets.fromLTRB(16, 2, 16, 170),
+                  ),
                   children: [
                     Semantics(
                       label:

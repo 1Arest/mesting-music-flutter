@@ -323,26 +323,15 @@ class _PlatformProfileEditPageState
   String _regionLabel(List<MusicRegion>? regions) {
     var provinceLabel = _province ?? '', cityLabel = _city ?? '';
     if (regions != null) {
-      final region = regions
-          .where(
-            (p) =>
-                p.name == _province ||
-                p.code == _province ||
-                (RegExp(r'^\d+$').hasMatch(_province ?? '') &&
-                    _province!.startsWith(p.code)),
-          )
-          .firstOrNull;
+      final selected = resolveMusicRegion(
+        regions,
+        province: _province,
+        city: _city,
+      );
+      final region = selected.province;
       if (region != null) {
         provinceLabel = region.name;
-        final city = region.cities
-            .where(
-              (c) =>
-                  c.name == _city ||
-                  c.code == _city ||
-                  (RegExp(r'^\d+$').hasMatch(_city ?? '') &&
-                      _city!.startsWith(c.code)),
-            )
-            .firstOrNull;
+        final city = selected.city;
         if (city != null) cityLabel = city.name;
       }
     }

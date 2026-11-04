@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -116,7 +117,10 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
           ),
         ],
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 32),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            const EdgeInsets.fromLTRB(22, 12, 22, 32),
+          ),
           children: [
             if (track.source == TrackSource.netease)
               EditorialTrackRow(track: track, contextTracks: [track]),

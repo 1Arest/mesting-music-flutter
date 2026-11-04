@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
@@ -189,7 +190,10 @@ class _SongRecognitionPageState extends ConsumerState<SongRecognitionPage>
     return PlatformPageFrame(
       title: '听歌识曲',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 30, 24, 210),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(24, 30, 24, 210),
+        ),
         children: [
           const Text(
             '让音乐告诉你答案',

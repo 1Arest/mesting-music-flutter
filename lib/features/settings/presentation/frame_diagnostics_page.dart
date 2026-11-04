@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -169,7 +170,10 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                   .where((r) => r['status'] == 'skipped')
                   .length;
               return ListView(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 210),
+                padding: BetaContentInsets.musicPaddingOf(
+                  context,
+                  EdgeInsets.fromLTRB(24, 24, 24, 210),
+                ),
                 children: [
                   Text(
                     '双平台连续巡检',

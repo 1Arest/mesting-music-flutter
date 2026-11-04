@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/widgets/beta_glass_controls.dart';
@@ -15,7 +16,10 @@ class ListeningSyncPage extends ConsumerWidget {
     return PlatformPageFrame(
       title: '酷狗播放同步',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 210),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(24, 20, 24, 210),
+        ),
         children: [
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,

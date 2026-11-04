@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,8 +213,14 @@ class _MusicHomeCataloguePageState
               enabled: _more && !_busy && _error == null,
               onLoadMore: _load,
               child: ListView.builder(
-                padding: const EdgeInsets.only(
-                  bottom: editorialBottomClearance,
+                padding: BetaContentInsets.musicPaddingOf(
+                  context,
+                  EdgeInsets.only(
+                    bottom: BetaContentInsets.musicBottomOf(
+                      context,
+                      editorialBottomClearance,
+                    ),
+                  ),
                 ),
                 itemCount: _items.length + 1,
                 itemBuilder: (context, index) {

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -106,7 +107,10 @@ class _NeteaseCommentHugsPageState
       child: !_current
           ? const Center(child: Text('账号已变化，请返回'))
           : ListView(
-              padding: const EdgeInsets.all(22),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                const EdgeInsets.all(22),
+              ),
               children: [
                 Text(
                   widget.comment.nickname,

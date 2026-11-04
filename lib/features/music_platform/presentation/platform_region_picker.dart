@@ -31,23 +31,38 @@ class _RegionPickerState extends State<_RegionPicker> {
   void initState() {
     super.initState();
     _regions = [...widget.regions];
-    _province = _regions.indexWhere(
-      (p) => p.name == widget.province || p.code == widget.province,
+    final selected = resolveMusicRegion(
+      _regions,
+      province: widget.province,
+      city: widget.city,
     );
-    if (_province < 0 && widget.province?.isNotEmpty == true) {
+    _province = _regions.indexOf(
+      selected.province ?? const MusicRegion('', '', []),
+    );
+    if (_province < 0 &&
+        widget.province?.trim().isNotEmpty == true &&
+        !RegExp(r'^\d+$').hasMatch(widget.province!.trim())) {
       // Preserve an existing overseas/legacy region even when it is outside
       // this offline mainland data set. Merely opening the picker writes none.
-      _regions.insert(
-        0,
+      _regions.add(
         MusicRegion(widget.province!, '', [
-          (name: widget.city ?? widget.province!, code: ''),
+          (
+            name:
+                widget.city?.isNotEmpty == true &&
+                    !RegExp(r'^\d+$').hasMatch(widget.city!)
+                ? widget.city!
+                : widget.province!,
+            code: '',
+          ),
         ]),
       );
-      _province = 0;
+      // Keep national order starting with Beijing; a named legacy value stays
+      // selected at the end, never as a synthetic first entry.
+      _province = _regions.length - 1;
     }
     if (_province < 0) _province = 0;
     _city = _regions[_province].cities.indexWhere(
-      (c) => c.name == widget.city || c.code == widget.city,
+      (c) => musicRegionMatches(c.name, c.code, widget.city),
     );
     if (_city < 0) _city = 0;
     _provinces = FixedExtentScrollController(initialItem: _province);

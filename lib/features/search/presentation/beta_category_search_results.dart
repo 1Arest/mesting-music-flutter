@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -181,7 +182,10 @@ class _CategoryPaneState extends ConsumerState<_CategoryPane> {
         widget.kind == PlatformSearchKind.lyrics ||
         widget.kind == PlatformSearchKind.users;
     Widget tail() => Padding(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 190),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(22, 20, 22, 190),
+      ),
       child: slice.loading
           ? const ArtworkPendingContent(
               child: Center(child: BetaActivityIndicator()),

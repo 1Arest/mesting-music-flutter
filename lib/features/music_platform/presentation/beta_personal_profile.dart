@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../netease/netease_account_overview.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../domain/platform_session.dart';
@@ -124,8 +125,13 @@ class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
           const _PersonalPlaylists(),
           if (netease)
             const _ProfilePart(child: NeteaseFullNavigation(tab: '我的')),
-          const SliverToBoxAdapter(
-            child: SizedBox(height: editorialBottomClearance),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: BetaContentInsets.musicBottomOf(
+                context,
+                editorialBottomClearance,
+              ),
+            ),
           ),
         ],
       ),

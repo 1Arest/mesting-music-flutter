@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,7 +40,10 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
         ),
       ),
       error: (error, stackTrace) => ListView(
-        padding: EdgeInsets.fromLTRB(16, top + 12, 16, 170),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(16, top + 12, 16, 170),
+        ),
         children: [
           const SocialPageHeader(title: '用户主页'),
           const SizedBox(height: 22),
@@ -53,7 +57,10 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
         physics: const BouncingScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(16, top + 12, 16, 170),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(16, top + 12, 16, 170),
+            ),
             sliver: SliverList.list(
               children: [
                 Row(

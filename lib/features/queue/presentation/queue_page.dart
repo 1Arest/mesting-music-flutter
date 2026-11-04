@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -111,6 +112,9 @@ class QueuePage extends ConsumerWidget {
               if (sheet) const _QueueGrabHandle(),
               Expanded(
                 child: BetaPlaybackQueue(
+                  bottomClearance: sheet
+                      ? 18
+                      : BetaContentInsets.musicBottomOf(context, 18),
                   onClose: sheet
                       ? () => Navigator.of(context).pop()
                       : () => context.go('/music'),

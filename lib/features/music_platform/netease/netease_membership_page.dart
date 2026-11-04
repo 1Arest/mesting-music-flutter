@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -94,7 +95,10 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
     return PlatformPageFrame(
       title: '我的会员',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(22, 12, 22, 180),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(22, 12, 22, 180),
+        ),
         children: [
           PlatformPanel(
             child: Column(

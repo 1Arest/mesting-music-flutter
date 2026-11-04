@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_content_insets.dart';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -294,7 +295,10 @@ class _NeteaseEntityPickerState extends ConsumerState<NeteaseEntityPicker> {
                     ),
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 30),
+                      padding: BetaContentInsets.musicPaddingOf(
+                        context,
+                        const EdgeInsets.only(bottom: 30),
+                      ),
                       itemCount: visible.length + 1,
                       itemBuilder: (context, index) {
                         if (index == visible.length) {

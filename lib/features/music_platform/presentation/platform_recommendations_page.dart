@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'dart:async';
 
@@ -401,7 +402,10 @@ class _PlatformRecommendationDetailState
                   widget.kind != null && _more && !_loading && _error == null,
               onLoadMore: _load,
               child: ListView.builder(
-                padding: const EdgeInsets.only(bottom: 180),
+                padding: BetaContentInsets.musicPaddingOf(
+                  context,
+                  EdgeInsets.only(bottom: 180),
+                ),
                 itemCount: tracks.length + 1,
                 itemBuilder: (context, index) {
                   if (index < tracks.length) {

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
@@ -77,7 +78,10 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
           child: ListView(
             physics: const BouncingScrollPhysics(),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: EdgeInsets.fromLTRB(16, topInset + 8, 16, 164),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(16, topInset + 8, 16, 164),
+            ),
             children: [
               _Header(
                 onBack: () => context.canPop()

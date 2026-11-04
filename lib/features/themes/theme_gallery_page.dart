@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_content_insets.dart';
 import '../../shared/widgets/music_activity_indicator.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
@@ -122,7 +123,14 @@ class ThemeGalleryPage extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 144),
+        // Beta reserves inside the scroll content so its surface can continue
+        // painting behind the glass; Stable retains its existing frame.
+        padding: EdgeInsets.fromLTRB(
+          16,
+          8,
+          16,
+          DistributionChannel.isBeta ? 0 : 144,
+        ),
         child: _ThemeSettingsPanel(onClose: context.pop),
       ),
     );
@@ -199,7 +207,14 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
               physics: const BouncingScrollPhysics(),
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    22,
+                    20,
+                    widget.embeddedInGlassSheet
+                        ? 18
+                        : BetaContentInsets.musicBottomOf(context, 18),
+                  ),
                   sliver: SliverList.list(
                     children: [
                       const _PanelHeader(),

@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_content_insets.dart';
 import '../../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../../shared/widgets/music_loading_scope.dart';
 import 'dart:async';
@@ -228,6 +229,7 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
         child: MusicRefreshIndicator(
           onRefresh: _load,
           child: ListView(
+            padding: BetaContentInsets.musicPaddingOf(context, EdgeInsets.zero),
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
               if (_filter.isEmpty) ...[
@@ -490,6 +492,7 @@ class _NeteaseFriendsPageState extends _MessageState<NeteaseFriendsPage> {
       child: PlatformPageFrame(
         title: '选择朋友',
         child: ListView(
+          padding: BetaContentInsets.musicPaddingOf(context, EdgeInsets.zero),
           children: [
             if (_error != null) _MessageFeedback(_error!, retry: _load),
             if (_busy)
@@ -1308,7 +1311,10 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
       PlatformPageFrame(
         title: row.person.name,
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            const EdgeInsets.all(24),
+          ),
           children: [
             Text(neteaseMessageTime(row.time)),
             const SizedBox(height: 18),
@@ -1343,7 +1349,10 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
       onRefresh: _load,
       child: ListView(
         key: PageStorageKey('notices-${_kind.name}'),
-        padding: const EdgeInsets.only(bottom: 190),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.only(bottom: 190),
+        ),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           if (_error != null) _MessageFeedback(_error!, retry: _load),

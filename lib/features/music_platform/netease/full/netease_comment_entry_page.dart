@@ -1,3 +1,4 @@
+import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,7 +95,10 @@ class _NeteaseCommentEntryPageState
     return PlatformPageFrame(
       title: '评论与互动',
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          const EdgeInsets.all(24),
+        ),
         children: [
           const Text('选择想查看的内容，即可阅读、点赞、回复和发布评论。'),
           const SizedBox(height: 22),

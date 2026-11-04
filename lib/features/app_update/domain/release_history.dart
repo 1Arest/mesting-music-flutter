@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.33': [
+    '修复更新说明历史列表末项被底部播放器遮挡的问题，并补齐其他页面随字号和系统安全区变化的底部避让。',
+    '地区选择不再显示纯数字选项，正确识别已选地区；未选择时按中国地区列表顺序从北京市开始。',
+    '网易云一起听按当前好友读取官方累计时长，不再把本次时长当作累计；未获取时明确提示，刷新失败保留上次确认值并标注。',
+  ],
   '1.0.32': [
     '搜索结果支持左右滑动切换分类，与顶部分类点击同步，保留各分类内容、滚动位置和封面缓存。',
     '升级后首次进入主界面展示一次本次更新说明，关闭后不重复弹出，不依赖联网检查结果。',

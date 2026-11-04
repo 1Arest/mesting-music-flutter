@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -101,7 +102,10 @@ class _NeteasePlaylistImportPageState
       child: !_current
           ? const Center(child: Text('账号已变化，请返回后重新打开'))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 190),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                EdgeInsets.fromLTRB(22, 16, 22, 190),
+              ),
               children: [
                 const Text('每行填写一首歌曲，可写成“歌名 - 歌手”。网易云会识别并导入到当前账号。'),
                 const SizedBox(height: 20),

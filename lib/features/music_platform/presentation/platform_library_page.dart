@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
@@ -42,7 +43,7 @@ class PlatformLibraryPage extends ConsumerWidget {
             16,
             MediaQuery.paddingOf(context).top + 12,
             16,
-            140,
+            BetaContentInsets.musicBottomOf(context, 140),
           ),
           children: [
             MusicHubTopBar(
@@ -193,8 +194,13 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
               retry: () => repository.synchronize(forcePull: true),
               playlistId: repository.canManage(id) ? id : null,
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: editorialBottomClearance),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: BetaContentInsets.musicBottomOf(
+                  context,
+                  editorialBottomClearance,
+                ),
+              ),
             ),
           ],
         ),

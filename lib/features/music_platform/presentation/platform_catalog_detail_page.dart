@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../platform_backend_providers.dart';
 import '../domain/platform_session.dart';
 import 'package:flutter/material.dart';
@@ -172,7 +173,10 @@ class _PlatformCatalogDetailPageState
           key: PageStorageKey(
             'catalog-${widget.hit.kind.name}-${widget.hit.id}',
           ),
-          padding: const EdgeInsets.only(bottom: 190),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.only(bottom: 190),
+          ),
           itemCount: _tracks.length + 2,
           itemBuilder: (context, index) {
             if (index == 0) {

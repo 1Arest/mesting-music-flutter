@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:math' as math;
 import '../../../core/cache/cached_browse_provider.dart';
 import 'package:flutter/cupertino.dart';
@@ -126,7 +127,10 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
               'djRadioCount': '收藏的播客',
             };
             return ListView(
-              padding: const EdgeInsets.fromLTRB(22, 20, 22, 40),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                const EdgeInsets.fromLTRB(22, 20, 22, 40),
+              ),
               children: [
                 Center(
                   child: PlatformAvatar(

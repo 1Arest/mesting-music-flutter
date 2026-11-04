@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +47,10 @@ class EditorialScroll extends StatelessWidget {
       ),
       padding: EdgeInsets.only(
         top: MediaQuery.paddingOf(context).top + 14,
-        bottom: editorialBottomClearance,
+        bottom: BetaContentInsets.musicBottomOf(
+          context,
+          editorialBottomClearance,
+        ),
       ),
       children: children,
     );

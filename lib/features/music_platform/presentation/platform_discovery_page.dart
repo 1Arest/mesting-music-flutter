@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../netease/fallback/netease_source_picker.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
@@ -55,7 +56,7 @@ class PlatformDiscoveryPage extends ConsumerWidget {
             16,
             MediaQuery.paddingOf(context).top + 12,
             16,
-            140,
+            BetaContentInsets.musicBottomOf(context, 140),
           ),
           children: [
             MusicHubTopBar(
@@ -352,7 +353,11 @@ class PlatformPublicPlaylistPage extends ConsumerWidget {
           value: ref.watch(platformPublicPlaylistProvider(id)),
           retry: () => ref.invalidate(platformPublicPlaylistProvider(id)),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 210)),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: BetaContentInsets.musicBottomOf(context, 210),
+          ),
+        ),
       ],
     ),
   );

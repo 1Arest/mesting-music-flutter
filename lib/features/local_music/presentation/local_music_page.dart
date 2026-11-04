@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -544,7 +545,11 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                             );
                           },
                         ),
-                      const SliverToBoxAdapter(child: SizedBox(height: 160)),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: BetaContentInsets.musicBottomOf(context, 160),
+                        ),
+                      ),
                     ],
                   );
                 },

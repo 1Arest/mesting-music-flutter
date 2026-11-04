@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -243,7 +244,10 @@ class _NeteaseUserProfilePageState
     return PlatformPageFrame(
       title: '用户主页',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 180),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(20, 18, 20, 180),
+        ),
         children: [
           Row(
             children: [
@@ -439,7 +443,10 @@ class _NeteaseUserConnectionsPageState
                 return false;
               },
               child: ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 180),
+                padding: BetaContentInsets.musicPaddingOf(
+                  context,
+                  EdgeInsets.only(top: 8, bottom: 180),
+                ),
                 itemCount: _users.length + 1,
                 itemBuilder: (context, index) {
                   if (index < _users.length) {

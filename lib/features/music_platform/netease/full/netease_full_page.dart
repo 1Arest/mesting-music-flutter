@@ -1404,7 +1404,10 @@ class NeteaseContentDetailPage extends StatelessWidget {
     return PlatformPageFrame(
       title: row.kind == 'message' ? '消息内容' : '内容详情',
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          const EdgeInsets.all(24),
+        ),
         children: [
           Text(row.title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),

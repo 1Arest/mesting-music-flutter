@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'beta_category_search_results.dart';
 import '../../../shared/widgets/beta_edge_back.dart';
 import '../../../shared/widgets/beta_bottom_search.dart';
@@ -479,7 +480,10 @@ class _SearchLandingState extends ConsumerState<_SearchLanding> {
     };
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(18, 22, 0, 96),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(18, 22, 0, 96),
+      ),
       children: [
         Padding(
           padding: const EdgeInsets.only(right: 18),
@@ -1094,7 +1098,10 @@ class _SearchInputPreview extends ConsumerWidget {
     return SingleChildScrollView(
       key: const ValueKey('search-input-preview-scroll'),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 96),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(18, 10, 18, 96),
+      ),
       child: _NeteaseSearchOverview(
         query: state.query,
         users: users.value ?? const <SocialUser>[],
@@ -1171,7 +1178,10 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
             key: const ValueKey('search-results-scroll'),
             controller: _scroll,
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(18, 14, 18, 96),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(18, 14, 18, 96),
+            ),
             children: [
               if (showTracks && state.errorMessage != null)
                 _MessageCard(

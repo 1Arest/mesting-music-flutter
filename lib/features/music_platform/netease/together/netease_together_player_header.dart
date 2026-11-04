@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../messages/netease_messages_page.dart';
 import '../messages/netease_messages_repository.dart';
 import 'netease_together_controller.dart';
-import 'together_presence.dart';
 
 Future<void> requestTogetherLocation(
   BuildContext context,
@@ -215,9 +214,8 @@ class _TogetherElapsedState extends State<_TogetherElapsed> {
 
   @override
   Widget build(BuildContext context) {
-    final duration = widget.controller.togetherDuration;
     return Text(
-      duration == null ? '正在一起听' : formatTogetherDuration(duration),
+      widget.controller.togetherDurationLabel,
       textAlign: TextAlign.center,
       style: TextStyle(fontSize: 14, color: widget.foreground),
     );

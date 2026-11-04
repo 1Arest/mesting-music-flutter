@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -409,7 +410,9 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
           );
         },
       ),
-      const SliverToBoxAdapter(child: SizedBox(height: 190)),
+      SliverToBoxAdapter(
+        child: SizedBox(height: BetaContentInsets.musicBottomOf(context, 190)),
+      ),
     ],
   );
 }

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -95,7 +96,10 @@ class AppleSearchResults extends ConsumerWidget {
             ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 190),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                EdgeInsets.fromLTRB(22, 16, 22, 190),
+              ),
               child: state.isLoadingMore
                   ? const Center(child: CupertinoActivityIndicator())
                   : state.moreError != null

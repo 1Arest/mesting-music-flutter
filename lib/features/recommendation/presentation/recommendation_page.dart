@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -122,7 +123,12 @@ class _RecommendationPageState extends ConsumerState<RecommendationPage>
       physics: const BouncingScrollPhysics(),
       slivers: [
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(16, topInset + 12, 16, bottomClearance),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            topInset + 12,
+            16,
+            BetaContentInsets.bottomOf(context, bottomClearance),
+          ),
           sliver: SliverList.list(
             children: [
               _RecommendationHeader(now: now),

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -300,7 +301,10 @@ class _PlaylistDetailContent extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 112),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(16, 12, 16, 112),
+        ),
         child: Column(
           children: [
             _PlaylistTopBar(onBack: onBack, onManage: onManage),

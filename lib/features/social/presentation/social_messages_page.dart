@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,7 +38,10 @@ class SocialMessagesPage extends ConsumerWidget {
           child: conversations.when(
             loading: () => const SocialLoadingState(message: '正在加载会话与未读消息'),
             error: (error, stackTrace) => ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 170),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                EdgeInsets.fromLTRB(16, 8, 16, 170),
+              ),
               children: [
                 SocialErrorCard(
                   error: error,
@@ -47,7 +51,10 @@ class SocialMessagesPage extends ConsumerWidget {
             ),
             data: (items) => items.isEmpty
                 ? ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 170),
+                    padding: BetaContentInsets.musicPaddingOf(
+                      context,
+                      EdgeInsets.fromLTRB(16, 8, 16, 170),
+                    ),
                     children: const [
                       SocialEmptyState(
                         icon: Icons.forum_outlined,
@@ -62,7 +69,10 @@ class SocialMessagesPage extends ConsumerWidget {
                       await ref.read(socialConversationsProvider.future);
                     },
                     child: ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 2, 16, 170),
+                      padding: BetaContentInsets.musicPaddingOf(
+                        context,
+                        EdgeInsets.fromLTRB(16, 2, 16, 170),
+                      ),
                       itemCount: items.length,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 9),

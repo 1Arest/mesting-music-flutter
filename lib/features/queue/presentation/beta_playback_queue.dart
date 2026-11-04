@@ -13,9 +13,18 @@ import 'queue_track_duration.dart';
 /// Shared sheet/player presentation. Never regroup rows into an order different
 /// from the handler's authoritative queue, including automatic recommendations.
 class BetaPlaybackQueue extends ConsumerStatefulWidget {
-  const BetaPlaybackQueue({this.immersive = false, this.onClose, super.key});
+  const BetaPlaybackQueue({
+    this.immersive = false,
+    this.onClose,
+    this.bottomClearance = 18,
+    super.key,
+  });
   final bool immersive;
   final VoidCallback? onClose;
+
+  /// Only the full queue route has floating music chrome. Sheets and the
+  /// player's inline queue keep their own existing viewport and safe area.
+  final double bottomClearance;
   @override
   ConsumerState<BetaPlaybackQueue> createState() => _BetaPlaybackQueueState();
 }
@@ -168,7 +177,10 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                 : ReorderableListView.builder(
                     key: const ValueKey('player-inline-queue'),
                     buildDefaultDragHandles: false,
-                    padding: const EdgeInsets.only(top: 8, bottom: 18),
+                    padding: EdgeInsets.only(
+                      top: 8,
+                      bottom: widget.bottomClearance,
+                    ),
                     proxyDecorator: (child, _, animation) => Material(
                       color: immersive
                           ? const Color(0xF0242529)

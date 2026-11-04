@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,10 @@ class CuratedPlaylistPage extends ConsumerWidget {
       SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 112),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.fromLTRB(18, 10, 18, 112),
+          ),
           children: [
             Row(
               children: [

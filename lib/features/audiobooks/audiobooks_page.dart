@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -372,7 +373,10 @@ class _AudiobooksPageState extends ConsumerState<AudiobooksPage> {
                 ),
               ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 160),
+              padding: BetaContentInsets.musicPaddingOf(
+                context,
+                EdgeInsets.fromLTRB(22, 22, 22, 160),
+              ),
               sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
@@ -738,7 +742,10 @@ class _AudiobookAlbumPageState extends ConsumerState<AudiobookAlbumPage> {
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(22, 20, 22, 160),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(22, 20, 22, 160),
+            ),
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [

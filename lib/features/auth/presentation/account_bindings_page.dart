@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
@@ -59,7 +60,10 @@ class _AccountBindingsPageState extends ConsumerState<AccountBindingsPage> {
         backgroundColor: Colors.transparent,
         body: ListView(
           physics: const BouncingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16, topInset + 12, 16, 150),
+          padding: BetaContentInsets.musicPaddingOf(
+            context,
+            EdgeInsets.fromLTRB(16, topInset + 12, 16, 150),
+          ),
           children: [
             _SecurityHeader(
               onBack: () =>

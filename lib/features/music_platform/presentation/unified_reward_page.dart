@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -146,7 +147,10 @@ class _NeteaseRewardTabState extends ConsumerState<_NeteaseRewardTab> {
               ? const Center(child: Text('请先登录网易云账号；已保存的酷狗登录可继续用于签到'))
               : ListView(
                   key: const PageStorageKey('netease-reward-scroll'),
-                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 180),
+                  padding: BetaContentInsets.musicPaddingOf(
+                    context,
+                    EdgeInsets.fromLTRB(22, 22, 22, 180),
+                  ),
                   children: [
                     const Text(
                       '网易云每日签到',

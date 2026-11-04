@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'dart:async';
 
@@ -173,7 +174,10 @@ class _ConnectionList extends ConsumerWidget {
     return users.when(
       loading: () => const SocialLoadingState(message: '正在加载关注与粉丝列表'),
       error: (error, stackTrace) => ListView(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 170),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(16, 10, 16, 170),
+        ),
         children: [
           SocialErrorCard(
             error: error,
@@ -184,7 +188,10 @@ class _ConnectionList extends ConsumerWidget {
       data: (items) {
         if (items.isEmpty) {
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 170),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(16, 12, 16, 170),
+            ),
             children: [
               SocialEmptyState(
                 icon: switch (kind) {
@@ -213,7 +220,10 @@ class _ConnectionList extends ConsumerWidget {
             await ref.read(socialConnectionsProvider(kind).future);
           },
           child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 170),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.fromLTRB(16, 4, 16, 170),
+            ),
             itemCount: items.length,
             separatorBuilder: (context, index) => const SizedBox(height: 9),
             itemBuilder: (context, index) => _UserRow(

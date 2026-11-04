@@ -1,6 +1,19 @@
 import 'package:flutter/services.dart';
 import '../netease_music_repository.dart';
 
+/// Read only the server's relation-wide cumulative snapshot. Session time is
+/// a separate measurement: neither it nor an earlier snapshot may be added to
+/// this value. Missing/invalid totals stay unknown, including on old servers
+/// which return only currentConnectionTime.
+Duration? parseTogetherCumulativeDuration(Object? value) {
+  var data = NeteaseMusicRepository.object(value);
+  if (data['data'] is Map) data = NeteaseMusicRepository.object(data['data']);
+  final seconds = int.tryParse('${data['totalConnectionTime']}'.trim());
+  return seconds != null && seconds >= 0 && seconds < 100 * 366 * 86400
+      ? Duration(seconds: seconds)
+      : null;
+}
+
 /// Platform distance is in kilometres (the official client formats it directly
 /// as km). Zero/negative sentinel values must never masquerade as proximity.
 class TogetherDistance {

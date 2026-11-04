@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../platform_backend_providers.dart';
@@ -42,7 +43,10 @@ class NeteasePlaybackSettingsPage extends ConsumerWidget {
     return PlatformPageFrame(
       title: '网易云播放与同步',
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(22, 12, 22, 190),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(22, 12, 22, 190),
+        ),
         children: [
           SwitchListTile.adaptive(
             title: const Text('备用音源'),

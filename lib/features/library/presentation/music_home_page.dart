@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -141,7 +142,7 @@ class _MusicHomePageState extends ConsumerState<MusicHomePage>
                 12,
                 topInset + 12,
                 12,
-                bottomClearance,
+                BetaContentInsets.bottomOf(context, bottomClearance),
               ),
               sliver: SliverList.list(
                 children: [

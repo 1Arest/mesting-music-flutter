@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -146,7 +147,12 @@ class PlatformRewardCalendar extends ConsumerWidget {
               onRefresh: controller.refresh,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(22, 20, 22, embedded ? 180 : 40),
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  20,
+                  22,
+                  embedded ? BetaContentInsets.musicBottomOf(context, 180) : 40,
+                ),
                 children: [
                   // Material 3 stretch composites the scroll contents into an
                   // isolated ImageFilter pass. Paint the real page surface in

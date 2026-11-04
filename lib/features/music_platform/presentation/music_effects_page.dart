@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../core/cache/cached_browse_loader.dart';
@@ -270,7 +271,10 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
       listenable: equalizer,
       builder: (context, _) => BetaGlassScrollBody(
         controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(22, 0, 22, 190),
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.fromLTRB(22, 0, 22, 190),
+        ),
         children: [
           if (_catalog == MusicEffectsCatalog.earphone)
             Align(

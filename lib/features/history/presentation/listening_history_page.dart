@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_swipe_pages.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -226,7 +227,10 @@ class _HistoryList extends ConsumerWidget {
         ranking ? 'listening-ranking-list' : 'recent-playback-list',
       ),
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 170),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(16, 6, 16, 170),
+      ),
       itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 9),
       itemBuilder: (context, index) {
@@ -457,7 +461,10 @@ class _HistoryMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 52, 22, 170),
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(22, 52, 22, 170),
+      ),
       children: [
         _HistoryGlassCard(
           key: const ValueKey('history-empty-glass-card'),

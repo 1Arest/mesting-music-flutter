@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/music_platform_providers.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,10 @@ class MusicLibraryPage extends ConsumerWidget {
             child: ListView.builder(
               padding: EdgeInsets.only(
                 top: MediaQuery.paddingOf(context).top + 14,
-                bottom: editorialBottomClearance,
+                bottom: BetaContentInsets.musicBottomOf(
+                  context,
+                  editorialBottomClearance,
+                ),
               ),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
