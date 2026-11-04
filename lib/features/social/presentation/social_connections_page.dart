@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -206,7 +207,7 @@ class _ConnectionList extends ConsumerWidget {
             ],
           );
         }
-        return RefreshIndicator(
+        return MusicRefreshIndicator(
           onRefresh: () async {
             ref.invalidate(socialConnectionsProvider(kind));
             await ref.read(socialConnectionsProvider(kind).future);

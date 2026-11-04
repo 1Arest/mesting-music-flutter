@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -51,7 +52,7 @@ class EditorialScroll extends StatelessWidget {
     );
     return onRefresh == null
         ? scroll
-        : RefreshIndicator(onRefresh: onRefresh!, child: scroll);
+        : MusicRefreshIndicator(onRefresh: onRefresh!, child: scroll);
   }
 }
 

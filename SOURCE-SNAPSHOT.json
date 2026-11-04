@@ -1,6 +1,6 @@
 {
-  "version": "1.0.30",
-  "androidVersionCode": 51,
+  "version": "1.0.31",
+  "androidVersionCode": 52,
   "baseCommit": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
   "status": "local_working_source_snapshot_not_a_git_release",
   "snapshotContainsWorkingChanges": true,
@@ -8,13 +8,13 @@
   "gitPushed": false,
   "published": false,
   "signingMaterialIncluded": false,
-  "apkFile": "Mesting-Music-v1.0.30.apk",
-  "apkSha256": "28ea8a2ce9e09693a3fc870368982b95a784b19ffb73d175007cac5b1e5b32c5",
+  "apkFile": "Mesting-Music-v1.0.31.apk",
+  "apkSha256": "3cf141da8ebb708e99b1deaa34a4f97104c5a1ab460e97db77567997cc67f53f",
   "nativeEngineManifest": "third_party/flutter_engine/android-release/engine-manifest.json",
   "externalVerificationExcludedToAvoidSelfReference": [
-    "release/Mesting-Music-v1.0.30-SHA256.txt",
-    "release/Mesting-Music-v1.0.30-source-verification.json",
-    "release/Mesting-Music-v1.0.30-source.sha256"
+    "release/Mesting-Music-v1.0.31-SHA256.txt",
+    "release/Mesting-Music-v1.0.31-source-verification.json",
+    "release/Mesting-Music-v1.0.31-source.sha256"
   ],
   "previousSnapshotMetadata": {
     "workingTreePath": "SOURCE-SNAPSHOT.json",
@@ -70,6 +70,11 @@
       "sha256": "dca100b15f77893856dc9edb3016053479e8a965f93d109f9982702c32ddd395"
     },
     {
+      "path": ".impeccable/surfaces/music-library-refresh-tab-131.md",
+      "size": 1833,
+      "sha256": "103f50cf0b9a5080626203ad4eabbe58c7e04c9d229ba60c54a9be3f56761dfb"
+    },
+    {
       "path": ".impeccable/surfaces/release-1.0.1.md",
       "size": 2656,
       "sha256": "f0afbf51fe393300d61c19bc309b5b0168b9280ace60be8499f023ae053ca325"
@@ -86,8 +91,8 @@
     },
     {
       "path": "AGENTS.md",
-      "size": 24116,
-      "sha256": "8930faeeaa659d94852333312b7a4b82d2ee4c053117a14514ba7d7d520b2f03"
+      "size": 24965,
+      "sha256": "719e1243ef2e52cd0258a60f7374d0f4719a9692f71657a72c8716799c3b21fe"
     },
     {
       "path": "BETA_ARCHIVE.md",
@@ -258,6 +263,11 @@
       "path": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.30.md",
       "size": 3941,
       "sha256": "4b3dc48bbe484aa44c6b250129049d7321f647e958866973ab8f967059ec814c"
+    },
+    {
+      "path": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.31.md",
+      "size": 3998,
+      "sha256": "6bef427eed4a38dfdf14f8528e7a30646edc87955bd7186a78c94f2c1c57462d"
     },
     {
       "path": "HANDOFF-GITHUB-2026-10-29-v1.0.17.md",
@@ -1011,8 +1021,8 @@
     },
     {
       "path": "assets/data/release-notes.json",
-      "size": 500,
-      "sha256": "fc750dea327564c7f04ed15c9c9c295fe68eb9e72dea2ce17c67acb323816d89"
+      "size": 482,
+      "sha256": "a45b3f6195be22ea32bc0ec102d3868649c868fe83194e0ba14e6c88ce80e896"
     },
     {
       "path": "assets/images/player/netease-style-tonearm.png",
@@ -1725,6 +1735,11 @@
       "sha256": "140650a3f7d0673e4b844efca903d033f65b724cf05b16d7deb8b26a330ab661"
     },
     {
+      "path": "docs/INSTALL-v1.0.31.md",
+      "size": 2164,
+      "sha256": "1b5b78c1969fb7717d42b618572a063328261ae54b179047c38280ca7db65756"
+    },
+    {
       "path": "docs/MD3MUSIC_BETA.md",
       "size": 110348,
       "sha256": "cb3c43e7919fe856dd4ff0621647a3395635bb56d6508ce5bc25035b2def6021"
@@ -2160,6 +2175,11 @@
       "sha256": "c908d535f5b1d5aeb2920db8def7a306a470df63cbba943881be9837a2dce268"
     },
     {
+      "path": "docs/fixes-2026-11-01-v1.0.31.md",
+      "size": 3902,
+      "sha256": "8392265b2f58682c7805c7c5b245d02eb12b177cbaede4f8ffdcd9c6f4365eca"
+    },
+    {
       "path": "docs/followup-2026-10-31-v1.0.24.md",
       "size": 5493,
       "sha256": "df4e01f15b3365439716eb7b49e6e47e31c1d246ed51ea041974458354ebcb63"
@@ -2293,6 +2313,11 @@
       "path": "docs/validation-2026-11-01-v1.0.30.json",
       "size": 26766,
       "sha256": "c08e2df41c7c6b40d8a9b17ecdb7d1eda603d27db0c9c7e8d292bdda5927e3a8"
+    },
+    {
+      "path": "docs/validation-2026-11-01-v1.0.31.json",
+      "size": 27825,
+      "sha256": "514f0b4bd359433d673834b854d7c9a16e16b6d58c1d4312dd0cc66df6c67992"
     },
     {
       "path": "docs/validation-netease-full-2026-10-29.json",
@@ -3171,8 +3196,8 @@
     },
     {
       "path": "lib/features/app_update/domain/release_history.dart",
-      "size": 20434,
-      "sha256": "4f87e6acfa8621db51d8194e1361e80796287f5b2ab9ec21fc6fcb4b8e5f33ac"
+      "size": 20855,
+      "sha256": "cfa69ff35d399beb75e829802968b3f193a2695d0b20df546e97745504e19d25"
     },
     {
       "path": "lib/features/app_update/presentation/app_update_coordinator.dart",
@@ -3181,8 +3206,8 @@
     },
     {
       "path": "lib/features/app_update/presentation/app_update_sheet.dart",
-      "size": 19452,
-      "sha256": "344ce5d87152aa4282c271d4937d5aafe7a8fde0f66ad97dc12982a2ab827983"
+      "size": 19683,
+      "sha256": "cb1aace6ca4f4abd2d27c3179eb3f13bd26b96064b82414d2a4c1cbf1437ca91"
     },
     {
       "path": "lib/features/app_update/presentation/apple_download_progress.dart",
@@ -3196,8 +3221,8 @@
     },
     {
       "path": "lib/features/app_update/presentation/java_mysql_test_channel_sheet.dart",
-      "size": 7989,
-      "sha256": "f3ade7de131ccdfa04082e3210722f663f45f5ded95dbdaf074e45c4c16c1625"
+      "size": 8068,
+      "sha256": "beba0f07b145d1c62c4fd05aa6210a1b42db55ac8271388f49877e18e490a579"
     },
     {
       "path": "lib/features/app_update/presentation/release_notes_sheet.dart",
@@ -3276,13 +3301,13 @@
     },
     {
       "path": "lib/features/auth/presentation/account_bindings_page.dart",
-      "size": 27666,
-      "sha256": "8ab7a95d9498cf649c80565678ec353712df70c144798ae33649d837523cb2e5"
+      "size": 27766,
+      "sha256": "97a21e7113a21b999f3d1dcf5ee2a70c469763c6e1b4a2ac74e93c9218bcc3d5"
     },
     {
       "path": "lib/features/auth/presentation/account_deletion_page.dart",
-      "size": 20910,
-      "sha256": "3bb7ca6da2d73e424c461b7d12077284fbe3ce7ae550806f53f17c239cc90179"
+      "size": 21012,
+      "sha256": "f572374684b1b5138c8254bb66653d1bbc98047239561b9f7ac2c4239775a540"
     },
     {
       "path": "lib/features/auth/presentation/auth_gate.dart",
@@ -3291,8 +3316,8 @@
     },
     {
       "path": "lib/features/auth/presentation/auth_page.dart",
-      "size": 59473,
-      "sha256": "479a6a9afa4880b150ee33171f9e311bd733aaf152b0f2410dbbaad5de7d6ee6"
+      "size": 59726,
+      "sha256": "4c8560ae4b1d2a35acbb6a10f5ae6484b783fd66049d1965ea4f57aeac733ddf"
     },
     {
       "path": "lib/features/auth/presentation/auth_protected_page.dart",
@@ -3356,8 +3381,8 @@
     },
     {
       "path": "lib/features/auth/presentation/forgot_password_page.dart",
-      "size": 20606,
-      "sha256": "2aa1b1d3256514b36260fc13e34684d9b5560e636c27a2d676776e7acd9c8faa"
+      "size": 20706,
+      "sha256": "e89a653509477846770c83342b2de63d5d613e8c7223c9d4b19f1fd7985657e6"
     },
     {
       "path": "lib/features/auth/presentation/mesting_music_companions.dart",
@@ -3466,8 +3491,8 @@
     },
     {
       "path": "lib/features/experience/presentation/editorial_widgets.dart",
-      "size": 19289,
-      "sha256": "6cc2f68e8206ae549eec3d55dbc8fbf7158d90c7cfe346993e74f4b678b6d23a"
+      "size": 19358,
+      "sha256": "9d395f5177f783f3ab2cf7d2eb2ec78da892bb5d5700cdfdebbd9cc8a64ffaef"
     },
     {
       "path": "lib/features/experience/presentation/floating_playback_pill.dart",
@@ -3501,8 +3526,8 @@
     },
     {
       "path": "lib/features/experience/presentation/music_library_page.dart",
-      "size": 12744,
-      "sha256": "b55bec86e631df23135770876795842a0d1f84297c4f5d929af156f6c64c533d"
+      "size": 13614,
+      "sha256": "8d33272f1184f472b23e450a1b17a6cc6031ced581f10bf55439d96cb518881f"
     },
     {
       "path": "lib/features/experience/presentation/playback_pill_menu.dart",
@@ -3946,8 +3971,8 @@
     },
     {
       "path": "lib/features/music_platform/netease/full/netease_full_page.dart",
-      "size": 51833,
-      "sha256": "9a14596e8cb1835fe68be3de8fea8325d1b0222a19c0f6b85fa858baf81076c9"
+      "size": 53060,
+      "sha256": "58ee1983d8e9b4444d44419665dc929165b81db8efd1cee01978e1c6e85efd9e"
     },
     {
       "path": "lib/features/music_platform/netease/full/netease_full_repository.dart",
@@ -4036,8 +4061,8 @@
     },
     {
       "path": "lib/features/music_platform/netease/messages/netease_messages_page.dart",
-      "size": 49200,
-      "sha256": "f6e946f8379780e750f5be96d54c2d61bf3aea11ace3b5a786f1a2bdaa801cc0"
+      "size": 49486,
+      "sha256": "5179964336e49f75359eb55c22d62d5e57aa533e158842bbb509d70282d8277f"
     },
     {
       "path": "lib/features/music_platform/netease/messages/netease_messages_repository.dart",
@@ -4101,8 +4126,8 @@
     },
     {
       "path": "lib/features/music_platform/netease/netease_features_page.dart",
-      "size": 36350,
-      "sha256": "2f627b62b25ce5ad40dc70a21b73c20462985b1e69111331448f33153d62b58f"
+      "size": 40183,
+      "sha256": "c1db470dd159e976b7ac80ca386820fe466b556b03eeab1231e09183bfe8fdab"
     },
     {
       "path": "lib/features/music_platform/netease/netease_features_repository.dart",
@@ -4113,6 +4138,11 @@
       "path": "lib/features/music_platform/netease/netease_library_repository.dart",
       "size": 11070,
       "sha256": "417b7ae2152c89c53b7c79353833c167a89546154edf720e508b7f07998b9762"
+    },
+    {
+      "path": "lib/features/music_platform/netease/netease_library_sections.dart",
+      "size": 1378,
+      "sha256": "7cd9c9d822028c3528cb7940fd297644c678576f037762d92fc2b685b0e25227"
     },
     {
       "path": "lib/features/music_platform/netease/netease_listening_reporter.dart",
@@ -4361,8 +4391,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_comments_page.dart",
-      "size": 29178,
-      "sha256": "e64e33c1b1f5278a54ee925e6019f6b6b4a8fd62b49f9bdf1a68ad76fab20a80"
+      "size": 29396,
+      "sha256": "81982719141b0b8ca8dd4ed0729326af3a764c31ff5dd417f8cee8eef63b19de"
     },
     {
       "path": "lib/features/music_platform/presentation/platform_design.dart",
@@ -4371,8 +4401,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_discovery_page.dart",
-      "size": 13480,
-      "sha256": "a5fb578fa3432dd22dc327d9e320cade2233f788dad11ad312b6b2b0f8f8afa9"
+      "size": 13549,
+      "sha256": "4aa7d8c99b96e1019c5a80c12640c4fdc4e882f87144fdf7be504b4b13cc4cce"
     },
     {
       "path": "lib/features/music_platform/presentation/platform_feedback.dart",
@@ -4381,8 +4411,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_library_page.dart",
-      "size": 10122,
-      "sha256": "49e73880a45f01ff42d8bbb7dcd9a805e274d9cbd6a991376eb15a8a94d66013"
+      "size": 10196,
+      "sha256": "227bd6f377564f4446903a2b3675c9089c478a569921a6ae82dd4f6e0a1cc143"
     },
     {
       "path": "lib/features/music_platform/presentation/platform_login_options_page.dart",
@@ -4406,8 +4436,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_recommendations_page.dart",
-      "size": 15629,
-      "sha256": "c5c5357b59e8c2ee02834938541d325905827308a44d9072e437cb0d2be315a9"
+      "size": 15698,
+      "sha256": "a112fcf19b7152532a2d98a6e54ab54aaf48767a1525980c926d57c289992fb9"
     },
     {
       "path": "lib/features/music_platform/presentation/platform_region_picker.dart",
@@ -4431,8 +4461,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_search_landing.dart",
-      "size": 19450,
-      "sha256": "bf8e9243f00f71712bf9a5d3d2bf235246dacf497fec4afac085e600bb44cb0f"
+      "size": 19598,
+      "sha256": "290ab8a809b17fd2568d30fa8daedd47eede700ecb73aca53aa9c07838fcfc9e"
     },
     {
       "path": "lib/features/music_platform/presentation/unified_reward_page.dart",
@@ -4531,8 +4561,8 @@
     },
     {
       "path": "lib/features/playlists/presentation/playlist_editor_dialog.dart",
-      "size": 24473,
-      "sha256": "f1088a36c95b5c1207b667d1c3f597255faab04b6381e3ce08e978f829497886"
+      "size": 24577,
+      "sha256": "f5c99b67c19c24927d9a5939d1e27464ed1ff30630deefb4e5254ae5b7e77a17"
     },
     {
       "path": "lib/features/profile/data/profile_background_sync_api.dart",
@@ -4546,8 +4576,8 @@
     },
     {
       "path": "lib/features/profile/presentation/profile_background_page.dart",
-      "size": 15957,
-      "sha256": "240e7fb7975153c37acbf6bd0f9669a34cc8eadadc04872aedcdff3158875cff"
+      "size": 15933,
+      "sha256": "3444e13915f0614e1f5c24ac09454bad896d79a93a084c99ffa893e8371e0908"
     },
     {
       "path": "lib/features/profile/presentation/profile_background_visual.dart",
@@ -4556,8 +4586,8 @@
     },
     {
       "path": "lib/features/profile/presentation/profile_edit_page.dart",
-      "size": 32293,
-      "sha256": "1bf0406ea53167139208e1f2f9cb891b96fde32f9e3c798db41eab041cff5218"
+      "size": 32405,
+      "sha256": "77e5e147c3d66b91600d51384795a4d64e6a2968967539684281724e0c790118"
     },
     {
       "path": "lib/features/profile/presentation/profile_page.dart",
@@ -4731,8 +4761,8 @@
     },
     {
       "path": "lib/features/settings/presentation/production_diagnostic_driver.dart",
-      "size": 29813,
-      "sha256": "9493d591f72cea129aa9b35433483c12696dbe619f37d24e4ad52aaec48561b9"
+      "size": 29933,
+      "sha256": "dd8a1a6df972733ee9222032f40a0a6a59edb9b0d3886ff085e8fc03e4beaf8d"
     },
     {
       "path": "lib/features/settings/presentation/settings_page.dart",
@@ -4786,8 +4816,8 @@
     },
     {
       "path": "lib/features/social/presentation/chat_page.dart",
-      "size": 146639,
-      "sha256": "502b0609b917e9d9bff5c0d544d2fd7e6bdcd96732fe3a27cbb1765a6c506808"
+      "size": 147011,
+      "sha256": "72c5aad43abb4eeda3f1f4fcc121a5846c4ed2da6df1aa62503c94141f46adbf"
     },
     {
       "path": "lib/features/social/presentation/friend_profile_actions_sheet.dart",
@@ -4816,13 +4846,13 @@
     },
     {
       "path": "lib/features/social/presentation/social_connections_page.dart",
-      "size": 15278,
-      "sha256": "e0d04b952d9271c1e618e9213c8ccd00982781cd5e0ce83335f17e7c9db54e11"
+      "size": 15347,
+      "sha256": "4b305019c900aa3ce7a7bd19e53ff4612263c478c0f82ef17cff589757e4fc2f"
     },
     {
       "path": "lib/features/social/presentation/social_messages_page.dart",
-      "size": 7993,
-      "sha256": "b04807f8c3ca6dd45a6b5a442d865afbb44f929565a769f87ffb3b4b32fd3ac9"
+      "size": 8062,
+      "sha256": "e0cbd1a45f8213cf3f81ff2c1e4dfa6862c5e74f1e05e26a4a2b111269d9840d"
     },
     {
       "path": "lib/features/social/presentation/social_widgets.dart",
@@ -4911,8 +4941,8 @@
     },
     {
       "path": "lib/features/themes/theme_gallery_page.dart",
-      "size": 77701,
-      "sha256": "c452afc836cb4a88276511350ecadb1b813daa851c69a05eff876adb33a34aa4"
+      "size": 77806,
+      "sha256": "940c45e2483bff45a52a61e052c665790b57571f22d5f7ced70807d8158046bc"
     },
     {
       "path": "lib/main.dart",
@@ -4961,13 +4991,13 @@
     },
     {
       "path": "lib/shared/widgets/artwork_reveal_boundary.dart",
-      "size": 11969,
-      "sha256": "b3f7e0cdcfe39d2151977363e0d3f1ad5b1cd3f4acd02f9c8d8de3018dd42bf3"
+      "size": 13344,
+      "sha256": "70dd6ef59871c45868c77ba955cdfd201137f3dcbc9cb12b998b05252ee74647"
     },
     {
       "path": "lib/shared/widgets/audio_resolving_wave.dart",
-      "size": 2230,
-      "sha256": "eae5a79160702bfe5e74672b3c364a9cc1185ee685f1a70b724f954f2463f8ba"
+      "size": 2903,
+      "sha256": "2ca3db21cbfc047820239803c814eabebeb5169182715b521c69681d02dfb728"
     },
     {
       "path": "lib/shared/widgets/automatic_song_paging.dart",
@@ -4976,8 +5006,8 @@
     },
     {
       "path": "lib/shared/widgets/beta_activity_indicator.dart",
-      "size": 2666,
-      "sha256": "a0e19593231462a158a884134904c5efd4a8c818fb242edcec3504b4d97ccd4e"
+      "size": 560,
+      "sha256": "7013aeeb6b346585cb7d93540da748df2d5b7145af64c839c76854b3c1f13b5a"
     },
     {
       "path": "lib/shared/widgets/beta_anchored_menu.dart",
@@ -5016,8 +5046,8 @@
     },
     {
       "path": "lib/shared/widgets/beta_glass_controls.dart",
-      "size": 6947,
-      "sha256": "916f389c6ffcf8c63d524af033a8b6ea461d88158430015e503b7d465e547ad3"
+      "size": 7132,
+      "sha256": "b90d81b773decf30fc37252df20af69f4348f5c19a4c3fd025874f12f463d817"
     },
     {
       "path": "lib/shared/widgets/beta_glass_menu_item.dart",
@@ -5091,8 +5121,8 @@
     },
     {
       "path": "lib/shared/widgets/beta_tab_navigation.dart",
-      "size": 968,
-      "sha256": "8788ef608ff505fc910f2ba891c8b92ed30d25c4cf153d7187571e215e843e79"
+      "size": 1150,
+      "sha256": "a007a5201da58b680d8cd7b409b085d7a1f1487d2e78cd29c888932e5b9293c5"
     },
     {
       "path": "lib/shared/widgets/beta_text_editing.dart",
@@ -5121,8 +5151,13 @@
     },
     {
       "path": "lib/shared/widgets/mesting_loading_indicator.dart",
-      "size": 2661,
-      "sha256": "7362eb83b7a5738d3827677d629cef13e06ba3ae4a7718acd3478f5495bb5b28"
+      "size": 2807,
+      "sha256": "4a154b8ee996a5f5b5c8e5717384f108aaa769b22e0136c8ccd8dd676035fd25"
+    },
+    {
+      "path": "lib/shared/widgets/music_activity_indicator.dart",
+      "size": 1401,
+      "sha256": "ba1fb9da6c1f9cf2c4ce33aa4f19a26085b41648e57a9b16c7be7bd063f19218"
     },
     {
       "path": "lib/shared/widgets/music_effect_glyph.dart",
@@ -5135,9 +5170,19 @@
       "sha256": "1c34977fd1a49cc0fd03126f95e06d739edee57296680e8aa223daffb94e00c6"
     },
     {
+      "path": "lib/shared/widgets/music_loading_scope.dart",
+      "size": 1228,
+      "sha256": "d366d19fd7f931d52b6fa615cbf26bcfe9d471bd1e77e5c0c1fac97e90200172"
+    },
+    {
       "path": "lib/shared/widgets/music_notice.dart",
       "size": 7847,
       "sha256": "b5251346e5e7c7129eeef6eec79d81cddb9b2bbb43bcb5d009a7bb75e3d62a34"
+    },
+    {
+      "path": "lib/shared/widgets/music_refresh_indicator.dart",
+      "size": 3990,
+      "sha256": "7a9d042ca244de81c7debf2b46d1be090c212c3c9ab28edc117a9d27cf55e46b"
     },
     {
       "path": "lib/shared/widgets/overflow_marquee.dart",
@@ -5830,6 +5875,21 @@
       "sha256": "004546a4eb9068484531b669efd52ddc981fb36c1cab95e799d1b711e5ba6761"
     },
     {
+      "path": "release/Mesting-Music-v1.0.30-SHA256.txt",
+      "size": 243,
+      "sha256": "3b391cf619979ad88edf00392c476519dff5243e609287469270ed01b008f8ae"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.30-source-verification.json",
+      "size": 815,
+      "sha256": "bccfa30c64aa3a436f448aad104af784677961c5d51114400e20a58ce1c05a4c"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.30-source.sha256",
+      "size": 100,
+      "sha256": "44320fa01e38625645edb4d23d2f5576d69a4b8e01c0b2fae8eaf64a17b1598a"
+    },
+    {
       "path": "release/Mesting-Music-v1.0.30-verification.json",
       "size": 8215,
       "sha256": "b0c8d701ddd709fe4b469e726ebf430d3dbffed6f3abc89f540db3e058a6e4d8"
@@ -5838,6 +5898,16 @@
       "path": "release/Mesting-Music-v1.0.30.apk.sha256",
       "size": 93,
       "sha256": "c6747a3faf1c15768a0750aa91f0c3214b149c6159ae0d19d7c0cb8257914517"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.31-verification.json",
+      "size": 8215,
+      "sha256": "b8231d209b124d76579358921fb72ddba1c789e209fc3c5ad33720f74456a27d"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.31.apk.sha256",
+      "size": 93,
+      "sha256": "87a981b569bb227b86ba1cc88203480a1e58eca664bf2fefee8273d9cb364e22"
     },
     {
       "path": "release/Mesting-Music-v1.0.37-beta.14-verification.json",
@@ -6526,8 +6596,8 @@
     },
     {
       "path": "test/netease_full_ui_test.dart",
-      "size": 17931,
-      "sha256": "d4df4437baec944a6d70b8301de841f906c87bda2dc1ed19201b73693b3c6108"
+      "size": 21032,
+      "sha256": "b366f0cd56e43ea8295af6e5e648599930917726c94d44af998faaabe55e0001"
     },
     {
       "path": "test/netease_full_workflows_test.dart",
@@ -6776,8 +6846,8 @@
     },
     {
       "path": "test/release_103_ui_test.dart",
-      "size": 27257,
-      "sha256": "84e2711d0b5df0ce61f5784a12eac0711c4ea19a1599e00204b728d3c795947d"
+      "size": 27926,
+      "sha256": "2081946548ea4fae78bc51dec8d1ce59403b3777631a08b3eb76e9dc22fb5552"
     },
     {
       "path": "test/release_105_regression_test.dart",
@@ -6963,6 +7033,21 @@
       "path": "test/release_130_artwork_reveal_test.dart",
       "size": 15646,
       "sha256": "1f9480abc1689a54ec010d1eed7d4817a371d46e19dd3e69fd629656960804ad"
+    },
+    {
+      "path": "test/release_131_library_test.dart",
+      "size": 9665,
+      "sha256": "cfad8ecf9a62287ab089547bc681445f94eebac024325167bbda1d494d53fb81"
+    },
+    {
+      "path": "test/release_131_refresh_test.dart",
+      "size": 3053,
+      "sha256": "db0289987dc9d2acc89dd7e45b15fa04388a3a5174161ef4540fa3a879b338ba"
+    },
+    {
+      "path": "test/release_131_tab_input_test.dart",
+      "size": 6555,
+      "sha256": "e7a24d0af10123367855ae8dd8c421c7bb65649018a168bd39fb341c641f4c20"
     },
     {
       "path": "test/remote_lyrics_repository_test.dart",
@@ -9942,12 +10027,12 @@
     {
       "path": "tool/build_android_md3_beta_apk.ps1",
       "size": 2914,
-      "sha256": "b55111e0b5893a2f4edb9f3d0f18a51cb72ea53158122fc2f4208e521b14c7d4"
+      "sha256": "97c59af478a7497c61f2f34cdb2278beb540ec497bc34153eafe60bfe0c3dac3"
     },
     {
       "path": "tool/build_android_release_apk.ps1",
       "size": 1317,
-      "sha256": "e87d29acb2f2b7b4b89d28560dcae0eb4aa02a41b940c3ed8b370f4f435d26c2"
+      "sha256": "c7a59d5bd512469be1819919dc2b2ee299bedcffb0b621260ef57e643a1edf3d"
     },
     {
       "path": "tool/build_flutter_engine_release.sh",

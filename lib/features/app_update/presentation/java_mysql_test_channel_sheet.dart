@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -151,7 +152,7 @@ class _JavaMysqlTestChannelSheetState
               const Center(
                 child: Padding(
                   padding: EdgeInsets.all(12),
-                  child: CircularProgressIndicator(),
+                  child: MusicActivityIndicator(independent: true),
                 ),
               )
             else if (manifest == null) ...[

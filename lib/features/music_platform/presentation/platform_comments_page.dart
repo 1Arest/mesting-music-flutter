@@ -1,3 +1,5 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import '../domain/platform_session.dart';
 import '../platform_backend_providers.dart';
@@ -506,7 +508,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: RefreshIndicator(
+                        child: MusicRefreshIndicator(
                           onRefresh: () => _load(reset: true),
                           child: ListView(
                             controller: _scroll,
@@ -650,7 +652,9 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                                 const Padding(
                                   padding: EdgeInsets.all(16),
                                   child: Center(
-                                    child: CircularProgressIndicator.adaptive(),
+                                    child: MusicActivityIndicator(
+                                      independent: true,
+                                    ),
                                   ),
                                 ),
                               if (_hasMore && !_loading)

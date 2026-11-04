@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../netease/fallback/netease_source_picker.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
@@ -36,7 +37,7 @@ class PlatformDiscoveryPage extends ConsumerWidget {
     final signedIn = ref.watch(platformAccountProvider).value != null;
     final daily = ref.watch(platformDailyProvider);
     return PlatformStyle(
-      child: RefreshIndicator(
+      child: MusicRefreshIndicator(
         onRefresh: () async {
           revalidateBrowse(ref);
           ref.invalidate(platformDailyProvider);

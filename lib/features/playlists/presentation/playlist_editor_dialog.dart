@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:io';
 import 'dart:math' as math;
@@ -197,7 +198,8 @@ class _PlaylistEditorState extends State<_PlaylistEditor> {
             icon: _saving
                 ? SizedBox.square(
                     dimension: 22,
-                    child: CircularProgressIndicator(
+                    child: MusicActivityIndicator(
+                      independent: true,
                       strokeWidth: 2,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),

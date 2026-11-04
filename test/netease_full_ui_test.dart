@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -161,6 +162,9 @@ void main() {
               buildMestingTheme(
                 musicThemePresetById(dark ? 'classic-dark' : 'classic'),
               ).copyWith(
+                listTileTheme: ListTileThemeData(subtitleTextStyle: TextStyle(
+                  fontFamily: 'MestingQA', fontSize: 14,
+                  color: dark ? const Color(0xFFB7BAC5) : const Color(0xFF515867))),
                 textTheme: buildMestingTheme(
                   musicThemePresetById(dark ? 'classic-dark' : 'classic'),
                 ).textTheme.apply(fontFamily: 'MestingQA'),
@@ -247,7 +251,7 @@ void main() {
         addTearDown(controller.dispose);
         await mount(
           tester,
-            const NeteaseTogetherPanel(invitee: NeteasePerson('8', '音乐朋友')),
+          const NeteaseTogetherPanel(invitee: NeteasePerson('8', '音乐朋友')),
           dark: dark,
           compact: true,
           together: controller,
@@ -317,6 +321,84 @@ void main() {
     await capture(tester, 'v114-conversation-light-phone');
     await tester.pumpWidget(const SizedBox.shrink());
   });
+  for (final compact in [false, true]) {
+    testWidgets(
+      'release131 actual messages refresh keeps one Apple indicator compact=$compact',
+      (tester) async {
+        var hold = false;
+        final response = Completer<http.Response>();
+        var refreshRequests = 0;
+        http.Response reply() => http.Response(
+          jsonEncode({
+            'code': 200,
+            'msgs': [
+              {
+                'id': 8,
+                'msg': '保留这条已有会话',
+                'fromUser': {'userId': 8, 'nickname': '音乐朋友'},
+              },
+            ],
+          }),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+        await mount(
+          tester,
+          const NeteaseMessagesPage(),
+          dark: true,
+          compact: compact,
+          client: MockClient((_) {
+            if (hold) {
+              refreshRequests++;
+              return response.future;
+            }
+            return Future.value(reply());
+          }),
+        );
+        expect(find.text('音乐朋友'), findsOneWidget);
+        hold = true;
+        await tester.drag(find.byType(ListView).first, const Offset(0, 750));
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(refreshRequests, greaterThan(0));
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(
+          find
+              .byType(CupertinoActivityIndicator)
+              .evaluate()
+              .where((e) => TickerMode.valuesOf(e).enabled)
+              .length,
+          1,
+        );
+        expect(find.text('音乐朋友').hitTestable(), findsOneWidget);
+        if (const bool.fromEnvironment('CAPTURE_NETEASE_FULL')) {
+          final shot = tester
+              .renderObject<RenderRepaintBoundary>(
+                find.byKey(const ValueKey('full-capture')),
+              )
+              .toImage();
+          await tester.runAsync(() async {
+            final image = await shot;
+            final png = await image.toByteData(format: ui.ImageByteFormat.png);
+            final path = File(
+              '.codex-artifacts/2026-11-01-release131/ui/messages-refresh-$compact.png',
+            );
+            await path.parent.create(recursive: true);
+            await path.writeAsBytes(png!.buffer.asUint8List());
+            image.dispose();
+          });
+        }
+        response.complete(reply());
+        hold = false;
+        for (var i = 0; i < 8; i++) {
+          await tester.pump(const Duration(milliseconds: 100));
+        }
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
   testWidgets('chat sends directly once and preserves its glass composer', (
     tester,
   ) async {

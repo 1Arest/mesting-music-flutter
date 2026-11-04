@@ -59,8 +59,22 @@ String neteaseTaskTitle(NeteaseEndpoint e) => switch (e.route) {
 /// Compact category links sit inside the existing four destinations. The
 /// searchable catalogue is local metadata and performs no background writes.
 class NeteaseFullNavigation extends ConsumerWidget {
-  const NeteaseFullNavigation({required this.tab, super.key});
+  const NeteaseFullNavigation({
+    required this.tab,
+    this.categories,
+    this.excludedCategories = const {},
+    this.categoryLabels = const {},
+    this.showHeading = true,
+    this.grouped = true,
+    this.heading = '网易云专区',
+    super.key,
+  });
   final String tab;
+  final Set<String>? categories;
+  final Set<String> excludedCategories;
+  final Map<String, String> categoryLabels;
+  final bool showHeading, grouped;
+  final String heading;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = ref.watch(neteaseCatalogProvider);
@@ -68,58 +82,78 @@ class NeteaseFullNavigation extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (all) {
-        final categories = all
-            .where((e) => e.tab == tab && e.category != '音乐搜索')
+        final visibleCategories = all
+            .where(
+              (e) =>
+                  e.tab == tab &&
+                  e.category != '音乐搜索' &&
+                  (categories == null || categories!.contains(e.category)) &&
+                  !excludedCategories.contains(e.category),
+            )
             .map((e) => e.category)
             .toSet();
+        if (visibleCategories.isEmpty) return const SizedBox.shrink();
+        final rows = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final category in visibleCategories)
+              ListTile(
+                contentPadding: grouped
+                    ? null
+                    : const EdgeInsets.symmetric(horizontal: 24),
+                minLeadingWidth: grouped ? null : 26,
+                horizontalTitleGap: grouped ? null : 18,
+                leading: Icon(
+                  _categoryIcon(category),
+                  color: grouped ? null : Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(
+                  categoryLabels[category] ??
+                      (category == '消息中心' ? '我的消息' : category),
+                  style: grouped
+                      ? null
+                      : const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (category == '消息中心') ...[
+                      NeteaseUnreadBadge(ref.watch(neteaseUnreadTotalProvider)),
+                      const SizedBox(width: 8),
+                    ],
+                    const Icon(CupertinoIcons.chevron_right, size: 16),
+                  ],
+                ),
+                onTap: () async {
+                  await _push(
+                    context,
+                    category == '消息中心'
+                        ? const NeteaseMessagesPage()
+                        : category == '一起听'
+                        ? const NeteaseTogetherPage()
+                        : neteaseCategoryDestination(all, tab, category),
+                  );
+                  if (context.mounted && category == '消息中心') {
+                    ref.invalidate(neteaseUnreadCountsProvider);
+                  }
+                },
+              ),
+          ],
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const EditorialSection('网易云专区'),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
-              child: PlatformPanel(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (final category in categories)
-                      ListTile(
-                        leading: Icon(_categoryIcon(category)),
-                        title: Text(category == '消息中心' ? '我的消息' : category),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (category == '消息中心') ...[
-                              NeteaseUnreadBadge(
-                                ref.watch(neteaseUnreadTotalProvider),
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            const Icon(CupertinoIcons.chevron_right, size: 16),
-                          ],
-                        ),
-                        onTap: () async {
-                          await _push(
-                            context,
-                            category == '消息中心'
-                                ? const NeteaseMessagesPage()
-                                : category == '一起听'
-                                ? const NeteaseTogetherPage()
-                                : neteaseCategoryDestination(
-                                    all,
-                                    tab,
-                                    category,
-                                  ),
-                          );
-                          if (context.mounted && category == '消息中心') {
-                            ref.invalidate(neteaseUnreadCountsProvider);
-                          }
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            ),
+            if (showHeading) EditorialSection(heading),
+            if (grouped)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: PlatformPanel(padding: EdgeInsets.zero, child: rows),
+              )
+            else
+              rows,
           ],
         );
       },
@@ -160,6 +194,10 @@ IconData _categoryIcon(String category) => switch (category) {
   '音乐人中心' => CupertinoIcons.music_note_2,
   '听歌工具' => CupertinoIcons.slider_horizontal_3,
   '歌单与收藏' => CupertinoIcons.music_note_list,
+  '音乐云盘' => CupertinoIcons.cloud,
+  '已购音乐' => CupertinoIcons.bag,
+  '历史与听歌报告' => CupertinoIcons.clock,
+  '资料与收藏概览' => CupertinoIcons.square_stack_3d_up,
   '播放与同步' => CupertinoIcons.slider_horizontal_3,
   _ => CupertinoIcons.compass,
 };

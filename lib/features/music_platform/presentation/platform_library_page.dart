@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../music_platform_providers.dart';
@@ -31,7 +32,7 @@ class PlatformLibraryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final repository = ref.watch(libraryRepositoryProvider);
     return PlatformStyle(
-      child: RefreshIndicator(
+      child: MusicRefreshIndicator(
         onRefresh: () async {
           await repository.synchronize(forcePull: true);
         },
@@ -169,7 +170,7 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
             ],
           ),
       ],
-      child: RefreshIndicator(
+      child: MusicRefreshIndicator(
         onRefresh: () async {
           await repository.synchronize(forcePull: true);
           ref.invalidate(playlistProvider(id));

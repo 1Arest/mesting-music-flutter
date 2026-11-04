@@ -61,7 +61,9 @@ class _ArtworkRevealBoundaryState extends State<ArtworkRevealBoundary> {
                     child: Semantics(
                       label: '正在加载内容',
                       liveRegion: true,
-                      child: const CupertinoActivityIndicator(),
+                      child: CupertinoActivityIndicator(
+                        animating: !MediaQuery.disableAnimationsOf(context),
+                      ),
                     ),
                   ),
                 ),
@@ -151,6 +153,25 @@ class ArtworkRevealEntry {
 class ArtworkRevealController {
   final entries = <ArtworkRevealEntry>{};
   final pending = ValueNotifier(true);
+  final _refreshes = <Object, RenderBox? Function()?>{};
+  bool get refreshing => _refreshes.isNotEmpty;
+  void refreshActivity(
+    Object owner,
+    bool active, {
+    RenderBox? Function()? box,
+  }) {
+    if (_disposed) return;
+    final changed = active
+        ? !_refreshes.containsKey(owner)
+        : _refreshes.containsKey(owner);
+    if (active) {
+      _refreshes[owner] = box;
+    } else {
+      _refreshes.remove(owner);
+    }
+    if (changed) invalidate();
+  }
+
   bool scrolled = false;
   VoidCallback? repaint;
   bool _disposed = false, _scheduled = false;
@@ -188,6 +209,7 @@ class ArtworkRevealController {
     _disposed = true;
     repaint = null;
     entries.clear();
+    _refreshes.clear();
     pending.dispose();
   }
 }
@@ -312,6 +334,26 @@ class _RenderArtworkViewport extends RenderBox
     );
   }
 
+  double _refreshTop() {
+    for (final read in controller._refreshes.values) {
+      final box = read?.call();
+      if (box == null || !box.attached || !box.hasSize) continue;
+      RenderObject? ancestor = box;
+      while (ancestor != null && ancestor != this) {
+        ancestor = ancestor.parent;
+      }
+      if (ancestor == null) continue;
+      final rect = MatrixUtils.transformRect(
+        box.getTransformTo(this),
+        Offset.zero & box.size,
+      );
+      if (rect.overlaps(Offset.zero & size)) {
+        return rect.top.clamp(0, size.height);
+      }
+    }
+    return 0;
+  }
+
   @override
   void paint(PaintingContext context, Offset offset) {
     var pendingTop = size.height;
@@ -350,7 +392,8 @@ class _RenderArtworkViewport extends RenderBox
         _committed.remove(_committed.first);
       }
     }
-    controller.reportPending(blocked);
+    final loading = blocked || controller.refreshing;
+    controller.reportPending(loading);
     if (_cutoff > 0) {
       context.pushClipRect(
         needsCompositing,
@@ -369,7 +412,11 @@ class _RenderArtworkViewport extends RenderBox
         ),
         Paint()..color = _background,
       );
-      final top = _cutoff == 0
+    }
+    if (loading) {
+      final top = controller.refreshing && !blocked
+          ? _refreshTop() + 18.0
+          : _cutoff == 0
           ? (size.height - loader.size.height) / 2
           : _cutoff + 14;
       final data = loader.parentData! as _ArtworkParentData;
@@ -387,7 +434,7 @@ class _RenderArtworkViewport extends RenderBox
   @override
   void visitChildrenForSemantics(RenderObjectVisitor visitor) {
     if (_cutoff > 0) visitor(content);
-    if (_cutoff < size.height) visitor(loader);
+    if (controller.refreshing || _cutoff < size.height) visitor(loader);
   }
 
   @override

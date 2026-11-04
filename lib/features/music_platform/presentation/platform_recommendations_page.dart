@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -382,7 +383,7 @@ class _PlatformRecommendationDetailState
           };
           final tracks = merged.values.toList();
           _baseIds = base.map((track) => track.id).toSet();
-          return RefreshIndicator(
+          return MusicRefreshIndicator(
             onRefresh: () async {
               setState(() {
                 _generation++;

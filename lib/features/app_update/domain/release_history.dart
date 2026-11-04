@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.31': [
+    '下拉刷新与页面加载统一使用 Apple 加载动画，同一次刷新共用一个动画并保留已有内容。',
+    '音乐库按常用音乐、收藏与订阅、播放足迹和我的歌单重新分组，保留现有功能及平台账号归属。',
+    '修正快速切换 Tab 时旧路由结果覆盖新目标的情况，最新点击立即生效，保留滑动过渡和页面状态。',
+  ],
   '1.0.30': [
     '首次搜索及未缓存页面统一等待首屏文字和封面解码就绪后共同显示，减少单项占位闪现。',
     '下滑时保留已显示内容，临近的新一批内容与封面准备好后共同展示；封面失败支持单独重试。',

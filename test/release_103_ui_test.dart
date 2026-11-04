@@ -273,6 +273,9 @@ void main() {
       }),
     )..session = _owner;
     final container = ProviderContainer(
+      // Exercise the manual error state after one failed read, rather than
+      // Riverpod's automatic retry/backoff state. Other fixtures keep retries.
+      retry: profileError ? (retryCount, error) => null : null,
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         audioHandlerProvider.overrideWithValue(actual),
@@ -681,7 +684,15 @@ void main() {
     'profile read failure is retryable and exposes no editable empty draft',
     (tester) async {
       await mount(tester, const PlatformProfileEditPage(), profileError: true);
-      await tester.pumpAndSettle();
+      // Reduced motion now pauses Apple tickers. Settling animation alone does
+      // not imply the asynchronous profile request has reached its error UI.
+      for (var i = 0; i < 80 && find.text('重试').evaluate().isEmpty; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.byType(TextField), findsNothing);
+      }
       expect(find.byType(TextField), findsNothing);
       expect(find.text('重试'), findsOneWidget);
       expect(tester.takeException(), isNull);

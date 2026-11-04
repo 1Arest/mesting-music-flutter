@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -372,7 +373,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     child: auth.isLoading || _saving
                         ? const SizedBox.square(
                             dimension: 21,
-                            child: CircularProgressIndicator(
+                            child: MusicActivityIndicator(
+                              independent: true,
                               strokeWidth: 2.4,
                               color: Colors.white,
                             ),

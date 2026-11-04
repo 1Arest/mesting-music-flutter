@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
 
@@ -582,7 +583,8 @@ class _ActionButton extends StatelessWidget {
               ? const SizedBox(
                   width: 19,
                   height: 19,
-                  child: CircularProgressIndicator(
+                  child: MusicActivityIndicator(
+                    independent: true,
                     strokeWidth: 2,
                     color: Colors.white,
                   ),

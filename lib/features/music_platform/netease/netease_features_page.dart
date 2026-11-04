@@ -1,4 +1,7 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/cupertino.dart';
+import 'netease_library_sections.dart';
 import 'package:flutter/material.dart';
 import '../../../core/cache/cached_browse_loader.dart';
 import '../../../core/cache/cached_browse_provider.dart';
@@ -402,7 +405,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
       title: widget.title ?? NeteaseFeaturesRepository.titles[widget.feed]!,
       child: !_current
           ? const EditorialEmpty('账号已变化，请返回后重新打开')
-          : RefreshIndicator(
+          : MusicRefreshIndicator(
               onRefresh: () => _load(reset: true),
               child: AutomaticSongPaging(
                 enabled: _more && !_busy && _error == null,
@@ -543,7 +546,12 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                                     ),
                                 ],
                               ),
-                            if (_writing) const LinearProgressIndicator(),
+                            if (_writing)
+                              const Center(
+                                child: MusicActivityIndicator(
+                                  independent: true,
+                                ),
+                              ),
                           ],
                         ),
                       );
@@ -672,41 +680,71 @@ class NeteaseResourceActions extends ConsumerStatefulWidget {
 }
 
 class NeteaseLibraryLinks extends StatelessWidget {
-  const NeteaseLibraryLinks({super.key});
+  const NeteaseLibraryLinks({this.section, super.key});
+  final NeteaseLibrarySection? section;
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-    child: PlatformPanel(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (final feed in [
-            NeteaseFeed.likedAlbums,
-            NeteaseFeed.likedArtists,
-            NeteaseFeed.likedMvs,
-            NeteaseFeed.cloud,
-            NeteaseFeed.recentSongs,
-            NeteaseFeed.recentPlaylists,
-            NeteaseFeed.recentAlbums,
-            NeteaseFeed.week,
-            NeteaseFeed.allTime,
-            NeteaseFeed.subscribedPodcasts,
-          ])
-            ListTile(
-              title: Text(NeteaseFeaturesRepository.titles[feed]!),
-              leading: Icon(
-                feed == NeteaseFeed.cloud
-                    ? CupertinoIcons.cloud
-                    : feed == NeteaseFeed.likedMvs
-                    ? CupertinoIcons.play_rectangle
-                    : CupertinoIcons.music_note_list,
-              ),
-              trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
-              onTap: () => openNeteaseFeed(context, feed),
-            ),
+  Widget build(BuildContext context) {
+    final content = Column(
+      children: [
+        for (final feed
+            in section == null
+                ? [
+                    NeteaseFeed.likedAlbums,
+                    NeteaseFeed.likedArtists,
+                    NeteaseFeed.likedMvs,
+                    NeteaseFeed.cloud,
+                    NeteaseFeed.recentSongs,
+                    NeteaseFeed.recentPlaylists,
+                    NeteaseFeed.recentAlbums,
+                    NeteaseFeed.week,
+                    NeteaseFeed.allTime,
+                    NeteaseFeed.subscribedPodcasts,
+                  ]
+                : neteaseLibrarySectionFeeds[section]!)
           ListTile(
-            title: const Text('导入歌单'),
-            leading: const Icon(CupertinoIcons.doc_text),
+            contentPadding: section == null
+                ? null
+                : const EdgeInsets.symmetric(horizontal: 24),
+            minLeadingWidth: section == null ? null : 26,
+            horizontalTitleGap: section == null ? null : 18,
+            title: Text(
+              NeteaseFeaturesRepository.titles[feed]!,
+              style: section == null
+                  ? null
+                  : const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            leading: Icon(
+              feed == NeteaseFeed.cloud
+                  ? CupertinoIcons.cloud
+                  : feed == NeteaseFeed.likedMvs
+                  ? CupertinoIcons.play_rectangle
+                  : CupertinoIcons.music_note_list,
+              color: section == null
+                  ? null
+                  : Theme.of(context).colorScheme.primary,
+            ),
+            trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+            onTap: () => openNeteaseFeed(context, feed),
+          ),
+        if (section == null || section == NeteaseLibrarySection.playlists)
+          ListTile(
+            contentPadding: section == null
+                ? null
+                : const EdgeInsets.symmetric(horizontal: 24),
+            minLeadingWidth: section == null ? null : 26,
+            horizontalTitleGap: section == null ? null : 18,
+            title: Text(
+              '导入歌单',
+              style: section == null
+                  ? null
+                  : const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            leading: Icon(
+              CupertinoIcons.doc_text,
+              color: section == null
+                  ? null
+                  : Theme.of(context).colorScheme.primary,
+            ),
             trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -714,11 +752,38 @@ class NeteaseLibraryLinks extends StatelessWidget {
               ),
             ),
           ),
-          const NeteaseFullNavigation(tab: '音乐库'),
-        ],
-      ),
-    ),
-  );
+        NeteaseFullNavigation(
+          tab: '音乐库',
+          categories: section == null || section == NeteaseLibrarySection.other
+              ? null
+              : {
+                  for (final entry in neteaseLibraryCategorySections.entries)
+                    if (entry.value == section) entry.key,
+                },
+          excludedCategories: section == NeteaseLibrarySection.other
+              ? neteaseLibraryCategorySections.keys.toSet()
+              : const {},
+          showHeading:
+              section == null || section == NeteaseLibrarySection.other,
+          heading: section == NeteaseLibrarySection.other ? '更多音乐库功能' : '网易云专区',
+          grouped: section == null,
+          categoryLabels: section == null
+              ? const {}
+              : const {
+                  '历史与听歌报告': '记录与报告管理',
+                  '歌单与收藏': '歌单与收藏管理',
+                  '资料与收藏概览': '收藏概览',
+                },
+        ),
+      ],
+    );
+    return section != null
+        ? content
+        : Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+            child: PlatformPanel(padding: EdgeInsets.zero, child: content),
+          );
+  }
 }
 
 class NeteaseAccountPanel extends ConsumerStatefulWidget {

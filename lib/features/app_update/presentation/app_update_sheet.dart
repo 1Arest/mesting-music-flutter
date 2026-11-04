@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -331,7 +332,7 @@ class AppUpdateSheet extends ConsumerWidget {
     if (state.busy) {
       return const SizedBox.square(
         dimension: 18,
-        child: CircularProgressIndicator(strokeWidth: 2.2),
+        child: MusicActivityIndicator(independent: true, strokeWidth: 2.2),
       );
     }
     return Icon(switch (state.phase) {
@@ -425,12 +426,14 @@ class _DownloadProgress extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            key: const ValueKey('app-update-progress'),
-            value: state.progress,
-            minHeight: 7,
-            backgroundColor: tokens.textPrimary.withValues(alpha: .08),
-          ),
+          child: state.progress == null
+              ? const Center(child: MusicActivityIndicator(independent: true))
+              : LinearProgressIndicator(
+                  key: const ValueKey('app-update-progress'),
+                  value: state.progress,
+                  minHeight: 7,
+                  backgroundColor: tokens.textPrimary.withValues(alpha: .08),
+                ),
         ),
         const SizedBox(height: 7),
         Row(

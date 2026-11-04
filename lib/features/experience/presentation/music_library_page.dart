@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../music_platform/music_platform_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import '../../library/library_providers.dart';
 import '../../music_platform/data/cloud_library_repository.dart';
 import '../../music_platform/platform_backend_providers.dart';
 import '../../music_platform/netease/netease_features_page.dart';
+import '../../music_platform/netease/netease_library_sections.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import '../../playlists/presentation/playlist_editor_dialog.dart';
@@ -42,7 +44,7 @@ class MusicLibraryPage extends ConsumerWidget {
             '歌曲暂时无法读取',
             onRetry: () => repository.synchronize(forcePull: true),
           ),
-          data: (tracks) => RefreshIndicator(
+          data: (tracks) => MusicRefreshIndicator(
             onRefresh: () => repository.synchronize(forcePull: true),
             child: ListView.builder(
               padding: EdgeInsets.only(
@@ -109,13 +111,7 @@ class MusicLibraryPage extends ConsumerWidget {
             ),
           ),
           if (view == null) ...[
-            _LibraryLink(
-              icon: Icons.download_rounded,
-              title: '已下载',
-              subtitle: '离线播放、导出与下载任务',
-              onTap: () => openAudioDownloads(context, downloadedOnly: true),
-            ),
-            if (ref.watch(usesNeteaseProvider)) const NeteaseLibraryLinks(),
+            const EditorialSection('常用音乐'),
             _LibraryLink(
               icon: Icons.favorite_rounded,
               title: '我的喜欢',
@@ -124,6 +120,20 @@ class MusicLibraryPage extends ConsumerWidget {
                   : '${favorites.value?.length ?? 0} 首歌曲',
               onTap: () => context.push('/music?view=favorites'),
             ),
+            _LibraryLink(
+              icon: Icons.download_rounded,
+              title: '已下载',
+              subtitle: '离线播放、导出与下载任务',
+              onTap: () => openAudioDownloads(context, downloadedOnly: true),
+            ),
+            if (ref.watch(usesNeteaseProvider)) ...[
+              const NeteaseLibraryLinks(section: NeteaseLibrarySection.common),
+              const EditorialSection('收藏与订阅'),
+              const NeteaseLibraryLinks(
+                section: NeteaseLibrarySection.collections,
+              ),
+            ],
+            const EditorialSection('播放足迹'),
             _LibraryLink(
               icon: Icons.history_rounded,
               title: '最近播放',
@@ -136,8 +146,10 @@ class MusicLibraryPage extends ConsumerWidget {
               subtitle: '你的每月与年度音乐足迹',
               onTap: () => context.push('/music/replay'),
             ),
+            if (ref.watch(usesNeteaseProvider))
+              const NeteaseLibraryLinks(section: NeteaseLibrarySection.history),
             EditorialSection(
-              '你的歌单',
+              '我的歌单',
               onTap: () => context.push('/music?view=playlists'),
             ),
           ],
@@ -179,6 +191,10 @@ class MusicLibraryPage extends ConsumerWidget {
                     ),
                   ),
           ),
+          if (view == null && ref.watch(usesNeteaseProvider)) ...[
+            const NeteaseLibraryLinks(section: NeteaseLibrarySection.playlists),
+            const NeteaseLibraryLinks(section: NeteaseLibrarySection.other),
+          ],
         ],
       ),
     );
@@ -213,7 +229,7 @@ class _LibraryLink extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: context.musicThemeTokens.textPrimary,
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

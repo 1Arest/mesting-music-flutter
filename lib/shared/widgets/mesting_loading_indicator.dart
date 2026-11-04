@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:math_curve_loaders/math_curve_loaders.dart';
 import '../../core/platform/distribution_channel.dart';
 import 'artwork_reveal_boundary.dart';
+import 'music_loading_scope.dart';
 
 /// The shared, text-free loading animation used by content and page states.
 ///
@@ -28,6 +29,9 @@ class MestingLoadingIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (DistributionChannel.isBeta) {
+      if (MusicLoadingScope.coveredOf(context)) {
+        return SizedBox.square(dimension: size);
+      }
       return ArtworkPendingContent(
         child: Semantics(
           label: semanticLabel,

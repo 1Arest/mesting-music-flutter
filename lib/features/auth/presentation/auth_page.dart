@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -377,7 +378,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
                       padding: EdgeInsets.all(16),
                       child: SizedBox.square(
                         dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: MusicActivityIndicator(
+                          independent: true,
+                          strokeWidth: 2,
+                        ),
                       ),
                     )
                   : null,
@@ -473,7 +477,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                   child: loading || _sendingCode
                       ? const SizedBox.square(
                           dimension: 21,
-                          child: CircularProgressIndicator(
+                          child: MusicActivityIndicator(
+                            independent: true,
                             strokeWidth: 2.4,
                             color: Colors.white,
                           ),
@@ -658,7 +663,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                   child: loading
                       ? const SizedBox.square(
                           dimension: 21,
-                          child: CircularProgressIndicator(
+                          child: MusicActivityIndicator(
+                            independent: true,
                             strokeWidth: 2.4,
                             color: Colors.white,
                           ),

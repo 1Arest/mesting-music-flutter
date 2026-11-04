@@ -1,0 +1,910 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Shanghai",
+  "version": "1.0.31",
+  "androidVersionCode": 52,
+  "localBaseVersion": "1.0.30",
+  "baseCommit": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+  "status": "local_original_signed_release_pending_user_device_acceptance",
+  "hostChecks": {
+    "beta": {
+      "fileCount": 88,
+      "passed": 1320,
+      "failed": 0,
+      "skipped": 0,
+      "perFile": {
+        "test/artwork_image_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta10_entry_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta10_feedback_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta10_quality_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta11_search_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta16_output_and_search_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta16_playback_order_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta6_audio_refresh_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta9_playback_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta8_navigation_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta_account_exclusivity_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta_login_entry_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta_update_isolation_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/beta_shared_page_search_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/dual_music_platform_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/dual_music_platform_ui_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/followup_controls_regression_test.dart": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/frame_timing_probe_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/music_home_catalogues_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/login_artwork_test.dart": {
+          "passed": 19,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_data_adapters_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_full_contracts_test.dart": {
+          "passed": 553,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_full_ui_test.dart": {
+          "passed": 27,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_full_workflows_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_message_card_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_message_card_ui_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v112_contracts_test.dart": {
+          "passed": 68,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v112_fallback_download_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v112_listening_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v114_workflows_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v112_ui_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v115_sources_test.dart": {
+          "passed": 20,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v116_recovery_test.dart": {
+          "passed": 26,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v115_ui_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v117_flows_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v118_data_test.dart": {
+          "passed": 22,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v117_ui_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v119_data_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v118_ui_test.dart": {
+          "passed": 18,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v119_ui_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v120_data_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/persistent_network_image_cache_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/netease_v120_ui_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/platform_cloud_library_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/platform_rewards_controller_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/platform_rewards_repository_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/platform_search_paging_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/playing_equalizer_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/profile_playlist_navigation_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_103_audio_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_103_sleep_playback_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_105_regression_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_103_ui_test.dart": {
+          "passed": 28,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_106_update_notes_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_107_listening_sync_test.dart": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_107_local_music_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_107_ui_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_120_render_test.dart": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_108_diagnostics_ui_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_120_shadow_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_121_artwork_transport_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_121_matte_cache_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_121_navigation_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_122_crash_diagnostics_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_123_player_ui_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_122_profile_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_123_together_test.dart": {
+          "passed": 15,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_124_accounts_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_124_diagnostics_test.dart": {
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_124_downloads_ui_test.dart": {
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_124_pages_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_126_browse_cache_test.dart": {
+          "passed": 12,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_126_cache_integration_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_126_message_protocol_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_126_tab_motion_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_127_message_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_128_presentation_test.dart": {
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_129_artwork_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_129_discovery_test.dart": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_129_user_ui_test.dart": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_129_users_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_130_artwork_reveal_test.dart": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_131_library_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_131_tab_input_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/release_131_refresh_test.dart": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/remote_lyrics_repository_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/scene_catalog_contract_test.dart": {
+          "passed": 4,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/search_menu_fm_regression_test.dart": {
+          "passed": 14,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "logs": [
+        "beta-final.jsonl",
+        "beta-followup.jsonl",
+        "profile-final-fixed.jsonl"
+      ]
+    },
+    "stable": {
+      "passed": 19,
+      "failed": 0,
+      "perFile": {
+        "test/csnas_app_update_test.dart": {
+          "passed": 8,
+          "failed": 0,
+          "skipped": 0
+        },
+        "test/music_search_ui_test.dart": {
+          "passed": 11,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      "log": "stable-complete.jsonl"
+    },
+    "searchBackPlayer": {
+      "passed": 11,
+      "failed": 0,
+      "includesAndroidBackHostRegistration": true,
+      "log": "search-back-player.jsonl"
+    },
+    "analysis": {
+      "issues": 0,
+      "log": "analyze-complete.log"
+    },
+    "aggregation": "Latest complete per-file result after full88 run and focused fixes; no overlapping sums.",
+    "intermediateFailuresRetained": true,
+    "profileFaultFixture": "Mocked manual-error case disables provider backoff only for its intentional failed read; product retry policy unchanged.",
+    "deviceUsed": false,
+    "realAccountUsed": false
+  },
+  "loading": {
+    "all12ExistingRefreshSitesShareCommonAdapter": true,
+    "betaUsesNativeCupertinoTicks": true,
+    "oneVisualOwnerPerRefresh": true,
+    "gestureAndCallbackRetained": true,
+    "standaloneAndFramedRefreshTested": true,
+    "oldRowsRemainUsable": true,
+    "actualMessagesHeldResponseDark390And320LargeTextTested": true,
+    "duplicatePlaceholderPaddingYieldsToRefresh": true,
+    "refreshWaitingExtentDp": 64,
+    "independentActionProgressRemainsOwnedByAction": true,
+    "determinatePlaybackDownloadAndQuotaProgressRetained": true,
+    "reducedMotionPausesAppleTickers": true,
+    "previousCachedContentAndThumbnailHdBehaviorRetained": true
+  },
+  "library": {
+    "groups": [
+      "常用音乐",
+      "收藏与订阅",
+      "播放足迹",
+      "我的歌单"
+    ],
+    "neteaseCatalogueCapabilities": 47,
+    "neteaseCatalogueCategories": 5,
+    "uniqueDirectFeeds": 9,
+    "cloudCategoryRetainsAll5Workflows": true,
+    "newAndImportPlaylistRetained": true,
+    "unknownFutureCategoriesRemainReachable": true,
+    "platformOnlyEntriesStayConditional": true,
+    "destinationsPermissionsAndRepositoriesRetained": true,
+    "realAccountWritesPerformed": false
+  },
+  "tabs": {
+    "staleAcknowledgementRedTestReproducedDroppedRequest": true,
+    "onlyMatchingLatestTargetAcknowledged": true,
+    "actualGlassCoordinateTapsWhileContentPending": true,
+    "latestRequestSequence": [
+      3,
+      1,
+      0,
+      2,
+      3,
+      0
+    ],
+    "retainedPageViewAndDirectionPreserved": true,
+    "noNetworkOrPriorAnimationWait": true,
+    "physicalFrameTimeMeasured": false
+  },
+  "hostUi": {
+    "screenshots": [
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-false-false-bottom.png",
+        "sha256": "17bce47d0d583a555d5fb43751b9f81708139e932efdc3885f321814686d5e4a"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-false-false-top.png",
+        "sha256": "95209a607c30691b803d1dadfc44a325c4b421f18a22f4f914d2e11a8e977b06"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-false-bottom.png",
+        "sha256": "5deaed6dd4a7c5ba740d25927b369c0fbb1fefe8e16e5bd085a213abc8843192"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-false-history.png",
+        "sha256": "2cfecb86192a7e1c07204bcc27ef0d6462f277a3d0fc04055d39caa8df5283d5"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-false-top.png",
+        "sha256": "00c8d9d8c8b8c0a8570362c049960f6a7b8f36dcf1827e3e21abd64d1cfb1ade"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-true-bottom.png",
+        "sha256": "6f5721476242b8f2049459a8672983638cd87bad624f1e48588cf2e17623a072"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-true-history.png",
+        "sha256": "0394c872937a960ff0f1edaf59727ea2a210be79f6d7d36f787910ff0e270c2a"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/library-true-true-top.png",
+        "sha256": "a478796d255fbdbb11c8f4fc042098fbad71a6815ba256a0f1aba198a639565e"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/messages-refresh-false.png",
+        "sha256": "4db62b45dd65d2fcc38820bf7bbe6f2d0758b1788ee3a181c5763d5e89af8b06"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/messages-refresh-true.png",
+        "sha256": "074dd28aad9ea64952fee03cfecf3553a5d40fe83c5501fe8eb8ef149c73995c"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/tab-latest-during-motion.png",
+        "sha256": "1130b455896cada73eb28c1728b04ada07af5753b2e476b33d0464f65e644587"
+      },
+      {
+        "path": ".codex-artifacts/2026-11-01-release131/ui/tab-latest-settled.png",
+        "sha256": "bb88ca114ccf5f69f4a439ab1e9d9693d3347b4927c5c1a684dbc886b5de54aa"
+      }
+    ],
+    "count": 12,
+    "syntheticFixturesOnly": true,
+    "librarySizes": [
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        844
+      ]
+    ],
+    "libraryDarkTextScale": 1.3,
+    "messagesSizes": [
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        650
+      ]
+    ],
+    "messagesNarrowTextScale": 1.5,
+    "finishReviewDisposition": "ship",
+    "newShippingRaster": false,
+    "incumbentSystemFilesPreserved": true,
+    "webDetector": "not_applicable_native_flutter"
+  },
+  "apk": {
+    "version": "1.0.31",
+    "androidVersionCode": 52,
+    "packageName": "com.mesting.music.beta",
+    "appName": "Mesting Music",
+    "file": "Mesting-Music-v1.0.31.apk",
+    "fileSize": 107681486,
+    "sha256": "3cf141da8ebb708e99b1deaa34a4f97104c5a1ab460e97db77567997cc67f53f",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+    "v2Signature": true,
+    "v3Signature": true,
+    "debuggable": false,
+    "minSdk": 24,
+    "targetSdk": 36,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "zipCrcVerified": true,
+    "zipAlignment16KiB": true,
+    "arm64ElfAlignment16KiB": true,
+    "arm32ElfAlignment4KiB": true,
+    "nativeLibraries": [
+      {
+        "path": "lib/arm64-v8a/libapp.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libflutter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libkugou_server.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlite3.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libapp.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libflutter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libkugou_server.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libsqlite3.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      }
+    ],
+    "bundledNotesMatchVersion": true,
+    "bundledNotesCount": 3,
+    "packagedAssetsByteIdenticalToSource": [
+      "assets/data/release-notes.json",
+      "assets/data/netease-full-catalog.json",
+      "third_party/netease_protocol/LICENSE",
+      "third_party/netease_protocol/NOTICE.md",
+      "third_party/netease_protocol/afp/afp.js",
+      "third_party/netease_protocol/afp/afp.wasm.js",
+      "third_party/netease_protocol/afp/LICENSE",
+      "third_party/unblock_netease/COPYING",
+      "third_party/unblock_netease/COPYING.LESSER",
+      "third_party/unblock_netease/NOTICE.md"
+    ],
+    "pinnedCustomReleaseEngine": {
+      "flutterVersion": "3.41.9",
+      "frameworkCommit": "00b0c91f06209d9e4a41f71b7a512d6eb3b9c694",
+      "upstreamEngineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+      "runtimeMode": "release",
+      "dartRevision": "c70f78e7d682c158c15ca0c26c729b3ccb932284",
+      "dependencySnapshotSha256": "204c7c2dd50b6d39aefa4f9e2dfd795bfbadfd23f130459f365b5aab00d1cbe9",
+      "compilerOptimization": "release",
+      "linkTimeOptimization": false,
+      "patchSha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66",
+      "createdAt": "2026-10-30T18:48:18.283417+00:00",
+      "licensesSha256": "1d531df6b9d1142fa3f6abc518cfab21adc6570ae11631c40a7ba366c93d2eaa",
+      "files": [
+        {
+          "abi": "arm64-v8a",
+          "jar": "arm64-v8a-release.jar",
+          "jarSha256": "4d2a41dec39c412a3d947237f32fb260541d60c9d08bbba3e886564f2acd70f9",
+          "nativeSha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3",
+          "nativeBytes": 12805608,
+          "nativeBuildId": "7f9d8a668f14166c413851535d650d072dc0053e",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "7823581ec4cecfcd8dac6b4556ad6be7292f51633ed916f92274e3767323b85a"
+        },
+        {
+          "abi": "armeabi-v7a",
+          "jar": "armeabi-v7a-release.jar",
+          "jarSha256": "bceb78dc0ba83367111a5abc848b044501f80c85580dfd8de1b264681f5518e9",
+          "nativeSha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767",
+          "nativeBytes": 8646952,
+          "nativeBuildId": "0f533f57422a3749c262e36ed443c583a9cbce11",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "eab3aff58453427ddfbc39b60f1599ff0902115f4c4638e588cb0574478da1af"
+        }
+      ]
+    },
+    "engineBytesMatchPinnedManifest": true,
+    "loginArtworkAssetAbsent": true,
+    "glassShadersComparedByteIdenticalAgainstLocalV130": [
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_render.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+      "assets/flutter_assets/shaders/ink_sparkle.frag",
+      "assets/flutter_assets/shaders/stretch_effect.frag"
+    ],
+    "sdkLibrariesComparedByteIdenticalAgainstLocalV130": [
+      "lib/arm64-v8a/libdatastore_shared_counter.so",
+      "lib/arm64-v8a/libjingle_peerconnection_so.so",
+      "lib/arm64-v8a/libkugou_server.so",
+      "lib/arm64-v8a/libsqlite3.so",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so",
+      "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+      "lib/armeabi-v7a/libkugou_server.so",
+      "lib/armeabi-v7a/libsqlite3.so"
+    ],
+    "licensePayloadsPresent": [
+      "assets/flutter_assets/NOTICES.Z",
+      "assets/flutter_assets/third_party/audio_glyphs/LICENSE",
+      "assets/flutter_assets/third_party/liquid_glass_widgets/LICENSE",
+      "assets/flutter_assets/third_party/md3music/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/afp/LICENSE",
+      "assets/flutter_assets/third_party/region_data/LICENSE",
+      "META-INF/androidx/annotation/annotation/LICENSE.txt",
+      "assets/LICENSE.flutter-engine.txt"
+    ],
+    "qaFontsAbsent": true,
+    "integrationTestPluginAbsent": true,
+    "privateDiagnosticsDisabled": true,
+    "nativePluginsAndDiagnosticsBridgePresent": {
+      "RingDownloadPlugin": true,
+      "FlutterWebRTCPlugin": true,
+      "getRecentAppExits": true,
+      "getHistoricalProcessExitReasons": true,
+      "getTraceInputStream": true,
+      "chooseDirectory": true,
+      "openDirectory": true
+    },
+    "backgroundLocationPermission": false,
+    "flutterVersion": "3.41.9",
+    "dartVersion": "3.11.5",
+    "javaVersion": "Temurin 17.0.20.1+1",
+    "androidBuildTools": "35.0.0",
+    "ndkVersion": "28.2.13676358",
+    "pubspecLockSha256": "6316dd4a0989c4a89b32d2a9a82bf603203743175909b52395a2d97cc4f2b5cc",
+    "inputApkSha256": "00f7c3b0e1aa19f74b176a72655c50cd0d0339f4943817233946510e6f0346a6",
+    "upgradeIdentityVerified": true,
+    "physicalUpgradeTestPerformed": false,
+    "releaseStage": "local_original_signed_release_pending_user_device_acceptance",
+    "deviceAccess": false,
+    "realAccountAccess": false,
+    "backendAccess": false,
+    "gitCommitted": false,
+    "gitPushed": false,
+    "uploaded": false,
+    "published": false
+  },
+  "productionApkNotesReader": {
+    "version": "1.0.31",
+    "versionCode": 52,
+    "notesCount": 3,
+    "productionReader": true,
+    "currentVersionOfflineHistoryMatches": true,
+    "rangeRequests": 3,
+    "bytesRead": 66020,
+    "networkAccess": false,
+    "deviceAccess": false,
+    "published": false
+  },
+  "protectedArtifacts": {
+    "frozenFiles": 44,
+    "allByteIdentical": true,
+    "originalSigningKeyUnchanged": true
+  },
+  "sourceSnapshot": {
+    "file": "Mesting-Music-v1.0.31-source.zip",
+    "verification": "release/Mesting-Music-v1.0.31-source-verification.json",
+    "digestExternalToAvoidSelfReference": true
+  },
+  "limitations": [
+    "Host tests and software captures do not certify physical Android GPU/FPS/Back/TalkBack or real services.",
+    "No phone/ADB, real account/backend, Git commit/push, upload or publication.",
+    "Together real ended-listening record remains unresolved/unverified."
+  ],
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false
+}

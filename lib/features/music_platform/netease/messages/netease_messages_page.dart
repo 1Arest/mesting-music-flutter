@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../../shared/widgets/music_loading_scope.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -223,7 +225,7 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
             },
           ),
         ],
-        child: RefreshIndicator(
+        child: MusicRefreshIndicator(
           onRefresh: _load,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -257,9 +259,11 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
               ],
               if (_error != null) _MessageFeedback(_error!, retry: _load),
               if (_busy)
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: BetaActivityIndicator()),
+                const MusicLoadingPlaceholder(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Center(child: BetaActivityIndicator()),
+                  ),
                 ),
               for (final conversation in list)
                 ListTile(
@@ -1335,7 +1339,7 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
       NeteaseNoticeKind.mentions => '评论和@提及',
       NeteaseNoticeKind.notices => '赞和通知',
     };
-    final list = RefreshIndicator(
+    final list = MusicRefreshIndicator(
       onRefresh: _load,
       child: ListView(
         key: PageStorageKey('notices-${_kind.name}'),
@@ -1344,9 +1348,11 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
         children: [
           if (_error != null) _MessageFeedback(_error!, retry: _load),
           if (_busy)
-            const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: BetaActivityIndicator()),
+            const MusicLoadingPlaceholder(
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: BetaActivityIndicator()),
+              ),
             ),
           for (final row in _rows)
             ListTile(

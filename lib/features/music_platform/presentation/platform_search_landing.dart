@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/track.dart';
@@ -130,7 +131,10 @@ class _PlatformSearchLandingState extends ConsumerState<PlatformSearchLanding> {
               icon: _refreshing
                   ? const SizedBox.square(
                       dimension: 20,
-                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                      child: MusicActivityIndicator(
+                        strokeWidth: 2,
+                        independent: true,
+                      ),
                     )
                   : const Icon(Icons.refresh),
             ),

@@ -15,9 +15,11 @@ class BetaTabNavigation {
     navigate(index);
   }
 
-  /// The router has published an actual location; the same-frame hint ends.
+  /// Only the latest request may acknowledge itself. Router rebuilds for an
+  /// earlier tap can arrive after a newer tap; clearing that newer intent would
+  /// make a subsequent tap on the old visible tab look like a duplicate.
   void settled(int index) {
-    _requested = null;
+    if (_requested == index) _requested = null;
   }
 
   void cancel() {

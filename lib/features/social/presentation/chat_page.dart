@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
@@ -2985,7 +2986,10 @@ class _ListenTogetherInviteMessageState
                       child: _busy
                           ? const SizedBox.square(
                               dimension: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: MusicActivityIndicator(
+                                independent: true,
+                                strokeWidth: 2,
+                              ),
                             )
                           : const FittedBox(
                               fit: BoxFit.scaleDown,
@@ -3205,7 +3209,8 @@ class _DeliveryIndicator extends StatelessWidget {
         child: SizedBox.square(
           key: ValueKey('chat-message-sending-$messageId'),
           dimension: 18,
-          child: CircularProgressIndicator(
+          child: MusicActivityIndicator(
+            independent: true,
             strokeWidth: 1.8,
             color: Theme.of(context).colorScheme.primary,
           ),
@@ -3523,7 +3528,8 @@ class _SocialVoiceMessageState extends ConsumerState<SocialVoiceMessage> {
               if (_busy)
                 SizedBox.square(
                   dimension: 20,
-                  child: CircularProgressIndicator(
+                  child: MusicActivityIndicator(
+                    independent: true,
                     strokeWidth: 2,
                     color: foreground,
                   ),
@@ -3824,7 +3830,8 @@ class _SocialVideoMessageState extends State<SocialVideoMessage> {
                   child: _opening
                       ? const Padding(
                           padding: EdgeInsets.all(14),
-                          child: CircularProgressIndicator(
+                          child: MusicActivityIndicator(
+                            independent: true,
                             strokeWidth: 2.4,
                             color: Colors.white,
                           ),
@@ -4331,7 +4338,10 @@ class _VideoViewerState extends State<_VideoViewer> {
                   );
                 }
                 if (snapshot.connectionState != ConnectionState.done) {
-                  return const CircularProgressIndicator(color: Colors.white);
+                  return const MusicActivityIndicator(
+                    independent: true,
+                    color: Colors.white,
+                  );
                 }
                 return _VideoPlaybackSurface(controller: _controller);
               },

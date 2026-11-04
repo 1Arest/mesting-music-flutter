@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -592,6 +593,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
             (e) =>
                 e.widget is MestingLoadingIndicator ||
                 e.widget is BetaActivityIndicator ||
+                e.widget is MusicActivityIndicator ||
                 e.widget is CircularProgressIndicator,
           );
       stable = busy ? 0 : stable + 1;

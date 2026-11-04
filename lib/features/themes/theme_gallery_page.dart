@@ -1,3 +1,4 @@
+import '../../shared/widgets/music_activity_indicator.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
@@ -885,7 +886,8 @@ class _BrandStyleCard extends StatelessWidget {
                     if (applying)
                       SizedBox.square(
                         dimension: 14,
-                        child: CircularProgressIndicator(
+                        child: MusicActivityIndicator(
+                          independent: true,
                           strokeWidth: 2,
                           color: accent,
                         ),

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/beta_text_editing.dart';
 import 'dart:async';
 
@@ -752,7 +753,8 @@ class _PrimaryAction extends StatelessWidget {
         child: busy
             ? SizedBox.square(
                 dimension: 20,
-                child: CircularProgressIndicator(
+                child: MusicActivityIndicator(
+                  independent: true,
                   color: palette.onPrimary,
                   strokeWidth: 2.3,
                 ),

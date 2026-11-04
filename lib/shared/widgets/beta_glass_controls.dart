@@ -5,6 +5,7 @@ import '../../features/experience/presentation/beta_bottom_bar.dart';
 import '../../features/themes/beta_appearance.dart';
 import 'beta_glass_action.dart';
 import '../../core/haptics/app_haptics.dart';
+import 'music_activity_indicator.dart';
 
 /// Floating controls share the navigation's optical material. Each surface
 /// owns its layer: nesting glass would disable the child's refraction.
@@ -99,7 +100,10 @@ class BetaGlassButton extends StatelessWidget {
                     ? EdgeInsets.zero
                     : EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: loading
-                    ? BetaActivityIndicator(color: foreground)
+                    ? BetaActivityIndicator(
+                        color: foreground,
+                        independent: true,
+                      )
                     : IconTheme.merge(
                         data: IconThemeData(color: foreground),
                         child: DefaultTextStyle.merge(
@@ -143,16 +147,19 @@ class BetaActivityIndicator extends StatelessWidget {
     this.color,
     this.radius = 10,
     this.label = '正在加载',
+    this.independent = false,
     super.key,
   });
   final Color? color;
   final double radius;
   final String label;
+  final bool independent;
   @override
-  Widget build(BuildContext context) => Semantics(
+  Widget build(BuildContext context) => MusicActivityIndicator(
     label: label,
-    liveRegion: true,
-    child: CupertinoActivityIndicator(color: color, radius: radius),
+    color: color,
+    radius: radius,
+    independent: independent,
   );
 }
 
