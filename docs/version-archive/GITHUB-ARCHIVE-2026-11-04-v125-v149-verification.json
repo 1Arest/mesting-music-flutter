@@ -1,0 +1,2063 @@
+{
+  "verifiedAtUtc": "2026-11-04T04:36:49.187102+00:00",
+  "repository": "https://github.com/Mesting42/mesting-music-flutter",
+  "versions": [
+    {
+      "version": "1.0.25",
+      "code": 46,
+      "tag": "v1.0.25",
+      "commit": "c6535c10b9c093d20bdb90cf8a2b40bcd1af19c1",
+      "tagObject": "004a495029af63906961bbcfa9b6a1bf25e9a647",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.25",
+      "publishedAt": "2026-11-04T04:34:51Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-10-31-v1.0.25.md",
+          "size": 3588,
+          "sha256": "1ccafb725a932f873fb65de5a9a2f56fddbfbae892655d770bfc9ffafde74720",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/fixes-2026-10-31-v1.0.25.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.25.md",
+          "size": 6134,
+          "sha256": "88e683e6ad2a463806f7111c4a9594488f05e3f6ee12cf93bb5df448ff2e3aa5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.25.md"
+        },
+        {
+          "name": "INSTALL-v1.0.25.md",
+          "size": 4419,
+          "sha256": "5b86bc63f841b8f45c513bf0b3c414848e765bd1b7c71228368e3adb8a569351",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/INSTALL-v1.0.25.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25-SHA256.txt",
+          "size": 193,
+          "sha256": "9a2ea2208563f92df3aabaa23cdaf93c4eadc881962fb7cf1521dba59521d31b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25-source-verification.json",
+          "size": 815,
+          "sha256": "e7e53326955ec37583aa663628646a7122d36b593468ad4f635bd9adebd17308",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25-source.sha256",
+          "size": 100,
+          "sha256": "33de57fc213edd08f5212c7f7867fb0b5120fce21f48fbd6466046643a8a402d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25-source.zip",
+          "size": 63392371,
+          "sha256": "c0e6d881f0a5eb7609118b21b36a2876c2ea4d1ad760b60def319814de61cfed",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25-verification.json",
+          "size": 8324,
+          "sha256": "cfaf0f9728150bec29186b7da307c847f3a4a5efd9085d8a2d4cb56def70c543",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25.apk",
+          "size": 108705597,
+          "sha256": "e05efc603eecf946e9aace3752c4bf9016af7ea011d826b9bd82f5f2698cf217",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.25.apk.sha256",
+          "size": 93,
+          "sha256": "1a351265b554f70afbf07b4ecc098b02cebcaeefb7bebc7afcf7dfca4fd051bb",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/Mesting-Music-v1.0.25.apk.sha256"
+        },
+        {
+          "name": "validation-2026-10-31-v1.0.25.json",
+          "size": 23772,
+          "sha256": "7551ada5d376f6ab02a11e988f62b0932bef12eb74cc5769c5dbd839a3111c2b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.25/validation-2026-10-31-v1.0.25.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.26",
+      "code": 47,
+      "tag": "v1.0.26",
+      "commit": "cddb9a4490e58d0d7faa5ad2681ee00b4633946f",
+      "tagObject": "bf5770f0e9e9c717d90be4188f792ccf2207a94d",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.26",
+      "publishedAt": "2026-11-04T04:34:54Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-10-31-v1.0.26.md",
+          "size": 5341,
+          "sha256": "9777c52851ae1d2c757561d1a6ffbfe31969990ea478aab2c346dfab30feccb9",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/fixes-2026-10-31-v1.0.26.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.26.md",
+          "size": 7738,
+          "sha256": "85aa9773c4e002cb9d22658fbfa1bfbacc045029dc7d4acc1f08fe26539f6818",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.26.md"
+        },
+        {
+          "name": "INSTALL-v1.0.26.md",
+          "size": 4622,
+          "sha256": "fa91b3ec67cab1efe4b4a96e54d079b47810b1efbfca44a3b46b6608c6886ca7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/INSTALL-v1.0.26.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26-SHA256.txt",
+          "size": 193,
+          "sha256": "5df738a3adfdf1d29e96bb6ed0bd4f7929c3671cc74c41b670e164dec4f762c7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26-source-verification.json",
+          "size": 815,
+          "sha256": "1dd671810a35adb738e1edd3a2b56eed18f88aaf323b2b94820d97df80a58abd",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26-source.sha256",
+          "size": 100,
+          "sha256": "4def622bbf4d1195ba7c68c4b04fce9ce58933d90a65c4a257e4a254ab5d82ea",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26-source.zip",
+          "size": 61978790,
+          "sha256": "a45feb2400be47948d0c17d6b62db5cca26ee7e2d3207b14c519b7e72c230265",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26-verification.json",
+          "size": 8215,
+          "sha256": "e3ff2746081b0f8ac42d3b93fe2f983685aee862f510576feddfd2197f8800de",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26.apk",
+          "size": 107402958,
+          "sha256": "d6a9f06654ae6341f51eb7f5760163981b74c5e3dd22f632cd615f31bf1db4a7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.26.apk.sha256",
+          "size": 93,
+          "sha256": "9fbfb4cb61c00242893f4824703af1e650a5e24c999e1432a10c690677acab90",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/Mesting-Music-v1.0.26.apk.sha256"
+        },
+        {
+          "name": "validation-2026-10-31-v1.0.26.json",
+          "size": 29182,
+          "sha256": "bb26b848c69c48eab466e5304d0229d64d2c8bda5828250481d0800b6d01f25e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.26/validation-2026-10-31-v1.0.26.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.27",
+      "code": 48,
+      "tag": "v1.0.27",
+      "commit": "b6beb89f9f8e41642a34c4f1f7ed5f69ccc43aae",
+      "tagObject": "bb864b35bd12abc3049b48e1aa91c3677bcd921b",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.27",
+      "publishedAt": "2026-11-04T04:34:56Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-10-31-v1.0.27.md",
+          "size": 3008,
+          "sha256": "4dbd963e234f02f18c0babf328104f24ac315cd459900d7cd4c5425f77ff379c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/fixes-2026-10-31-v1.0.27.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.27.md",
+          "size": 6309,
+          "sha256": "1eeb54564347fb02c49f5d434cab3907d1196934f08f90ae0c2468b23298c44e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.27.md"
+        },
+        {
+          "name": "INSTALL-v1.0.27.md",
+          "size": 1604,
+          "sha256": "2054cdc06b70d65552922bab5cb69e4622d33d87521d2b6dcc76ddbf83f85b0f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/INSTALL-v1.0.27.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27-SHA256.txt",
+          "size": 193,
+          "sha256": "c1a79cc1a2657bc77da8b62a2a0ec435fd47d9b5618d36246f1231aca234badc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27-source-verification.json",
+          "size": 815,
+          "sha256": "9ff9b03933f4567c15b1d38fecf1b6eed5eb87cb44a52ec209fd93bba3c176ae",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27-source.sha256",
+          "size": 100,
+          "sha256": "0a6dfc3202636ae75260c3b6089c31887bb53096b80fc849f8f260c76972380a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27-source.zip",
+          "size": 62003704,
+          "sha256": "27af6dd14a35024a8b329dbe1caa15d12f3b5cc56df7f3e341f5f738f11ab0eb",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27-verification.json",
+          "size": 8215,
+          "sha256": "51df282193d3eec82d2416a63097f606c49260528dbf897e90ad8c8e0d8501f3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27.apk",
+          "size": 107484878,
+          "sha256": "52d1b27298b2226ddb9c9db29050e56cdb8210f2755b6258d491397226b09aa0",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.27.apk.sha256",
+          "size": 93,
+          "sha256": "ea22811dd87e57bfc45ab33fa92ca8826c4567ce4ce9fc8cb65b4e49935cb62e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/Mesting-Music-v1.0.27.apk.sha256"
+        },
+        {
+          "name": "validation-2026-10-31-v1.0.27.json",
+          "size": 19421,
+          "sha256": "e58b23e9acd22829d57328a51e0a43519704b9a8ce91156b1038f362f84d4b35",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.27/validation-2026-10-31-v1.0.27.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.28",
+      "code": 49,
+      "tag": "v1.0.28",
+      "commit": "62b9cc6374dd9930f2d3a25382c7eaa03cef7e6d",
+      "tagObject": "00ad53ea5aaf17db2df767b933ffdeadb555c4c2",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.28",
+      "publishedAt": "2026-11-04T04:34:59Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-10-31-v1.0.28.md",
+          "size": 4640,
+          "sha256": "06cfe55e3d582c1e382d43525736ff5554aebd64eb5d6d8376ec73f50d0a7439",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/fixes-2026-10-31-v1.0.28.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.28.md",
+          "size": 6754,
+          "sha256": "0818a42226bececb279f0c52d025f73d35d361b9b09de6e1c5266a97196305d1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/HANDOFF-CURRENT-SESSION-2026-10-31-v1.0.28.md"
+        },
+        {
+          "name": "INSTALL-v1.0.28.md",
+          "size": 2185,
+          "sha256": "dceed2c116e597c9dfb5d633ce2f5a5921f56813072cdbb76d6d5080858dbfce",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/INSTALL-v1.0.28.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28-SHA256.txt",
+          "size": 193,
+          "sha256": "3d6fa82a37bcbc9bf4be4aed6f3f094ed44b60f9774250858f3f7cd735426e49",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28-source-verification.json",
+          "size": 815,
+          "sha256": "742009a359f5f76c5623b82d02830e25d62655c45431cf4d505d930fdf471d6a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28-source.sha256",
+          "size": 100,
+          "sha256": "27503a65513405ab04c67829094c95e9fff7cbb2c52674c17588c21546f72913",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28-source.zip",
+          "size": 62034866,
+          "sha256": "5fa03d3d87fb5bc3ff6bd9f9a9ef36ae9453b0a46edbbb4dfbeab7b984218196",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28-verification.json",
+          "size": 8215,
+          "sha256": "8718596088e1125171ea1030f42ef3bfd53e7d424483f6c01427a0e7530f65a3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28.apk",
+          "size": 107599566,
+          "sha256": "7157782d1dc56b000d8a965d33bac3fae4881321806e05aa33208aee4dde5ac1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.28.apk.sha256",
+          "size": 93,
+          "sha256": "0dd7220d4ceb2e69b27b14ee3f56ca8663f7cf42f9a826e7b2ee42611a325bf5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/Mesting-Music-v1.0.28.apk.sha256"
+        },
+        {
+          "name": "validation-2026-10-31-v1.0.28.json",
+          "size": 18802,
+          "sha256": "d18bde5a19aa1c16490094e8248a61b908015b7a977a1853bae11d37b3727476",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.28/validation-2026-10-31-v1.0.28.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.29",
+      "code": 50,
+      "tag": "v1.0.29",
+      "commit": "f728b6a9e56756e619a48114201a260805bfceea",
+      "tagObject": "088f130c40d8270b85ebdb5b312e081246f6def2",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.29",
+      "publishedAt": "2026-11-04T04:35:02Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.29.md",
+          "size": 4969,
+          "sha256": "b9906eaa8a73f00f239a2a7fdb5398875d3086239ddc108499f9148bcb8f4e73",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/fixes-2026-11-01-v1.0.29.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.29.md",
+          "size": 4435,
+          "sha256": "d9afb26e51603e1b2701b81aecac017cfc77259a642c957fe7a4d8ad1ec00fca",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.29.md"
+        },
+        {
+          "name": "INSTALL-v1.0.29.md",
+          "size": 2283,
+          "sha256": "6e6569c1121798cef7c379c56108925ed90c991aa0c90640ab0ea470e787e17e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/INSTALL-v1.0.29.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29-SHA256.txt",
+          "size": 193,
+          "sha256": "2e564465f44716a1ef43cb7699d92574f842f0bbee3bf7816b76d6f12b593478",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29-source-verification.json",
+          "size": 815,
+          "sha256": "dcc0d6c3f9642f40d6aea3c720c0e8bd26bdb34aa8ae29ddb516296335e9a4f6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29-source.sha256",
+          "size": 100,
+          "sha256": "dfc17f4fc9d54cf48945c3d57f97deb6bd0a8eb9a248b2508482b864fd4734ce",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29-source.zip",
+          "size": 62084954,
+          "sha256": "50fe9951e8c06591ee77296ad41d8fedfc83f29c90254b45bc1f52c887f46cd7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29-verification.json",
+          "size": 8215,
+          "sha256": "2bf3723876cca10d132d6d4017c777d9208a03dc09c9b1a3a41fc8720710c9e6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29.apk",
+          "size": 107648718,
+          "sha256": "b0c5dc1939ae96c0e7fc6299534a6052c2672957a638968f4670127fac774849",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.29.apk.sha256",
+          "size": 93,
+          "sha256": "69678222a987def336d92f0352f0081b84aee7164940e8ab9b42348fb8eaf415",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/Mesting-Music-v1.0.29.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.29.json",
+          "size": 21553,
+          "sha256": "839349a87a108f181d8dfcd9e266c10db4f1517523d72d2866b569e6521783a0",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.29/validation-2026-11-01-v1.0.29.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.30",
+      "code": 51,
+      "tag": "v1.0.30",
+      "commit": "67ba584684fcb09a936254904f170110b1ca0adb",
+      "tagObject": "70a4e066b428e54681a08208e88037c46226afdf",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.30",
+      "publishedAt": "2026-11-04T04:35:04Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.30.md",
+          "size": 3513,
+          "sha256": "c908d535f5b1d5aeb2920db8def7a306a470df63cbba943881be9837a2dce268",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/fixes-2026-11-01-v1.0.30.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.30.md",
+          "size": 3941,
+          "sha256": "4b3dc48bbe484aa44c6b250129049d7321f647e958866973ab8f967059ec814c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.30.md"
+        },
+        {
+          "name": "INSTALL-v1.0.30.md",
+          "size": 2207,
+          "sha256": "140650a3f7d0673e4b844efca903d033f65b724cf05b16d7deb8b26a330ab661",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/INSTALL-v1.0.30.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30-SHA256.txt",
+          "size": 243,
+          "sha256": "3b391cf619979ad88edf00392c476519dff5243e609287469270ed01b008f8ae",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30-source-verification.json",
+          "size": 815,
+          "sha256": "bccfa30c64aa3a436f448aad104af784677961c5d51114400e20a58ce1c05a4c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30-source.sha256",
+          "size": 100,
+          "sha256": "44320fa01e38625645edb4d23d2f5576d69a4b8e01c0b2fae8eaf64a17b1598a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30-source.zip",
+          "size": 62115155,
+          "sha256": "88bef451e6695b199cc06eb669b03f079653a488358d3aec0c64901586dc1e6a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30-verification.json",
+          "size": 8215,
+          "sha256": "b0c8d701ddd709fe4b469e726ebf430d3dbffed6f3abc89f540db3e058a6e4d8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30.apk",
+          "size": 107665102,
+          "sha256": "28ea8a2ce9e09693a3fc870368982b95a784b19ffb73d175007cac5b1e5b32c5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.30.apk.sha256",
+          "size": 93,
+          "sha256": "c6747a3faf1c15768a0750aa91f0c3214b149c6159ae0d19d7c0cb8257914517",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/Mesting-Music-v1.0.30.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.30.json",
+          "size": 26766,
+          "sha256": "c08e2df41c7c6b40d8a9b17ecdb7d1eda603d27db0c9c7e8d292bdda5927e3a8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.30/validation-2026-11-01-v1.0.30.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.31",
+      "code": 52,
+      "tag": "v1.0.31",
+      "commit": "48b58877d0907241a28acca33fef63f74701dbb8",
+      "tagObject": "85f0ee4bf7e6c7896e623e18bdd1780e822e2ba9",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.31",
+      "publishedAt": "2026-11-04T04:35:07Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.31.md",
+          "size": 3902,
+          "sha256": "8392265b2f58682c7805c7c5b245d02eb12b177cbaede4f8ffdcd9c6f4365eca",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/fixes-2026-11-01-v1.0.31.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.31.md",
+          "size": 3998,
+          "sha256": "6bef427eed4a38dfdf14f8528e7a30646edc87955bd7186a78c94f2c1c57462d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.31.md"
+        },
+        {
+          "name": "INSTALL-v1.0.31.md",
+          "size": 2164,
+          "sha256": "1b5b78c1969fb7717d42b618572a063328261ae54b179047c38280ca7db65756",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/INSTALL-v1.0.31.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31-SHA256.txt",
+          "size": 243,
+          "sha256": "ae56b7eb87ac6e33169329086775d7898b20021e1cf67e4162b41e0ea2ac1d25",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31-source-verification.json",
+          "size": 815,
+          "sha256": "d2522f3adb69971e9413cf545d0b558a0a375ddc356b340359ee1bfe658b852d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31-source.sha256",
+          "size": 100,
+          "sha256": "8f395140cc9072dd9c71178216e82e7dfb4642a6d69a30c7ed17b27a3853bee3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31-source.zip",
+          "size": 62147460,
+          "sha256": "5957091083867cb973e52788ca41f9c753c4350c9b1841297658bfd8a38847da",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31-verification.json",
+          "size": 8215,
+          "sha256": "b8231d209b124d76579358921fb72ddba1c789e209fc3c5ad33720f74456a27d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31.apk",
+          "size": 107681486,
+          "sha256": "3cf141da8ebb708e99b1deaa34a4f97104c5a1ab460e97db77567997cc67f53f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.31.apk.sha256",
+          "size": 93,
+          "sha256": "87a981b569bb227b86ba1cc88203480a1e58eca664bf2fefee8273d9cb364e22",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/Mesting-Music-v1.0.31.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.31.json",
+          "size": 27825,
+          "sha256": "514f0b4bd359433d673834b854d7c9a16e16b6d58c1d4312dd0cc66df6c67992",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.31/validation-2026-11-01-v1.0.31.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.32",
+      "code": 53,
+      "tag": "v1.0.32",
+      "commit": "2a4c549556a7598b57a5e4884459c972054e3b29",
+      "tagObject": "fbbcef2ef042d109c31e3304711a39b788adba3f",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.32",
+      "publishedAt": "2026-11-04T04:35:09Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.32.md",
+          "size": 2880,
+          "sha256": "eec018eeb2a694243c7dacd51f54da7da6b7727ef4c0b6d7edbc3858264c007e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/fixes-2026-11-01-v1.0.32.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.32.md",
+          "size": 3023,
+          "sha256": "1d584c10c0bdbeaeb318d5a3ae993b74a39a3a1417bd4f2652fd2399bad4d12e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.32.md"
+        },
+        {
+          "name": "INSTALL-v1.0.32.md",
+          "size": 2515,
+          "sha256": "709d21a770c75650e7c1f7efd79d19b5c2e307166515bc0099b77c660e089dc7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/INSTALL-v1.0.32.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32-SHA256.txt",
+          "size": 243,
+          "sha256": "0ac6bc38a1eb99c331b7bcd751014f66cf400196d3be94c228f4d5ed35fb3911",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32-source-verification.json",
+          "size": 815,
+          "sha256": "d3d2a4fe67e16ac7a9c0556687b9d9e1059aba2c0b37d00a4ddc8ba9aceeab33",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32-source.sha256",
+          "size": 100,
+          "sha256": "5a699d4cd241249e08c615778c8807e34d087d5def1bd9fd1e56895c75e44543",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32-source.zip",
+          "size": 62172564,
+          "sha256": "019d956939a2356aea6070409af0d8dd11849318ae3b7f057997da1a6ba11636",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32-verification.json",
+          "size": 8215,
+          "sha256": "536e58bf650232877e0ee112e1f3947dec426a66f0b349a7be6ede338c73d5d4",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32.apk",
+          "size": 107697870,
+          "sha256": "7262948c569ecb585564d3bcee3d4f5ec7acff6a6229a14754e8e252d574ea66",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.32.apk.sha256",
+          "size": 93,
+          "sha256": "1f9a998bd96865d94ab46902740a453b638d5e1d97cd0fef2fc7daa1b5d96701",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/Mesting-Music-v1.0.32.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.32.json",
+          "size": 14812,
+          "sha256": "df0a1d00e11abfe3c9f0d4d719cb2cdb01cc977247011ffde7750eae35d5dc69",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.32/validation-2026-11-01-v1.0.32.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.33",
+      "code": 54,
+      "tag": "v1.0.33",
+      "commit": "0887015cfd4418163ea36e938f7f7c087a294c26",
+      "tagObject": "d3881e88ba8295ccb048504866625ae983eddf9c",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.33",
+      "publishedAt": "2026-11-04T04:35:12Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.33.md",
+          "size": 3902,
+          "sha256": "39a4783a2799b72cac21b377fc46fc362ce9d7179a1b14d9f2c1eb3e10f1f751",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/fixes-2026-11-01-v1.0.33.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.33.md",
+          "size": 3712,
+          "sha256": "107866e7bbd2ded3f0915efa0a3a5d72550a15033c81eeb59c168fc500dd7566",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.33.md"
+        },
+        {
+          "name": "INSTALL-v1.0.33.md",
+          "size": 2842,
+          "sha256": "431c40507db6dc7f6a164f565961f096db595f7c500485dfe1ce18b749a00de3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/INSTALL-v1.0.33.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33-SHA256.txt",
+          "size": 243,
+          "sha256": "b24098d70586714a862187c4e899d66f918412c0a335398d44122037fb5521e6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33-source-verification.json",
+          "size": 815,
+          "sha256": "40daf95425c5de820b081631b59e5c465ac24b527a24e133acd8fdeeb69dfacc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33-source.sha256",
+          "size": 100,
+          "sha256": "9885e35001f6c5fdf2477e615aa4b46a87197ece550451313073508b6399aef6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33-source.zip",
+          "size": 62211723,
+          "sha256": "9e87c9622c13b3ca003470216f7955089953b6fb15397fa97dfc5ea856ffa1bb",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33-verification.json",
+          "size": 8215,
+          "sha256": "1146edd2fe0fc20cdae9456894817dacb1fe263a34727c4e6835750e1553fae7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33.apk",
+          "size": 107697870,
+          "sha256": "1983f4a0e5253a6cf0e1d4d11fcd15774012670f45400de5b5692c77a9031ba6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.33.apk.sha256",
+          "size": 93,
+          "sha256": "455f93b54103492288786f13d86e812da98c45349aa70c9402b1e26f06858a47",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/Mesting-Music-v1.0.33.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.33.json",
+          "size": 16164,
+          "sha256": "0e55d0cd8551ae96e19bba5f6448e7fd7b207b7df156eb099b0addfdd83917e3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.33/validation-2026-11-01-v1.0.33.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.34",
+      "code": 55,
+      "tag": "v1.0.34",
+      "commit": "d2d0baf3d336cd06a3ee4c23741c099b657b18ed",
+      "tagObject": "e5105a29e986f2374fe73b4899c0dd1a8df56567",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.34",
+      "publishedAt": "2026-11-04T04:35:15Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.34.md",
+          "size": 2878,
+          "sha256": "2e9af5e679eaec6f6a4bb6be93cb8273771c3ae4b8ad8d1b66562de310148967",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/fixes-2026-11-01-v1.0.34.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.34.md",
+          "size": 3729,
+          "sha256": "5402b435959f5100a0b20bc3d8afafccab01810431dc9202d3284dc967232354",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.34.md"
+        },
+        {
+          "name": "INSTALL-v1.0.34.md",
+          "size": 2520,
+          "sha256": "16f7d02e5c0da14f894d072623fb68687a4c53a2336d6d6b3df8297bcd5ff205",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/INSTALL-v1.0.34.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34-SHA256.txt",
+          "size": 243,
+          "sha256": "bd5c739763c60eb70609dc6e34e0584d32ed3addd809ea98f76d7452e302da85",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34-source-verification.json",
+          "size": 815,
+          "sha256": "20efb1968648db3660d3b5a38a3fd5665b0b0ebbe322d5d0cb8a3840eb25d986",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34-source.sha256",
+          "size": 100,
+          "sha256": "837d9ca99005a610ede553e6e68cef88dec3b8945c32890afe3d9953f4def081",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34-source.zip",
+          "size": 62232135,
+          "sha256": "e80dfd3c60ad04758aaee395946422736358c3e1e2b3a125910237ed80edc501",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34-verification.json",
+          "size": 8215,
+          "sha256": "62273bf7c624dae01f226fcd37fcfa5eaeccecaef63397bb1b9c4cdc2ced2181",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34.apk",
+          "size": 107697870,
+          "sha256": "fd6738c904a6bed92df261c8d66e1d0a95c34f534e0cb89b2dcd33629a0db01e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.34.apk.sha256",
+          "size": 93,
+          "sha256": "582366ba4f59bc45430109927c6614db9734bf3db2748bed4545dd5989103482",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/Mesting-Music-v1.0.34.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.34.json",
+          "size": 7177,
+          "sha256": "e631c64943f15469939aa5ae499b72132f0198de76c7e48cea1c211453352aca",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.34/validation-2026-11-01-v1.0.34.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.35",
+      "code": 56,
+      "tag": "v1.0.35",
+      "commit": "13d8e3ffaafc946ceddab4c221115d8e5c166873",
+      "tagObject": "16bcd6c991efbc2d2469884c4a82fc5d2dd707f2",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.35",
+      "publishedAt": "2026-11-04T04:35:17Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.35.md",
+          "size": 3257,
+          "sha256": "cad36d196ad317b2b139f5b15edff1325bd6699a7e64c26db07a73b2b6143394",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/fixes-2026-11-01-v1.0.35.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.35.md",
+          "size": 4269,
+          "sha256": "4a2bd2ddedb64f679269315a1264d36eaa244e50b165f89f05e7be3b9a5493a3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.35.md"
+        },
+        {
+          "name": "INSTALL-v1.0.35.md",
+          "size": 3086,
+          "sha256": "c5646a981b40098c0dfbf9e2e19ac7dc4e36186869fcf1ee1f99973a3d35ba74",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/INSTALL-v1.0.35.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35-SHA256.txt",
+          "size": 243,
+          "sha256": "37fd2c940e7849033c600543de6cc004a66dc4385912c5af312c461f7c72a134",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35-source-verification.json",
+          "size": 815,
+          "sha256": "0f85199cd308efa59f292096c96c821ba541a79a36bfc3950f244316c3177ebd",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35-source.sha256",
+          "size": 100,
+          "sha256": "a7ac62bc6a9d66f2bd99282bb72c21061e15be83bc2786bf5aaf6ffd3b483485",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35-source.zip",
+          "size": 62261955,
+          "sha256": "83c9b6760e00b7b8f506d20a046c8303bb3127f60ab31058b4a26630cd4c2e1f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35-verification.json",
+          "size": 8215,
+          "sha256": "f92342af1eb68a71ac1e3ca8460889c88d0613e83a84761d769918d38d6922bc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35.apk",
+          "size": 107796174,
+          "sha256": "6e0f5e822c451fd1a690273001003b4eb9c47fd9c772c904cb3a4bf21d160c94",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.35.apk.sha256",
+          "size": 93,
+          "sha256": "b1cc57935ffb89cd55ee5ba22a6304d2d199b3611434babe9156fb23e07fdf70",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/Mesting-Music-v1.0.35.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.35.json",
+          "size": 7627,
+          "sha256": "de63b42f998f7e8e4558f779724a9d804554c8aec7061f28ed4a936ab3743be9",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.35/validation-2026-11-01-v1.0.35.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.36",
+      "code": 57,
+      "tag": "v1.0.36",
+      "commit": "c0e3a70c976e9f3fa04b31274df1dad26301f803",
+      "tagObject": "cda2d6343165d5547d0de2577b3fc6a7378c5a60",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.36",
+      "publishedAt": "2026-11-04T04:35:20Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-01-v1.0.36.md",
+          "size": 3736,
+          "sha256": "d4188135d90d85b111a99b5c8f97d764ec65581417c649d6de5dadd041a2b2f2",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/fixes-2026-11-01-v1.0.36.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.36.md",
+          "size": 4580,
+          "sha256": "f7ea13cba075ea82e93f8d2e8e7ffeb6b4cfd59f8a5d60a0998066d413294c6a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/HANDOFF-CURRENT-SESSION-2026-11-01-v1.0.36.md"
+        },
+        {
+          "name": "INSTALL-v1.0.36.md",
+          "size": 2777,
+          "sha256": "4f201c4e97433a977cf25c7ac9be05dd68aec312b6f455b7809d6eeacf6b47a8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/INSTALL-v1.0.36.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36-SHA256.txt",
+          "size": 243,
+          "sha256": "6a13b80c1982437464a06639b95cebe6c0b9807da859b44256611d65453b7a1c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36-source-verification.json",
+          "size": 815,
+          "sha256": "63d0fe39ade7a7552ac3a3a16f2cd18f15fd53203c1e210de106b9e7e8163388",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36-source.sha256",
+          "size": 100,
+          "sha256": "f47fae8103dc07a26d2e447610729e3a6e3b8fdf26645bd7f4ce5432b4be7b1e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36-source.zip",
+          "size": 62290715,
+          "sha256": "49c0a0b04714273d238f4ad70bc38c78df459415cc929a2d904631faa46cd87e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36-verification.json",
+          "size": 8215,
+          "sha256": "fa22bca85bcd1e595fd4f6dd9988445a428ca5b1d47f2a3102112afaea6c569d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36.apk",
+          "size": 107910862,
+          "sha256": "370744ba5cfdf8ad718aa94d2830eec420c1d24772a4fcf0da32575f55ecf7cd",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.36.apk.sha256",
+          "size": 93,
+          "sha256": "0ffa9d36dde42c534fa14a255cb6885ed6cef91e24dc1184b085942e56d0fb42",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/Mesting-Music-v1.0.36.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-01-v1.0.36.json",
+          "size": 7636,
+          "sha256": "86ad6d519932c17930f6532b7ffaa8d50f698cd73cd0ebb0dca9ee069c8f06da",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.36/validation-2026-11-01-v1.0.36.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.37",
+      "code": 58,
+      "tag": "v1.0.37",
+      "commit": "e826b917b2f8850c09a1f1dc60f3cce61ebb7100",
+      "tagObject": "ee2d27399c7a862f74b689a2a40b7f5fe94705d1",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.37",
+      "publishedAt": "2026-11-04T04:35:22Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-02-v1.0.37.md",
+          "size": 2924,
+          "sha256": "1a385a0fd801811c83918a700ae6f1589c69c9f3e44273eaf8f82e41df99f80c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/fixes-2026-11-02-v1.0.37.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.37.md",
+          "size": 4942,
+          "sha256": "203cbb810499696c5ae2687ddb9a786259f89233065cdd4aae5ff9c7784523e2",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.37.md"
+        },
+        {
+          "name": "INSTALL-v1.0.37.md",
+          "size": 3243,
+          "sha256": "8b4d274a52ad48144ec0ad005f85ad44e187f1ec101ff446abb90947137f631e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/INSTALL-v1.0.37.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37-SHA256.txt",
+          "size": 243,
+          "sha256": "845da213e8aee0c25848caf2687939901889bcd2b2b2ad74a8693206fa8841cc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37-source-verification.json",
+          "size": 815,
+          "sha256": "00996253a0b5b3b931e57f613044d3236119083948c42e02ebb263382392ad3f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37-source.sha256",
+          "size": 100,
+          "sha256": "8115cb61e4c44242a0915568d13800d47a2371c3ee1db2f7c45015676b3b8d76",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37-source.zip",
+          "size": 62325138,
+          "sha256": "b654bef817a245bbd637bea793026f42d2c8ee7d6046f68b9d79ba628aed1eb3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37-verification.json",
+          "size": 8797,
+          "sha256": "8c8b36359c7e75511e20a801c49c7b7bbefdd7b45d5561f9cdc9bc8bd0fdb5cc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37.apk",
+          "size": 107927246,
+          "sha256": "b79f75758312b90cf763acaf8298b7b45b00abf144a416df6b299488162180ac",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.37.apk.sha256",
+          "size": 93,
+          "sha256": "69729202c380c150d4b052b061b91a557e9d5bdbc6b1d09a24a9017d0206fc66",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/Mesting-Music-v1.0.37.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-02-v1.0.37.json",
+          "size": 7777,
+          "sha256": "a3b31afa7a3aea346cbd958df27047f5fadbc3a82b35dfbb1d5ce7efff198078",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.37/validation-2026-11-02-v1.0.37.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.39",
+      "code": 60,
+      "tag": "v1.0.39",
+      "commit": "a897db00bf4190f731591fb874e33a0f65bef4a8",
+      "tagObject": "5bd9c5e13702195e023876acdc68c6a0cb31ecaa",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.39",
+      "publishedAt": "2026-11-04T04:35:24Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.39.md",
+          "size": 2860,
+          "sha256": "c8d223eb82c447dbf8c0fc741b31f77e3cd55f8be3ca86834dcd8a88f20f6328",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.39.md"
+        },
+        {
+          "name": "INSTALL-v1.0.39.md",
+          "size": 4336,
+          "sha256": "7a7e4e9e8fccca1d811e7be89685fe205e80bab5edc93e6da1b190458d7bb075",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/INSTALL-v1.0.39.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39-SHA256.txt",
+          "size": 243,
+          "sha256": "e198a47abead06021d7ca4663f8ba5544b6cdf7ea3afe4d47ddb92a6504c32fa",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39-source-verification.json",
+          "size": 774,
+          "sha256": "c4068027e08fb15901a6fb007060791ce26ce5bce0992864e15035f94601700a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39-source.sha256",
+          "size": 100,
+          "sha256": "9fd46b71bcae56993e56aa0b805d46781b7571a4898cda87eaaf2045f7f45c64",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39-source.zip",
+          "size": 62394168,
+          "sha256": "255bf72f2a1b9928545868ad4e133aefa913013e53f9630badb90c26cbaf9168",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39-verification.json",
+          "size": 8930,
+          "sha256": "08146fbc647381b29caa174528e66313b05e6862727996158f24e2528e91ec56",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39.apk",
+          "size": 108025550,
+          "sha256": "8a4f64d7973f7b0a2712020e4f13d3adb3811696abf7ae7f71555a64f395d69c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.39.apk.sha256",
+          "size": 93,
+          "sha256": "5fdebdad1e9d226ab74bdfc15837d6e428665e3a1555210b475615e85dbd0463",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/Mesting-Music-v1.0.39.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-02-v1.0.39.json",
+          "size": 19411,
+          "sha256": "79a1f1b6bbd57c8ac5f55f98dfe7c4c3953da2aaf6a306a27a95725462a74146",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.39/validation-2026-11-02-v1.0.39.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.40",
+      "code": 61,
+      "tag": "v1.0.40",
+      "commit": "9de1877fc015f4bece3e312ca3d10481b904e6bc",
+      "tagObject": "07e4cf7ce38ea39c540076c4e7d5de3aec0a5230",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.40",
+      "publishedAt": "2026-11-04T04:35:27Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-02-v1.0.40.md",
+          "size": 5312,
+          "sha256": "e0fe15345683adb622f4f000a85778f996abdbc702b86437fc7759c433f4900e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/fixes-2026-11-02-v1.0.40.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.40.md",
+          "size": 2456,
+          "sha256": "7d43def76e2ebcf3574c84ccae52f66bec07589229f5cb80f76e321762143d70",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.40.md"
+        },
+        {
+          "name": "INSTALL-v1.0.40.md",
+          "size": 3052,
+          "sha256": "6b341e1f4398c896976d951a908d8f5a95a0994744baba05cb3f5144bca2df9a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/INSTALL-v1.0.40.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40-SHA256.txt",
+          "size": 243,
+          "sha256": "536e34165e9bd9dd5c911f94df45069397e21daf7c2620c6ebf0274663129fa1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40-source-verification.json",
+          "size": 774,
+          "sha256": "82b724659621a5ee03cf7b375724d0d6d3bbb0014929d9ff9c0b680b83c38387",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40-source.sha256",
+          "size": 100,
+          "sha256": "cda9341fdb13b8e7daf8cd2133d1e1a4048c829c6b186c0c9f877fa064848f06",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40-source.zip",
+          "size": 62458141,
+          "sha256": "225997858ea5f09f90efdf3ce8fba5bad439f0761192a8cf28a7af24e9e37fc8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40-verification.json",
+          "size": 8930,
+          "sha256": "f23c50d9598630b4d1f7f291764f1b0fb1d5a39d19741ae75ca9db8c946b75fb",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40.apk",
+          "size": 108107470,
+          "sha256": "9077d373cde638837c122dc516220ae4bdee4bb1cb5fdb77f34f7686c6dcacc1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.40.apk.sha256",
+          "size": 93,
+          "sha256": "7a991ff7ed703c901df85d2516ceb8ea045c8c6f889826566319581298ff426d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/Mesting-Music-v1.0.40.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-02-v1.0.40.json",
+          "size": 31645,
+          "sha256": "ca7a912ee6f38b72c9d4c19b76d592e54b014d31cae3ee34496fb688beda3583",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.40/validation-2026-11-02-v1.0.40.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.41",
+      "code": 62,
+      "tag": "v1.0.41",
+      "commit": "895b450856fb8842ed6542491f08e0c9366bf728",
+      "tagObject": "38b86fbaec792872a4b54c3506d517ffa02c73cf",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.41",
+      "publishedAt": "2026-11-04T04:35:30Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-02-v1.0.41.md",
+          "size": 2565,
+          "sha256": "b978540419b70fd28defd1933c3d20211fb8cc956a63c94fcaa66c8abb91df44",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/fixes-2026-11-02-v1.0.41.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.41.md",
+          "size": 1926,
+          "sha256": "544bef3d1695e0a9204ecc99ff8a298422c57ff930177496383a5ada3f6bb9db",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.41.md"
+        },
+        {
+          "name": "INSTALL-v1.0.41.md",
+          "size": 2330,
+          "sha256": "5a614e959423a8e341471133ffb1f535b3d9809c6961fe6294b2d1925140310f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/INSTALL-v1.0.41.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41-SHA256.txt",
+          "size": 243,
+          "sha256": "8479220bb46aa4e8be4753b2d71eaa192b467d4844eadd1400410af31ed87f0e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41-source-verification.json",
+          "size": 774,
+          "sha256": "37447e3a8e84e199475928af3625a1c5a9af635f857311d14cf2c88412308041",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41-source.sha256",
+          "size": 100,
+          "sha256": "df40b09160b9b32945d7b5181bc898e172b3d86367908a379f369880332dc5f8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41-source.zip",
+          "size": 62475372,
+          "sha256": "7cb98422a627c54430c33ed752b93aafcb6c22f91b96ee031058b1b664b320d7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41-verification.json",
+          "size": 8930,
+          "sha256": "fdc3326a9013fba163e67b0e118f81fe6fcb3f414e7a4c3eaf09d167e654eae5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41.apk",
+          "size": 108123854,
+          "sha256": "c75154966f0d8feea3a1d0a7905ffb27ad2f849be32f5d6b747d72b82c1c3c2c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.41.apk.sha256",
+          "size": 93,
+          "sha256": "6230cdfc7cdd3ce1897418614c7368ff0a0345232dc466a1373509f28f9aedbf",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/Mesting-Music-v1.0.41.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-02-v1.0.41.json",
+          "size": 22410,
+          "sha256": "1393a051329601a1131cb0636d2af2b0719e8655d2b4d6954328e64746602757",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.41/validation-2026-11-02-v1.0.41.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.42",
+      "code": 63,
+      "tag": "v1.0.42",
+      "commit": "8023bb54cc4112cd0918939b2a2a8106417a9197",
+      "tagObject": "cf5a2b22f50577187079f0ce700e4dce629f6200",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.42",
+      "publishedAt": "2026-11-04T04:35:33Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-02-v1.0.42.md",
+          "size": 3586,
+          "sha256": "9db4073806462df9e028cd60665ed211989a8bc3b8f323a399d285c6be3cc0cd",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/fixes-2026-11-02-v1.0.42.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.42.md",
+          "size": 1972,
+          "sha256": "42ddbbbb7986ba1e4dd5285068397f8650c23482cd9dbf2757bbffbba6bbcb5b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/HANDOFF-CURRENT-SESSION-2026-11-02-v1.0.42.md"
+        },
+        {
+          "name": "INSTALL-v1.0.42.md",
+          "size": 2106,
+          "sha256": "cf41330c4eeba44907d5cd02d48509140a905cf02fb56d4310ebc8453efbfc7d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/INSTALL-v1.0.42.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42-SHA256.txt",
+          "size": 243,
+          "sha256": "cb56b6c63ae86dd3e600b40cb6ef63b33c053d3a0a8e9d67a75fe798cec0ce95",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42-source-verification.json",
+          "size": 774,
+          "sha256": "4132cfd201de6f4c1e443b48babf86b344772e4400ef6ada9d4e8fc4f88b03e1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42-source.sha256",
+          "size": 100,
+          "sha256": "71a67a4f8bce4ab144c5e53035f00f20decfef375743b637ddfe7287fab28eee",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42-source.zip",
+          "size": 62499634,
+          "sha256": "03ed093ee3687e7eee4ac3bc8016ba10f97eebcc304f4fefd29eb7a506ee1ece",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42-verification.json",
+          "size": 8930,
+          "sha256": "021d6e85dfa3966a7f52ec8fec31b21a964c1bc39b09f9625f6c4e719fe1e89d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42.apk",
+          "size": 108189390,
+          "sha256": "d9ff90d479189b5893f3def3b19278c5735d9b130f102e66965b890387495361",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.42.apk.sha256",
+          "size": 93,
+          "sha256": "cff46eae614077f6463603e97a5a2c323e161129a1812ca3385c84fdd72f0516",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/Mesting-Music-v1.0.42.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-02-v1.0.42.json",
+          "size": 23337,
+          "sha256": "ee2b5856dea36800be425bb29ac1d0896a8b54666526e7f9a97b2c007d7b6483",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.42/validation-2026-11-02-v1.0.42.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.43",
+      "code": 64,
+      "tag": "v1.0.43",
+      "commit": "13442faead3afe2894bde42fce8a9aa6a9ce317e",
+      "tagObject": "68c963c39c7c3da8ebb7f5197890176068dc9f06",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.43",
+      "publishedAt": "2026-11-04T04:35:36Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-03-v1.0.43.md",
+          "size": 5151,
+          "sha256": "2934236f9a951ca335c4da41284ad25126d829f3a041753343888c2b6f2071cc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/fixes-2026-11-03-v1.0.43.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.43.md",
+          "size": 1891,
+          "sha256": "39a7149701efc4406f3dc940cec272ea79511be365c51807898e6db03d0c0787",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.43.md"
+        },
+        {
+          "name": "INSTALL-v1.0.43.md",
+          "size": 2398,
+          "sha256": "07fa4b4e93776615b03fa67510e73adca136fde2aced04e1e71c4a4d2e19c049",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/INSTALL-v1.0.43.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43-SHA256.txt",
+          "size": 243,
+          "sha256": "aeafab85856ce2edbc720b3f625ddd3956694046036f45a3ae12e1f6c8f00ddf",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43-source-verification.json",
+          "size": 774,
+          "sha256": "683350f498b93989ef68435aeda75250ae78d37f578fc7e0f01e3d2b0bc05ab7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43-source.sha256",
+          "size": 100,
+          "sha256": "238016a9e9ca9676b2652d6e7a036960bf01142602282e7ea44ee142cbeb5b14",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43-source.zip",
+          "size": 62529774,
+          "sha256": "95267e9c46f39c3f47cdb5194bc2a86c17ccc214e584342786aa02bef2b02403",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43-verification.json",
+          "size": 9272,
+          "sha256": "12629571a4300f43da82fd6520a0a5aed11beda0af252558d4fec5bc7d520100",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43.apk",
+          "size": 108205774,
+          "sha256": "061240572224ad4bcd42a22a9be525837dadedb58e8d3dc0f660c19fd38033f3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.43.apk.sha256",
+          "size": 93,
+          "sha256": "2ae86de5378d62c11a302138bbab2e9b67a0df6e34cda47f91d253e19fa47f0c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/Mesting-Music-v1.0.43.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-03-v1.0.43.json",
+          "size": 23907,
+          "sha256": "16c6b2dea640af03db3f45d6241904c01ef21d2ff727a6d1d0ba939fd24e4288",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.43/validation-2026-11-03-v1.0.43.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.44",
+      "code": 65,
+      "tag": "v1.0.44",
+      "commit": "314414521423e4ea69332df0ac04bb3324fe1edb",
+      "tagObject": "d434f1f9f338173710cf61e1f4ef31aed62edd80",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.44",
+      "publishedAt": "2026-11-04T04:35:39Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-03-v1.0.44.md",
+          "size": 3754,
+          "sha256": "ece189221f126ce4142f17a6723d7ef36fc142becb2ec8dbb57f6101556c5fa2",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/fixes-2026-11-03-v1.0.44.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.44.md",
+          "size": 1506,
+          "sha256": "567a3ecb245f6bc926bb6a189141f547373528d69647aba73fc22ff04d50582a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.44.md"
+        },
+        {
+          "name": "INSTALL-v1.0.44.md",
+          "size": 2030,
+          "sha256": "ab56c6fee17631b3ec048dea81980d78c41ff07d6e50b12c28673e15d952a83b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/INSTALL-v1.0.44.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44-SHA256.txt",
+          "size": 243,
+          "sha256": "9a4f4ddb623bd7c4698365df6239e96bc49f99db3a40db55ce68f2217f9b8165",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44-source-verification.json",
+          "size": 774,
+          "sha256": "0e9ec857ef79bb46a5d32d834dfaba85be636208cf2573bec2fd4849e1b84430",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44-source.sha256",
+          "size": 100,
+          "sha256": "17a983fc74c4fefd8fd99ee7a77f01ab7c21306ec134c73de940813f6c38e62b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44-source.zip",
+          "size": 62586850,
+          "sha256": "9ca481e8d99324dbc16666ac37edf1f71462dac9c0c5d7ad8b84cfc76ab7b9c3",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44-verification.json",
+          "size": 9331,
+          "sha256": "83f5d811c10833a92455d937c9f7f0dc024019218a11ffddb00c28a9e1c0701b",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44.apk",
+          "size": 108320462,
+          "sha256": "cc3406fbd9b086535c75dad9e3364ddcbc44a4c05fb6ef445ed70e62d401bf2c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.44.apk.sha256",
+          "size": 93,
+          "sha256": "5a7092c77616beba7a1e62fdbeb6f603f87291d892c29cf93be9751824d361ce",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/Mesting-Music-v1.0.44.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-03-v1.0.44.json",
+          "size": 3289,
+          "sha256": "9c9546e85892375c143c4920a9fd660f5c2af66352191c6509959585ac3028ed",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.44/validation-2026-11-03-v1.0.44.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.45",
+      "code": 66,
+      "tag": "v1.0.45",
+      "commit": "205fc2b87242e87a6b1a983eef863c64bb7c36b2",
+      "tagObject": "c3e52e6635e33d7a2008742e59210d83cc1eb37d",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.45",
+      "publishedAt": "2026-11-04T04:35:41Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-03-v1.0.45.md",
+          "size": 2026,
+          "sha256": "ba91d197e68ef9590d6f0bf3c2e8c044289fd9d02f2a20b038920a72c7f03cea",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/fixes-2026-11-03-v1.0.45.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.45.md",
+          "size": 3226,
+          "sha256": "c526074770b1cf1007964ad73862fc1372abb2c1ccf72fc0e8f53753dca5d7e8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.45.md"
+        },
+        {
+          "name": "INSTALL-v1.0.45.md",
+          "size": 2152,
+          "sha256": "e635be9625b2015f764b01e671cb985ada76bbc51337bf031c5a904739187a32",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/INSTALL-v1.0.45.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45-SHA256.txt",
+          "size": 243,
+          "sha256": "245274868b88887dd621f4188f869537ac0739999decd279a13cbe7b25a041d8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45-source-verification.json",
+          "size": 774,
+          "sha256": "b28a1329536d57683d1c2e8bf1f0fe727cce84b6acd787809bbdefe6f6be0672",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45-source.sha256",
+          "size": 100,
+          "sha256": "e940febb9dce1fa9c52ad4dcf32e9ab12b7bc11fb9091ee2b4287f96e5ea4841",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45-source.zip",
+          "size": 62717044,
+          "sha256": "8a82d8e458dbb7e32b772c309e466f8bf7bc7cf9657b9ec60fa877544fea7484",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45-verification.json",
+          "size": 9511,
+          "sha256": "d674d91195f90586517f5b3e9fe7eb432d49c58534c8e6c5984a8831a099863d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45.apk",
+          "size": 108734214,
+          "sha256": "ae0762c75212b0058d960fd957687a37c9954404565f5a890a0f3e95ca4ee8df",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.45.apk.sha256",
+          "size": 93,
+          "sha256": "167eb133fe1c4287dfaff5128fb842db6c8f92df26dfb9d8e172393a9701c696",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/Mesting-Music-v1.0.45.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-03-v1.0.45.json",
+          "size": 2869,
+          "sha256": "98857cbf485ef0cf264bf3244b05523c7034acbd5179341838f46452a73ae97c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.45/validation-2026-11-03-v1.0.45.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.46",
+      "code": 67,
+      "tag": "v1.0.46",
+      "commit": "e007d3d08f3b6e83ed604148753625be48812a82",
+      "tagObject": "32937573cb476b72d4295d35f3e51ccdf806e6fb",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.46",
+      "publishedAt": "2026-11-04T04:35:44Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-03-v1.0.46.md",
+          "size": 4272,
+          "sha256": "24c0a11a0d60e12b3b2392e4f61f165469ba93478e1bd320477c52f0e0ff99a0",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/fixes-2026-11-03-v1.0.46.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.46.md",
+          "size": 4155,
+          "sha256": "98f2207f093b444825901e21cfd17140ab44347ab1eb6831961457338fd312a8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.46.md"
+        },
+        {
+          "name": "INSTALL-v1.0.46.md",
+          "size": 1657,
+          "sha256": "36c718f6a7fa894c3f29a480a27ed10f7795b178f865474cade64ed0e35cef7a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/INSTALL-v1.0.46.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46-SHA256.txt",
+          "size": 193,
+          "sha256": "ad63885d67219290c25038b3cb312fc6d47b72eaa348afbd7b55fbd46b696db1",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46-source-verification.json",
+          "size": 774,
+          "sha256": "6b3df3415b15246de169f02da41b7e11f27cf2259eb6a9b86d60821614be137d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46-source.sha256",
+          "size": 100,
+          "sha256": "38016411c137f1e007c17837941c89060c874be3e29d8d83ba6dda81247d00bd",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46-source.zip",
+          "size": 62752405,
+          "sha256": "689affdd93fea62385adf6f010e79a2774170af30309fd284abe848b0ec7c791",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46-verification.json",
+          "size": 9489,
+          "sha256": "c302fd1dce8ac3086f18cff4a23be301ce36aa1abd77be8060dfdcd31b794da9",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46.apk",
+          "size": 108848902,
+          "sha256": "01fc1d9375b88fb6e092b8d8d81792f853a880cd9157e232b6da0abab3f7594d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.46.apk.sha256",
+          "size": 93,
+          "sha256": "4b59334cebb19657a2ecadcf833b1fd871288b2a830a08eab53a0f05ae1529d4",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/Mesting-Music-v1.0.46.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-03-v1.0.46.json",
+          "size": 37618,
+          "sha256": "c781aa679126c3bec70d1cc2cd14930ee9636093e9388593874112da5aafc277",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.46/validation-2026-11-03-v1.0.46.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.47",
+      "code": 68,
+      "tag": "v1.0.47",
+      "commit": "3aafa5d610917a90afe2c77670dcfbfd9280ea23",
+      "tagObject": "2fe2ec0cfddbf8d343980725258ba0ab24659f6d",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.47",
+      "publishedAt": "2026-11-04T04:35:46Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-03-v1.0.47.md",
+          "size": 3336,
+          "sha256": "74e58f6451109aef6adc6e5a5d03b217aaefaf301ee407329fdbb3751051a160",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/fixes-2026-11-03-v1.0.47.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.47.md",
+          "size": 3980,
+          "sha256": "e090442a4c33316056be170b087e205dd6c7fea94b82bb79d8fcf253c2b75f04",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/HANDOFF-CURRENT-SESSION-2026-11-03-v1.0.47.md"
+        },
+        {
+          "name": "INSTALL-v1.0.47.md",
+          "size": 2504,
+          "sha256": "30e17861609834809b3b63f89a264ef3832619297134eb048a35a5b0aa22bb6c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/INSTALL-v1.0.47.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47-SHA256.txt",
+          "size": 193,
+          "sha256": "fdc2b88d195b01c74e77564ebd6548592b4b7e0e508b5a9fff695c799040d832",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47-source-verification.json",
+          "size": 774,
+          "sha256": "9705843edcbc52394892faab00e16a870dd1feac2fad4694552c5e511d028afe",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47-source.sha256",
+          "size": 100,
+          "sha256": "2b71ba1e283666397abdfefe4d23e001b25716c545acb3d183f957266cc479f7",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47-source.zip",
+          "size": 62827949,
+          "sha256": "2e8a018fecfa735ef7d7a15f6d12aefba87d8e33529a92e5813b05d6c8754c7c",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47-verification.json",
+          "size": 9489,
+          "sha256": "16373fbae095231db28cf00b866078572002a5d74badf9e1581a323bfb4d4f13",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47.apk",
+          "size": 109274886,
+          "sha256": "94e7f62f756105cea2db9358f7f94901df8d3f8d2c982839d5c807267e483761",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.47.apk.sha256",
+          "size": 93,
+          "sha256": "e9cce6086ba48ce681fd7114a8e61b01bd0ccb2b5eab2e7a6581e8dcd44e6ff6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/Mesting-Music-v1.0.47.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-03-v1.0.47.json",
+          "size": 42394,
+          "sha256": "750b7779f2418891b42698a89afa299a3fd158f9d15f4e316400f7a8b448d83e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.47/validation-2026-11-03-v1.0.47.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.48",
+      "code": 69,
+      "tag": "v1.0.48",
+      "commit": "59fb154fc9586febd5b18182fa5697acd6324363",
+      "tagObject": "19d15fe12359289e1ae39dd1329dad516124981f",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.48",
+      "publishedAt": "2026-11-04T04:35:49Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-04-v1.0.48.md",
+          "size": 4871,
+          "sha256": "490f14e9f47fb490bef2f265e011856961c36d52e608f0be13c6f25f1c3536c2",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/fixes-2026-11-04-v1.0.48.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-04-v1.0.48.md",
+          "size": 2055,
+          "sha256": "8bdb463a83de65f1336de51f596f85e8f315c4b1f25358bf211282a091ed75b8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/HANDOFF-CURRENT-SESSION-2026-11-04-v1.0.48.md"
+        },
+        {
+          "name": "INSTALL-v1.0.48.md",
+          "size": 1993,
+          "sha256": "f0c0597a9eafacb6348b9fd7639b947fb9d3663edf51f3ce220c10d00d68a846",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/INSTALL-v1.0.48.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48-SHA256.txt",
+          "size": 201,
+          "sha256": "f6e24310276d1b4ba47d3274246059dadaf29452919fb9352452b0f948743753",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48-source-verification.json",
+          "size": 774,
+          "sha256": "eae9a50318c8a4533760f972d0a1fa38119819b7997c0ebf5fcef6604217abdf",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48-source.sha256",
+          "size": 100,
+          "sha256": "d0fa850227cc050eab72c43d61861b80918a2c8696eef1c8d7b803d390078cdc",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48-source.zip",
+          "size": 62877696,
+          "sha256": "10e8fd6748ab459d47749f044c50e80987a86f164bc105e1a6ebc9f913c8f5b5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48-verification.json",
+          "size": 9489,
+          "sha256": "3a1276cbe9419fbf7c1881c99b3d8d144cfd8c3c3d4af4d9a3bd008f8cd7e9d6",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48.apk",
+          "size": 109389574,
+          "sha256": "16b66c5917db27b612e3f2703c96de31fa0809164dd02b8e0c589e5a9d064310",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.48.apk.sha256",
+          "size": 93,
+          "sha256": "3ec44e69856fdd59e1f877b9ad43cd6ef7b10d511fa4e5515ac659b45266e3a5",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/Mesting-Music-v1.0.48.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-04-v1.0.48.json",
+          "size": 1953,
+          "sha256": "234fbd29b16b9baf98b6ef5ce9a97edb8628d82bc2120e58f34cfbc10480e16f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.48/validation-2026-11-04-v1.0.48.json"
+        }
+      ]
+    },
+    {
+      "version": "1.0.49",
+      "code": 70,
+      "tag": "v1.0.49",
+      "commit": "3fec176c233d6fa885332b86a0e95cfc8d58ccca",
+      "tagObject": "d21afb23092f72bc5abade74231f002223e6e216",
+      "url": "https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.49",
+      "publishedAt": "2026-11-04T04:35:52Z",
+      "prerelease": false,
+      "assets": [
+        {
+          "name": "fixes-2026-11-04-v1.0.49.md",
+          "size": 4636,
+          "sha256": "52943ea1b42677017bc325a8f58c56122223f767641a143086ee69dce316dcd8",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/fixes-2026-11-04-v1.0.49.md"
+        },
+        {
+          "name": "HANDOFF-CURRENT-SESSION-2026-11-04-v1.0.49.md",
+          "size": 1412,
+          "sha256": "6e06699fad00b032a991e1f53675d44cda6581b261642a20c8c53f7a9b56dd0a",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/HANDOFF-CURRENT-SESSION-2026-11-04-v1.0.49.md"
+        },
+        {
+          "name": "INSTALL-v1.0.49.md",
+          "size": 1988,
+          "sha256": "cdca437e6c294d118aea3659d399683e68e3f516e3e7524cd716cfab744cf575",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/INSTALL-v1.0.49.md"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49-SHA256.txt",
+          "size": 201,
+          "sha256": "4ecd9515e2b377d4b3691f7f8bcc635791510fce2ae8dbee6d42bdbd64594897",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49-SHA256.txt"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49-source-verification.json",
+          "size": 774,
+          "sha256": "53a4699f8ec24cd34b377783f87bbae1e1b5116e35a95a32ec32d7c588a859b2",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49-source-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49-source.sha256",
+          "size": 100,
+          "sha256": "d5e1e1ff0ddc4275918fcfee3ce3a9d8e465c670b0c6004d4097d60cea5ef637",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49-source.sha256"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49-source.zip",
+          "size": 62914874,
+          "sha256": "f64220a6ab820bfa077a2edfc79958d2d2149fc2c81359d2654d235c52b3665e",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49-source.zip"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49-verification.json",
+          "size": 9489,
+          "sha256": "74062e76c7daad042d729f76138402ba4b316040ecaf741223f5adaef4c05148",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49-verification.json"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49.apk",
+          "size": 109487878,
+          "sha256": "b1564178e47af0d5595612461b673312a07ae379b85f22c87dc2ebf87666da6f",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49.apk"
+        },
+        {
+          "name": "Mesting-Music-v1.0.49.apk.sha256",
+          "size": 93,
+          "sha256": "91104e1c2d20f724fcc9b7145d5e39e5ea724c3ebb08af9ba6dcd8cf26c3d786",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/Mesting-Music-v1.0.49.apk.sha256"
+        },
+        {
+          "name": "validation-2026-11-04-v1.0.49.json",
+          "size": 28606,
+          "sha256": "1822c594de0586918e4ea4957d9216b1baadbbdfa844ed7e2c521abe7308ae5d",
+          "url": "https://github.com/Mesting42/mesting-music-flutter/releases/download/v1.0.49/validation-2026-11-04-v1.0.49.json"
+        }
+      ]
+    }
+  ],
+  "versionCount": 24,
+  "assetCount": 263,
+  "allRemoteAssetSizesAndSha256Verified": true,
+  "sourceEntriesVerifiedInFreshClone": 50809,
+  "freshClone": [
+    {
+      "tag": "v1.0.25",
+      "commit": "c6535c10b9c093d20bdb90cf8a2b40bcd1af19c1",
+      "frozenZipEntriesVerified": 1930,
+      "auditSha256": "58fbbdd8f98f7fb7dd9dd40c454dd454cb03270dec2a96129d5542f800af7274"
+    },
+    {
+      "tag": "v1.0.26",
+      "commit": "cddb9a4490e58d0d7faa5ad2681ee00b4633946f",
+      "frozenZipEntriesVerified": 1945,
+      "auditSha256": "34f9f93d4faa5a63840a8e51df01a10fec01b95b139172efee700c5be7ba4886"
+    },
+    {
+      "tag": "v1.0.27",
+      "commit": "b6beb89f9f8e41642a34c4f1f7ed5f69ccc43aae",
+      "frozenZipEntriesVerified": 1958,
+      "auditSha256": "3a356440946548aa52d00a0624d9b59c67546d4d0617d2ee68baac71b46daa46"
+    },
+    {
+      "tag": "v1.0.28",
+      "commit": "62b9cc6374dd9930f2d3a25382c7eaa03cef7e6d",
+      "frozenZipEntriesVerified": 1972,
+      "auditSha256": "cc1e84e3e3ddcb720876b72f8340ca001ebd41baf70fc491cd367003556de48d"
+    },
+    {
+      "tag": "v1.0.29",
+      "commit": "f728b6a9e56756e619a48114201a260805bfceea",
+      "frozenZipEntriesVerified": 1991,
+      "auditSha256": "eac11efe08f2cee91102a1e3762289c168db4ae08c81031646182ac5656b11a8"
+    },
+    {
+      "tag": "v1.0.30",
+      "commit": "67ba584684fcb09a936254904f170110b1ca0adb",
+      "frozenZipEntriesVerified": 2003,
+      "auditSha256": "4148d2029f2f33839aee8a4bf2d8c5591211b3abb2a710409f5c220292dd5b12"
+    },
+    {
+      "tag": "v1.0.31",
+      "commit": "48b58877d0907241a28acca33fef63f74701dbb8",
+      "frozenZipEntriesVerified": 2020,
+      "auditSha256": "0314889e04ad03725bbec589430c7c73108a91d61e2b4031a62b9f0ac36cf1d2"
+    },
+    {
+      "tag": "v1.0.32",
+      "commit": "2a4c549556a7598b57a5e4884459c972054e3b29",
+      "frozenZipEntriesVerified": 2035,
+      "auditSha256": "2de253ffa896e5d78454b6157eada706c2a5de03ff2100fd124ed5e33664512e"
+    },
+    {
+      "tag": "v1.0.33",
+      "commit": "0887015cfd4418163ea36e938f7f7c087a294c26",
+      "frozenZipEntriesVerified": 2051,
+      "auditSha256": "7f39596979f8aebdc40b5deb9c8a8ebb01444b32f116b17d475534e8bfa78012"
+    },
+    {
+      "tag": "v1.0.34",
+      "commit": "d2d0baf3d336cd06a3ee4c23741c099b657b18ed",
+      "frozenZipEntriesVerified": 2063,
+      "auditSha256": "357cfb5975054c9204d63b6910718aa462bd62efc6d9c1028365883eebf3435e"
+    },
+    {
+      "tag": "v1.0.35",
+      "commit": "13d8e3ffaafc946ceddab4c221115d8e5c166873",
+      "frozenZipEntriesVerified": 2078,
+      "auditSha256": "7343943235ef19441ca207c6d42607adba8f3a74d6f69d955f6fbdc778afda1b"
+    },
+    {
+      "tag": "v1.0.36",
+      "commit": "c0e3a70c976e9f3fa04b31274df1dad26301f803",
+      "frozenZipEntriesVerified": 2092,
+      "auditSha256": "ac3ae99f10caea60f50106f42ed5f9e959d27dbf4dcbc9c3232382dc94ec003b"
+    },
+    {
+      "tag": "v1.0.37",
+      "commit": "e826b917b2f8850c09a1f1dc60f3cce61ebb7100",
+      "frozenZipEntriesVerified": 2109,
+      "auditSha256": "fa0a8d781af162365c29e0db4cf89971d14d3d9f42cd8e46c94807a9c0646abc"
+    },
+    {
+      "tag": "v1.0.39",
+      "commit": "a897db00bf4190f731591fb874e33a0f65bef4a8",
+      "frozenZipEntriesVerified": 2136,
+      "auditSha256": "09ce11f29139f5f1bfe7e4f35f978b1dd62c940d1b55dedee0aad6dbc018e8b9"
+    },
+    {
+      "tag": "v1.0.40",
+      "commit": "9de1877fc015f4bece3e312ca3d10481b904e6bc",
+      "frozenZipEntriesVerified": 2155,
+      "auditSha256": "f2bf240c9b2e69f4de73d0e538b572ac051875a2018dbc3578abab49092388ef"
+    },
+    {
+      "tag": "v1.0.41",
+      "commit": "895b450856fb8842ed6542491f08e0c9366bf728",
+      "frozenZipEntriesVerified": 2165,
+      "auditSha256": "89e7e09d2fc3dead282065072b19cab178c8cf30fa107bdd962c06011fd4d501"
+    },
+    {
+      "tag": "v1.0.42",
+      "commit": "8023bb54cc4112cd0918939b2a2a8106417a9197",
+      "frozenZipEntriesVerified": 2178,
+      "auditSha256": "c96ac7dc1d2878c31c0019e6f20cbb4a87cd8c70613d66e23f0457c123a7cd6c"
+    },
+    {
+      "tag": "v1.0.43",
+      "commit": "13442faead3afe2894bde42fce8a9aa6a9ce317e",
+      "frozenZipEntriesVerified": 2193,
+      "auditSha256": "6c89d91f711e3a7ca72c21c638e7a145d4478a352a070b19045c649ef779de70"
+    },
+    {
+      "tag": "v1.0.44",
+      "commit": "314414521423e4ea69332df0ac04bb3324fe1edb",
+      "frozenZipEntriesVerified": 2216,
+      "auditSha256": "0bd6d2d2ff12bf5c571f22cbba06273f9f3974b6f898bd53496a2f759aa2eb28"
+    },
+    {
+      "tag": "v1.0.45",
+      "commit": "205fc2b87242e87a6b1a983eef863c64bb7c36b2",
+      "frozenZipEntriesVerified": 2265,
+      "auditSha256": "f8cc94e161cebaa4267f2d7584bb092ea536e4cc655a1c382002477ecbe911b2"
+    },
+    {
+      "tag": "v1.0.46",
+      "commit": "e007d3d08f3b6e83ed604148753625be48812a82",
+      "frozenZipEntriesVerified": 2280,
+      "auditSha256": "2c4abfb1b04220292dce9a7fc5cca0528437b5a805930710e0a20dd486b62a53"
+    },
+    {
+      "tag": "v1.0.47",
+      "commit": "3aafa5d610917a90afe2c77670dcfbfd9280ea23",
+      "frozenZipEntriesVerified": 2307,
+      "auditSha256": "5f8af75c1f7c0cc1a5b1f255f38b91c97ec02fe093d8b6cd0b37234e9a68a081"
+    },
+    {
+      "tag": "v1.0.48",
+      "commit": "59fb154fc9586febd5b18182fa5697acd6324363",
+      "frozenZipEntriesVerified": 2326,
+      "auditSha256": "fa2b825d8a51a99cb8d3de96deabc4711a9d64c75aa64716dbe4518098c74a97"
+    },
+    {
+      "tag": "v1.0.49",
+      "commit": "3fec176c233d6fa885332b86a0e95cfc8d58ccca",
+      "frozenZipEntriesVerified": 2341,
+      "auditSha256": "7b10591816918a87e640d94f9e78a892248c130ee5b4fc1e66f521373f9f011b"
+    }
+  ],
+  "betaTip": "8e77db9bbd57bafa53f7a6a791b82208767cb77b",
+  "mainTip": "9f011b1d3d2ec2f83d99681f856404aa79400123",
+  "mainProductFilesUnchanged": true,
+  "mainDocumentationPaths": [
+    "README.md",
+    "docs/apk-downloads.md",
+    "docs/versions.md"
+  ],
+  "readmeAndCatalogReadback": {
+    "beta": {
+      "readmeBlob": "2df3207ddb288528ce6210a3a0d78d7d5fa58c03",
+      "catalogBlob": "41a8008d857c143b787465b4d2666f23769a2d96"
+    },
+    "main": {
+      "readmeBlob": "993315805326bf6360c9e91e384171c0633e7385",
+      "catalogBlob": "41a8008d857c143b787465b4d2666f23769a2d96"
+    }
+  },
+  "installationChannelCatalog": {
+    "stableApkRows": 32,
+    "betaFormalRows": 48,
+    "betaExperimentalRows": 21,
+    "sort": "numeric descending within each installation-channel series"
+  },
+  "latest": "v1.0.49",
+  "allNewReleasesPublishedNonPrerelease": true,
+  "olderReleasesAndAssetsUnchanged": true,
+  "existingRemoteTagsUnchanged": true,
+  "privateCandidatesExcluded": true,
+  "sourceAndApkRebuilt": false,
+  "phoneAccess": false,
+  "realMusicAccountAccess": false,
+  "musicBackendPublication": false,
+  "preservation": {
+    "primaryBranch": "beta",
+    "primaryIndexPreserved": true,
+    "existingFilesBytePreserved": 2343,
+    "frozenArtifactsBytePreserved": 90,
+    "signingAndLockPreserved": true
+  },
+  "verifiedBeforeFinalEvidenceCommit": true
+}
