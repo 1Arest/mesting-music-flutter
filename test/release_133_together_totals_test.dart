@@ -58,7 +58,7 @@ void main() {
               };
             } else if (path.endsWith('/relation/statistics/get/v2')) {
               requests++;
-              expect(eapiBody(request)['roomUserIds'], '[$peer]');
+              expect(eapiBody(request)['roomUserIds'], '[$peer,7]');
               if (pending != null) return pending!.future;
               if (failStatistics) {
                 throw http.ClientException('synthetic offline');
@@ -137,8 +137,11 @@ void main() {
       failStatistics = false;
       statistics = {'totalConnectionTime': 0, 'currentConnectionTime': 0};
       await controller.restore();
-      expect(controller.togetherDurationIsStale, isFalse);
-      expect(controller.togetherDuration!.inSeconds, 0);
+      expect(controller.togetherDurationIsStale, isTrue);
+      expect(
+        controller.togetherDuration!.inSeconds,
+        inInclusiveRange(90060, 90061),
+      );
     },
   );
   test(

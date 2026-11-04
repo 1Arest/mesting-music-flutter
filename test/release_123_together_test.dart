@@ -81,7 +81,7 @@ void main() {
             } else if (path.endsWith('/distance/get')) {
               data = {'distance': 12.34, 'unopenedUserIds': []};
             } else if (path.endsWith('/relation/statistics/get/v2')) {
-              expect(eapiBody(request)['roomUserIds'], '[8]');
+              expect(eapiBody(request)['roomUserIds'], '[8,7]');
               data = {
                 'totalConnectionTime': 7260,
                 'currentConnectionTime': 120,

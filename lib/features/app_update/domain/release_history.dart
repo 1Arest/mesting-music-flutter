@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.34': [
+    '修正网易云一起听累计查询缺少当前账号的问题，按双方账号读取每位好友的官方累计时长。',
+    '恢复应用或重新进入房间时重新获取官方累计，替换旧快照，避免将本次时长重复相加。',
+    '同一房间的临时零值不再覆盖已有累计；未获取或同步失败时保留明确提示，切换好友或房间时隔离数据。',
+  ],
   '1.0.33': [
     '修复更新说明历史列表末项被底部播放器遮挡的问题，并补齐其他页面随字号和系统安全区变化的底部避让。',
     '地区选择不再显示纯数字选项，正确识别已选地区；未选择时按中国地区列表顺序从北京市开始。',

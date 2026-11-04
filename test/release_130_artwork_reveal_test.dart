@@ -173,11 +173,14 @@ Widget app(Widget child) => MaterialApp(
 );
 
 Future<void> waitFor(WidgetTester tester, bool Function() condition) async {
-  for (var n = 0; n < 100 && !condition(); n++) {
+  // Native file codecs and scheduled widget frames use different clocks.
+  // Give both bounded progress, keeping the virtual interval below the first
+  // automatic retry (650ms) so retry/error assertions retain their meaning.
+  for (var n = 0; n < 300 && !condition(); n++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1));
   }
   expect(condition(), isTrue);
 }
