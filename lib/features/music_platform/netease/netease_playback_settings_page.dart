@@ -12,7 +12,7 @@ import 'netease_listening_reporter.dart';
 import 'netease_source_settings_panel.dart';
 import 'netease_account_source_info.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
-import 'netease_footprint.dart';
+import 'footprint/official_footprint_page.dart';
 import 'diagnostics/netease_listening_audit_page.dart';
 
 class NeteasePlaybackSettingsPage extends ConsumerStatefulWidget {
@@ -24,9 +24,6 @@ class NeteasePlaybackSettingsPage extends ConsumerStatefulWidget {
 
 class _PlaybackSettingsState
     extends ConsumerState<NeteasePlaybackSettingsPage> {
-  // Visiting source settings does not implicitly query account listening data.
-  // A deliberate refresh enables this route-bound, separately labelled read.
-  bool _loadFootprint = false;
   @override
   Widget build(BuildContext context) {
     if (!ref.watch(usesNeteaseProvider)) {
@@ -61,9 +58,6 @@ class _PlaybackSettingsState
                   r.state == ListeningSyncState.open),
         )
         .fold<int>(0, (sum, r) => sum + (r.number('heardMs') ~/ 1000));
-    final footprint = _loadFootprint
-        ? ref.watch(neteaseFootprintProvider)
-        : const AsyncData<NeteaseFootprint?>(null);
     return PlatformPageFrame(
       title: '网易云播放与同步',
       child: ListView(
@@ -114,24 +108,14 @@ class _PlaybackSettingsState
             ),
           ),
           ListTile(
+            key: const ValueKey('netease-official-footprint'),
             title: const Text('云村听歌足迹'),
-            subtitle: Text(
-              footprint.when(
-                data: (value) => value == null
-                    ? _loadFootprint
-                          ? '官方足迹时长暂未获取'
-                          : '点击刷新读取官方足迹'
-                    : '${value.month} · 官方返回 ${value.label}',
-                loading: () => '正在读取官方足迹',
-                error: (_, _) => '官方足迹暂时无法读取，请重试',
+            subtitle: const Text('官方今日、当前月及历史总时长 · 历史月报核对'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const OfficialFootprintPage(),
               ),
-            ),
-            trailing: BetaGlassButton(
-              onPressed: () {
-                setState(() => _loadFootprint = true);
-                ref.invalidate(neteaseFootprintProvider);
-              },
-              child: const Text('刷新'),
             ),
           ),
           Padding(
@@ -147,10 +131,6 @@ class _PlaybackSettingsState
                     await ref
                         .read(neteaseListeningReporterProvider)
                         ?.recoverPending();
-                    if (context.mounted) {
-                      setState(() => _loadFootprint = true);
-                      ref.invalidate(neteaseFootprintProvider);
-                    }
                   },
             child: const Text('同步确定未发送的记录'),
           ),

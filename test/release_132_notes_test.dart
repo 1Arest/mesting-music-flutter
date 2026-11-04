@@ -276,6 +276,13 @@ void main() {
       expect(find.byType(MusicReleaseHistoryPage), findsOneWidget);
       expect(find.text(notesForMusicVersion('1.0.32').first), findsOneWidget);
       await capture132UI(tester, 'release-history-current');
+      // The fixture's installed version moves down as new releases are added.
+      // Position its header clear of the floating player before collapsing it.
+      await Scrollable.ensureVisible(
+        tester.element(find.text('v1.0.32')),
+        alignment: 0.25,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('v1.0.32'));
       await tester.pumpAndSettle();
       for (final version in ['1.0.31', '1.0.30']) {

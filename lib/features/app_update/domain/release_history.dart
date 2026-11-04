@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.37': [
+    '云村听歌足迹分别读取官方今日、当前月及历史总时长，显示成功读取时间，刷新失败保留旧值。',
+    '增加历史月报与本机真实收听、逐次记录核对；处理跨日与账号切换，避免旧日期或旧账号数据混入。',
+    '明确区分本机统计、接口回执与官方入库；保留真实未发送记录恢复，不重复补发已接收或结果未知的历史记录。',
+  ],
   '1.0.36': [
     '网易云播放与同步新增按月听歌上报诊断，分别展示本机时长、逐次记录和发送状态。',
     '历史字段检查标出缺少真实秒数、原始开始时间和旧版标记的记录，区分最近播放确认与足迹累计。',
