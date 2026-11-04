@@ -22,6 +22,7 @@ import 'package:mesting_music/features/music_platform/netease/together/together_
 import 'package:mesting_music/features/music_platform/netease/together/together_records_page.dart';
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
+import 'release_141_type51_message_test.dart' show type51Fixture;
 
 // Fixtures follow observed official JS field contracts, never a captured
 // account. The legacy card uses the shipped CommonMessage.fromJson schema.
@@ -188,9 +189,11 @@ void main() {
           .renderObject<RenderRepaintBoundary>(find.byKey(_captureKey))
           .toImage(pixelRatio: 2);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final target = File(
-        '.codex-artifacts/2026-11-02-v140-fixes/ui/$name.png',
+      const captureDir = String.fromEnvironment(
+        'RECORDS_CAPTURE_DIR',
+        defaultValue: '.codex-artifacts/2026-11-02-v140-fixes/ui',
       );
+      final target = File('$captureDir/$name.png');
       await target.parent.create(recursive: true);
       await target.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
@@ -240,24 +243,47 @@ void main() {
     'ended card opens actual report then all records without writes',
     (tester) async {
       final repository = _Records();
+      final payload = type51Fixture(time: '26小时5分钟');
+      final body = payload['opaqueRecordContainer'] as Map;
+      body['creatorAvatarUrl'] = '';
+      body['acceptorAvatarUrl'] = '';
+      final parsed = NeteaseChatMessage.parse({
+        'msg': jsonEncode(payload),
+      }).card!;
       await mount(
         tester,
         Scaffold(
           body: SafeArea(
-            child: NeteaseMessageCardView(
-              card: NeteaseMessageCard(
-                title: '我们一起听了',
-                togetherRecord: true,
-                togetherRoomId: 'fixture_room_1',
-                duration: const Duration(hours: 26, minutes: 5),
-              ),
-              time: DateTime(2026, 11, 2),
+            // A chat bubble is a 300dp-wide child of an unbounded vertical
+            // list. Mount it with that contract, not tight full-screen bounds.
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    width: 300,
+                    child: NeteaseMessageCardView(
+                      card: parsed,
+                      time: DateTime(2026, 11, 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         repository,
       );
-      expect(find.text('26 小时 5 分钟 ›'), findsOneWidget);
+      expect(find.text('26小时5分钟 ›'), findsOneWidget);
+      expect(
+        tester
+            .getSize(
+              find.byKey(const ValueKey('netease-together-message-card')),
+            )
+            .height,
+        lessThan(150),
+      );
       await capture(tester, 'chat-ended-record');
       await tester.tap(
         find.byKey(const ValueKey('netease-message-card-detail')),
@@ -284,7 +310,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('together-history-more')));
       await tester.pumpAndSettle();
       expect(repository.calls, [
-        'report:fixture_room_1',
+        'report:synthetic_room',
         'history:',
         'history:next',
       ]);

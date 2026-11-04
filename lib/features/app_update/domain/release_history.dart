@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  '1.0.41': [
+    '修复网易云一起听结束记录仍显示为分享内容的问题，补齐专用记录消息的读取。',
+    '结束记录卡片保留消息原有时长文字与双方头像，可进入本次详情及全部一起听记录。',
+    '完善单条消息的脱敏结构诊断，便于核查记录兼容性；不复制消息正文、头像地址或账号信息。',
+  ],
   '1.0.40': [
     '修复搜索框收起键盘后再次点击无法输入、底部搜索控件重复及粘贴菜单越界的问题，统一双平台搜索交互。',
     '补齐完整播放器和自带输入区页面的底部控件显隐，避免播放器或聊天页面叠加底栏与播放胶囊。',

@@ -58,6 +58,17 @@ class NeteaseMessageDiagnostics {
       'totalConnectionTime',
       'currentConnectionTime',
       'durationSeconds',
+      // Shipped LTRecordMsg names are safe schema identifiers. Their strings,
+      // avatars, colors, room selectors and URLs still never leave this report.
+      'recordOrpheus',
+      'timeTitle',
+      'historyTitle',
+      'creatorAvatarUrl',
+      'acceptorAvatarUrl',
+      'isFriend',
+      'startColor',
+      'endColor',
+      'titleColor',
       'songCount',
       'currentSongCount',
       'totalSongCount',
@@ -133,6 +144,8 @@ class NeteaseMessageDiagnostics {
           if (url != null) {
             entry['officialWebTarget'] = true;
             entry['togetherPath'] = url.path.contains('listen-together');
+            entry['ordinaryTogetherReport'] =
+                NeteaseMessageCard.isTogetherReportUrl(url);
             // A route's actual path/query can include a user or room ID.
             entry['queryFieldCount'] = url.queryParameters.length;
           }

@@ -78,7 +78,9 @@ class NeteaseMessageCardView extends StatelessWidget {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        card.duration != null
+                        card.durationDescription.isNotEmpty
+                            ? '${card.durationDescription} ›'
+                            : card.duration != null
                             ? '${card.durationLabel} ›'
                             : '查看一起听记录 ›',
                         style: const TextStyle(
@@ -96,10 +98,18 @@ class NeteaseMessageCardView extends StatelessWidget {
                   height: 40,
                   child: Stack(
                     children: [
-                      _TogetherCardAvatar(person: self),
+                      _TogetherCardAvatar(
+                        uri: card.togetherAvatars.firstOrNull ?? '',
+                        person: card.togetherAvatars.isEmpty ? self : null,
+                      ),
                       Positioned(
                         left: 22,
-                        child: _TogetherCardAvatar(person: peer),
+                        child: _TogetherCardAvatar(
+                          uri: card.togetherAvatars.length > 1
+                              ? card.togetherAvatars[1]
+                              : '',
+                          person: card.togetherAvatars.isEmpty ? peer : null,
+                        ),
                       ),
                     ],
                   ),
@@ -154,8 +164,9 @@ class NeteaseMessageCardView extends StatelessWidget {
 }
 
 class _TogetherCardAvatar extends StatelessWidget {
-  const _TogetherCardAvatar({this.person});
+  const _TogetherCardAvatar({this.person, this.uri = ''});
   final NeteasePerson? person;
+  final String uri;
   @override
   Widget build(BuildContext context) => Container(
     width: 40,
@@ -167,8 +178,12 @@ class _TogetherCardAvatar extends StatelessWidget {
     ),
     padding: const EdgeInsets.all(1.5),
     child: ClipOval(
-      child: person?.avatar.isNotEmpty == true
-          ? ArtworkImage(uri: person!.avatar, width: 37, height: 37)
+      child: uri.isNotEmpty || person?.avatar.isNotEmpty == true
+          ? ArtworkImage(
+              uri: uri.isNotEmpty ? uri : person!.avatar,
+              width: 37,
+              height: 37,
+            )
           : const Icon(
               CupertinoIcons.person_fill,
               color: Colors.white,

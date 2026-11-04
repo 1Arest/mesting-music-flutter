@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../../../../shared/utils/media_uri.dart' show normalizeArtworkUri;
+
 /// A private-message card is distinct from a song share or an invitation.
 /// GeneralMessage can be inside msg, body, msgBody or another JSON string;
 /// its plain-text msg is often only an older-client compatibility warning.
@@ -11,6 +13,8 @@ class NeteaseMessageCard {
     this.detailUrl,
     this.togetherRecord = false,
     this.togetherRoomId = '',
+    this.durationDescription = '',
+    this.togetherAvatars = const [],
     this.duration,
   });
 
@@ -22,6 +26,13 @@ class NeteaseMessageCard {
   /// repository. Opening a historical card never reuses it as a live room.
   final String togetherRoomId;
   final Duration? duration;
+
+  /// Type 51 supplies an already formatted session label, not a numeric total.
+  final String durationDescription;
+
+  /// The official payload orders creator then acceptor; neither role implies
+  /// the current account. Keep both slots instead of relabelling them as self.
+  final List<String> togetherAvatars;
 
   String get durationLabel {
     final value = duration;
@@ -209,6 +220,85 @@ class NeteaseMessageCard {
         : null;
   }
 
+  static Object? _decodeContent(Object? value) {
+    var layers = 0;
+    while (value is String && value.length <= 32768 && layers++ < 3) {
+      try {
+        value = jsonDecode(value);
+      } on FormatException {
+        break;
+      }
+    }
+    return value;
+  }
+
+  static String _recordAvatar(Object? value) {
+    if (value is! String || value.length > 4096) return '';
+    // Reuse the common artwork policy for older official HTTP CDN links, then
+    // apply this message's narrower host/credential boundary before rendering.
+    final normalized = normalizeArtworkUri(value);
+    final uri = Uri.tryParse(normalized);
+    return uri?.scheme == 'https' &&
+            uri!.userInfo.isEmpty &&
+            (!uri.hasPort || uri.port == 443) &&
+            RegExp(r'^p[1-6]\.music\.126\.net$').hasMatch(uri.host)
+        ? normalized
+        : '';
+  }
+
+  /// Official MsgBody maps 51 to post.meta.LTRecordMsg, not CommonMessage.
+  /// Its wire body uses recordOrpheus/timeTitle and two participant avatars.
+  /// The privacy-redacted reports hide the body's outer field name. Instead
+  /// of guessing that name, scan a bounded number of direct children of an
+  /// explicitly typed message. Require this DTO signature plus the validated
+  /// ordinary-report URL; never recursively read profiles as message bodies.
+  static NeteaseMessageCard? _type51Record(Map value) {
+    final candidates = <Map>[value];
+    for (final entry in value.entries.take(24)) {
+      if (const {
+        'fromUser',
+        'toUser',
+        'user',
+        'profile',
+        'sender',
+        'receiver',
+        'cookie',
+        'cookies',
+        'headers',
+        'authorization',
+      }.contains(entry.key)) {
+        continue;
+      }
+      final child = _decodeContent(entry.value);
+      if (child is Map) candidates.add(child);
+    }
+    for (final body in candidates) {
+      if (!body.containsKey('recordOrpheus') ||
+          !body.containsKey('timeTitle')) {
+        continue;
+      }
+      final url = officialUrl(body['recordOrpheus']);
+      if (!isTogetherReportUrl(url)) continue;
+      final title = _text(body['title'], 200);
+      final timeTitle = _text(body['timeTitle'], 120);
+      if (title.isEmpty || timeTitle.isEmpty) continue;
+      return NeteaseMessageCard(
+        title: title,
+        subtitle: timeTitle,
+        togetherRecord: true,
+        togetherRoomId: _roomId(url),
+        detailUrl: url,
+        duration: _durationText(timeTitle),
+        durationDescription: timeTitle,
+        togetherAvatars: List.unmodifiable([
+          _recordAvatar(body['creatorAvatarUrl']),
+          _recordAvatar(body['acceptorAvatarUrl']),
+        ]),
+      );
+    }
+    return null;
+  }
+
   /// Traversal is limited to message-content fields, never peer profiles. This
   /// supports historical and current envelopes without guessing a numeric type
   /// or treating a free-form roomId as a record. Unknown fields are not shown.
@@ -225,14 +315,7 @@ class NeteaseMessageCard {
       Object? value = node.value;
       // Some transports put a JSON string inside a JSON string. Decode only a
       // bounded number of layers; malformed bodies never break the chat list.
-      var decodedLayers = 0;
-      while (value is String && value.length <= 32768 && decodedLayers++ < 3) {
-        try {
-          value = jsonDecode(value);
-        } on FormatException {
-          break;
-        }
-      }
+      value = _decodeContent(value);
       if (value is List) {
         for (final item in value.take(12)) {
           queue.add((
@@ -244,6 +327,13 @@ class NeteaseMessageCard {
         continue;
       }
       if (value is! Map) continue;
+      if (int.tryParse('${value['type'] ?? value['msgType']}') == 51) {
+        final typed = _type51Record(value);
+        if (typed != null) return typed;
+        // A malformed type-51 body remains diagnosable; its title alone must
+        // not fabricate a working ended-session card or bypass URL checks.
+        continue;
+      }
       final title = _text(value['mainTitle'] ?? value['title'], 200);
       final subtitle = _text(
         value['subTitle'] ??
