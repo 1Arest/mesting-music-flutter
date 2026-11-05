@@ -2,6 +2,10 @@ import 'dart:convert';
 
 import '../../../shared/models/track.dart';
 
+/// Current-process measurements from a genuine standard authorization only.
+/// Legacy grade rows must never be relabelled or copied into this protocol.
+const kugouStandardGradeProtocol = 'kugou-standard-v4-new-play-v1';
+
 /// Accepted means the platform acknowledged a write. Verified requires a
 /// separate official read-back; the two are deliberately different states.
 enum ListeningSyncState {

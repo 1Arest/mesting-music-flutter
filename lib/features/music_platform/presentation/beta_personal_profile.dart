@@ -28,6 +28,10 @@ import 'platform_avatar.dart';
 import 'platform_design.dart';
 import 'platform_library_page.dart';
 import 'platform_login_options_page.dart';
+import 'kugou_accounts_page.dart';
+import 'kugou_listening_profile_pages.dart';
+import 'kugou_official_page.dart';
+import 'kugou_standard_authorization_page.dart';
 import 'platform_profile_edit_page.dart';
 import 'unified_reward_page.dart';
 
@@ -59,6 +63,10 @@ class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
             for (final entry in [
               ('edit', '编辑个人资料', CupertinoIcons.person_crop_circle),
               ('switch', '切换音乐平台', CupertinoIcons.arrow_2_circlepath),
+              ('kugouAccounts', '切换酷狗账号', CupertinoIcons.person_2),
+              if (ref.read(platformAccountProvider).value?.platform ==
+                  MusicPlatform.kugou)
+                ('authorizeKugou', '验证酷狗官方功能', CupertinoIcons.checkmark_shield),
               (
                 'account',
                 '管理当前账号',
@@ -77,6 +85,13 @@ class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
     if (!mounted) return;
     if (action == 'edit') _open(const PlatformProfileEditPage());
     if (action == 'switch') _open(const MusicPlatformSwitchPage());
+    if (action == 'kugouAccounts') _open(const KugouAccountsPage());
+    if (action == 'authorizeKugou') {
+      final session = ref.read(platformAccountProvider).value;
+      if (session?.platform == MusicPlatform.kugou) {
+        await openKugouStandardAuthorization(context, session!);
+      }
+    }
     if (action == 'account') {
       final session = ref.read(platformAccountProvider).value;
       if (session != null) {
@@ -264,8 +279,14 @@ class _PersonalIdentity extends ConsumerWidget {
         const SizedBox(height: 18),
         if (session.platform == MusicPlatform.netease)
           NeteasePersonalStatistics(session: session)
-        else
+        else ...[
+          KugouPersonalStatistics(
+            session: session,
+            onOpenOfficial: (uri) =>
+                openKugouOfficialPage(context, ref, session, uri),
+          ),
           const _PersonalCounts(),
+        ],
       ],
     );
   }

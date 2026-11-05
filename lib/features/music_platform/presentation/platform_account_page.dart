@@ -152,7 +152,9 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
         final result = await _login.poll(challenge);
         if (!mounted || generation != _generation) return;
         if (result != null) {
-          await ref.read(platformAccountProvider.notifier).accept(result);
+          await ref
+              .read(platformAccountProvider.notifier)
+              .accept(result, loginMethod: _method.name);
           if (!mounted || generation != _generation) return;
           Navigator.of(context).pop(true);
           return;
@@ -286,7 +288,9 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
       if ('${result['status']}' != '1') {
         throw const MusicPlatformException('登录未成功，请核对验证码或稍后重试');
       }
-      await ref.read(platformAccountProvider.notifier).accept(data);
+      await ref
+          .read(platformAccountProvider.notifier)
+          .accept(data, loginMethod: _method.name);
       if (mounted && generation == _generation) Navigator.of(context).pop(true);
     } on Object catch (error) {
       if (mounted && generation == _generation) {

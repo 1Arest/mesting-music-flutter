@@ -174,7 +174,10 @@ void main() {
         },
         kugou: (_, _) async => {},
       );
-      await expectLater(repo.load(song148(1)), throwsStateError);
+      final result = await repo.load(song148(1));
+      expect(result.failed, contains(SongDetailsSection.catalogue));
+      expect(result.albumId, isEmpty);
+      expect(result.artists.every((p) => p.id != '5'), true);
     },
   );
   final kugou = Track(
@@ -254,7 +257,9 @@ void main() {
         ],
       },
     );
-    await expectLater(repo.load(kugou), throwsStateError);
+    final result = await repo.load(kugou);
+    expect(result.failed, contains(SongDetailsSection.catalogue));
+    expect(result.albumId, isEmpty);
   });
   test(
     'corrupt optional pin rows cannot prevent loading other accounts',

@@ -6,7 +6,9 @@ import 'package:flutter/widgets.dart';
 import '../../../core/audio/mesting_audio_handler.dart';
 import '../../../shared/models/track.dart';
 import '../domain/platform_session.dart';
+import '../data/kugou_v4_grade_repository.dart';
 import 'listening_clock.dart';
+import 'listening_daily_readback.dart';
 import 'listening_sync_models.dart';
 import 'listening_sync_repository.dart';
 import 'listening_sync_store.dart';
@@ -71,6 +73,8 @@ class ListeningSyncCoordinator with WidgetsBindingObserver {
     required this.gateway,
     required this.currentIdentity,
     required this.prepareOwner,
+    this.officialDayReader,
+    this.standardGradeGateway,
     ListeningClock? clock,
     this.observeLifecycle = true,
     this.automaticTimers = true,
@@ -107,6 +111,8 @@ class ListeningSyncCoordinator with WidgetsBindingObserver {
   final ListeningPlatformGateway gateway;
   final PlatformSession? Function() currentIdentity;
   final Future<void> Function(String owner) prepareOwner;
+  final OfficialListeningDayReader? officialDayReader;
+  final KugouStandardGradeGateway? standardGradeGateway;
   final ListeningClock clock;
   final bool observeLifecycle, automaticTimers;
   final List<StreamSubscription<Object?>> _subscriptions = [];
@@ -151,7 +157,8 @@ class ListeningSyncCoordinator with WidgetsBindingObserver {
         !_disposed &&
         epoch == _epoch &&
         currentIdentity()?.userId == identity.userId &&
-        currentIdentity()?.token == identity.token;
+        currentIdentity()?.token == identity.token &&
+        currentIdentity()?.kugouStandardToken == identity.kugouStandardToken;
     try {
       final owner = 'kugou:${identity.userId}';
       // This reuses the existing serialized owner switch. It prevents a last
@@ -167,6 +174,8 @@ class ListeningSyncCoordinator with WidgetsBindingObserver {
         gateway: gateway,
         identity: identity,
         currentIdentity: currentIdentity,
+        officialDayReader: officialDayReader,
+        standardGradeGateway: standardGradeGateway,
         now: () => clock.now,
       );
       _track = feed.currentTrack;
@@ -235,6 +244,11 @@ class ListeningSyncCoordinator with WidgetsBindingObserver {
       'heardMs': 0,
       'allocatedMs': 0,
       'time': now.millisecondsSinceEpoch ~/ 1000,
+      if (worker.identity.kugouAppId == 1005 &&
+          standardGradeGateway != null) ...{
+        'gradeProtocol': kugouStandardGradeProtocol,
+        'credentialAppId': 1005,
+      },
     };
     final segment = ListeningSyncEntry(
       ownerId: worker.owner,

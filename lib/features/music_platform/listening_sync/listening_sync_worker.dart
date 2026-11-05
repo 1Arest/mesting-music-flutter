@@ -1,4 +1,6 @@
 import '../domain/platform_session.dart';
+import '../data/kugou_v4_grade_repository.dart';
+import 'listening_daily_readback.dart';
 import 'listening_sync_models.dart';
 import 'listening_sync_repository.dart';
 import 'listening_sync_store.dart';
@@ -11,30 +13,63 @@ class ListeningSyncWorker {
     required this.gateway,
     required this.identity,
     required this.currentIdentity,
+    this.officialDayReader,
+    this.standardGradeGateway,
     DateTime Function()? now,
   }) : now = now ?? DateTime.now;
   final ListeningSyncStore store;
   final ListeningPlatformGateway gateway;
   final PlatformSession identity;
   final PlatformSession? Function() currentIdentity;
+  final OfficialListeningDayReader? officialDayReader;
+  final KugouStandardGradeGateway? standardGradeGateway;
   final DateTime Function() now;
   final Set<String> _liveSegments = {};
+  final Set<String> _measuredSegments = {};
   bool _disposed = false, _flushing = false, _flushAgain = false;
   String get owner => 'kugou:${identity.userId}';
   bool get current =>
       !_disposed &&
+      currentIdentity()?.platform == MusicPlatform.kugou &&
       currentIdentity()?.userId == identity.userId &&
-      currentIdentity()?.token == identity.token;
+      currentIdentity()?.token == identity.token &&
+      currentIdentity()?.kugouStandardToken == identity.kugouStandardToken;
 
-  void registerLiveSegment(String id) => _liveSegments.add(id);
+  late final ListeningDailyReadback? _officialDays = officialDayReader == null
+      ? null
+      : ListeningDailyReadback(
+          store: store,
+          reader: officialDayReader!,
+          identity: identity,
+          isCurrent: () => current,
+          now: now,
+        );
+
+  void registerLiveSegment(String id) {
+    _liveSegments.add(id);
+    _measuredSegments.add(id);
+  }
+
   void dispose() => _disposed = true;
 
   Future<void> verifyPending() async {
-    if (!current || _flushing) return;
+    if (!current) return;
+    if (_flushing) {
+      // An explicit statistics refresh can join an active official read without
+      // racing or repeating the upload journal drain already in progress.
+      await _officialDays?.observe(force: true);
+      return;
+    }
     _flushing = true;
     try {
       await _attempt(() => _history(allowWrites: false));
       if (current) await _attempt(() => _grade(allowWrites: false));
+      if (current) await _attempt(() => _standardGrade(allowWrites: false));
+      if (current) {
+        await _attempt(() async {
+          await _officialDays?.observe(force: true);
+        });
+      }
     } on Object {
       // Keep the last confirmed journal state if official read-back fails.
     } finally {
@@ -65,11 +100,21 @@ class ListeningSyncWorker {
         _flushAgain = false;
         await gateway.prepare(identity);
         if (!current) return;
+        // Statistics run alongside the upload chains so a slow report page
+        // cannot make a live CSCC start/end event stale. This is an independent
+        // observation, never proof of which client caused a later change.
+        final officialRead = _attempt(() async {
+          await _officialDays?.observe();
+        });
         await _attempt(_events);
         if (!current) return;
         await _attempt(() => _history());
         if (!current) return;
-        await _attempt(() => _grade());
+        // Old Lite rows retain their original protocol and are never migrated
+        // or replayed under standard authorization.
+        await _attempt(() => _grade(allowWrites: identity.kugouAppId != 1005));
+        if (current) await _attempt(() => _standardGrade());
+        await officialRead;
         if (!_flushAgain || !current) break;
       }
     } on Object {
@@ -318,6 +363,110 @@ class ListeningSyncWorker {
         ListeningSyncState.verified,
         now(),
         payload: {...batch.payload, 'observedSeconds': observed},
+      );
+    }
+  }
+
+  Future<void> _standardGrade({bool allowWrites = true}) async {
+    final standard = standardGradeGateway;
+    if (standard == null ||
+        identity.kugouAppId != 1005 ||
+        identity.kugouStandardToken.isEmpty ||
+        !current) {
+      return;
+    }
+    final rows = await store.entries(
+      owner,
+      kinds: {'grade_v4'},
+      states: {
+        ListeningSyncState.queued,
+        ListeningSyncState.dispatched,
+        ListeningSyncState.accepted,
+        ListeningSyncState.unknown,
+      },
+    );
+    final queued = <ListeningSyncEntry>[];
+    final uncertain = <ListeningSyncEntry>[];
+    for (final row in rows) {
+      if (row.text('gradeProtocol') != kugouStandardGradeProtocol ||
+          row.number('credentialAppId') != 1005) {
+        continue;
+      }
+      if (row.state != ListeningSyncState.queued) {
+        uncertain.add(row);
+      } else if (_measuredSegments.contains(row.text('segmentId'))) {
+        queued.add(row);
+      } else if (allowWrites) {
+        // An app restart/new authentication epoch may observe the old outcome,
+        // but cannot submit a delta measured by its predecessor process.
+        await store.change(
+          row,
+          ListeningSyncState.interrupted,
+          now(),
+          payload: {...row.payload, 'result': 'past_measurement_not_replayed'},
+        );
+      }
+    }
+    if (!current || (queued.isEmpty && uncertain.isEmpty)) return;
+    final before = await standard.seconds(identity);
+    if (before == null || !current) return;
+    for (final row in uncertain) {
+      if (row.number('target') > 0 && before >= row.number('target')) {
+        await store.change(
+          row,
+          ListeningSyncState.verified,
+          now(),
+          payload: {...row.payload, 'observedV4Seconds': before},
+        );
+      } else {
+        // Hold later measurements rather than leap over an ambiguous write or
+        // add its delta into a second request. Explicit refresh remains read-only.
+        return;
+      }
+    }
+    if (!allowWrites || !current) return;
+    final batch = await store.claimStandardGrade(owner, queued, before, now());
+    if (batch == null || !current) return;
+    try {
+      final accepted = await standard.report(
+        identity,
+        localMillis: batch.number('localMillis'),
+        diffSeconds: batch.number('diffSec'),
+      );
+      if (!current) return;
+      await store.change(
+        batch,
+        accepted ? ListeningSyncState.accepted : ListeningSyncState.unknown,
+        now(),
+      );
+    } on KugouStandardGradeRejected catch (error) {
+      // An explicit rejection is never retried, but does not poison future
+      // fresh measurements after the user completes valid authorization.
+      await store.change(
+        batch,
+        ListeningSyncState.rejected,
+        now(),
+        payload: {
+          ...batch.payload,
+          'result': error.loginRequired
+              ? 'standard_authorization_rejected'
+              : 'standard_grade_rejected',
+        },
+      );
+      return;
+    } on Object {
+      // Claim-before-send is already durable. Never retry a request whose
+      // upstream outcome became unknowable through transport/account changes.
+      await store.change(batch, ListeningSyncState.unknown, now());
+    }
+    if (!current) return;
+    final observed = await standard.seconds(identity);
+    if (observed != null && current && observed >= batch.number('target')) {
+      await store.change(
+        batch,
+        ListeningSyncState.verified,
+        now(),
+        payload: {...batch.payload, 'observedV4Seconds': observed},
       );
     }
   }

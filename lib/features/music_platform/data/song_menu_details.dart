@@ -8,6 +8,14 @@ class SongMenuPerson {
   final String name, id, role;
 }
 
+enum SongDetailsSection {
+  catalogue('歌手、专辑'),
+  creators('创作者署名');
+
+  const SongDetailsSection(this.label);
+  final String label;
+}
+
 class SongMenuDetails {
   const SongMenuDetails({
     this.artists = const [],
@@ -15,9 +23,25 @@ class SongMenuDetails {
     this.album = '',
     this.albumId = '',
     this.cover = '',
+    this.failed = const {},
   });
   final List<SongMenuPerson> artists, creators;
   final String album, albumId, cover;
+
+  /// 缺少署名与请求失败分别表示：空数据不伪装成网络错误，也不伪造资料。
+  final Set<SongDetailsSection> failed;
+
+  SongMenuDetails copyWith({
+    List<SongMenuPerson>? creators,
+    Set<SongDetailsSection>? failed,
+  }) => SongMenuDetails(
+    artists: artists,
+    creators: creators ?? this.creators,
+    album: album,
+    albumId: albumId,
+    cover: cover,
+    failed: failed ?? this.failed,
+  );
   factory SongMenuDetails.local(Track track) => SongMenuDetails(
     artists: track.artist.trim().isEmpty
         ? const []
@@ -103,7 +127,44 @@ class SongMenuDetailsRepository {
     return result;
   }
 
-  Future<SongMenuDetails> load(Track track) async {
+  Future<SongMenuDetails> load(
+    Track track, {
+    SongMenuDetails? previous,
+    SongDetailsSection? only,
+  }) async {
+    if (only == SongDetailsSection.creators && previous != null) {
+      final failed = {...previous.failed}..remove(SongDetailsSection.creators);
+      try {
+        return previous.copyWith(
+          creators: await _credits(track),
+          failed: failed,
+        );
+      } catch (_) {
+        return previous.copyWith(
+          failed: failed..add(SongDetailsSection.creators),
+        );
+      }
+    }
+    Future<SongMenuDetails> catalogueFailure() async {
+      var retained = (previous ?? SongMenuDetails.local(track)).copyWith(
+        failed: {...?previous?.failed, SongDetailsSection.catalogue},
+      );
+      // 两个独立资料源：目录暂不可用时仍读取署名，不把未读取当作空数据。
+      if (only == null || previous == null) {
+        try {
+          retained = retained.copyWith(
+            creators: await _credits(track),
+            failed: {...retained.failed}..remove(SongDetailsSection.creators),
+          );
+        } catch (_) {
+          retained = retained.copyWith(
+            failed: {...retained.failed, SongDetailsSection.creators},
+          );
+        }
+      }
+      return retained;
+    }
+
     if (track.source == TrackSource.netease) {
       final id = _id(
         track.platformSongId.isNotEmpty
@@ -111,18 +172,29 @@ class SongMenuDetailsRepository {
             : track.id.replaceFirst('netease_', ''),
       );
       if (id.isEmpty) return SongMenuDetails.local(track);
-      final payload = await netease('/song/detail', {'ids': id});
+      Map<String, dynamic> payload;
+      try {
+        payload = await netease('/song/detail', {'ids': id});
+      } catch (_) {
+        return catalogueFailure();
+      }
       final songs = NeteaseMusicRepository.rows(payload['songs']);
       final song = songs.where((s) => _text(s['id']) == id).firstOrNull;
-      if (song == null) throw StateError('平台未返回这首歌的资料，请重试');
+      if (song == null) return catalogueFailure();
       final album = _map(song['al'] ?? song['album']);
-      List<SongMenuPerson> creators = const [];
+      List<SongMenuPerson> creators = previous?.creators ?? const [];
+      final failed = {...?previous?.failed}
+        ..remove(SongDetailsSection.catalogue);
       // Credits are optional. A lyric failure must not discard verified album
       // and artist IDs; the empty creator state remains truthful and retryable.
-      try {
-        final lyric = await netease('/lyric', {'id': id});
-        creators = lyricCredits(_text(_map(lyric['lrc'])['lyric']));
-      } catch (_) {}
+      if (only == null || previous == null) {
+        try {
+          creators = await _credits(track);
+          failed.remove(SongDetailsSection.creators);
+        } catch (_) {
+          failed.add(SongDetailsSection.creators);
+        }
+      }
       final artists = _people(song['ar'] ?? song['artists']);
       return SongMenuDetails(
         artists: artists.isEmpty
@@ -132,11 +204,17 @@ class SongMenuDetailsRepository {
         album: _text(album['name']),
         albumId: _id(album['id']),
         cover: _text(album['picUrl']),
+        failed: failed,
       );
     }
     if (track.source == TrackSource.kugou && track.id.startsWith('kugou_')) {
       final hash = track.id.substring(6);
-      final payload = await kugou('/audio', {'hash': hash});
+      Map<String, dynamic> payload;
+      try {
+        payload = await kugou('/audio', {'hash': hash});
+      } catch (_) {
+        return catalogueFailure();
+      }
       final data = payload['data'];
       final rows = data is List ? data : [data];
       // /audio was requested for one exact hash. If the response names a
@@ -145,7 +223,7 @@ class SongMenuDetailsRepository {
         final actual = _text(r['hash'] ?? _map(r['base'])['hash']);
         return actual.isEmpty || actual.toLowerCase() == hash.toLowerCase();
       }).firstOrNull;
-      if (row == null || row.isEmpty) throw StateError('平台未返回这首歌的资料，请重试');
+      if (row == null || row.isEmpty) return catalogueFailure();
       final base = _map(row['base']);
       final album = _map(row['album_info']);
       final artists = _people(
@@ -154,11 +232,13 @@ class SongMenuDetailsRepository {
             row['singers'] ??
             base['authors'],
       );
-      List<SongMenuPerson> creators = const [];
+      List<SongMenuPerson> creators = previous?.creators ?? const [];
+      final failed = {...?previous?.failed}
+        ..remove(SongDetailsSection.catalogue);
       // Only explicit roles qualify as credits; a generic author/singer list
       // must never be relabeled as lyricists or composers.
       final credits = row['credits'];
-      if (credits is List) {
+      if (credits is List && (only == null || previous == null)) {
         creators = [
           for (final raw in credits)
             if (_text(_map(raw)['role']).isNotEmpty &&
@@ -169,39 +249,14 @@ class SongMenuDetailsRepository {
               ),
         ];
       }
-      if (creators.isEmpty) {
+      if (creators.isEmpty && (only == null || previous == null)) {
         // Same read-only hash-scoped lyric contract as LyricsRepository. Only
         // explicit credit lines are retained; never infer credits from names.
         try {
-          final search = await kugou('/search/lyric', {
-            'hash': hash,
-            'album_audio_id': track.platformSongId.isEmpty
-                ? '0'
-                : track.platformSongId,
-            'duration': '${track.duration.inMilliseconds}',
-            'man': 'no',
-          });
-          final values = search['candidates'];
-          final candidate = values is List && values.isNotEmpty
-              ? _map(values.first)
-              : const <String, dynamic>{};
-          final id = _text(candidate['id']),
-              key = _text(candidate['accesskey']);
-          if (id.isNotEmpty && key.isNotEmpty) {
-            final lyric = await kugou('/lyric', {
-              'id': id,
-              'accesskey': key,
-              'fmt': 'lrc',
-              'decode': 'true',
-            });
-            final decoded = _text(lyric['decodeContent']);
-            final content = decoded.isNotEmpty
-                ? decoded
-                : utf8.decode(base64Decode(_text(lyric['content'])));
-            creators = lyricCredits(content);
-          }
+          creators = await _credits(track);
+          failed.remove(SongDetailsSection.creators);
         } catch (_) {
-          // Metadata actions remain available when optional lyrics are absent.
+          failed.add(SongDetailsSection.creators);
         }
       }
       return SongMenuDetails(
@@ -219,8 +274,59 @@ class SongMenuDetailsRepository {
         cover: _text(
           album['sizable_cover'] ?? album['cover'],
         ).replaceAll('{size}', '400'),
+        failed: failed,
       );
     }
     return SongMenuDetails.local(track);
+  }
+
+  /// 独立读取失败的署名部分，重试不会重新请求已经成功的歌手/专辑。
+  Future<List<SongMenuPerson>> _credits(Track track) async {
+    if (track.source == TrackSource.netease) {
+      final id = _id(
+        track.platformSongId.isNotEmpty
+            ? track.platformSongId
+            : track.id.replaceFirst('netease_', ''),
+      );
+      final lyric = await netease('/lyric', {'id': id});
+      return lyricCredits(_text(_map(lyric['lrc'])['lyric']));
+    }
+    if (track.source != TrackSource.kugou || !track.id.startsWith('kugou_')) {
+      return const [];
+    }
+    final hash = track.id.substring(6);
+    final search = await kugou('/search/lyric', {
+      'hash': hash,
+      'album_audio_id': track.platformSongId.isEmpty
+          ? '0'
+          : track.platformSongId,
+      'duration': '${track.duration.inMilliseconds}',
+      'man': 'no',
+    });
+    final values = search['candidates'];
+    final candidate = values is List
+        ? values
+              .map(_map)
+              .where(
+                (c) =>
+                    _text(c['hash']).isEmpty ||
+                    _text(c['hash']).toLowerCase() == hash.toLowerCase(),
+              )
+              .firstOrNull
+        : null;
+    if (candidate == null) return const [];
+    final id = _text(candidate['id']), key = _text(candidate['accesskey']);
+    if (id.isEmpty || key.isEmpty) return const [];
+    final lyric = await kugou('/lyric', {
+      'id': id,
+      'accesskey': key,
+      'fmt': 'lrc',
+      'decode': 'true',
+    });
+    final decoded = _text(lyric['decodeContent']);
+    final content = decoded.isNotEmpty
+        ? decoded
+        : utf8.decode(base64Decode(_text(lyric['content'])));
+    return lyricCredits(content);
   }
 }

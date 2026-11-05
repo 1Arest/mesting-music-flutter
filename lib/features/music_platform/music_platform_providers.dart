@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'data/embedded_music_server.dart';
 import 'data/music_platform_api.dart';
 import 'data/platform_session_store.dart';
+import 'data/kugou_account_store.dart';
 import 'domain/platform_session.dart';
 import '../../core/platform/distribution_channel.dart';
 import '../../core/performance/startup_timing_probe.dart';
@@ -20,8 +21,27 @@ final musicServerProvider = Provider<MusicServer>(
   (ref) => EmbeddedMusicServer(),
 );
 final platformSessionStoreProvider = Provider<PlatformSessionStore>(
-  (ref) => const SecurePlatformSessionStore(),
+  (ref) => SecureKugouAccountStore(),
 );
+
+/// 只向页面公开昵称等展示资料，凭据仍由加密仓库及切换协调层持有。
+final savedKugouAccountsProvider = FutureProvider<List<KugouSavedAccount>>((
+  ref,
+) async {
+  final store = ref.watch(platformSessionStoreProvider);
+  ref.watch(retainedKugouMutationProvider);
+  if (store is KugouAccountStore) return (await store.snapshot()).accounts;
+  final session = await store.read();
+  return session == null
+      ? const []
+      : [
+          KugouSavedAccount(
+            userId: session.userId,
+            nickname: session.nickname,
+            avatarUrl: session.avatarUrl,
+          ),
+        ];
+}, retry: (_, _) => null);
 final musicPlatformApiProvider = Provider<MusicPlatformApi>((ref) {
   final client = http.Client();
   ref.onDispose(client.close);
@@ -141,7 +161,10 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     }
   }
 
-  Future<void> accept(Map<String, dynamic> result) => _serialize(() async {
+  Future<void> accept(
+    Map<String, dynamic> result, {
+    String? loginMethod,
+  }) => _serialize(() async {
     // Initialization must settle before a fresh login may replace its state.
     await readyForInteractiveLogin();
     if (DistributionChannel.isBeta &&
@@ -149,25 +172,135 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       throw const MusicPlatformException('请先退出当前 Mesting 账号');
     }
     final hadAccount = state.value != null;
-    final session = PlatformSession.fromJson(result);
-    await ref.read(platformSessionStoreProvider).write(session);
-    ref.read(retainedKugouMutationProvider.notifier).publish(session);
-    ref.invalidate(savedKugouSessionProvider);
-    if (state.value?.ownerId != session.ownerId) {
-      await _prepare(session.ownerId);
-    }
-    if (DistributionChannel.isBeta) {
-      if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-        throw const MusicPlatformException('当前已切换为 Mesting 账号，请先退出');
-      }
-      await ref
-          .read(betaAccountChoiceProvider.notifier)
-          .select(BetaAccountChoice.kugou);
-    }
-    _publish(session);
+    final session = PlatformSession.fromJson(
+      {...result}
+        ..remove('mesting_kugou_standard_token')
+        ..remove('mesting_kugou_standard_vip_token'),
+    );
+    await _selectKugou(session, loginMethod: loginMethod);
     if (DistributionChannel.isBeta && !hadAccount) {
       ref.read(betaEntryFlowProvider.notifier).authenticated();
     }
+  });
+
+  /// 先冻结旧账号的真实播放，再提交登录快照，最后一次性发布新归属。
+  /// 偏好/安全存储失败会回滚登录选择，绝不把两账号队列或在途响应混合。
+  Future<void> _selectKugou(
+    PlatformSession session, {
+    String? loginMethod,
+    bool Function()? isCurrent,
+  }) async {
+    void check() {
+      if (isCurrent != null && !isCurrent()) {
+        throw const MusicPlatformException('授权已取消，请重新打开验证');
+      }
+    }
+
+    check();
+    final store = ref.read(platformSessionStoreProvider);
+    var committed = session;
+    final previous = await store.read();
+    final snapshot = store is KugouAccountStore ? await store.snapshot() : null;
+    final choice = ref.read(betaAccountChoiceProvider);
+    check();
+    if (state.value?.ownerId != session.ownerId) {
+      await _prepare(session.ownerId);
+    }
+    try {
+      if (store is KugouAccountStore) {
+        await store.select(session, loginMethod: loginMethod);
+        committed = await store.read() ?? (throw StateError('账号保存未完成，请重试'));
+      } else {
+        await store.write(session);
+      }
+      check();
+      if (DistributionChannel.isBeta) {
+        await ref
+            .read(betaAccountChoiceProvider.notifier)
+            .select(BetaAccountChoice.kugou);
+      }
+      check();
+    } catch (_) {
+      if (snapshot != null && store is KugouAccountStore) {
+        await store.restore(snapshot);
+      } else if (previous != null) {
+        await store.write(previous);
+      }
+      if (choice != null && ref.read(betaAccountChoiceProvider) != choice) {
+        await ref.read(betaAccountChoiceProvider.notifier).select(choice);
+      }
+      rethrow;
+    }
+    ref.read(retainedKugouMutationProvider.notifier).publish(committed);
+    ref.invalidate(savedKugouSessionProvider);
+    _publish(committed);
+  }
+
+  Future<void> switchKugouAccount(String userId) => _serialize(() async {
+    await readyForInteractiveLogin();
+    if (state.value?.platform == MusicPlatform.kugou &&
+        state.value?.userId == userId) {
+      return;
+    }
+    final store = ref.read(platformSessionStoreProvider);
+    final session = store is KugouAccountStore
+        ? await store.account(userId)
+        : await store.read();
+    if (session == null || session.userId != userId) {
+      throw const MusicPlatformException('该账号的本机登录已移除，请重新添加');
+    }
+    if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
+      throw const MusicPlatformException('请先退出当前 Mesting 账号');
+    }
+    await _selectKugou(session);
+  });
+
+  /// 标准版重新验证必须属于发起验证的同一UID及同一主登录周期。
+  /// 补充凭据不更换音乐协议、音乐库归属或播放队列。
+  Future<void> acceptKugouStandard(
+    Map<String, dynamic> result, {
+    required PlatformSession expected,
+    bool Function()? isCurrent,
+  }) => _serialize(() async {
+    await readyForInteractiveLogin();
+    if (isCurrent != null && !isCurrent()) {
+      throw const MusicPlatformException('授权已取消，请重新打开验证');
+    }
+    final current = state.value;
+    final verified = PlatformSession.fromJson(result);
+    if (current?.platform != MusicPlatform.kugou ||
+        current?.userId != expected.userId ||
+        current?.token != expected.token ||
+        current?.kugouStandardToken != expected.kugouStandardToken ||
+        result['mesting_kugou_appid'] != 1005 ||
+        verified.userId != expected.userId) {
+      throw const MusicPlatformException('请使用当前酷狗账号完成验证；账号已变化时请重新打开');
+    }
+    await _selectKugou(
+      PlatformSession(
+        userId: current!.userId,
+        token: current.token,
+        vipToken: current.vipToken,
+        nickname: current.nickname,
+        avatarUrl: current.avatarUrl,
+        kugouStandardToken: verified.token,
+        kugouStandardVipToken: verified.vipToken,
+      ),
+      isCurrent: isCurrent,
+    );
+  });
+
+  Future<void> removeKugouAccount(String userId) => _serialize(() async {
+    await readyForInteractiveLogin();
+    // 当前账号通过原有退出流程移除，保留欢迎/路由归位和暂停契约。
+    if (state.value?.platform == MusicPlatform.kugou &&
+        state.value?.userId == userId) {
+      throw const MusicPlatformException('请先退出当前账号，再从列表移除');
+    }
+    final store = ref.read(platformSessionStoreProvider);
+    if (store is! KugouAccountStore) return;
+    await store.remove(userId);
+    ref.invalidate(savedKugouAccountsProvider);
   });
 
   Future<void> acceptNetease(NeteaseSession session) => _serialize(() async {
@@ -260,6 +393,8 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       userId: current.userId,
       token: current.token,
       vipToken: current.vipToken,
+      kugouStandardToken: current.kugouStandardToken,
+      kugouStandardVipToken: current.kugouStandardVipToken,
       nickname: nickname ?? current.nickname,
       avatarUrl: avatarUrl?.isNotEmpty == true ? avatarUrl! : current.avatarUrl,
     );

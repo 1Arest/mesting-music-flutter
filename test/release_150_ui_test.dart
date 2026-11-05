@@ -226,7 +226,7 @@ void main() {
       );
       await tester.drag(find.byType(ListView), const Offset(0, -450));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('资料加载未完成，重试'));
+      await tester.tap(find.text('歌手、专辑资料读取失败，重试'));
       await tester.pumpAndSettle();
       expect(find.text('专辑：恢复的专辑'), findsOneWidget);
       expect(attempts, 2);

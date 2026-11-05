@@ -1,0 +1,1415 @@
+{
+  "version": "1.0.52",
+  "androidVersionCode": 73,
+  "date": "2026-11-04",
+  "preparedAtUtc": "2026-11-04T13:50:47.896777+00:00",
+  "packageName": "com.mesting.music",
+  "appName": "Mesting Music",
+  "internalNativeUiFlavor": "beta",
+  "apk": {
+    "version": "1.0.52",
+    "androidVersionCode": 73,
+    "packageName": "com.mesting.music",
+    "appName": "Mesting Music",
+    "file": "Mesting-Music-v1.0.52.apk",
+    "fileSize": 110634930,
+    "sha256": "f10155ada6f9d9ee4b3c6de15148c56e3ef627da9081218e5926cf2037a1f342",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+    "v2Signature": true,
+    "v3Signature": true,
+    "debuggable": false,
+    "minSdk": 24,
+    "targetSdk": 36,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "zipCrcVerified": true,
+    "zipAlignment16KiB": true,
+    "arm64ElfAlignment16KiB": true,
+    "arm32ElfAlignment4KiB": true,
+    "nativeLibraries": [
+      {
+        "path": "lib/arm64-v8a/libapp.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libflutter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libkugou_server.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libring_receive_buffer.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlite3.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libapp.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libflutter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libkugou_server.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libring_receive_buffer.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libsqlite3.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      }
+    ],
+    "appPayloadsChangedFromV136": [
+      {
+        "path": "lib/arm64-v8a/libapp.so",
+        "sha256": "ae524432cafb45d9b13a1a52434d21aff432966decaf35841aaf8e0789261e63",
+        "previousV136Sha256": "fe93055920f3ab61c399929eae79df1032dbfa19c6acd298a935f51ed98890ba",
+        "changedFromV136": true
+      },
+      {
+        "path": "lib/armeabi-v7a/libapp.so",
+        "sha256": "319be4020ffb3193c216bbfc7c82b2ba47f7c4c55af7bd675ca4a3dcda125df8",
+        "previousV136Sha256": "35dbf582583a5a68cec7d1ab8623a3faca622fb446b5ba98aa4b580c7c11b9cb",
+        "changedFromV136": true
+      }
+    ],
+    "bundledNotesMatchVersion": true,
+    "bundledNotesCount": 8,
+    "packagedAssetsByteIdenticalToSource": [
+      "assets/data/release-notes.json",
+      "assets/data/netease-full-catalog.json",
+      "third_party/netease_protocol/LICENSE",
+      "third_party/netease_protocol/NOTICE.md",
+      "third_party/netease_protocol/afp/afp.js",
+      "third_party/netease_protocol/afp/afp.wasm.js",
+      "third_party/netease_protocol/afp/LICENSE",
+      "third_party/unblock_netease/COPYING",
+      "third_party/unblock_netease/COPYING.LESSER",
+      "third_party/unblock_netease/NOTICE.md"
+    ],
+    "pinnedCustomReleaseEngine": {
+      "flutterVersion": "3.41.9",
+      "frameworkCommit": "00b0c91f06209d9e4a41f71b7a512d6eb3b9c694",
+      "upstreamEngineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+      "runtimeMode": "release",
+      "dartRevision": "c70f78e7d682c158c15ca0c26c729b3ccb932284",
+      "dependencySnapshotSha256": "204c7c2dd50b6d39aefa4f9e2dfd795bfbadfd23f130459f365b5aab00d1cbe9",
+      "compilerOptimization": "release",
+      "linkTimeOptimization": false,
+      "patchSha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66",
+      "createdAt": "2026-10-30T18:48:18.283417+00:00",
+      "licensesSha256": "1d531df6b9d1142fa3f6abc518cfab21adc6570ae11631c40a7ba366c93d2eaa",
+      "files": [
+        {
+          "abi": "arm64-v8a",
+          "jar": "arm64-v8a-release.jar",
+          "jarSha256": "4d2a41dec39c412a3d947237f32fb260541d60c9d08bbba3e886564f2acd70f9",
+          "nativeSha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3",
+          "nativeBytes": 12805608,
+          "nativeBuildId": "7f9d8a668f14166c413851535d650d072dc0053e",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "7823581ec4cecfcd8dac6b4556ad6be7292f51633ed916f92274e3767323b85a"
+        },
+        {
+          "abi": "armeabi-v7a",
+          "jar": "armeabi-v7a-release.jar",
+          "jarSha256": "bceb78dc0ba83367111a5abc848b044501f80c85580dfd8de1b264681f5518e9",
+          "nativeSha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767",
+          "nativeBytes": 8646952,
+          "nativeBuildId": "0f533f57422a3749c262e36ed443c583a9cbce11",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "eab3aff58453427ddfbc39b60f1599ff0902115f4c4638e588cb0574478da1af"
+        }
+      ]
+    },
+    "engineBytesMatchPinnedManifest": true,
+    "loginArtworkAssetAbsent": true,
+    "glassShadersComparedByteIdenticalAgainstLocalV136": [
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_render.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+      "assets/flutter_assets/shaders/ink_sparkle.frag",
+      "assets/flutter_assets/shaders/stretch_effect.frag"
+    ],
+    "sdkLibrariesComparedByteIdenticalAgainstLocalV136": [
+      "lib/arm64-v8a/libdatastore_shared_counter.so",
+      "lib/arm64-v8a/libjingle_peerconnection_so.so",
+      "lib/arm64-v8a/libkugou_server.so",
+      "lib/arm64-v8a/libsqlite3.so",
+      "lib/armeabi-v7a/libdatastore_shared_counter.so",
+      "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+      "lib/armeabi-v7a/libkugou_server.so",
+      "lib/armeabi-v7a/libsqlite3.so"
+    ],
+    "ringDownloadSdkVersion": "1.1.2",
+    "newRingReceiveBufferLibraries": [
+      {
+        "path": "lib/armeabi-v7a/libring_receive_buffer.so",
+        "bytes": 7752,
+        "sha256": "dbe6590b43e0b5c3bb52c6f61b6761b36126e5718a6670671d4745777bd2b6da",
+        "officialSourceBytes": 10248,
+        "officialSourceSha256": "fccaf9f147aa5d739daf2e21d8a66ac98b3c7e92bd1f189b98eb607f2c734aec",
+        "releaseTransformation": "NDK 28.2.13676358 llvm-strip --strip-unneeded",
+        "matchesOfficialSdk112AfterNdkStrip": true
+      },
+      {
+        "path": "lib/arm64-v8a/libring_receive_buffer.so",
+        "bytes": 9032,
+        "sha256": "1538e629e1fd3b17c4a5b1236cbd6fe3df6b234260d0e0d417083a5bf46a6dda",
+        "officialSourceBytes": 11136,
+        "officialSourceSha256": "b76fde1a5a5b2ed29f83670480d59a809d421a531da1e4bfc68d9e0fe820e823",
+        "releaseTransformation": "NDK 28.2.13676358 llvm-strip --strip-unneeded",
+        "matchesOfficialSdk112AfterNdkStrip": true
+      }
+    ],
+    "licensePayloadsPresent": [
+      "assets/flutter_assets/NOTICES.Z",
+      "assets/flutter_assets/third_party/audio_glyphs/LICENSE",
+      "assets/flutter_assets/third_party/liquid_glass_widgets/LICENSE",
+      "assets/flutter_assets/third_party/md3music/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/afp/LICENSE",
+      "assets/flutter_assets/third_party/region_data/LICENSE",
+      "META-INF/androidx/annotation/annotation/LICENSE.txt",
+      "assets/LICENSE.flutter-engine.txt"
+    ],
+    "qaFontsAbsent": true,
+    "integrationTestPluginAbsent": true,
+    "unrelatedLocalDiagnosticsDisabled": true,
+    "togetherSyncDiagnosticLoggingEnabled": false,
+    "experimentalNativePlaybackDisabled": true,
+    "newPlaybackUsesLegacyWeblog": true,
+    "oldNativeJournalHeldWithoutReplay": true,
+    "nativePluginsAndDiagnosticsBridgePresent": {
+      "TogetherBackgroundPlugin": true,
+      "RingDownloadPlugin": true,
+      "RingRtcReceiveBuffer": true,
+      "nativeTune": true,
+      "FlutterWebRTCPlugin": true,
+      "getRecentAppExits": true,
+      "getHistoricalProcessExitReasons": true,
+      "getTraceInputStream": true,
+      "chooseDirectory": true,
+      "openDirectory": true
+    },
+    "backgroundLocationPermission": false,
+    "backgroundPluginReleaseEvidence": {
+      "releaseClass": "m2.g0",
+      "descriptor": "Lm2/g0;",
+      "mappingSha256": "5596b011f2b970214b7bc3f2e302434bb1ea9f64192246318cbeff9e65a7e223",
+      "definedInDex": [
+        "classes.dex"
+      ],
+      "nativeChannelInDex": [
+        "classes.dex"
+      ],
+      "workerThreadInDex": [
+        "classes.dex"
+      ]
+    },
+    "flutterVersion": "3.41.9",
+    "dartVersion": "3.11.5",
+    "javaVersion": "Temurin 17.0.20.1+1",
+    "androidBuildTools": "35.0.0",
+    "ndkVersion": "28.2.13676358",
+    "pubspecLockSha256": "7293689c92ee42bff5e0fd6a1e0f61d675767128395e7cf806ebd45f6f07c9fa",
+    "inputApkSha256": "6c39ebc4f700be41563083337ef83ce54ba0d3193ceadfb65a0f70d3c475cdf0",
+    "currentPackageIdentityVerified": true,
+    "betaInPlaceUpgradePossible": false,
+    "oldBetaDataAutomaticallyMigrated": false,
+    "physicalUpgradeTestPerformed": false,
+    "nativeRoomLeaseSourceSha256": "128d65af91f77d044dff14b9be4e022bdd39441687a55e7c71f8401141ef1123",
+    "releaseStage": "local_original_signed_release_152_pending_device_acceptance",
+    "deviceAccess": false,
+    "realAccountAccess": false,
+    "backendAccess": false,
+    "gitCommitted": false,
+    "gitPushed": false,
+    "uploaded": false,
+    "published": false
+  },
+  "host": {
+    "beta-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 172,
+      "counts": {
+        "success": 1962,
+        "skipped": 2
+      },
+      "perFile": {
+        "D:/AnLi/test/artwork_image_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/beta10_entry_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/beta10_feedback_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/beta10_quality_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/beta11_search_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/beta16_playback_order_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/beta16_output_and_search_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/beta18_refinements_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/beta6_audio_refresh_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/beta8_navigation_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/beta9_playback_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/beta9_interactions_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/beta_account_exclusivity_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/beta_login_entry_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/beta_shared_page_search_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/chat_message_actions_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/beta_update_isolation_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/dual_music_platform_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/dual_music_platform_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/followup_controls_regression_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/frame_timing_probe_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/library_cloud_persistence_test.dart": {
+          "skipped": 1
+        },
+        "D:/AnLi/test/local_library_integrity_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/music_home_catalogues_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/login_artwork_test.dart": {
+          "success": 19
+        },
+        "D:/AnLi/test/netease_data_adapters_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/netease_full_contracts_test.dart": {
+          "success": 553
+        },
+        "D:/AnLi/test/netease_full_ui_test.dart": {
+          "success": 27
+        },
+        "D:/AnLi/test/netease_full_workflows_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_message_card_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_message_card_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/netease_v112_contracts_test.dart": {
+          "success": 68
+        },
+        "D:/AnLi/test/netease_v112_fallback_download_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_v112_listening_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/netease_v114_workflows_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/netease_v112_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/netease_v115_sources_test.dart": {
+          "success": 20
+        },
+        "D:/AnLi/test/netease_v116_recovery_test.dart": {
+          "success": 26
+        },
+        "D:/AnLi/test/netease_v115_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/netease_v117_flows_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/netease_v118_data_test.dart": {
+          "success": 22
+        },
+        "D:/AnLi/test/netease_v117_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_v118_ui_test.dart": {
+          "success": 18
+        },
+        "D:/AnLi/test/netease_v119_data_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_v120_data_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/netease_v119_ui_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_v120_ui_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/persistent_network_image_cache_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/platform_cloud_library_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/platform_rewards_controller_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/platform_rewards_repository_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/platform_search_paging_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/playback_progress_thumb_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/playing_equalizer_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/profile_playlist_navigation_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_103_audio_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/release_103_sleep_playback_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_105_regression_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_103_ui_test.dart": {
+          "success": 28
+        },
+        "D:/AnLi/test/release_106_update_notes_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_107_listening_sync_test.dart": {
+          "success": 13
+        },
+        "D:/AnLi/test/release_107_local_music_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_107_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_120_render_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/release_108_diagnostics_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_120_shadow_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_121_artwork_transport_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_121_matte_cache_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_121_navigation_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_123_player_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_122_profile_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_123_together_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/release_124_accounts_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_124_downloads_ui_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_124_diagnostics_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_124_pages_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_browse_cache_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_126_cache_integration_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_message_protocol_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_tab_motion_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_127_message_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_128_presentation_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_129_artwork_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_129_discovery_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_129_user_ui_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_129_users_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_130_artwork_reveal_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_131_library_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_131_refresh_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_131_tab_input_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_132_notes_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_132_search_swipe_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_133_region_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_133_clearance_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_133_together_totals_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_134_together_history_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_135_listening_report_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_136_listening_audit_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_135_scroll_frontier_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_137_footprint_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_136_listening_audit_ui_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_138_footprint_units_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_137_footprint_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_138_listening_safety_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_138_native_log_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_138_native_transport_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_138_ui_refresh_test.dart": {
+          "skipped": 1,
+          "success": 6
+        },
+        "D:/AnLi/test/release_139_listening_rollback_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_140_shell_search_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_140_together_records_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/release_140_together_records_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_140_users_badge_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/release_141_type51_message_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/release_142_player_chrome_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_142_together_sync_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_143_background_sync_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_144_background_sync_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_143_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_144_discovery_refresh_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_144_kugou_favorites_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_144_navigation_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_144_player_menu_motion_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_145_background_diagnostics_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_144_room_theme_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_145_connections_test.dart": {
+          "success": 19
+        },
+        "D:/AnLi/test/release_145_footprint_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_145_connections_ui_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/release_145_footprint_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_145_loading_geometry_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_145_messages_back_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_145_profile_actions_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_145_snapshot_poll_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_146_download_resume_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_146_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_147_collection_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_147_collection_window_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_147_footprint_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_147_local_history_performance_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_147_platform_paging_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_148_data_test.dart": {
+          "success": 13
+        },
+        "D:/AnLi/test/release_148_playback_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_148_ui_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/release_149_bookmarks_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_149_regressions_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_149_ui_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/remote_lyrics_repository_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/saved_messages_page_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/scene_catalog_contract_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/social_repository_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/search_menu_fm_regression_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/release_150_data_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_150_navigation_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_package_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_queue_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_ui_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/release_151_navigation_test.dart": {
+          "success": 16
+        },
+        "D:/AnLi/test/release_151_loading_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_151_login_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_151_scroll_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_152_accounts_test.dart": {
+          "success": 13
+        },
+        "D:/AnLi/test/release_152_accounts_ui_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_152_kugou_profile_test.dart": {
+          "success": 27
+        },
+        "D:/AnLi/test/release_152_kugou_standard_login_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_152_kugou_v4_protocol_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_152_medals_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_152_official_listening_readback_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_152_official_web_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_152_scroll_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_152_song_details_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_152_standard_grade_reporting_test.dart": {
+          "success": 10
+        }
+      },
+      "log": "beta-complete.jsonl",
+      "logSha256": "f29dfec1019fe3b8a2b7f6a9dc2188ee6b20a16f799e1fd9e3346ee7d3f4ffa0",
+      "initialFailuresRetained": [
+        {
+          "file": "D:/AnLi/test/release_130_artwork_reveal_test.dart",
+          "name": "scroll keeps old rows and reveals a new visible batch together",
+          "status": "error"
+        },
+        {
+          "file": "D:/AnLi/test/release_150_data_test.dart",
+          "name": "wrong NetEase ID is rejected instead of assigning another recording",
+          "status": "error"
+        },
+        {
+          "file": "D:/AnLi/test/release_150_data_test.dart",
+          "name": "wrong Kugou hash is rejected",
+          "status": "error"
+        },
+        {
+          "file": "D:/AnLi/test/release_152_kugou_profile_test.dart",
+          "name": "rank like unknown result blocks replay until official refresh; city asks before write",
+          "status": "error"
+        },
+        {
+          "file": "D:/AnLi/test/release_152_song_details_test.dart",
+          "name": "successful prior creators survive an empty or foreign catalogue result",
+          "status": "error"
+        }
+      ],
+      "completeFileRerunProvenance": {
+        "D:/AnLi/test/artwork_image_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta10_entry_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta10_feedback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta10_quality_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta11_search_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta16_playback_order_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta16_output_and_search_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta18_refinements_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta6_audio_refresh_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta8_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta9_playback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta9_interactions_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta_account_exclusivity_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta_login_entry_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta_shared_page_search_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/chat_message_actions_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/beta_update_isolation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/dual_music_platform_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/dual_music_platform_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/followup_controls_regression_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/frame_timing_probe_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/library_cloud_persistence_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/local_library_integrity_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/music_home_catalogues_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/login_artwork_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_data_adapters_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_contracts_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_workflows_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_message_card_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_message_card_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_contracts_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_fallback_download_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_listening_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v114_workflows_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v115_sources_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v116_recovery_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v115_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v117_flows_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v118_data_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v117_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v118_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v119_data_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v120_data_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v119_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/netease_v120_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/persistent_network_image_cache_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/platform_cloud_library_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/platform_rewards_controller_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/platform_rewards_repository_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/platform_search_paging_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/playback_progress_thumb_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/playing_equalizer_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/profile_playlist_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_103_audio_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_103_sleep_playback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_105_regression_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_103_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_106_update_notes_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_107_listening_sync_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_107_local_music_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_107_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_120_render_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_108_diagnostics_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_120_shadow_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_121_artwork_transport_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_121_matte_cache_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_121_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_123_player_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_122_profile_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_123_together_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_124_accounts_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_124_downloads_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_124_diagnostics_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_124_pages_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_126_browse_cache_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_126_cache_integration_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_126_message_protocol_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_126_tab_motion_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_127_message_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_128_presentation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_129_artwork_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_129_discovery_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_129_user_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_129_users_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_130_artwork_reveal_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_131_library_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_131_refresh_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_131_tab_input_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_132_notes_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_132_search_swipe_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_133_region_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_133_clearance_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_133_together_totals_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_134_together_history_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_135_listening_report_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_136_listening_audit_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_135_scroll_frontier_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_137_footprint_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_136_listening_audit_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_138_footprint_units_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_137_footprint_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_138_listening_safety_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_138_native_log_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_138_native_transport_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_138_ui_refresh_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_139_listening_rollback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_140_shell_search_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_140_together_records_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_140_together_records_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_140_users_badge_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_141_type51_message_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_142_player_chrome_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_142_together_sync_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_143_background_sync_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_background_sync_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_143_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_discovery_refresh_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_kugou_favorites_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_player_menu_motion_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_background_diagnostics_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_144_room_theme_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_connections_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_footprint_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_connections_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_footprint_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_loading_geometry_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_messages_back_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_profile_actions_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_145_snapshot_poll_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_146_download_resume_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_146_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_collection_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_collection_window_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_footprint_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_local_history_performance_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_147_platform_paging_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_148_data_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_148_playback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_148_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_149_bookmarks_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_149_regressions_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_149_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/remote_lyrics_repository_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/saved_messages_page_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/scene_catalog_contract_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/social_repository_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/search_menu_fm_regression_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_150_data_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_150_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_150_package_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_150_queue_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_150_ui_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_151_navigation_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_151_loading_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_151_login_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_151_scroll_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_accounts_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_152_accounts_ui_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_152_kugou_profile_test.dart": "final-profile-regression.jsonl",
+        "D:/AnLi/test/release_152_kugou_standard_login_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_kugou_v4_protocol_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_medals_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_official_listening_readback_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_official_web_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_152_scroll_test.dart": "beta-complete.jsonl",
+        "D:/AnLi/test/release_152_song_details_test.dart": "final-beta-regressions.jsonl",
+        "D:/AnLi/test/release_152_standard_grade_reporting_test.dart": "final-beta-regressions.jsonl"
+      },
+      "singleCleanInvocation": false
+    },
+    "stable-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 6,
+      "counts": {
+        "success": 63
+      },
+      "perFile": {
+        "D:/AnLi/test/app_update_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/beta17_player_ui_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/chat_page_test.dart": {
+          "success": 27
+        },
+        "D:/AnLi/test/csnas_app_update_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/music_search_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/playlist_detail_ui_test.dart": {
+          "success": 5
+        }
+      },
+      "failures": [],
+      "log": "stable-complete.jsonl",
+      "logSha256": "cf30eecb40b14e42a888add63a867252ea4382f4edab41e6ac99ded8a68dfe31"
+    },
+    "search-back-player.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 1,
+      "counts": {
+        "success": 55
+      },
+      "perFile": {
+        "D:/AnLi/test/beta5_ui_test.dart": {
+          "success": 55
+        }
+      },
+      "failures": [],
+      "log": "search-back-player.jsonl",
+      "logSha256": "b4c5fd33e51ed9938e580449cb6c0d6ecf6ef6711ed744bf2a394145ffcac271"
+    },
+    "analysisPassed": true,
+    "analysisIssues": 0,
+    "finalHostFrames": 56,
+    "visualRounds": 2,
+    "visualEvidence": "Final 56 host frames inspected; capture-unit miss corrected through full-file regression, no third visual redesign pass.",
+    "deviceAccess": false,
+    "hostImagesAreNotPhoneGpuAcceptance": true,
+    "initialFailedAndIntermediateLogsRetained": true,
+    "countingRule": "Each selected complete file counted once, final whole-file reruns replace its earlier counts. Navigation and inherited SDK are separate."
+  },
+  "actualBuild": {
+    "version": "1.0.52",
+    "versionCode": 73,
+    "sourceFileHashesMatched": 1446,
+    "actualBuildReceiptPresent": true,
+    "builder": "exact_flutter_gradle_arguments_with_task_scoped_maven_transport",
+    "successfulFlutterPubPrerequisite": true,
+    "gradleOffline": false,
+    "processOnlyMavenTransport": true,
+    "dependencyDeclarationsUnchanged": true,
+    "sameRequestedArtifactCoordinates": true,
+    "onlineMetadataWaitAttemptRetained": true,
+    "buildOutputNewerThanFinalSourceManifest": true,
+    "compilerDefinitionsObservedDuringThisBuild": true,
+    "diagnosticsDisabled": true,
+    "appUpdateChecksEnabled": true,
+    "inputApkSha256": "6c39ebc4f700be41563083337ef83ce54ba0d3193ceadfb65a0f70d3c475cdf0",
+    "transportSupportSha256": {
+      "maven_transport.init.gradle": "1a330c648b8ef80da1d68ca141bbec0d4079ab721698c8da6677c36f2d060330",
+      "maven_build_proxy.py": "23eb29a796736eca23ac3bf955ee186b93535414fc2189392891062a5e64c8a4",
+      "maven_build_proxy_pooled.py": "8186845dcb939e51015e5d8875032b1b6777262b388cdb1d8a81bfda11ff1367",
+      "build_transport.ps1": "9b9e616ce1472cae4b679c6260ef3626816c0f7830bfba3d69d5c979222918b4"
+    }
+  },
+  "formalPayload": {
+    "apk": "D:\\AnLi\\release\\Mesting-Music-v1.0.52.apk",
+    "bytes": 110634930,
+    "sha256": "f10155ada6f9d9ee4b3c6de15148c56e3ef627da9081218e5926cf2037a1f342",
+    "r8InlinedBridgeMethodEvidence": {
+      "com.ryanheise.audioservice.MestingTogetherMediaLease.acquire(": [
+        {
+          "mappedHolder": "j2.d",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ],
+      "com.ryanheise.audioservice.MestingTogetherMediaLease.release(": [
+        {
+          "mappedHolder": "m2.a0",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ],
+      "com.ryanheise.audioservice.MestingTogetherMediaLease$1.promote(": [
+        {
+          "mappedHolder": "j2.d",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ],
+      "com.ryanheise.audioservice.MestingTogetherMediaLease$1.releaseIfOwned(": [
+        {
+          "mappedHolder": "m2.a0",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ],
+      "com.mesting.music.TogetherMediaLeaseCoordinator.acquire(": [
+        {
+          "mappedHolder": "j2.d",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ],
+      "com.mesting.music.TogetherMediaLeaseCoordinator.release(": [
+        {
+          "mappedHolder": "m2.a0",
+          "definedInDex": [
+            "classes.dex"
+          ]
+        }
+      ]
+    },
+    "leasePhasesPresent": [
+      "foregroundLeaseAcquired",
+      "foregroundLeaseRejected"
+    ],
+    "ownershipMarkerPresent": true,
+    "notificationResource": {
+      "id": "0x7f07007c",
+      "resolvedPath": "res/mf.xml",
+      "present": true
+    },
+    "permissionsIdenticalToR2": false,
+    "permissionsEquivalentExceptPackageScopedRename": true,
+    "packageScopedPermissionRename": {
+      "from": "com.mesting.music.beta.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+      "to": "com.mesting.music.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    },
+    "osPermissionsIdenticalToR2": true,
+    "permissionCount": 19,
+    "nativeScenariosPassed": 16,
+    "nativeInputsStillMatch": true,
+    "r4NativeInputsMatch": true,
+    "release152ListAndTransitionChanges": true,
+    "priorFrozenArtifactsToVerifyAtDelivery": 94,
+    "inheritedNativeVerificationReference": "D:\\AnLi\\.codex-artifacts\\2026-11-03-release147\\native-background-verification.json",
+    "inheritedNativeVerificationSha256": "3b0fa7ea376267941510ff26acefeaef1af42e3dda1995cf845aab09f240a77f",
+    "deviceAccess": false,
+    "realAccountAccess": false,
+    "formalVersion": "1.0.52+73",
+    "r4LogicPreserved": true,
+    "formalApkDeviceAccepted": false,
+    "nativeChecksInheritedFromUnchangedR4Inputs": true
+  },
+  "productionApkNotesReader": {
+    "version": "1.0.52",
+    "versionCode": 73,
+    "notesCount": 8,
+    "productionReader": true,
+    "currentVersionOfflineHistoryMatches": true,
+    "rangeRequests": 3,
+    "bytesRead": 66380,
+    "networkAccess": false,
+    "deviceAccess": false,
+    "published": false
+  },
+  "sdk": {
+    "version": "1.1.2",
+    "officialZipSha256": "387a6b8f5f3ec1bf2e0551d57427f6053a841fb90dd1b2bd670dad376d143665",
+    "files": 29,
+    "counts": {
+      "success": 563
+    },
+    "allSelectedFilesSuccessful": true,
+    "perFile": {
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_download_recovery_test.dart": {
+        "success": 4
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_file_io_test.dart": {
+        "success": 7
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_p2p_flow_test.dart": {
+        "success": 141
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_hybrid_flow_test.dart": {
+        "success": 138
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_seed_candidates_test.dart": {
+        "success": 6
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_upload_diagnostics_test.dart": {
+        "success": 9
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_v40_contract_test.dart": {
+        "success": 2
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/cache_verifier_test.dart": {
+        "success": 4
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/mobile_upload_budget_test.dart": {
+        "success": 3
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/native_probe_evidence_test.dart": {
+        "success": 11
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_coordinator_test.dart": {
+        "success": 27
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_leases_test.dart": {
+        "success": 16
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_lifecycle_file_io_test.dart": {
+        "success": 6
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_ordered_writer_test.dart": {
+        "success": 8
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_receiver_test.dart": {
+        "success": 3
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_source_goodput_test.dart": {
+        "success": 6
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_protocol_test.dart": {
+        "success": 19
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_receiver_test.dart": {
+        "success": 9
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_sender_test.dart": {
+        "success": 9
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_window_test.dart": {
+        "success": 29
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_writer_pipeline_test.dart": {
+        "success": 4
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/receive_buffer_test.dart": {
+        "success": 7
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_cache_sharing_test.dart": {
+        "success": 5
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_contract_test.dart": {
+        "success": 15
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_external_https_test.dart": {
+        "success": 27
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_installation_events_test.dart": {
+        "success": 3
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_release_test.dart": {
+        "success": 28
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_verified_piece_test.dart": {
+        "success": 8
+      },
+      "D:/AnLi/third_party/ring_download_sdk/test/sharing_resources_test.dart": {
+        "success": 9
+      }
+    },
+    "completeFileRerunProvenance": {
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_download_recovery_test.dart": "sdk-host-compat-final.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_file_io_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_p2p_flow_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_hybrid_flow_test.dart": "sdk-final-hybrid-isolated.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_seed_candidates_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_upload_diagnostics_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/app_upgrade_v40_contract_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/cache_verifier_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/mobile_upload_budget_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/native_probe_evidence_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_coordinator_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_leases_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_lifecycle_file_io_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_ordered_writer_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_receiver_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_source_goodput_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_protocol_test.dart": "sdk-final-files-r2.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_receiver_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_transfer_sender_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_window_test.dart": "sdk-final-files-r2.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/p8p_writer_pipeline_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/receive_buffer_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_cache_sharing_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_contract_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_external_https_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_installation_events_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_release_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sdk_verified_piece_test.dart": "sdk-regression.jsonl",
+      "D:/AnLi/third_party/ring_download_sdk/test/sharing_resources_test.dart": "sdk-regression.jsonl"
+    },
+    "originalVendorFilesVerified": 242,
+    "originalFilesStillIdentical": 241,
+    "localAdaptations": [
+      {
+        "path": "lib/src/core/services/app_upgrade_v40_download_client.dart",
+        "officialSha256": "5cbe278d310e0fbcdf89724b2aad8c6e935d1b986bdeaef37cc82b85e2d44862",
+        "localSha256": "e4e0806009fa11f902eb4946a0b2e5d2d3642da8fe5c666bd98e95dd432a2254",
+        "reason": "Remove one redundant non-null assertion after host Dart promotion; no transfer/control-flow change."
+      }
+    ],
+    "sdkLockOnlyDependencyChange": true,
+    "productionAppId": "music",
+    "sharingOptIn": false,
+    "deviceAccess": false,
+    "sourceChangeAfterFullUpstreamSuite": "One redundant non-null assertion removed for host Dart promotion; subsequent complete download-recovery and Music integration files passed.",
+    "realRtcAndPhoneAcceptance": false,
+    "inheritedFromVersion": "1.0.51",
+    "rerunForVersion152": false,
+    "allRecordedThirdPartyInputsUnchanged": 613,
+    "inheritanceReason": "No third-party source or SDK lock change; same recorded inputs hash-verified for 1.0.52."
+  },
+  "protectedOldFrozenArtifacts": 94,
+  "protectedGitHead": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+  "originalSigningPreserved": true,
+  "dependencyLockUnchanged": true,
+  "newProtocolsUseSyntheticFixtures": true,
+  "officialStandardLoginActualAccountAccepted": false,
+  "officialListeningDailyOrCrossDayBooked": false,
+  "phoneAdbAccess": false,
+  "realMusicAccountAccess": false,
+  "backendAccess": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false,
+  "oldBetaPrivateDataAutomaticallyMigrated": false,
+  "frozenSourceVerificationExternal": "release/Mesting-Music-v1.0.52-source-verification.json"
+}

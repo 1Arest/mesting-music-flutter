@@ -196,27 +196,72 @@ class _SongListToolsState extends State<SongListTools> {
       if (!mounted || !_current(epoch)) return;
       final index = tracks.indexWhere((t) => t.id == bookmark.trackId);
       if (index < 0) throw StateError('当前列表中暂未找到这首歌，可稍后继续定位');
-      // Lazy slivers need a measured destination before the target has a render
-      // object. Animate to it, then ensureVisible precisely; all intermediate
-      // rows remain part of the visible journey, including long distances.
-      // headers and text scaling therefore do not become hardcoded offsets.
-      for (var attempt = 0; attempt < 14 && _current(epoch); attempt++) {
-        _SongListEntryState? target;
-        for (final row in _rows) {
-          if (row.mounted && row.widget.track.id == bookmark.trackId) {
-            target = row;
-            break;
-          }
+      final position = _position;
+      if (position == null || !position.hasContentDimensions) {
+        throw StateError('当前列表尚未就绪，请重试');
+      }
+      double? destination() {
+        if (!_current(epoch)) return null;
+        final target = _rows
+            .where(
+              (r) =>
+                  r.mounted &&
+                  r.widget.track.id == bookmark.trackId &&
+                  r.scrollPosition == position,
+            )
+            .firstOrNull;
+        final box = target?.box;
+        if (box != null) {
+          return RenderAbstractViewport.maybeOf(
+            box,
+          )?.getOffsetToReveal(box, .35).offset;
         }
-        if (target != null && mounted && target.mounted) {
-          await Scrollable.ensureVisible(
-            target.context,
-            alignment: .35,
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 280),
-          );
-          if (!mounted || !_current(epoch)) return;
+        // 懒列表尚未构建目标时，按当前真实行高预测同一个 .35 对齐点。
+        // 此处已包含最终对齐偏移，不再先滚到行首再反向校正一段。
+        final row = _rows
+            .where(
+              (r) => r.mounted && r.scrollPosition == position && r.box != null,
+            )
+            .firstOrNull;
+        if (row == null) return null;
+        final anchor = tracks.indexWhere((t) => t.id == row.widget.track.id);
+        if (anchor < 0) return null;
+        final anchorBox = row.box!;
+        final reveal = RenderAbstractViewport.maybeOf(
+          anchorBox,
+        )?.getOffsetToReveal(anchorBox, .35).offset;
+        return reveal == null
+            ? null
+            : reveal + (index - anchor) * anchorBox.size.height;
+      }
+
+      final reduced = MediaQuery.disableAnimationsOf(context);
+      for (var attempt = 0; attempt < 14 && _current(epoch); attempt++) {
+        final offset = destination();
+        if (offset == null) break;
+        await SongListScrollMotion.move(
+          position,
+          offset,
+          reduceMotion: reduced,
+          measuredTarget: destination,
+          isCurrent: () => _current(epoch),
+        );
+        if (!_current(epoch)) return;
+        await WidgetsBinding.instance.endOfFrame;
+        if (!_current(epoch)) return;
+        final target = _rows
+            .where((r) => r.mounted && r.widget.track.id == bookmark.trackId)
+            .firstOrNull;
+        final finalOffset = destination();
+        if (target != null &&
+            finalOffset != null &&
+            (finalOffset.clamp(
+                          position.minScrollExtent,
+                          position.maxScrollExtent,
+                        ) -
+                        position.pixels)
+                    .abs() <
+                1.5) {
           highlight.value = bookmark.trackId;
           _highlightTimer?.cancel();
           _highlightTimer = Timer(
@@ -225,40 +270,6 @@ class _SongListToolsState extends State<SongListTools> {
           );
           return;
         }
-        final position = _position;
-        final candidates = _rows
-            .where(
-              (r) => r.mounted && r.scrollPosition == position && r.box != null,
-            )
-            .toList();
-        if (position == null ||
-            !position.hasContentDimensions ||
-            candidates.isEmpty) {
-          break;
-        }
-        final row = candidates.first;
-        final anchor = tracks.indexWhere((t) => t.id == row.widget.track.id);
-        if (anchor < 0) break;
-        final box = row.box!;
-        if (!mounted) return;
-        final storageContext = position.context.storageContext;
-        if (!storageContext.mounted) return;
-        final viewport = storageContext.findRenderObject();
-        final top = viewport is RenderBox
-            ? viewport.localToGlobal(Offset.zero).dy
-            : 0.0;
-        final offset =
-            position.pixels +
-            box.localToGlobal(Offset.zero).dy -
-            top +
-            (index - anchor) * box.size.height;
-        await SongListScrollMotion.move(
-          position,
-          offset,
-          reduceMotion: MediaQuery.disableAnimationsOf(context),
-        );
-        if (!_current(epoch)) return;
-        await WidgetsBinding.instance.endOfFrame;
       }
       throw StateError('歌曲已加载，当前未能完成定位，请重试');
     } catch (error) {
@@ -343,7 +354,7 @@ class _SongListToolsState extends State<SongListTools> {
                             math.max(12, constraints.maxHeight - 150),
                           ),
                       width: math.min(
-                        238,
+                        210,
                         math.max(100, constraints.maxWidth - 36),
                       ),
                       child: Column(

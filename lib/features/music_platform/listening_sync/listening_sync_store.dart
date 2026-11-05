@@ -53,12 +53,26 @@ class ListeningSyncStore {
   Stream<List<ListeningSyncEntry>> watch(String owner) =>
       _query(owner).watch().map((rows) => rows.map(_decode).toList());
 
+  /// Only the newest official daily observations are decoded for the status
+  /// surface; checkpoints and the potentially long upload journal stay in SQL.
+  Stream<List<ListeningSyncEntry>> watchOfficialDays(String owner) =>
+      (database.select(database.platformListeningOutboxes)
+            ..where(
+              (row) =>
+                  row.ownerId.equals(owner) &
+                  row.kind.equals('official_day_readback'),
+            )
+            ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+            ..limit(14))
+          .watch()
+          .map((rows) => rows.map(_decode).toList());
+
   /// Summaries count inside SQLite instead of decoding every historical event
   /// whenever a five-second checkpoint updates the journal.
   Stream<ListeningSyncSummary> watchSummary(String owner) => database
       .customSelect(
         "SELECT state, COUNT(*) AS n FROM platform_listening_outboxes "
-        "WHERE owner_id = ? AND kind IN ('history','grade','cscc') GROUP BY state",
+        "WHERE owner_id = ? AND kind IN ('history','grade','grade_v4','cscc') GROUP BY state",
         variables: [Variable.withString(owner)],
         readsFrom: {database.platformListeningOutboxes},
       )
@@ -189,10 +203,12 @@ class ListeningSyncStore {
     final allocated = current.number('allocatedMs');
     final payload = {...current.payload, 'heardMs': heardMs};
     if (heardMs - allocated >= 60000) {
+      final standard =
+          current.text('gradeProtocol') == kugouStandardGradeProtocol;
       await put(
         owner: segment.ownerId,
         id: 'grade:${segment.id}:$heardMs',
-        kind: 'grade',
+        kind: standard ? 'grade_v4' : 'grade',
         payload: {...payload, 'heardMs': heardMs - allocated},
         now: now,
       );
@@ -277,12 +293,19 @@ class ListeningSyncStore {
     }
     final remainder = heardMs - current.number('allocatedMs');
     if (remainder > 0) {
+      final standard =
+          current.text('gradeProtocol') == kugouStandardGradeProtocol;
       await put(
         owner: segment.ownerId,
         id: 'grade:${segment.id}:end',
-        kind: 'grade',
+        kind: standard ? 'grade_v4' : 'grade',
         payload: {...payload, 'heardMs': remainder},
         now: now,
+        // Recovery/account changes retain the local fact but do not replay a
+        // past process's standard delta under new authorization.
+        state: standard && !live
+            ? ListeningSyncState.interrupted
+            : ListeningSyncState.queued,
       );
     }
     // A persisted old segment has no valid historical CSCC timestamp input.
@@ -383,6 +406,90 @@ class ListeningSyncStore {
       ownerId: owner,
       id: first.id,
       kind: first.kind,
+      payload: payload,
+      state: ListeningSyncState.dispatched,
+      createdAt: first.createdAt,
+      updatedAt: now,
+    );
+  });
+
+  /// Claim a separately measured standard batch exactly once. Native v4 sends
+  /// d_sec as (server baseline + local measured milliseconds) ~/ 1000, and
+  /// diff_sec as the new elapsed whole seconds. No legacy row or ambiguous
+  /// delta participates; a crash after this transaction is read-back only.
+  Future<ListeningSyncEntry?> claimStandardGrade(
+    String owner,
+    List<ListeningSyncEntry> rows,
+    int baseline,
+    DateTime now,
+  ) => database.transaction(() async {
+    if (baseline < 0) return null;
+    final eligible = rows.map((row) => row.id).toSet();
+    final fresh =
+        (await entries(
+              owner,
+              kinds: {'grade_v4'},
+              states: {ListeningSyncState.queued},
+            ))
+            .where(
+              (row) =>
+                  eligible.contains(row.id) &&
+                  row.text('gradeProtocol') == kugouStandardGradeProtocol &&
+                  row.number('credentialAppId') == 1005,
+            )
+            .toList();
+    final milliseconds = fresh.fold<int>(
+      0,
+      (sum, row) => sum + row.number('heardMs'),
+    );
+    final seconds = milliseconds ~/ 1000;
+    if (fresh.isEmpty || seconds < 1) return null;
+    final first = fresh.first;
+    final payload = <String, Object?>{
+      ...first.payload,
+      'heardMs': milliseconds,
+      'diffSec': seconds,
+      'protocol': kugouStandardGradeProtocol,
+      'baseline': baseline,
+      'localMillis': baseline * 1000 + milliseconds,
+      'target': baseline + seconds,
+      'sources': fresh.map((row) => row.id).toList(),
+    };
+    for (final row in fresh.skip(1)) {
+      await change(
+        row,
+        ListeningSyncState.coalesced,
+        now,
+        expected: ListeningSyncState.queued,
+      );
+    }
+    if (!await change(
+      first,
+      ListeningSyncState.dispatched,
+      now,
+      payload: payload,
+      expected: ListeningSyncState.queued,
+    )) {
+      return null;
+    }
+    if (milliseconds % 1000 > 0) {
+      await put(
+        owner: owner,
+        id: 'grade-v4:carry:${first.id}',
+        kind: 'grade_v4',
+        payload: {
+          'heardMs': milliseconds % 1000,
+          'segmentId': first.text('segmentId'),
+          'gradeProtocol': kugouStandardGradeProtocol,
+          'credentialAppId': 1005,
+        },
+        now: now,
+      );
+    }
+    return ListeningSyncEntry(
+      ownerId: owner,
+      id: first.id,
+      kind: 'grade_v4',
       payload: payload,
       state: ListeningSyncState.dispatched,
       createdAt: first.createdAt,

@@ -130,6 +130,10 @@ Future<void> showSongActions(
         platformAvailable: remote && matching,
         extras: extras,
         loadDetails: remote && matching ? () => repository.load(track) : null,
+        reloadDetails: remote && matching
+            ? (previous, part) =>
+                  repository.load(track, previous: previous, only: part)
+            : null,
         onSelect: (value) => Navigator.pop(sheet, value),
       );
     },
@@ -252,6 +256,7 @@ class SongActionsPanel extends ConsumerStatefulWidget {
     this.platformAvailable = true,
     this.extras = const [],
     this.loadDetails,
+    this.reloadDetails,
     super.key,
   });
   final Track track;
@@ -259,6 +264,8 @@ class SongActionsPanel extends ConsumerStatefulWidget {
   final bool favorites, playable, libraryAvailable, platformAvailable;
   final List<SongMenuExtraAction> extras;
   final Future<SongMenuDetails> Function()? loadDetails;
+  final Future<SongMenuDetails> Function(SongMenuDetails, SongDetailsSection)?
+  reloadDetails;
   @override
   ConsumerState<SongActionsPanel> createState() => _SongActionsPanelState();
 }
@@ -268,6 +275,10 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
   Future<SongMenuDetails> _load() =>
       widget.loadDetails?.call() ??
       Future.value(SongMenuDetails.local(widget.track));
+  void _retry(SongMenuDetails data, SongDetailsSection section) => setState(() {
+    // FutureBuilder 保留上一个已取得的值，只更新失败部分的结果。
+    _details = widget.reloadDetails?.call(data, section) ?? _load();
+  });
   Widget _action(String label, IconData icon, Object intent, {Color? color}) =>
       ListTile(
         key: intent is String ? ValueKey('song-menu-$intent') : null,
@@ -421,12 +432,27 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
                                 icon: const Icon(
                                   CupertinoIcons.arrow_clockwise,
                                 ),
-                                label: const Text('资料加载未完成，重试'),
+                                label: const Text('歌手、专辑资料读取失败，重试'),
+                              ),
+                            for (final section in data.failed)
+                              TextButton.icon(
+                                onPressed:
+                                    result.connectionState ==
+                                        ConnectionState.done
+                                    ? () => _retry(data, section)
+                                    : null,
+                                icon: const Icon(
+                                  CupertinoIcons.arrow_clockwise,
+                                ),
+                                label: Text('${section.label}读取失败，重试'),
                               ),
                             if (!result.hasError &&
                                 result.connectionState ==
                                     ConnectionState.done &&
                                 data.creators.isEmpty &&
+                                !data.failed.contains(
+                                  SongDetailsSection.creators,
+                                ) &&
                                 widget.loadDetails != null)
                               TextButton(
                                 onPressed: () => setState(() {

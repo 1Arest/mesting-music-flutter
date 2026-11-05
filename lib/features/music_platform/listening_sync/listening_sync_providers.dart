@@ -1,14 +1,20 @@
 import '../domain/platform_session.dart';
+import '../domain/kugou_listening_profile.dart';
+import '../kugou_listening_profile_providers.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../core/audio/playback_providers.dart';
 import '../../../core/persistence/app_preferences.dart';
 import '../../../core/persistence/playback_persistence_controller.dart';
 import '../../library/library_providers.dart';
 import '../music_platform_providers.dart';
+import '../data/kugou_official_api.dart';
+import '../data/kugou_v4_grade_repository.dart';
 import 'listening_sync_coordinator.dart';
+import 'listening_daily_readback.dart';
 import 'listening_sync_models.dart';
 import 'listening_sync_repository.dart';
 import 'listening_sync_store.dart';
@@ -37,6 +43,46 @@ final platformListeningSyncStoreProvider = Provider<ListeningSyncStore>(
   (ref) => ListeningSyncStore(ref.watch(appDatabaseProvider)),
 );
 
+/// Standard grade authorization is separate from the legacy playback login.
+/// Closing this account epoch also invalidates A→B→A late network responses.
+final kugouV4GradeRepositoryProvider = Provider<KugouV4GradeRepository>((ref) {
+  ref.watch(
+    platformAccountProvider.select(
+      (value) => (
+        value.value?.platform,
+        value.value?.userId,
+        value.value?.token,
+        value.value?.kugouStandardToken,
+      ),
+    ),
+  );
+  final api = ref.watch(musicPlatformApiProvider);
+  final client = http.Client();
+  var closed = false;
+  ref.listen(platformAccountProvider, (previous, next) {
+    final before = previous?.value, after = next.value;
+    if (before?.platform != after?.platform ||
+        before?.userId != after?.userId ||
+        before?.token != after?.token ||
+        before?.kugouStandardToken != after?.kugouStandardToken) {
+      // 同步撤销旧授权周期，快速A→B→A也不能让旧请求重新有效。
+      closed = true;
+      client.close();
+    }
+  });
+  ref.onDispose(() {
+    closed = true;
+    client.close();
+  });
+  return KugouV4GradeRepository(
+    client: client,
+    currentIdentity: () =>
+        closed ? null : ref.read(platformAccountProvider).value,
+    device: () => KugouOfficialApi.registeredDevice(api),
+    clock: ref.watch(kugouListeningProfileClockProvider),
+  );
+});
+
 /// Watch once from the Beta application root. Rebuilds/route changes do not
 /// create more subscriptions; account and toggle listeners drive activation.
 final platformListeningSyncProvider = Provider<ListeningSyncCoordinator>((ref) {
@@ -45,7 +91,23 @@ final platformListeningSyncProvider = Provider<ListeningSyncCoordinator>((ref) {
     feed: HandlerListeningAudioFeed(ref.watch(audioHandlerProvider)),
     store: ref.watch(platformListeningSyncStoreProvider),
     gateway: KugouListeningRepository(api),
+    standardGradeGateway: ref.watch(kugouV4GradeRepositoryProvider),
     currentIdentity: () => api.session,
+    officialDayReader: (identity, day) async {
+      final fact = await ref
+          .read(kugouListeningProfileRepositoryProvider)
+          .statistics(identity, KugouListenPeriod.day, day);
+      final seconds = fact.seconds;
+      if (seconds == null) {
+        throw const FormatException('Official daily duration is absent');
+      }
+      return OfficialListeningDayFact(
+        day: fact.date,
+        seconds: seconds,
+        readAt: fact.readAt,
+        totalSeconds: fact.totalSeconds,
+      );
+    },
     prepareOwner: ref
         .watch(playbackPersistenceControllerProvider)
         .activateOwner,
@@ -65,7 +127,8 @@ final platformListeningSyncProvider = Provider<ListeningSyncCoordinator>((ref) {
     // must not manufacture another play instance or split a listening span.
     if (previous != null &&
         before?.ownerId == after?.ownerId &&
-        before?.token == after?.token) {
+        before?.token == after?.token &&
+        before?.kugouStandardToken == after?.kugouStandardToken) {
       return;
     }
     activate();
@@ -84,4 +147,26 @@ final platformListeningSyncSummaryProvider =
       return ref
           .watch(platformListeningSyncStoreProvider)
           .watchSummary('kugou:${session.userId}');
+    });
+
+/// The value belongs to the current account and current calendar day. It is a
+/// read-back observation, separate from accepted/uncertain upload counts.
+final kugouOfficialDailySyncStatusProvider =
+    StreamProvider<OfficialListeningDayStatus?>((ref) {
+      final session = ref.watch(platformAccountProvider).value;
+      final clock = ref.watch(kugouListeningProfileClockProvider);
+      if (session == null || session.platform != MusicPlatform.kugou) {
+        return Stream.value(null);
+      }
+      return ref
+          .watch(platformListeningSyncStoreProvider)
+          .watchOfficialDays('kugou:${session.userId}')
+          .map((rows) {
+            final day = OfficialListeningDayStatus.dayKey(clock());
+            for (final row in rows) {
+              final value = OfficialListeningDayStatus.fromEntry(row);
+              if (value?.day == day) return value;
+            }
+            return null;
+          });
     });
