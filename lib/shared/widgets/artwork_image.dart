@@ -79,6 +79,8 @@ class _ArtworkImageState extends State<ArtworkImage> {
   ArtworkRefreshRegistration? _registration;
   Timer? _retryTimer;
   int _networkRetry = 0;
+  int _resolutionRevision = 0;
+  ImageProvider<Object>? _directNetworkProvider;
   File? _persistentNetworkFile;
   String? _persistentNetworkIdentity;
   bool _persistentNetworkFailed = false;
@@ -194,18 +196,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
         label: empty ? '暂无封面' : '重试加载封面',
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: empty
-              ? null
-              : () {
-                  _retryTimer?.cancel();
-                  _networkRetry = 0;
-                  _persistentNetworkFailed = false;
-                  // This is an explicit failed item. Retrying it must not hide other
-                  // successful rows or restore a generic album placeholder.
-                  _resetPersistentNetworkImage();
-                  widget.onRetry?.call();
-                  setState(() {});
-                },
+          onTap: empty ? null : _retryFailedImage,
           child: SizedBox(
             width: widget.width,
             height: widget.height,
@@ -342,6 +333,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
       }) => RetainedArtworkFrame(
         key: const ValueKey('retained-artwork-frame'),
         uri: uri,
+        retryRevision: _resolutionRevision,
         owner: widget.frameOwner ?? artworkContentIdentity(widget.uri),
         onReadinessChanged: (value) {
           _decoded = value;
@@ -362,6 +354,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
           cacheHeight,
           networkArtworkProvider(uri),
         );
+        _directNetworkProvider = provider;
         return frame(
           provider,
           onError: (error, stackTrace) {
@@ -475,12 +468,36 @@ class _ArtworkImageState extends State<ArtworkImage> {
       return;
     }
     final nextRetry = _networkRetry + 1;
+    final identity = _requestUri;
     _retryTimer = Timer(Duration(milliseconds: 650 * nextRetry), () async {
       _retryTimer = null;
       await provider.evict();
-      if (!mounted) return;
-      setState(() => _networkRetry = nextRetry);
+      if (!mounted || identity != _requestUri) return;
+      setState(() {
+        _networkRetry = nextRetry;
+        _resolutionRevision++;
+      });
+      _startDeadline();
     });
+  }
+
+  /// Explicit retry evicts the precise resized provider. A plain rebuild of
+  /// an equal provider never reconnects RetainedArtworkFrame's failed stream.
+  Future<void> _retryFailedImage() async {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    final identity = _requestUri;
+    await _directNetworkProvider?.evict();
+    if (!mounted || identity != _requestUri) return;
+    setState(() {
+      _networkRetry = 0;
+      _resolutionRevision++;
+      _initialDeadline?.cancel();
+      _initialDeadline = null;
+      _resetPersistentNetworkImage();
+    });
+    _startDeadline();
+    widget.onRetry?.call();
   }
 
   ({PersistentNetworkImageCache cache, String cacheKey, String uri})?

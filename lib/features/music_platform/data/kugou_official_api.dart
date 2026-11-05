@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
@@ -6,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../domain/platform_session.dart';
 import 'music_platform_api.dart';
+import '../../../core/network/music_http_client.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 
 /// 明确列举已从官版20.8.6或它实际加载的官方H5代码核实的服务。
 /// 调用方不能传任意主机，也不能借查询参数覆盖账号归属。
@@ -41,9 +42,14 @@ enum KugouOfficialRoute {
 }
 
 class KugouOfficialException implements Exception {
-  const KugouOfficialException(this.message, {this.loginRequired = false});
+  const KugouOfficialException(
+    this.message, {
+    this.loginRequired = false,
+    this.outcome,
+  });
   final String message;
   final bool loginRequired;
+  final MusicNetworkOutcome? outcome;
   @override
   String toString() => message;
 }
@@ -157,38 +163,46 @@ class KugouOfficialApi {
         'token': owner.kugouOfficialToken,
     };
     parameters['signature'] = signature(parameters, encoded);
-    final request = http.Request(
-      body == null ? 'GET' : 'POST',
-      Uri.https(route.host, route.path, parameters),
-    )..followRedirects = false;
-    request.headers.addAll({
+    final headers = {
       'Accept': 'application/json',
       'Cache-Control': 'no-cache',
       'Referer': 'https://h5.kugou.com/',
       'Origin': 'https://h5.kugou.com',
-    });
+    };
     if (body != null) {
-      request.headers['Content-Type'] = 'application/json;charset=utf-8';
-      request.body = encoded;
+      headers['Content-Type'] = 'application/json;charset=utf-8';
     }
     try {
-      final response = await client
-          .send(request)
-          .timeout(const Duration(seconds: 15));
-      final bytes = <int>[];
-      await for (final chunk in response.stream.timeout(
-        const Duration(seconds: 15),
-      )) {
-        bytes.addAll(chunk);
-        if (bytes.length > 4 * 1024 * 1024) {
-          throw const FormatException();
-        }
-      }
+      // One bounded transaction covers headers AND body, with real abort and
+      // no retry of uncertain writes (likes, medal wearing/claims or cities).
+      final response = await sendMusicRequest(
+        client: client,
+        platform: 'kugou',
+        operation: MusicNetworkOperation.read,
+        timeout: const Duration(seconds: 15),
+        maximumResponseBytes: 4 * 1024 * 1024,
+        phase: MusicDiagnosticPhase.networkSend,
+        build: (abort) {
+          final request =
+              http.AbortableRequest(
+                  body == null ? 'GET' : 'POST',
+                  Uri.https(route.host, route.path, parameters),
+                  abortTrigger: abort,
+                )
+                ..followRedirects = false
+                ..headers.addAll(headers);
+          if (body != null) request.body = encoded;
+          return request;
+        },
+      );
       _check(owner);
       if (response.statusCode != 200) {
-        throw const KugouOfficialException('酷狗服务暂时不可用，请重试');
+        throw const KugouOfficialException(
+          '酷狗服务响应异常，请重试',
+          outcome: MusicNetworkOutcome.http,
+        );
       }
-      final decoded = jsonDecode(utf8.decode(bytes));
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       if (decoded is! Map) {
         throw const FormatException();
       }
@@ -196,16 +210,37 @@ class KugouOfficialApi {
       if ('${payload['status']}' != '1') {
         final code = '${payload['errcode'] ?? payload['error_code'] ?? ''}';
         final auth = {'30000', '20018'}.contains(code);
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'kugou',
+          operation: MusicNetworkOperation.read,
+          outcome: MusicNetworkOutcome.business,
+          status: int.tryParse(code),
+          phase: MusicDiagnosticPhase.responseValidate,
+        );
         throw KugouOfficialException(
           auth ? '该官方服务需要重新验证酷狗登录' : '酷狗暂未返回这项资料，请重试',
           loginRequired: auth,
+          outcome: MusicNetworkOutcome.business,
         );
       }
       return payload;
     } on KugouOfficialException {
       rethrow;
+    } on MusicTransportException catch (error) {
+      throw KugouOfficialException(error.message, outcome: error.outcome);
     } catch (_) {
-      throw const KugouOfficialException('酷狗资料读取失败，请检查网络后重试');
+      // A received but malformed payload is distinct from DNS/TLS/timeout.
+      // Only closed categories are retained, never the signed URL or body.
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'kugou',
+        operation: MusicNetworkOperation.read,
+        outcome: MusicNetworkOutcome.format,
+        phase: MusicDiagnosticPhase.responseDecode,
+      );
+      throw const KugouOfficialException(
+        '酷狗资料格式异常，请稍后重试',
+        outcome: MusicNetworkOutcome.format,
+      );
     }
   }
 }

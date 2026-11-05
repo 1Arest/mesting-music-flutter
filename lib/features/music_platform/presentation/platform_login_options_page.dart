@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
+import '../../../core/security/credential_failure.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
 import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
@@ -73,6 +76,7 @@ class _MusicPlatformSwitchPageState
     extends ConsumerState<MusicPlatformSwitchPage> {
   bool _busy = false;
   MusicPlatform? _target;
+  MusicPlatform? _unreadableTarget;
   String? _error;
 
   Future<void> _select(MusicPlatform platform) async {
@@ -81,6 +85,7 @@ class _MusicPlatformSwitchPageState
       _busy = true;
       _target = platform;
       _error = null;
+      _unreadableTarget = null;
     });
     try {
       final controller = ref.read(platformAccountProvider.notifier);
@@ -95,11 +100,78 @@ class _MusicPlatformSwitchPageState
         await controller.switchPlatform(platform);
       }
       if (mounted) Navigator.of(context).pop(true);
-    } catch (_) {
-      if (mounted) setState(() => _error = '切换未完成，请重试；原账号数据已保留。');
+    } on Object catch (error) {
+      if (mounted) {
+        setState(() {
+          if (error is CredentialStoreException || error is TimeoutException) {
+            // A broken TARGET credential must not strand a healthy CURRENT
+            // account. Only a subsequent, user-requested login may replace it.
+            _unreadableTarget = platform;
+            _error = error is CredentialStoreException
+                ? error.message
+                : '该平台登录资料仍在处理中，可重试或重新登录；原资料已保留';
+          } else {
+            _error = '切换未完成，请重试；原账号数据已保留。';
+          }
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _reauthenticate(MusicPlatform platform) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _target = platform;
+    });
+    try {
+      final success = await Navigator.of(context).push<bool>(
+        betaEntryRoute(PlatformLoginOptionsPage(platform: platform)),
+      );
+      // Cancelling the form leaves the selected account and both stores alone.
+      // The existing controller owns authentication, durable save and publish.
+      if (mounted && success == true) Navigator.of(context).pop(true);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _platformButton(MusicPlatform platform, MusicPlatform? active) {
+    final caption =
+        '${platform == MusicPlatform.kugou ? '酷狗音乐' : '网易云音乐'}'
+        '${platform == active ? ' · 当前平台' : ''}';
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The current-platform suffix can wrap at large accessibility sizes.
+        // Measure the same inherited type style instead of clipping two lines
+        // inside the shared button's normal 52dp height or shrinking the text.
+        final painter =
+            TextPainter(
+              text: TextSpan(
+                text: caption,
+                style: DefaultTextStyle.of(context).style.merge(
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                ),
+              ),
+              textScaler: MediaQuery.textScalerOf(context),
+              textDirection: Directionality.of(context),
+            )..layout(
+              maxWidth: (constraints.maxWidth - 36).clamp(1, double.infinity),
+            );
+        final height = painter.height + 24;
+        painter.dispose();
+        return BetaGlassButton(
+          height: height > 52 ? height : 52,
+          loading: _busy && _target == platform,
+          onPressed: _busy || platform == active
+              ? null
+              : () => _select(platform),
+          child: Text(caption, textAlign: TextAlign.center),
+        );
+      },
+    );
   }
 
   @override
@@ -109,16 +181,7 @@ class _MusicPlatformSwitchPageState
       title: '切换音乐平台',
       children: [
         for (final platform in MusicPlatform.values) ...[
-          BetaGlassButton(
-            loading: _busy && _target == platform,
-            onPressed: _busy || platform == active
-                ? null
-                : () => _select(platform),
-            child: Text(
-              '${platform == MusicPlatform.kugou ? '酷狗音乐' : '网易云音乐'}'
-              '${platform == active ? ' · 当前平台' : ''}',
-            ),
-          ),
+          _platformButton(platform, active),
           const SizedBox(height: 14),
         ],
         if (_error != null)
@@ -128,6 +191,17 @@ class _MusicPlatformSwitchPageState
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
+        if (_unreadableTarget != null) ...[
+          const SizedBox(height: 16),
+          BetaGlassButton(
+            key: const ValueKey('platform-switch-reauthenticate'),
+            loading: _busy,
+            onPressed: _busy ? null : () => _reauthenticate(_unreadableTarget!),
+            child: Text(
+              '重新登录${_unreadableTarget == MusicPlatform.netease ? '网易云' : '酷狗'}',
+            ),
+          ),
+        ],
       ],
     );
   }

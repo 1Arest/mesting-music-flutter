@@ -41,6 +41,9 @@ enum MusicDiagnosticPhase {
   recoveryWrite,
   accountPublish,
   networkPrepare,
+  networkSend,
+  responseDecode,
+  responseValidate,
 }
 
 enum MusicFailureFamily {

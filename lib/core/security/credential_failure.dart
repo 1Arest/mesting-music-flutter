@@ -10,7 +10,18 @@ class CredentialStoreException implements Exception {
   final MusicDiagnosticPhase phase;
   final MusicFailureFamily family;
 
-  String get message => family == MusicFailureFamily.timeout
+  /// Permanent key/decode failures cannot be repaired by repeating the same
+  /// read. Reauthentication is explicit and never deletes the legacy bytes.
+  bool get requiresReauthentication =>
+      family == MusicFailureFamily.keyInvalidated ||
+      family == MusicFailureFamily.decrypt ||
+      phase == MusicDiagnosticPhase.storageDecode;
+
+  String get message => family == MusicFailureFamily.keyInvalidated
+      ? '本机保存的登录密钥已失效，请重新登录此平台；原加密资料已保留'
+      : family == MusicFailureFamily.decrypt
+      ? '本机登录资料无法解密，请重新登录此平台；原加密资料已保留'
+      : family == MusicFailureFamily.timeout
       ? '本机登录资料仍在处理中，请稍后重试；原资料已保留'
       : phase == MusicDiagnosticPhase.storageDecode
       ? '本机登录资料暂时无法解析，可重新登录；原资料已保留'

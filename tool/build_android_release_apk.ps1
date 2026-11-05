@@ -1,6 +1,6 @@
 param(
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$VersionName = '1.0.54',
-    [ValidateRange(64, 2147483647)][int]$VersionCode = 75,
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$VersionName = '1.0.55',
+    [ValidateRange(64, 2147483647)][int]$VersionCode = 76,
     [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,
     [switch]$TogetherSyncDiagnostics
 )

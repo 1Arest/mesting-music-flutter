@@ -18,12 +18,17 @@ class RetainedArtworkFrame extends StatefulWidget {
     this.onError,
     this.owner,
     this.onReadinessChanged,
+    this.retryRevision = 0,
     super.key,
   });
   final String uri;
   final String scope;
   final String? owner;
   final ValueChanged<bool>? onReadinessChanged;
+
+  /// Re-resolve an evicted provider even when its URL/size are unchanged.
+  /// Keeping this widget's identity preserves its last successful frame.
+  final int retryRevision;
   final ImageProvider<Object>? image;
   final Widget fallback;
   final double? width, height;
@@ -57,6 +62,7 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
     if (oldWidget.scope != widget.scope ||
         oldWidget.owner != widget.owner ||
         oldWidget.uri != widget.uri ||
+        oldWidget.retryRevision != widget.retryRevision ||
         oldWidget.image != widget.image) {
       _resolve();
     }

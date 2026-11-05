@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -147,6 +148,8 @@ Future<http.Response> sendMusicRequest({
   Future<void>? abortTrigger,
   bool retryRead = false,
   bool Function(http.Response response)? retryResponse,
+  int? maximumResponseBytes,
+  MusicDiagnosticPhase? phase,
 }) async {
   var externallyCancelled = false;
   Completer<void>? activeAbort;
@@ -170,7 +173,29 @@ Future<http.Response> sendMusicRequest({
     try {
       final response = await client
           .send(request)
-          .then(http.Response.fromStream)
+          .then((response) async {
+            if (maximumResponseBytes == null) {
+              return http.Response.fromStream(response);
+            }
+            // Small JSON services may cap their own decoded bytes; large
+            // libraries/audio keep the existing uncapped streaming contract.
+            final bytes = BytesBuilder(copy: false);
+            await for (final chunk in response.stream) {
+              if (bytes.length + chunk.length > maximumResponseBytes) {
+                throw const FormatException('Music response exceeds limit');
+              }
+              bytes.add(chunk);
+            }
+            return http.Response.bytes(
+              bytes.takeBytes(),
+              response.statusCode,
+              request: response.request,
+              headers: response.headers,
+              isRedirect: response.isRedirect,
+              persistentConnection: response.persistentConnection,
+              reasonPhrase: response.reasonPhrase,
+            );
+          })
           .timeout(
             timeout,
             onTimeout: () {
@@ -189,6 +214,7 @@ Future<http.Response> sendMusicRequest({
         attempt: attempt,
         status: response.statusCode,
         transport: transport,
+        phase: phase,
       );
       if (retryRead &&
           attempt == 1 &&
@@ -209,6 +235,7 @@ Future<http.Response> sendMusicRequest({
         elapsedMs: watch.elapsedMilliseconds,
         attempt: attempt,
         transport: transport,
+        phase: phase,
       );
       if (outcome == MusicNetworkOutcome.cancelled) {
         throw http.RequestAbortedException();

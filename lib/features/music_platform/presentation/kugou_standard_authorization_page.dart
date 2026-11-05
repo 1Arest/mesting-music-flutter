@@ -11,10 +11,12 @@ import '../data/kugou_official_api.dart';
 import '../data/kugou_standard_login.dart';
 import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
+import '../kugou_listening_profile_providers.dart';
+import '../../../core/network/music_http_client.dart';
 
 /// 生产复用本机注册设备；测试可注入响应，不需要访问手机或真实账号。
 final kugouStandardAuthorizationClientFactoryProvider =
-    Provider<http.Client Function()>((ref) => http.Client.new);
+    Provider<http.Client Function()>((ref) => MusicHttpClient.new);
 final kugouStandardAuthorizationDeviceProvider =
     Provider<Future<Map<String, String>> Function()>((ref) {
       final api = ref.watch(musicPlatformApiProvider);
@@ -24,11 +26,24 @@ final kugouStandardAuthorizationDeviceProvider =
 Future<bool> openKugouStandardAuthorization(
   BuildContext context,
   PlatformSession owner,
-) async =>
-    await Navigator.of(context).push<bool>(
-      betaContentRoute(KugouStandardAuthorizationPage(owner: owner)),
-    ) ==
-    true;
+) async {
+  final accepted =
+      await Navigator.of(context).push<bool>(
+        betaContentRoute(KugouStandardAuthorizationPage(owner: owner)),
+      ) ==
+      true;
+  if (accepted && context.mounted) {
+    // Re-read the current reader outside route build. Same-token verification
+    // must retry a cached failure too; invalidating a provider while its route
+    // subscription is paused can race TickerMode's reactivation.
+    final reader = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(kugouListeningProfileReaderProvider);
+    unawaited(reader?.loadOverview(force: true));
+  }
+  return accepted;
+}
 
 /// 为当前UID补充标准客户端授权。扫码期间不更换主登录，也不恢复/重置播放。
 class KugouStandardAuthorizationPage extends ConsumerStatefulWidget {

@@ -1,0 +1,481 @@
+{
+  "version": "1.0.55",
+  "androidVersionCode": 76,
+  "packageName": "com.mesting.music",
+  "appName": "Mesting Music",
+  "localOnly": true,
+  "beta": {
+    "completeAndSuccessful": true,
+    "counts": {
+      "success": 2046,
+      "skipped": 2
+    },
+    "files": 185,
+    "completeFileRerunProvenance": {
+      "D:/AnLi/test/release_155_network_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_155_official_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_155_ui_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_151_login_test.dart": "final-regressions.jsonl"
+    }
+  },
+  "stable": {
+    "completeAndSuccessful": true,
+    "counts": {
+      "success": 63
+    },
+    "files": 6
+  },
+  "navigation": {
+    "completeAndSuccessful": true,
+    "counts": {
+      "success": 55
+    },
+    "files": 1
+  },
+  "analysisIssues": 0,
+  "wholeFileSuccessfulRerunsReplacePriorResults": true,
+  "new155Cases": {
+    "D:/AnLi/test/release_155_artwork_test.dart": {
+      "success": 2
+    },
+    "D:/AnLi/test/release_155_network_test.dart": {
+      "success": 8
+    },
+    "D:/AnLi/test/release_155_authorization_test.dart": {
+      "success": 1
+    },
+    "D:/AnLi/test/release_155_official_test.dart": {
+      "success": 10
+    },
+    "D:/AnLi/test/release_155_storage_test.dart": {
+      "success": 7
+    },
+    "D:/AnLi/test/release_155_ui_test.dart": {
+      "success": 9
+    }
+  },
+  "https": {
+    "missingTlsReproducedBeforeFix": true,
+    "actualLoopbackTlsServer": true,
+    "androidFactoryExercisedWithMockSystemPolicyAndDns": true,
+    "originalHostnameCertificateVerification": true,
+    "wrongHostnameRejected": true,
+    "httpConnectProxyVerified": true,
+    "largeStreamOver18MiBVerified": true,
+    "inFlightGenerationChangePostSentOnce": true,
+    "handshakeCloseReleasesSocket": true,
+    "neteaseFirstArtworkDecodedThroughFactory": true,
+    "kugouStatisticsGradeMusicAgeMedalsReadThroughFactory": true,
+    "physicalAndroidTlsOrVpnExecuted": false
+  },
+  "images": {
+    "automaticAndExplicitSameUrlRetriesVerified": true,
+    "successfulNeighborPixelsRetained": true,
+    "restartRequiredByDesign": false
+  },
+  "storage": {
+    "readableBothPlatformCredentialsRestoreWithoutReplacement": true,
+    "unreadableTargetReauthenticationPreservesCurrentAccount": true,
+    "cancelAndFailedSavePreserveCurrentAccount": true,
+    "verifiedRecoverySurvivesNewRepositoryInstances": true,
+    "oldEncryptedBytesRetained": true,
+    "originalCipherAndNamespaceOptionsUnchanged": true,
+    "resetOnError": false,
+    "initialUserKeyInvalidationCauseKnown": false,
+    "permanentlyInvalidKeyAutomaticallyDecrypted": false,
+    "physicalKeystoreColdRestoreVerified": false
+  },
+  "kugouOfficial": {
+    "standardProtocolAndCredentialAppIdPreserved": true,
+    "completeHeadersAndBodyDeadline": true,
+    "actualAbort": true,
+    "smallJsonLimitBytes": 4194304,
+    "unknownWritesAutomaticallyReplayed": false,
+    "sameTokenSuccessfulQrForcesOverviewRetry": true,
+    "networkHttpBusinessFormatErrorsSeparated": true,
+    "realOfficialAccountDataValidated": false
+  },
+  "diagnostics": {
+    "schema": 2,
+    "memoryOnly": true,
+    "maximumEvents": 80,
+    "fixedCategoriesOnly": true,
+    "signedUrlsCredentialsDeviceIdsOrRawExceptionsIncluded": false
+  },
+  "inheritedNativeJvm": {
+    "fromVersion": "1.0.54",
+    "background": 16,
+    "systemHttp": 13,
+    "credentialFamily": 6,
+    "totalPassed": 35,
+    "rerunFor155": false
+  },
+  "inheritedRustHost": {
+    "fromVersion": "1.0.54",
+    "passed": 136,
+    "ignoredExternalNetworkCases": 6,
+    "rerunFor155": false
+  },
+  "sdkHistoricalOnly": {
+    "passed": 563,
+    "sourceFilesVerified": 242,
+    "rerunFor155": false
+  },
+  "unchangedNativeThirdPartyAndMotionInputsVerified": 785,
+  "finalHostScreenshots": {
+    "total": 24,
+    "visuallyInspected": true,
+    "lightDarkNarrowAndLargeText": true,
+    "currentPlatformLabelClippingRepaired": true,
+    "physicalGpuMeasured": false
+  },
+  "welcomeMotion": {
+    "scheduledFrames": 193,
+    "priorContinuousFrameDemand": 720,
+    "fromVersion": "1.0.53",
+    "physicalGpuMeasured": false
+  },
+  "actualApk": {
+    "version": "1.0.55",
+    "androidVersionCode": 76,
+    "packageName": "com.mesting.music",
+    "appName": "Mesting Music",
+    "file": "Mesting-Music-v1.0.55.apk",
+    "fileSize": 108669453,
+    "sha256": "33964c2df6cfa59bff832ad77361a809f1147f8a73f87bc2334314a18a0d78d9",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+    "originalSignature": true,
+    "v2Signature": true,
+    "v3Signature": true,
+    "debuggable": false,
+    "minSdk": 24,
+    "targetSdk": 36,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "zipCrcVerified": true,
+    "zipAlignment16KiB": true,
+    "nativeLibraries": [
+      {
+        "path": "lib/arm64-v8a/libapp.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libflutter.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libkugou_server.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libring_receive_buffer.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlite3.so",
+        "bits": 64,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libapp.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libflutter.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          65536,
+          65536,
+          65536
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libkugou_server.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096,
+          4096
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libring_receive_buffer.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          16384,
+          16384,
+          16384
+        ]
+      },
+      {
+        "path": "lib/armeabi-v7a/libsqlite3.so",
+        "bits": 32,
+        "loadSegmentAlignments": [
+          4096,
+          4096,
+          4096
+        ]
+      }
+    ],
+    "unchangedNonAppNativePayloadsFrom54": [
+      {
+        "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+        "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1"
+      },
+      {
+        "path": "lib/arm64-v8a/libflutter.so",
+        "sha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3"
+      },
+      {
+        "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+        "sha256": "7b299113fcd743de7dc5559686b21fc2681b2c8598347d8dc0743d2e004995ca"
+      },
+      {
+        "path": "lib/arm64-v8a/libkugou_server.so",
+        "sha256": "63b2b1ba786f4788191ba8c799258c9c22b68c81db366e003513928afe4801fd"
+      },
+      {
+        "path": "lib/arm64-v8a/libring_receive_buffer.so",
+        "sha256": "1538e629e1fd3b17c4a5b1236cbd6fe3df6b234260d0e0d417083a5bf46a6dda"
+      },
+      {
+        "path": "lib/arm64-v8a/libsqlite3.so",
+        "sha256": "39d7e39ce70936ff0efcfe919cebb98b6750903a67e81e66f7d92e974b1f51aa"
+      },
+      {
+        "path": "lib/armeabi-v7a/libdatastore_shared_counter.so",
+        "sha256": "716c5d8d2cac8ca0edf65da8f139c7886b726ac79d542a14edeb94994ba6d3dc"
+      },
+      {
+        "path": "lib/armeabi-v7a/libflutter.so",
+        "sha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767"
+      },
+      {
+        "path": "lib/armeabi-v7a/libjingle_peerconnection_so.so",
+        "sha256": "762f3d5e1c4c69c3f02f2383540f40e1142cb631e9d99e86bdb1602f4c277559"
+      },
+      {
+        "path": "lib/armeabi-v7a/libkugou_server.so",
+        "sha256": "5d4efeb09b9d560dcbd1d9ee4bfe8e77d2b64bbab39cbc8c06149c8a5b09e284"
+      },
+      {
+        "path": "lib/armeabi-v7a/libring_receive_buffer.so",
+        "sha256": "dbe6590b43e0b5c3bb52c6f61b6761b36126e5718a6670671d4745777bd2b6da"
+      },
+      {
+        "path": "lib/armeabi-v7a/libsqlite3.so",
+        "sha256": "8c98b90c63fcb2fe0fdc42f15761e6cbb80671cd7f76ad8c9a626e7ba3c57a29"
+      }
+    ],
+    "changedAppPayloads": [
+      {
+        "path": "lib/arm64-v8a/libapp.so",
+        "sha256": "6fd8329ae59b626386318aaf25b7a556948104bc513e825567f6051f76a65592"
+      },
+      {
+        "path": "lib/armeabi-v7a/libapp.so",
+        "sha256": "c71bef207aa7fd98ffa5b3a47296a5a73f35d9091c5ef63e582028b543ab461f"
+      }
+    ],
+    "pinnedCustomReleaseEngine": {
+      "flutterVersion": "3.41.9",
+      "frameworkCommit": "00b0c91f06209d9e4a41f71b7a512d6eb3b9c694",
+      "upstreamEngineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+      "runtimeMode": "release",
+      "dartRevision": "c70f78e7d682c158c15ca0c26c729b3ccb932284",
+      "dependencySnapshotSha256": "204c7c2dd50b6d39aefa4f9e2dfd795bfbadfd23f130459f365b5aab00d1cbe9",
+      "compilerOptimization": "release",
+      "linkTimeOptimization": false,
+      "patchSha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66",
+      "createdAt": "2026-10-30T18:48:18.283417+00:00",
+      "licensesSha256": "1d531df6b9d1142fa3f6abc518cfab21adc6570ae11631c40a7ba366c93d2eaa",
+      "files": [
+        {
+          "abi": "arm64-v8a",
+          "jar": "arm64-v8a-release.jar",
+          "jarSha256": "4d2a41dec39c412a3d947237f32fb260541d60c9d08bbba3e886564f2acd70f9",
+          "nativeSha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3",
+          "nativeBytes": 12805608,
+          "nativeBuildId": "7f9d8a668f14166c413851535d650d072dc0053e",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "7823581ec4cecfcd8dac6b4556ad6be7292f51633ed916f92274e3767323b85a"
+        },
+        {
+          "abi": "armeabi-v7a",
+          "jar": "armeabi-v7a-release.jar",
+          "jarSha256": "bceb78dc0ba83367111a5abc848b044501f80c85580dfd8de1b264681f5518e9",
+          "nativeSha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767",
+          "nativeBytes": 8646952,
+          "nativeBuildId": "0f533f57422a3749c262e36ed443c583a9cbce11",
+          "symbolsStripped": true,
+          "loadSegmentAlignments": [
+            65536,
+            65536,
+            65536
+          ],
+          "gnArgsSha256": "eab3aff58453427ddfbc39b60f1599ff0902115f4c4638e588cb0574478da1af"
+        }
+      ]
+    },
+    "engineBytesMatchPinnedManifest": true,
+    "glassShadersComparedByteIdenticalAgainstLocalV136": [
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/interactive_indicator.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/lightweight_glass.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_geometry_blended.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/liquid_glass_render.frag",
+      "assets/flutter_assets/packages/liquid_glass_widgets/shaders/progressive_blur.frag",
+      "assets/flutter_assets/shaders/ink_sparkle.frag",
+      "assets/flutter_assets/shaders/stretch_effect.frag"
+    ],
+    "glassShadersByteIdenticalTo54": true,
+    "bundledNotesCount": 8,
+    "bundledNotesMatchVersion": true,
+    "licensePayloadsPresent": [
+      "assets/flutter_assets/NOTICES.Z",
+      "assets/flutter_assets/third_party/audio_glyphs/LICENSE",
+      "assets/flutter_assets/third_party/liquid_glass_widgets/LICENSE",
+      "assets/flutter_assets/third_party/md3music/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/LICENSE",
+      "assets/flutter_assets/third_party/netease_protocol/afp/LICENSE",
+      "assets/flutter_assets/third_party/region_data/LICENSE",
+      "META-INF/androidx/annotation/annotation/LICENSE.txt",
+      "assets/LICENSE.flutter-engine.txt"
+    ],
+    "testCertificateAndQaFontsAbsent": true,
+    "integrationTestPluginAbsent": true,
+    "localDiagnosticsEnabled": false,
+    "togetherSyncDiagnosticLoggingEnabled": false,
+    "nativePlaybackExperimentEnabled": false,
+    "newPlaybackUsesLegacyWeblog": true,
+    "oldAcceptedOrUnknownRecordsReplayed": false,
+    "pubspecLockSha256": "34c7d6e357e5f08a81f85b492582c0f9a18367fa264b0548acdbf6c401ca4f51",
+    "lockUnchangedFrom54": true,
+    "physicalUpgradeTestPerformed": false,
+    "deviceAccess": false,
+    "realAccountAccess": false,
+    "backendAccess": false,
+    "gitCommitted": false,
+    "gitPushed": false,
+    "uploaded": false,
+    "published": false,
+    "sourceAndBuildInputsVerified": 1513,
+    "compilerFlagsObservedDuringBuild": true,
+    "actualDexJniClasses": 3,
+    "actualDexJniMethodSignatures": 5,
+    "actualDexJniPublicFields": 12,
+    "actualJniAndNativePackagingVerified": true,
+    "productionNotesReader": {
+      "version": "1.0.55",
+      "versionCode": 76,
+      "notesCount": 8,
+      "productionReader": true,
+      "currentVersionOfflineHistoryMatches": true,
+      "rangeRequests": 3,
+      "bytesRead": 66337,
+      "networkAccess": false,
+      "deviceAccess": false,
+      "published": false
+    }
+  },
+  "pubspecLockSha256": "34c7d6e357e5f08a81f85b492582c0f9a18367fa264b0548acdbf6c401ca4f51",
+  "lockUnchangedFrom54": true,
+  "oldFormalFrozenArtifacts": 100,
+  "newFormalPairMakes": 102,
+  "sourceZipVerification": "release/Mesting-Music-v1.0.55-source-verification.json",
+  "notPerformed": [
+    "physical54to55Upgrade",
+    "physicalColdRestore",
+    "realAccountAccess",
+    "sameVpnSameNodeOnOff",
+    "wifiCellularSwitch",
+    "completeCdnSongPlayback",
+    "physicalGpuMeasurement",
+    "adbOrEmulatorAccess",
+    "backendAccess",
+    "commitPushUploadPublish"
+  ],
+  "unresolved": [
+    "initialDeviceKeyInvalidationCause",
+    "neteaseHistoricalTotalDuration",
+    "October683min10sec"
+  ],
+  "oldAcceptedOrUnknownPlaybackRecordsReplayed": false,
+  "phoneAcceptance": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false
+}

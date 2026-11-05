@@ -89,13 +89,72 @@ class MusicSystemNetwork {
         final host = proxyHost ?? uri.host;
         final port = proxyPort ?? uri.port;
         final addresses = await _lookup(host, policy.generation);
-        return happyEyeballsConnect(addresses, port);
+        final socket = happyEyeballsConnect(addresses, port);
+        // HttpClient delegates the entire direct connection to this factory;
+        // it does NOT add TLS to a custom plain socket. Use the URL hostname
+        // for SNI/certificate verification, never the resolved numeric address.
+        // For an HTTP proxy HttpClient owns CONNECT and its subsequent TLS.
+        return uri.scheme == 'https' && proxyHost == null
+            ? _secureMusicConnection(socket, uri.host)
+            : socket;
       };
     }
     return client;
   }
 
   Future<HttpClient> cacheClient(Uri uri) async => client(await policy(uri));
+}
+
+/// TLS is part of the cancellable connection, before any HTTP headers/body.
+/// Default platform roots and hostname checks remain mandatory. An interrupted
+/// handshake releases both the underlying socket and a late secure completion.
+ConnectionTask<Socket> _secureMusicConnection(
+  ConnectionTask<Socket> plain,
+  String hostname,
+) {
+  final result = Completer<Socket>();
+  Socket? connected;
+  SecureSocket? secured;
+  var cancelled = false;
+  void cancel([Object? error]) {
+    cancelled = true;
+    plain.cancel();
+    secured?.destroy();
+    connected?.destroy();
+    if (!result.isCompleted) {
+      result.completeError(
+        error ?? const SocketException('Connection cancelled'),
+      );
+    }
+  }
+
+  final deadline = Timer(
+    const Duration(seconds: 8),
+    () => cancel(TimeoutException('Music TLS connection deadline')),
+  );
+  Future<void> connect() async {
+    try {
+      connected = await plain.socket;
+      if (cancelled) {
+        connected!.destroy();
+        return;
+      }
+      secured = await SecureSocket.secure(connected!, host: hostname);
+      if (cancelled) {
+        secured!.destroy();
+      } else {
+        result.complete(secured);
+      }
+    } on Object catch (error, stack) {
+      connected?.destroy();
+      if (!result.isCompleted) result.completeError(error, stack);
+    } finally {
+      deadline.cancel();
+    }
+  }
+
+  unawaited(connect());
+  return ConnectionTask.fromSocket(result.future, cancel);
 }
 
 class MusicNetworkPolicy {
@@ -202,7 +261,8 @@ class SystemMusicIoClient extends http.BaseClient {
   SystemMusicIoClient({MusicSystemNetwork? network})
     : _network = network ?? MusicSystemNetwork.shared;
   final MusicSystemNetwork _network;
-  final _clients = <String, (HttpClient, IOClient)>{};
+  final _clients = <String, _MusicClientLease>{};
+  final _allClients = <_MusicClientLease>{};
   int _generation = -1;
   bool _closed = false;
 
@@ -210,35 +270,100 @@ class SystemMusicIoClient extends http.BaseClient {
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     var policy = await _network.policy(request.url);
     if (_closed) throw http.ClientException('Client closed');
-    if (!MusicSystemNetwork.local(request.url)) {
+    final local = MusicSystemNetwork.local(request.url);
+    if (!local) {
       if (policy.generation < _generation) {
         policy = await _network.policy(request.url);
       }
+      if (policy.generation < _generation) {
+        // Out-of-order platform replies may not resurrect a retired route.
+        // Nothing has been finalized/sent, so the caller can safely retry.
+        throw http.ClientException('Network policy changed before dispatch');
+      }
       if (policy.generation != _generation) {
-        // Retire idle old-route connections; existing streams can finish. Never
-        // delete a session or replay an in-flight mutation on a network change.
-        for (final pair in _clients.values) {
-          pair.$1.close(force: false);
+        // HttpClient.close(force:false) also cancels CONNECTING sockets. Lease
+        // the complete response stream so a startup network callback cannot
+        // abort every initial cover while its DNS/TLS work is still pending.
+        for (final key in _clients.keys.where((k) => k != 'local').toList()) {
+          _clients.remove(key)!.retire();
         }
-        _clients.clear();
         _generation = policy.generation;
       }
     }
     if (_closed) throw http.ClientException('Client closed');
-    final key = '${policy.generation}:${policy.proxy}';
+    final key = local ? 'local' : '${policy.generation}:${policy.proxy}';
     final pair = _clients.putIfAbsent(key, () {
       final client = _network.client(policy);
-      return (client, IOClient(client));
+      late final _MusicClientLease lease;
+      lease = _MusicClientLease(client, () => _allClients.remove(lease));
+      _allClients.add(lease);
+      return lease;
     });
-    return pair.$2.send(request);
+    return pair.send(request);
   }
 
   @override
   void close() {
     _closed = true;
-    for (final pair in _clients.values) {
-      pair.$1.close(force: true);
+    for (final pair in _allClients.toList()) {
+      pair.close();
     }
     _clients.clear();
+  }
+}
+
+/// A retired route accepts no new work, but an already-issued response retains
+/// its own transport through completion/cancellation. No request is replayed.
+class _MusicClientLease {
+  _MusicClientLease(this.native, this.onClosed) : client = IOClient(native);
+  final HttpClient native;
+  final IOClient client;
+  final void Function() onClosed;
+  int _active = 0;
+  bool _retired = false, _closed = false;
+
+  void _release() {
+    _active--;
+    if (_retired && _active == 0) close();
+  }
+
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    _active++;
+    try {
+      final response = await client.send(request);
+      Stream<List<int>> body() async* {
+        try {
+          yield* response.stream;
+        } finally {
+          _release();
+        }
+      }
+
+      return http.StreamedResponse(
+        body(),
+        response.statusCode,
+        contentLength: response.contentLength,
+        request: response.request,
+        headers: response.headers,
+        isRedirect: response.isRedirect,
+        persistentConnection: response.persistentConnection,
+        reasonPhrase: response.reasonPhrase,
+      );
+    } on Object {
+      _release();
+      rethrow;
+    }
+  }
+
+  void retire() {
+    _retired = true;
+    if (_active == 0) close();
+  }
+
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    client.close();
+    onClosed();
   }
 }

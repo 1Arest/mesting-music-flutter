@@ -81,6 +81,9 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
     'storageVerify' => '回读保存结果',
     'recoveryWrite' => '保存恢复资料',
     'accountPublish' => '本机登录确认',
+    'networkSend' => '请求与响应读取',
+    'responseDecode' => '解析服务资料',
+    'responseValidate' => '平台资料校验',
     _ => '准备连接',
   };
   static String _family(Object? name) => switch (name) {

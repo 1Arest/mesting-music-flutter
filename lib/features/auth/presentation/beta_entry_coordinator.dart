@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import '../../../core/network/music_network_diagnostics.dart';
+import '../../../core/security/credential_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/persistence/app_preferences.dart';
@@ -146,6 +147,7 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
       // mounted, but expose an honest, retryable restoration state.
       overlay = _AccountRestoreSurface(
         loading: platform.isLoading,
+        error: platform.error,
         onRetry: () => ref.invalidate(platformAccountProvider),
         onLogin: () => ref.read(betaEntryFlowProvider.notifier).welcome(),
       );
@@ -200,11 +202,13 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
 class _AccountRestoreSurface extends StatelessWidget {
   const _AccountRestoreSurface({
     required this.loading,
+    required this.error,
     required this.onRetry,
     required this.onLogin,
   });
 
   final bool loading;
+  final Object? error;
   final VoidCallback onRetry, onLogin;
 
   @override
@@ -219,13 +223,22 @@ class _AccountRestoreSurface extends StatelessWidget {
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('账号暂未恢复，登录信息已保留', textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    BetaGlassButton(
-                      onPressed: onRetry,
-                      child: const Text('重试恢复'),
+                    Text(
+                      error is CredentialStoreException
+                          ? (error as CredentialStoreException).message
+                          : '账号暂未恢复，登录信息已保留',
+                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+                    if (!(error is CredentialStoreException &&
+                        (error as CredentialStoreException)
+                            .requiresReauthentication)) ...[
+                      BetaGlassButton(
+                        onPressed: onRetry,
+                        child: const Text('重试恢复'),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     BetaGlassButton(
                       onPressed: onLogin,
                       child: const Text('重新登录'),
