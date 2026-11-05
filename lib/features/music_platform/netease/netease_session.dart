@@ -1,3 +1,4 @@
+import '../../../core/security/retained_secure_read.dart';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -72,7 +73,7 @@ class SecureNeteaseSessionStore implements NeteaseSessionStore {
   @override
   Future<NeteaseSession?> read() async {
     // A failed restore must leave the encrypted bytes available for recovery.
-    final encoded = await _storage.read(key: key);
+    final encoded = await readRetainedSecureValue(_storage, key);
     return encoded == null
         ? null
         : NeteaseSession.fromJson(jsonDecode(encoded) as Map<String, dynamic>);

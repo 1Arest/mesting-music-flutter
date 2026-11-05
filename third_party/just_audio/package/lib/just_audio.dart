@@ -1664,10 +1664,13 @@ class AudioPlayer {
                 errorMessage: playbackEvent.errorMessage,
               ));
 
-        if (active && _isAndroid() && _androidAudioOutputOwner != null && !wasInterrupted()) {
+        if (active &&
+            _isAndroid() &&
+            _androidAudioOutputOwner != null &&
+            !wasInterrupted()) {
           await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
-              .invokeMethod<void>('mestingSetOutputOwner',
-                  {'owner': _androidAudioOutputOwner});
+              .invokeMethod<void>(
+                  'mestingSetOutputOwner', {'owner': _androidAudioOutputOwner});
         }
         _platformValue = platform;
         return platform;
@@ -3384,6 +3387,9 @@ class LockCachingAudioSource extends StreamAudioSource {
   Future<HttpClientResponse>? _response;
   final Uri uri;
   final Map<String, String>? headers;
+
+  /// Bounds stalled headers/chunks without limiting total song/download length.
+  final Duration networkTimeout;
   final Future<File> cacheFile;
   int _progress = 0;
   final _requests = <_StreamingByteRangeRequest>[];
@@ -3400,6 +3406,7 @@ class LockCachingAudioSource extends StreamAudioSource {
     this.uri, {
     this.headers,
     File? cacheFile,
+    this.networkTimeout = const Duration(seconds: 12),
     dynamic tag,
   })  : cacheFile =
             cacheFile != null ? Future.value(cacheFile) : _getCacheFile(uri),
@@ -3479,6 +3486,27 @@ class LockCachingAudioSource extends StreamAudioSource {
   /// 3. If the byte range request is entirely outside the cached region, a
   /// separate HTTP request is made to fulfill it while the download of the
   /// entire file continues in parallel.
+  Future<HttpClientResponse> _openNetwork(
+      HttpClient client, Map<String, String>? requestHeaders) async {
+    client.connectionTimeout = networkTimeout;
+    try {
+      final request = await _getUrl(client, uri, headers: requestHeaders)
+          .timeout(networkTimeout, onTimeout: () {
+        client.close(force: true);
+        throw TimeoutException('Audio connection deadline');
+      });
+      return await request.close().timeout(networkTimeout, onTimeout: () {
+        request.abort();
+        client.close(force: true);
+        throw TimeoutException('Audio response deadline');
+      });
+    } catch (_) {
+      client.close(force: true);
+      _downloading = false;
+      rethrow;
+    }
+  }
+
   Future<HttpClientResponse> _fetch() async {
     _downloading = true;
     final cacheFile = await this.cacheFile;
@@ -3488,8 +3516,7 @@ class LockCachingAudioSource extends StreamAudioSource {
         partialCacheFile.existsSync() ? partialCacheFile : cacheFile;
 
     final httpClient = _createHttpClient(userAgent: _player?._userAgent);
-    final httpRequest = await _getUrl(httpClient, uri, headers: headers);
-    final response = await httpRequest.close();
+    final response = await _openNetwork(httpClient, headers);
     if (response.statusCode != 200) {
       httpClient.close();
       throw Exception('HTTP Status Error: ${response.statusCode}');
@@ -3517,7 +3544,10 @@ class LockCachingAudioSource extends StreamAudioSource {
     }
 
     _progress = 0;
-    subscription = response.listen((data) async {
+    subscription = response.timeout(networkTimeout, onTimeout: (events) {
+      events.addError(TimeoutException('Audio data deadline'));
+      events.close();
+    }).listen((data) async {
       _progress += data.length;
       final newPercentProgress = (sourceLength == null)
           ? 0
@@ -3578,7 +3608,9 @@ class LockCachingAudioSource extends StreamAudioSource {
         } else {
           final cacheResponse = _InProgressCacheResponse(end: effectiveEnd);
           inProgressResponses.add(cacheResponse);
-          responseStream = Rx.concatEager([
+          // The replay subject already buffers live bytes. Eagerly subscribing
+          // can surface its error before the cached prefix has been consumed.
+          responseStream = Rx.concat([
             // NOTE: The cache file part of the stream must not overlap with
             // the live part. "_progress" should
             // to the cache file at the time
@@ -3605,11 +3637,10 @@ class LockCachingAudioSource extends StreamAudioSource {
         final httpClient = _createHttpClient(userAgent: _player?._userAgent);
 
         final rangeRequest = _HttpRangeRequest(start, end);
-        _getUrl(httpClient, uri, headers: {
+        _openNetwork(httpClient, {
           if (headers != null) ...headers!,
           HttpHeaders.rangeHeader: rangeRequest.header,
-        }).then((httpRequest) async {
-          final response = await httpRequest.close();
+        }).then((response) async {
           if (response.statusCode != 206) {
             httpClient.close();
             throw Exception('HTTP Status Error: ${response.statusCode}');
@@ -3620,7 +3651,10 @@ class LockCachingAudioSource extends StreamAudioSource {
             contentLength: end != null ? end - start : null,
             offset: start,
             contentType: mimeType,
-            stream: response.asBroadcastStream(),
+            stream: response.timeout(networkTimeout, onTimeout: (events) {
+              events.addError(TimeoutException('Audio range deadline'));
+              events.close();
+            }).asBroadcastStream(),
           ));
         }, onError: (dynamic e, StackTrace? stackTrace) {
           request.fail(e, stackTrace);
@@ -3637,13 +3671,50 @@ class LockCachingAudioSource extends StreamAudioSource {
           cacheResponse.controller.close();
         }
       }
-      (await _partialCacheFile).renameSync(cacheFile.path);
+      // Flush and close before publishing a complete cache. A partial file is
+      // never a playable final file after a reset/truncated transfer.
+      await sink.flush();
+      await sink.close();
+      if (_progress == 0 || sourceLength != null && _progress != sourceLength) {
+        final error = StateError('Incomplete audio response');
+        for (final req in _requests) {
+          req.fail(error, StackTrace.current);
+        }
+        _requests.clear();
+        final partial = await _partialCacheFile;
+        if (partial.existsSync()) partial.deleteSync();
+        _response = null;
+      } else {
+        final partial = await _partialCacheFile;
+        // Windows readers may briefly retain the .part handle; Android can
+        // rename an open file. Cache publication stays atomic on both hosts.
+        for (var attempt = 0; ; attempt++) {
+          try {
+            await partial.rename(cacheFile.path);
+            break;
+          } on FileSystemException catch (error) {
+            if (!Platform.isWindows || error.osError?.errorCode != 32 || attempt >= 5) {
+              // Caching failure must not turn a fully delivered song into a
+              // playback error. Only the final name is considered a cache hit.
+              _response = null;
+              break;
+            }
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+        }
+      }
       await subscription.cancel();
       httpClient.close();
       _downloading = false;
     }, onError: (Object e, StackTrace stackTrace) async {
-      (await _partialCacheFile).deleteSync();
-      httpClient.close();
+      try { await subscription.cancel(); } catch (_) { /* Keep original stream failure. */ }
+      httpClient.close(force: true);
+      try {
+        await sink.close();
+      } catch (_) {/* Retain original network error. */}
+      final partial = await _partialCacheFile;
+      if (partial.existsSync()) partial.deleteSync();
+      _response = null;
       // Fail all pending requests
       for (final req in _requests) {
         req.fail(e, stackTrace);
@@ -3652,7 +3723,7 @@ class LockCachingAudioSource extends StreamAudioSource {
       // Close all in progress requests
       for (final res in inProgressResponses) {
         res.controller.addError(e, stackTrace);
-        res.controller.close();
+        unawaited(res.controller.close().onError((Object _, StackTrace __) {}));
       }
       _downloading = false;
     }, cancelOnError: true);
@@ -3677,14 +3748,18 @@ class LockCachingAudioSource extends StreamAudioSource {
     _requests.add(byteRangeRequest);
     _response ??=
         _fetch().catchError((dynamic error, StackTrace? stackTrace) async {
-      // So that we can restart later
+      // Byte-range futures deliver this error to the player. Consume the shared
+      // fetch failure here instead of creating a second unhandled async error.
       _response = null;
-      // Cancel any pending request
+      _downloading = false;
       for (final req in _requests) {
         req.fail(error, stackTrace);
       }
-      return Future<HttpClientResponse>.error(error as Object, stackTrace);
+      _requests.clear();
+      throw error as Object;
     });
+    unawaited(
+        _response!.then<void>((_) {}, onError: (Object _, StackTrace __) {}));
     return byteRangeRequest.future.then((response) {
       response.stream.listen((event) {}, onError: (Object e, StackTrace st) {
         // So that we can restart later

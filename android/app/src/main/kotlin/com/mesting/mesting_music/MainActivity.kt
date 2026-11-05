@@ -113,6 +113,9 @@ open class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        if (!flutterEngine.plugins.has(MusicHttpPlugin::class.java)) {
+            flutterEngine.plugins.add(MusicHttpPlugin())
+        }
         // The cached audio engine outlives this Activity. Its Together bridge
         // must detach with that engine, never when the UI merely backgrounds.
         if (!flutterEngine.plugins.has(TogetherBackgroundPlugin::class.java)) {

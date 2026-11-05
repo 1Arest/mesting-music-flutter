@@ -1,0 +1,68 @@
+{
+  "version": "1.0.53",
+  "androidVersionCode": 74,
+  "packageName": "com.mesting.music",
+  "completedAtUtc": "2026-11-04T16:12:09.624348+00:00",
+  "beta": {
+    "files": 177,
+    "counts": {
+      "success": 1998,
+      "skipped": 2
+    },
+    "completeFileRerunReplacement": true,
+    "initialFailuresRetained": true
+  },
+  "stable": {
+    "files": 6,
+    "counts": {
+      "success": 63
+    }
+  },
+  "independentNavigation": {
+    "success": 55
+  },
+  "analysisIssues": 0,
+  "nativeHostScenariosRerun": 16,
+  "systemHttpPluginHostTypeChecked": true,
+  "androidNetworkRuntimeTested": false,
+  "sdkHistoricalOnly": {
+    "counts": {
+      "success": 563
+    },
+    "files": 29,
+    "sameSdkSourceFilesVerified": 242
+  },
+  "finalHostImages": 12,
+  "welcomeFrameScheduling": {
+    "sampleDisplayHz": 120,
+    "sampleIntervals": 720,
+    "scheduledFrames": 193,
+    "priorContinuousControllerFrameDemand": 720,
+    "physicalGpuMeasured": false
+  },
+  "actualOriginalSignedApkVerified": true,
+  "apkBytes": 110700466,
+  "apkSha256": "dd76b332ca6ff0dd85de7e31f99a463525f4ea2d27ed222602da67b850027f52",
+  "actualApkRangeReader": {
+    "version": "1.0.53",
+    "versionCode": 74,
+    "notesCount": 8,
+    "productionReader": true,
+    "currentVersionOfflineHistoryMatches": true,
+    "rangeRequests": 3,
+    "bytesRead": 66365,
+    "networkAccess": false,
+    "deviceAccess": false,
+    "published": false
+  },
+  "phoneAccess": false,
+  "vpnDeviceTested": false,
+  "realMusicAccountAccess": false,
+  "backendAccess": false,
+  "netEaseHistoricalTotalDurationFixed": false,
+  "october683Minutes10SecondsRecovered": false,
+  "oldAcceptedOrUnknownListeningLogsReplayed": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "published": false
+}

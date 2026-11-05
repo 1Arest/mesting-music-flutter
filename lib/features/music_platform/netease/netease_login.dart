@@ -53,10 +53,13 @@ class NeteaseLoginService {
 
   Future<void> sendCode(String phone, String countryCode) async {
     _validatePhone(phone, countryCode);
-    await api.call(
+    final result = await api.call(
       '/captcha/sent',
       query: {'phone': phone, 'countrycode': countryCode},
     );
+    if ('${result['code']}' != '200') {
+      throw const MusicPlatformException('平台未确认验证码已发送，请稍后重试');
+    }
   }
 
   Future<NeteaseSession> login(

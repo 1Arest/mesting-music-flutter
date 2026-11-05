@@ -1,3 +1,4 @@
+import 'music_network_diagnostics_page.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../music_platform/presentation/platform_account_page.dart';
 import '../../music_platform/presentation/platform_login_options_page.dart';
@@ -251,6 +252,19 @@ class SettingsPage extends ConsumerWidget {
                 child: Column(
                   children: [
                     if (DistributionChannel.isBeta) ...[
+                      _SettingsTile(
+                        key: const ValueKey('settings-network-diagnostics'),
+                        icon: Icons.network_check_rounded,
+                        iconColor: const Color(0xFF527FD3),
+                        title: '连接与播放诊断',
+                        subtitle: '查看本次启动的连接结果并复制记录',
+                        onTap: () => Navigator.of(context).push(
+                          betaEntryRoute<void>(
+                            const MusicNetworkDiagnosticsPage(),
+                          ),
+                        ),
+                      ),
+                      const _SettingsDivider(),
                       _SettingsTile(
                         icon: Icons.speed_rounded,
                         iconColor: const Color(0xFF527FD3),

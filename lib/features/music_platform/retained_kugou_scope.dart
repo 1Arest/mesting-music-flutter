@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
+import '../../core/network/music_http_client.dart';
 
 import 'data/music_platform_api.dart';
 import 'domain/platform_session.dart';
@@ -63,7 +63,7 @@ final retainedKugouScopeProvider = Provider<RetainedKugouScope?>((ref) {
   );
   final owner = ref.read(retainedKugouSessionProvider);
   if (owner == null) return null;
-  final client = http.Client();
+  final client = MusicHttpClient();
   final scope = RetainedKugouScope(
     MusicPlatformApi(server: ref.watch(musicServerProvider), client: client),
     owner,

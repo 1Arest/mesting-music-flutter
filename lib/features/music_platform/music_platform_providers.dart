@@ -1,8 +1,9 @@
+import '../../core/network/music_network_diagnostics.dart';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show PlatformException;
-import 'package:http/http.dart' as http;
+import '../../core/network/music_http_client.dart';
 
 import 'data/embedded_music_server.dart';
 import 'data/music_platform_api.dart';
@@ -43,7 +44,7 @@ final savedKugouAccountsProvider = FutureProvider<List<KugouSavedAccount>>((
         ];
 }, retry: (_, _) => null);
 final musicPlatformApiProvider = Provider<MusicPlatformApi>((ref) {
-  final client = http.Client();
+  final client = MusicHttpClient();
   ref.onDispose(client.close);
   return MusicPlatformApi(
     server: ref.watch(musicServerProvider),
@@ -122,6 +123,11 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
           .read()
           .timeout(const Duration(seconds: 5));
     } on Object catch (error) {
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'other',
+        operation: MusicNetworkOperation.restore,
+        outcome: MusicNetworkOutcome.storage,
+      );
       // An opt-in diagnostic records categories only. Exception messages and
       // encrypted/decrypted account values must never enter timing logs.
       if (StartupTimingProbe.enabled) {

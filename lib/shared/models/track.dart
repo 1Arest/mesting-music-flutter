@@ -40,6 +40,7 @@ class Track {
     this.audioHeaders = const {},
     this.audioBitrate = 0,
     this.audioOrigin,
+    this.audioAlternatives = const [],
   }) : _sourceTitle = title;
 
   final String id;
@@ -53,6 +54,10 @@ class Track {
   final String album;
   final Duration duration;
   final String audioAsset;
+
+  /// Exact alternative URLs returned for this recording and quality. A new
+  /// resolved primary clears old candidates unless the resolver supplies them.
+  final List<String> audioAlternatives;
   final String coverAsset;
   final String lyricsAsset;
   final TrackSource source;
@@ -112,6 +117,7 @@ class Track {
       'album': album,
       'durationMs': duration.inMilliseconds,
       'audioAsset': audioAsset,
+      if (audioAlternatives.isNotEmpty) 'audioAlternatives': audioAlternatives,
       'coverAsset': coverAsset,
       'lyricsAsset': resolvedLyricsAsset,
       'source': source.name,
@@ -136,6 +142,7 @@ class Track {
       album: json['album']! as String,
       duration: Duration(milliseconds: json['durationMs']! as int),
       audioAsset: json['audioAsset']! as String,
+      audioAlternatives: publicAudioAlternatives(json['audioAlternatives']),
       coverAsset: json['coverAsset']! as String,
       lyricsAsset: json['lyricsAsset']! as String,
       source: TrackSource.values.firstWhere(
@@ -172,6 +179,8 @@ class Track {
       artUri: resolvedArtwork,
       extras: {
         'audioAsset': audioAsset,
+        if (audioAlternatives.isNotEmpty)
+          'audioAlternatives': audioAlternatives,
         'coverAsset': coverAsset,
         'lyricsAsset': resolvedLyricsAsset,
         'source': source.name,
@@ -200,6 +209,7 @@ class Track {
     Map<String, String>? audioHeaders,
     int? audioBitrate,
     AudioOrigin? audioOrigin,
+    List<String>? audioAlternatives,
   }) {
     return Track(
       id: id,
@@ -208,6 +218,9 @@ class Track {
       album: album,
       duration: duration ?? this.duration,
       audioAsset: audioAsset ?? this.audioAsset,
+      audioAlternatives:
+          audioAlternatives ??
+          (audioAsset == null ? this.audioAlternatives : const []),
       coverAsset: coverAsset ?? this.coverAsset,
       lyricsAsset: lyricsAsset ?? this.lyricsAsset,
       source: source,
@@ -240,4 +253,23 @@ Map<String, String> publicAudioHeaders(Object? value) {
           !RegExp(r'[\r\n]').hasMatch(entry.value as String))
         '${entry.key}': entry.value as String,
   });
+}
+
+/// Keep only a bounded list of absolute HTTP media URLs; never synthesize a CDN
+/// hostname, change a signature, downgrade HTTPS or attach authentication.
+List<String> publicAudioAlternatives(Object? value) {
+  if (value is! List) return const [];
+  return List.unmodifiable(
+    value
+        .whereType<String>()
+        .where((text) {
+          final uri = Uri.tryParse(text);
+          return uri != null &&
+              {'http', 'https'}.contains(uri.scheme) &&
+              uri.host.isNotEmpty &&
+              uri.userInfo.isEmpty;
+        })
+        .toSet()
+        .take(2),
+  );
 }

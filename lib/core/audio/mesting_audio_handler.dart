@@ -18,6 +18,7 @@ import 'playback_start_guard.dart';
 import 'queue_engine.dart';
 import 'music_sleep_timer.dart';
 import '../platform/distribution_channel.dart';
+import '../network/music_network_diagnostics.dart';
 
 typedef RadioTrackLoader =
     Future<List<Track>> Function(Set<String> excludedTrackKeys);
@@ -39,6 +40,9 @@ class MestingAudioHandler extends BaseAudioHandler
        _player =
            player ??
            AudioPlayer(
+             // Android forwards public CDN headers natively; a fallback must
+             // not re-enter the Dart loopback proxy, especially under a VPN.
+             useProxyForRequestHeaders: false,
              androidAudioOutputOwner: DistributionChannel.isBeta
                  ? 'mesting-music'
                  : null,
@@ -535,12 +539,88 @@ class MestingAudioHandler extends BaseAudioHandler
       queue.add(mediaItems);
       _upcomingMediaItems = mediaItems.skip(1).toList(growable: false);
       mediaItem.add(mediaItems.first);
-      await _player.setAudioSources(
-        <AudioSource>[activeSource],
-        preload: preload,
-        initialIndex: 0,
-        initialPosition: initialPosition,
-      );
+      try {
+        await _player.setAudioSources(
+          <AudioSource>[activeSource],
+          preload: preload,
+          initialIndex: 0,
+          initialPosition: initialPosition,
+        );
+      } on Object catch (error) {
+        if (!isCurrent()) return false;
+        final selected = orderedTracks.first;
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'audio',
+          operation: MusicNetworkOperation.audio,
+          outcome: classifyMusicNetworkError(error),
+          transport: 'cache',
+        );
+        // Initial preparation errors were excluded by the playback-event guard,
+        // so the existing direct retry never ran for this common failure path.
+        // Retry the same recording/quality once; no skip or listening is added.
+        // Existing pinned cache API; the fork has bounded network regressions.
+        // ignore: experimental_member_use
+        if (activeSource is! LockCachingAudioSource ||
+            !_recoverableNetworkLoad(error) ||
+            !selected.isRemote ||
+            !_directRemoteSourceIds.add(selected.id)) {
+          rethrow;
+        }
+        final direct = await _audioSourceFor(selected, mediaItems.first);
+        if (!isCurrent()) return false;
+        try {
+          await _player.setAudioSources(
+            [direct],
+            preload: preload,
+            initialIndex: 0,
+            initialPosition: initialPosition,
+          );
+        } on Object {
+          if (!isCurrent()) return false;
+          var restored = false;
+          // Alternatives are supplied by this exact resolved recording, never
+          // guessed from CDN patterns or borrowed from another source/quality.
+          for (final backup in publicAudioAlternatives(
+            selected.audioAlternatives,
+          )) {
+            if (!isCurrent()) return false;
+            final candidate = selected.copyWith(audioAsset: backup);
+            final candidateItem = await _mediaItemFor(candidate);
+            final candidateSource = await _audioSourceFor(
+              candidate,
+              candidateItem,
+            );
+            if (!isCurrent()) return false;
+            try {
+              await _player.setAudioSources(
+                [candidateSource],
+                preload: preload,
+                initialIndex: 0,
+                initialPosition: initialPosition,
+              );
+            } on Object {
+              if (!isCurrent()) return false;
+              continue;
+            }
+            if (!isCurrent()) return false;
+            orderedTracks[0] = candidate;
+            _knownTracks[candidate.id] = candidate;
+            mediaItems[0] = candidateItem;
+            queue.add(List.of(mediaItems));
+            mediaItem.add(candidateItem);
+            restored = true;
+            break;
+          }
+          if (!restored) rethrow;
+        }
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'audio',
+          operation: MusicNetworkOperation.audio,
+          outcome: MusicNetworkOutcome.success,
+          attempt: 2,
+          transport: 'nativeAudio',
+        );
+      }
       if (!isCurrent()) {
         _trace('load-stale-after-source epoch=$loadEpoch');
         return false;
@@ -624,6 +704,16 @@ class MestingAudioHandler extends BaseAudioHandler
     return cleanPath.substring(dot).toLowerCase();
   }
 
+  /// A programming/decoder failure must not be converted into a successful
+  /// network retry. Android's pinned player reports source I/O as type 0;
+  /// renderer/codec failures use different ExoPlaybackException types.
+  static bool _recoverableNetworkLoad(Object error) =>
+      error is SocketException ||
+      error is HttpException ||
+      error is TlsException ||
+      error is TimeoutException ||
+      error is PlayerException && error.code == 0;
+
   Future<AudioSource> _audioSourceFor(Track track, MediaItem item) async {
     if (track.isRemote) {
       final remoteUri = Uri.parse(track.audioAsset);
@@ -632,7 +722,9 @@ class MestingAudioHandler extends BaseAudioHandler
         _trace('source-remote id=${track.id} strategy=direct');
         return AudioSource.uri(
           remoteUri,
-          headers: publicAudioHeaders(track.audioHeaders),
+          headers: track.audioHeaders.isEmpty
+              ? null
+              : publicAudioHeaders(track.audioHeaders),
           tag: item,
         );
       }

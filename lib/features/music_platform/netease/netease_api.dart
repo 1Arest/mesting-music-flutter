@@ -1,3 +1,6 @@
+import 'dart:async';
+import '../../../core/network/music_http_client.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 import 'dart:convert';
 import '../../../core/performance/background_json.dart';
 import 'dart:math';
@@ -635,31 +638,57 @@ class NeteaseApi {
           : 'interface.music.163.com',
       '/${weapi ? 'weapi' : 'eapi'}/${path.substring(5)}',
     );
-    final req = http.AbortableRequest('POST', uri, abortTrigger: abortTrigger)
-      ..followRedirects = false
-      ..headers.addAll({
-        'Referer': 'https://music.163.com/',
-        'User-Agent': playbackLog
-            ? 'NeteaseMusic/3.1.10.5100 (Macintosh; OS X 15.5)'
-            : weapi
-            ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36'
-            : mobileMessages
-            ? NeteaseMessageProtocol.userAgent
-            : 'NeteaseMusic/9.0.65.240416212826(9006053); Dalvik/2.1.0',
-        'Cookie': (weapi ? cookie : header).entries
-            .map((e) => '${e.key}=${e.value}')
-            .join('; '),
-        'Accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        if (additionalHeaders.containsKey('x-nos-token'))
-          'x-nos-token': additionalHeaders['x-nos-token']!,
-      })
-      ..bodyFields = encoded;
+    http.AbortableRequest buildRequest(Future<void> abort) {
+      if (generation != _generation ||
+          expectedCredential != null &&
+              _session?.credentialId != expectedCredential) {
+        throw const MusicPlatformException('账号已变化，请重新加载页面');
+      }
+      final req = http.AbortableRequest('POST', uri, abortTrigger: abort)
+        ..followRedirects = false
+        ..headers.addAll({
+          'Referer': 'https://music.163.com/',
+          'User-Agent': playbackLog
+              ? 'NeteaseMusic/3.1.10.5100 (Macintosh; OS X 15.5)'
+              : weapi
+              ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36'
+              : mobileMessages
+              ? NeteaseMessageProtocol.userAgent
+              : 'NeteaseMusic/9.0.65.240416212826(9006053); Dalvik/2.1.0',
+          'Cookie': (weapi ? cookie : header).entries
+              .map((e) => '${e.key}=${e.value}')
+              .join('; '),
+          'Accept': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          if (additionalHeaders.containsKey('x-nos-token'))
+            'x-nos-token': additionalHeaders['x-nos-token']!,
+        })
+        ..bodyFields = encoded;
+      return req;
+    }
+
     try {
-      final response = await client
-          .send(req)
-          .then(http.Response.fromStream)
-          .timeout(const Duration(seconds: 18));
+      final response = await sendMusicRequest(
+        client: client,
+        build: buildRequest,
+        platform: 'netease',
+        operation: path == '/api/sms/captcha/sent'
+            ? MusicNetworkOperation.sms
+            : path.contains('/login')
+            ? MusicNetworkOperation.login
+            : path == '/api/song/enhance/player/url/v1'
+            ? MusicNetworkOperation.playbackUrl
+            : MusicNetworkOperation.read,
+        abortTrigger: abortTrigger,
+        retryRead:
+            !playbackLog &&
+            {
+              '/api/song/enhance/player/url/v1',
+              '/api/v3/song/detail',
+              '/api/song/lyric/v1',
+              '/api/cloudsearch/pc',
+            }.contains(path),
+      );
       if (generation != _generation) {
         throw const MusicPlatformException('音乐平台已切换，请重新操作');
       }
@@ -680,6 +709,12 @@ class NeteaseApi {
         throw const MusicPlatformException('网易云播放上报回执不完整，结果暂不确定');
       }
       if ((!allowBusinessError || playbackLog) && code != null && code != 200) {
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'netease',
+          operation: MusicNetworkOperation.other,
+          outcome: MusicNetworkOutcome.business,
+          status: code,
+        );
         final message = switch (code) {
           301 || 302 => '网易云登录已失效，请重新登录',
           415 || 405 => '网易云需要安全验证，请使用扫码登录或稍后重试',
@@ -714,6 +749,13 @@ class NeteaseApi {
         }
       }
       return result;
+    } on MusicTransportException catch (error) {
+      // Keep timeout identity for the background phase recorder. Transport
+      // categories are not numeric platform rejection codes for listen logs.
+      if (error.outcome == MusicNetworkOutcome.timeout) {
+        throw TimeoutException(error.message);
+      }
+      throw MusicPlatformException(error.message);
     } on FormatException {
       throw const MusicPlatformException('网易云返回格式异常，请稍后重试');
     }

@@ -1,3 +1,5 @@
+import '../../../core/errors/user_facing_error.dart';
+import '../../settings/presentation/music_network_diagnostics_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../domain/platform_session.dart';
 import '../netease/netease_login.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../data/music_platform_api.dart';
@@ -408,8 +411,13 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
     ),
   );
 
-  String _error(Object error) =>
-      error is MusicPlatformException ? error.message : '音乐平台暂时不可用，请重试或返回先体验';
+  String _error(Object error) {
+    if (error is MusicPlatformException) return error.message;
+    if (error is PlatformException || error is FormatException) {
+      return '本机登录资料未能读写，旧登录信息已保留；请查看连接诊断';
+    }
+    return userFacingErrorMessage(error, fallback: '登录未能完成，请重试或查看连接诊断');
+  }
 
   String _label(PlatformLoginMethod method) => _isNetease
       ? '网易云扫码'
@@ -688,6 +696,15 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
                               ),
                             ),
                         ],
+                        if (_message != null)
+                          TextButton(
+                            onPressed: () => Navigator.of(context).push(
+                              betaContentRoute<void>(
+                                const MusicNetworkDiagnosticsPage(),
+                              ),
+                            ),
+                            child: const Text('查看连接诊断'),
+                          ),
                         if (_message != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 20),

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'companion_motion.dart';
 
 /// The paired poses preserve the startup artwork's left-record/right-earbud
 /// shoulder contact. One decoded atlas keeps pose changes independent of video,
@@ -14,14 +15,7 @@ class BetaCompanionStage extends StatefulWidget {
 
 class _BetaCompanionStageState extends State<BetaCompanionStage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
-  late final _beat = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 6),
-  );
-  late final _hello = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-  );
+  late final _motion = CompanionMotion(this);
   ImageStream? _stream;
   ImageStreamListener? _listener;
   ImageInfo? _image;
@@ -59,11 +53,7 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
         _foreground &&
         TickerMode.valuesOf(context).enabled &&
         !MediaQuery.disableAnimationsOf(context);
-    if (active && !_beat.isAnimating) _beat.repeat();
-    if (!active) {
-      _beat.stop();
-      _hello.stop();
-    }
+    _motion.setActive(active);
   }
 
   @override
@@ -74,7 +64,7 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
 
   void _greet() {
     if (!MediaQuery.disableAnimationsOf(context) && _foreground) {
-      _hello.forward(from: 0);
+      _motion.greet();
     }
   }
 
@@ -83,8 +73,7 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
     WidgetsBinding.instance.removeObserver(this);
     if (_listener != null) _stream?.removeListener(_listener!);
     _image?.dispose();
-    _beat.dispose();
-    _hello.dispose();
+    _motion.dispose();
     super.dispose();
   }
 
@@ -101,16 +90,11 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
           key: const ValueKey('beta21-companions-stage'),
           height: widget.height,
           width: double.infinity,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_beat, _hello]),
-            builder: (context, _) => CustomPaint(
-              painter: _CompanionAtlasPainter(
-                _image?.image,
-                MediaQuery.disableAnimationsOf(context) ? 0 : _beat.value * 6,
-                !MediaQuery.disableAnimationsOf(context) && _hello.isAnimating,
-                _hello.value,
-                Theme.of(context).brightness == Brightness.dark,
-              ),
+          child: CustomPaint(
+            painter: _CompanionAtlasPainter(
+              _image?.image,
+              _motion,
+              Theme.of(context).brightness == Brightness.dark,
             ),
           ),
         ),
@@ -120,16 +104,11 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
 }
 
 class _CompanionAtlasPainter extends CustomPainter {
-  _CompanionAtlasPainter(
-    this.atlas,
-    this.seconds,
-    this.greeting,
-    this.hello,
-    this.dark,
-  );
+  _CompanionAtlasPainter(this.atlas, this.motion, this.dark)
+    : super(repaint: motion);
   final ui.Image? atlas;
-  final double seconds, hello;
-  final bool greeting, dark;
+  final CompanionMotion motion;
+  final bool dark;
   @override
   void paint(Canvas canvas, Size size) {
     // These coordinates belong to one composition, so responsive scaling never
@@ -148,6 +127,9 @@ class _CompanionAtlasPainter extends CustomPainter {
           alpha: .09,
         ),
     );
+    final seconds = motion.seconds;
+    final greeting = motion.greeting;
+    final hello = motion.hello;
     final phase = seconds % 6;
     final wave = greeting || (phase > .3 && phase < 1.9);
     final blink = phase > 3.8 && phase < 3.94;
@@ -260,9 +242,5 @@ class _CompanionAtlasPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CompanionAtlasPainter old) =>
-      old.atlas != atlas ||
-      old.seconds != seconds ||
-      old.hello != hello ||
-      old.greeting != greeting ||
-      old.dark != dark;
+      old.atlas != atlas || old.motion != motion || old.dark != dark;
 }

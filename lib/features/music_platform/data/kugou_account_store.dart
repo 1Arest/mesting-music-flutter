@@ -1,3 +1,4 @@
+import '../../../core/security/retained_secure_read.dart';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -130,7 +131,7 @@ class SecureKugouAccountStore implements KugouAccountStore {
     // 沿用旧存储的短暂 KeyStore 挂载重试；读取失败绝不当成空列表覆盖。
     for (var attempt = 0; ; attempt++) {
       try {
-        final value = await _storage.read(key: key);
+        final value = await readRetainedSecureValue(_storage, key);
         if (value != null || attempt >= 2) return value;
       } on PlatformException {
         if (attempt >= 2) rethrow;

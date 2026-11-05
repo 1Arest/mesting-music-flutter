@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/persistence/app_preferences.dart';
@@ -227,6 +229,15 @@ class _AccountRestoreSurface extends StatelessWidget {
                     BetaGlassButton(
                       onPressed: onLogin,
                       child: const Text('重新登录'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => Clipboard.setData(
+                        ClipboardData(
+                          text: MusicNetworkDiagnostics.shared.export(),
+                        ),
+                      ),
+                      child: const Text('复制恢复诊断'),
                     ),
                   ],
                 ),

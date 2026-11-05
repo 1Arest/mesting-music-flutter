@@ -1,3 +1,5 @@
+import '../../../core/network/music_http_client.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 import 'dart:async';
 import '../../../core/performance/background_json.dart';
 import 'dart:convert';
@@ -160,42 +162,79 @@ class MusicPlatformApi {
             identity?.token != expectedSession.token)) {
       throw const MusicPlatformException('账号已变化，请返回后重新操作');
     }
-    final request = http.AbortableRequest(
-      method,
-      base.replace(
-        path: path,
-        queryParameters: {
-          ...query,
-          'dfid': ?_dfid,
-          // Account-specific responses must never hit another account's cache.
-          if (identity != null) 't': '${DateTime.now().microsecondsSinceEpoch}',
-        },
-      ),
-      abortTrigger: abortTrigger,
-    );
-    request.followRedirects = false;
-    request.headers['Accept'] = 'application/json';
-    request.headers['x-apicache-bypass'] = '1';
-    request.headers['Cache-Control'] = 'no-cache';
-    if (body != null) {
-      request.headers['Content-Type'] = 'application/json; charset=utf-8';
-      request.body = jsonEncode(body);
-    } else if (binaryBody != null) {
-      request.headers['Content-Type'] = 'application/octet-stream';
-      request.bodyBytes = binaryBody;
+    http.AbortableRequest buildRequest(Future<void> abort) {
+      if (!_sessionCurrent() ||
+          session?.ownerId != identity?.ownerId ||
+          session?.token != identity?.token) {
+        throw const MusicPlatformException('账号已变化，请返回后重新操作');
+      }
+      final request = http.AbortableRequest(
+        method,
+        base.replace(
+          path: path,
+          queryParameters: {
+            ...query,
+            'dfid': ?_dfid,
+            // Account-specific responses must never hit another account's cache.
+            if (identity != null)
+              't': '${DateTime.now().microsecondsSinceEpoch}',
+          },
+        ),
+        abortTrigger: abort,
+      );
+      request.followRedirects = false;
+      request.headers['Accept'] = 'application/json';
+      request.headers['x-apicache-bypass'] = '1';
+      request.headers['Cache-Control'] = 'no-cache';
+      if (body != null) {
+        request.headers['Content-Type'] = 'application/json; charset=utf-8';
+        request.body = jsonEncode(body);
+      } else if (binaryBody != null) {
+        request.headers['Content-Type'] = 'application/octet-stream';
+        request.bodyBytes = binaryBody;
+      }
+      if (identity != null) {
+        request.headers['Authorization'] = [
+          'token=${identity.token}',
+          'userid=${identity.userId}',
+          if (identity.vipToken.isNotEmpty) 'vip_token=${identity.vipToken}',
+        ].join(';');
+      }
+      return request;
     }
-    if (identity != null) {
-      request.headers['Authorization'] = [
-        'token=${identity.token}',
-        'userid=${identity.userId}',
-        if (identity.vipToken.isNotEmpty) 'vip_token=${identity.vipToken}',
-      ].join(';');
-    }
+
     try {
-      final response = await http.Response.fromStream(
-        await _client.send(request).timeout(timeout),
-      ).timeout(timeout);
+      final response = await sendMusicRequest(
+        client: _client,
+        build: buildRequest,
+        platform: 'kugou',
+        operation: path == '/captcha/sent'
+            ? MusicNetworkOperation.sms
+            : path.startsWith('/login/')
+            ? MusicNetworkOperation.login
+            : path.startsWith('/song/url')
+            ? MusicNetworkOperation.playbackUrl
+            : MusicNetworkOperation.read,
+        timeout: timeout,
+        abortTrigger: abortTrigger,
+        retryResponse: _transportResponse,
+        retryRead: {
+          '/song/url',
+          '/song/url/new',
+          '/audio',
+          '/search',
+          '/song/info',
+        }.contains(path),
+      );
       final decoded = await decodeJsonBytes(response.bodyBytes);
+      if (response.statusCode >= 500 &&
+          path.startsWith('/song/url') &&
+          _transportResponse(response)) {
+        throw MusicPlatformException(
+          '播放地址服务暂时不可用（HTTP ${response.statusCode}），请重试',
+          code: 'http_${response.statusCode}',
+        );
+      }
       if (!_sessionCurrent() ||
           session?.ownerId != identity?.ownerId ||
           session?.token != identity?.token) {
@@ -213,6 +252,12 @@ class MusicPlatformApi {
         final rawCode =
             '${decoded['error_code'] ?? decoded['err_code'] ?? decoded['errcode'] ?? ''}';
         final code = RegExp(r'^\d+$').hasMatch(rawCode) ? rawCode : '';
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'kugou',
+          operation: MusicNetworkOperation.other,
+          outcome: MusicNetworkOutcome.business,
+          status: int.tryParse(code),
+        );
         throw MusicPlatformException(
           code == '20017' || code == '20018'
               ? '音乐平台登录已失效，请重新登录后重试'
@@ -243,6 +288,10 @@ class MusicPlatformApi {
       return decoded;
     } on http.RequestAbortedException {
       rethrow;
+    } on MusicTransportException catch (error) {
+      throw MusicPlatformException(error.message);
+    } on FormatException {
+      throw const MusicPlatformException('音乐平台返回格式异常，请稍后重试');
     } on TimeoutException {
       throw const MusicPlatformException('音乐平台连接超时，请重试');
     } on MusicPlatformException {
@@ -263,6 +312,26 @@ class MusicPlatformApi {
       throw const MusicPlatformException('设备注册尚未完成，请稍后重试');
     }
     _dfid = dfid;
+  }
+
+  /// The Rust adapter uses HTTP 502 for BOTH upstream business rejection and
+  /// transport failure. Preserve device/rights/verification codes for resolver
+  /// policy; retry only its recognized empty transport envelope or a gateway.
+  static bool _transportResponse(http.Response response) {
+    try {
+      final value = jsonDecode(response.body);
+      if (value is! Map) return true;
+      final nested = value['data'];
+      for (final item in [value, if (nested is Map) nested]) {
+        if (['errcode', 'error_code', 'err_code'].any(item.containsKey)) {
+          return false;
+        }
+      }
+      final message = value['msg'];
+      return value['status'] == 0 && message is Map && message.isEmpty;
+    } on FormatException {
+      return true;
+    }
   }
 
   static Map<String, dynamic> objectMap(Object? value) => value is Map

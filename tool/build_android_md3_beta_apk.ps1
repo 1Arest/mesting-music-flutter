@@ -1,8 +1,8 @@
 param(
     # Retain this internal native/UI flavor, with the requested public package
     # com.mesting.music. The old .beta installation remains a separate app.
-    [string]$VersionName = '1.0.52',
-    [ValidateRange(1, 2147483647)][int]$VersionCode = 73,
+    [string]$VersionName = '1.0.53',
+    [ValidateRange(1, 2147483647)][int]$VersionCode = 74,
     [ValidateSet('debug', 'profile', 'release')][string]$Mode = 'release',
     [string]$TargetPlatform = 'android-arm,android-arm64',
     [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,

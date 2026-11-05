@@ -1,3 +1,4 @@
+import '../../../core/security/retained_secure_read.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
@@ -29,7 +30,7 @@ class SecurePlatformSessionStore implements PlatformSessionStore {
     // a cold-start read or JSON failure. Explicit signOut is the sole eraser.
     for (var attempt = 0; ; attempt++) {
       try {
-        final value = await _storage.read(key: key);
+        final value = await readRetainedSecureValue(_storage, key);
         if (value == null) {
           if (attempt >= 2) return null;
           await Future<void>.delayed(

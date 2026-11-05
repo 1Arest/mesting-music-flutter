@@ -285,7 +285,9 @@ void main() {
       controllers[1].sharedTracks = controllers[1].sharedTracks
           .where((t) => t.platformSongId == '17')
           .toList();
-      room.failSongReads = 1;
+      // Exhaust both bounded read attempts before verifying the command stays
+      // unconsumed. The next tick then succeeds with the original command.
+      room.failSongReads = 2;
       players[0].track = _second;
       players[0].trackController.add(_second.id);
       await controllers[0].settle();

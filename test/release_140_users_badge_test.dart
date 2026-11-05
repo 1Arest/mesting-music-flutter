@@ -191,8 +191,10 @@ void main() {
     () async {
       final response = Completer<http.Response>();
       var count = 0;
+      final dispatched = Completer<void>();
       final client = MockClient((_) {
         count++;
+        dispatched.complete();
         return response.future;
       });
       addTearDown(client.close);
@@ -200,6 +202,8 @@ void main() {
       final repository = NeteaseUserRepository(NeteaseMusicRepository(api));
       final write = repository.follow('42', true);
       final rejected = expectLater(write, throwsException);
+      // Ensure this is truly a late response, not a cancelled pre-dispatch write.
+      await dispatched.future;
       api.configure(null);
       response.complete(http.Response('{"code":200}', 200));
       await rejected;
