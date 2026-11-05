@@ -7,6 +7,7 @@ import '../network/music_network_diagnostics.dart';
 import 'credential_failure.dart';
 import 'retained_secure_read.dart';
 import 'retained_secure_storage.dart';
+import 'android_credential_archive.dart';
 
 /// Recovery has separate data, wrapped keys, configuration and KeyStore aliases.
 /// It is used only after an explicit, platform-verified login. Existing encrypted
@@ -24,27 +25,37 @@ class CredentialRecoveryWrite {
 }
 
 class RetainedCredentialVault {
-  static final _vaults =
-      Expando<Map<FlutterSecureStorage?, RetainedCredentialVault>>();
+  static final _vaults = Expando<Map<Object?, RetainedCredentialVault>>();
   factory RetainedCredentialVault(
     FlutterSecureStorage primary, {
     FlutterSecureStorage? recovery,
+    AndroidCredentialArchive? archive,
   }) {
+    final nativeArchive =
+        archive ??
+        (recovery == null &&
+                !kIsWeb &&
+                Platform.isAndroid &&
+                identical(primary, retainedSecureStorage)
+            ? const AndroidCredentialArchive()
+            : null);
     final effective =
         recovery ??
-        (!kIsWeb &&
+        (nativeArchive == null &&
+                !kIsWeb &&
                 Platform.isAndroid &&
                 identical(primary, retainedSecureStorage)
             ? retainedRecoveryStorage
             : null);
     return (_vaults[primary] ??= {}).putIfAbsent(
-      effective,
-      () => RetainedCredentialVault._(primary, effective),
+      nativeArchive ?? effective,
+      () => RetainedCredentialVault._(primary, effective, nativeArchive),
     );
   }
-  RetainedCredentialVault._(this.primary, this.recovery);
+  RetainedCredentialVault._(this.primary, this.recovery, this.archive);
   final FlutterSecureStorage primary;
   final FlutterSecureStorage? recovery;
+  final AndroidCredentialArchive? archive;
   final Set<String> _checked = {}, _active = {};
   final Map<String, String?> _recoveryValues = {};
 
@@ -59,8 +70,18 @@ class RetainedCredentialVault {
 
   Future<String?> read(String key) async {
     final backup = recovery;
-    if (backup != null && !_checked.contains(key)) {
-      final raw = await _rawRead(backup, key);
+    if ((backup != null || archive != null) && !_checked.contains(key)) {
+      // Production Android checks raw entry presence before touching a cipher.
+      // No entry means the original 50/51 read path, even if the unused archive
+      // has an invalid key. Existing 54/55 overlays and logout tombstones remain
+      // authoritative; unreadable entries are never mistaken for an empty slot.
+      final raw = archive != null
+          ? await credentialStep(
+              platform: _platform(key),
+              phase: MusicDiagnosticPhase.storageRead,
+              run: () => archive!.read(key),
+            )
+          : await _rawRead(backup!, key);
       _recoveryValues[key] = raw;
       _checked.add(key);
       if (raw != null) _active.add(key);
@@ -112,19 +133,27 @@ class RetainedCredentialVault {
             MusicFailureFamily.io,
           );
         }
+        if (archive != null && identical(storage, primary)) {
+          // A same-instance read may reuse an AES key whose RSA private key is
+          // already unusable. Reopen from persisted wrapped bytes before a
+          // controller is allowed to publish a successful login.
+          await archive!.verifyPrimary(key, value, primary.aOptions.toMap());
+        }
       },
     );
   }
 
   Future<void> write(String key, String value) async {
+    // Resolve the actual owner before the first write to a different platform.
+    // Otherwise a retained archive could be shadowed by a write to legacy data.
+    final previous = await read(key);
     if (_active.contains(key)) {
       final envelope = jsonEncode({'schema': 1, 'value': value});
-      await _commit(recovery!, key, envelope, isRecovery: true);
+      await _writeArchive(key, envelope);
       _recoveryValues[key] = envelope;
     } else {
       // A failed local write must not discard a readable previous account.
       // Unknown/failed reads are not treated as empty and never overwritten.
-      final previous = await _rawRead(primary, key);
       try {
         await _commit(primary, key, value);
       } on Object {
@@ -144,6 +173,32 @@ class RetainedCredentialVault {
   /// Only a verified login may create this overlay. Rollback touches solely the
   /// newly created recovery entry, leaving every legacy key/account unchanged.
   Future<CredentialRecoveryWrite> recover(String key, String value) async {
+    if (archive != null) {
+      // A fresh verified login must never read either failed old cipher first.
+      // Its receipt can restore the previous pointer without decrypting it.
+      final oldChecked = _checked.contains(key);
+      final oldActive = _active.contains(key);
+      final oldCached = _recoveryValues[key];
+      final envelope = jsonEncode({'schema': 1, 'value': value});
+      final receipt = await credentialStep(
+        platform: _platform(key),
+        phase: MusicDiagnosticPhase.recoveryWrite,
+        run: () => archive!.replace(key, envelope),
+      );
+      _checked.add(key);
+      _active.add(key);
+      _recoveryValues[key] = envelope;
+      return CredentialRecoveryWrite(() async {
+        await archive!.rollback(key, receipt);
+        if (!oldChecked) _checked.remove(key);
+        if (!oldActive) _active.remove(key);
+        if (oldCached == null) {
+          _recoveryValues.remove(key);
+        } else {
+          _recoveryValues[key] = oldCached;
+        }
+      });
+    }
     final backup = recovery;
     if (backup == null) {
       // Injectable stores retain their original contract in non-Android tests.
@@ -168,10 +223,11 @@ class RetainedCredentialVault {
   }
 
   Future<void> clear(String key) async {
+    await read(key);
     if (_active.contains(key)) {
       // A tombstone prevents old retained credentials resurfacing after logout.
       final envelope = jsonEncode({'schema': 1, 'value': null});
-      await _commit(recovery!, key, envelope, isRecovery: true);
+      await _writeArchive(key, envelope);
       _recoveryValues[key] = envelope;
     } else {
       await credentialStep(
@@ -180,5 +236,17 @@ class RetainedCredentialVault {
         run: () => primary.delete(key: key),
       );
     }
+  }
+
+  Future<void> _writeArchive(String key, String envelope) async {
+    if (archive == null) {
+      await _commit(recovery!, key, envelope, isRecovery: true);
+      return;
+    }
+    await credentialStep(
+      platform: _platform(key),
+      phase: MusicDiagnosticPhase.storageWrite,
+      run: () => archive!.write(key, envelope),
+    );
   }
 }

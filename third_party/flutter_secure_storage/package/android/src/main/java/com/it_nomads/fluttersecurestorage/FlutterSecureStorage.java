@@ -913,6 +913,12 @@ public class FlutterSecureStorage {
      */
     private void handleKeyMismatch(NamespacedConfigSource configSource, SecurePreferencesCallback<Void> callback,
                                    Exception exception, String errorType) {
+        // An unusable key with unchanged algorithms is not a migration. Trying
+        // the same saved cipher again cannot repair it and must not reset data.
+        if (exception != null && !storageCipherFactory.requiresReEncryption()) {
+            callback.onError(exception);
+            return;
+        }
         Log.e(TAG, "Key mismatch detected during cipher initialization: " + errorType, exception);
         Log.e(TAG, "This typically occurs after an algorithm change.");
         Log.e(TAG, "Stored key cannot be decrypted with current algorithm.");

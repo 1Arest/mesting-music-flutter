@@ -1,0 +1,251 @@
+{
+  "version": "1.0.56",
+  "androidVersionCode": 77,
+  "recordedAt": "2026-11-05T02:58:05.957050+00:00",
+  "host": {
+    "beta": {
+      "files": 186,
+      "success": 2054,
+      "skipped": 2,
+      "complete": true,
+      "mergedFromCompleteFiles": true,
+      "earlierFailuresRetained": [
+        {
+          "file": "test/release_130_artwork_reveal_test.dart",
+          "test": "scroll keeps old rows and reveals a new visible batch together",
+          "error": "Test failed. See exception logs above.\nThe test description was: scroll keeps old rows and reveals a new visible batch together"
+        },
+        {
+          "file": "test/release_146_download_resume_test.dart",
+          "test": "byte progress updates one task without rebuilding a 3000-task collection",
+          "error": "Timed out waiting for download state"
+        }
+      ],
+      "recheckedFiles": [
+        "test/beta10_entry_test.dart",
+        "test/beta_account_exclusivity_test.dart",
+        "test/dual_music_platform_test.dart",
+        "test/release_124_accounts_test.dart",
+        "test/release_130_artwork_reveal_test.dart",
+        "test/release_146_download_resume_test.dart",
+        "test/release_152_accounts_test.dart",
+        "test/release_153_storage_test.dart",
+        "test/release_154_storage_test.dart",
+        "test/release_155_storage_test.dart",
+        "test/release_156_storage_test.dart"
+      ]
+    },
+    "stable": {
+      "files": 6,
+      "success": 63,
+      "complete": true
+    },
+    "navigation": {
+      "files": 1,
+      "success": 55,
+      "complete": true
+    },
+    "nativeSecureStorage": {
+      "files": 8,
+      "passed": 164,
+      "results": [
+        {
+          "name": "com.it_nomads.fluttersecurestorage.ciphers.CipherAlgorithmTest",
+          "tests": 13,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.ciphers.StorageCipherFactoryTest",
+          "tests": 16,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.ciphers.StorageCipherTest",
+          "tests": 12,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.FlutterSecureStorageConfigAndroidTest",
+          "tests": 1,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.FlutterSecureStorageConfigTest",
+          "tests": 53,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.MigrationBackupTest",
+          "tests": 48,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.NamespacedConfigSourceTest",
+          "tests": 13,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        },
+        {
+          "name": "com.it_nomads.fluttersecurestorage.VerifiedCredentialSlotsTest",
+          "tests": 8,
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    "analysisPassed": true
+  },
+  "device": {
+    "authorizedByUserForThisLoginFault": true,
+    "androidApi": 36,
+    "targetPackage": "com.mesting.music",
+    "finalVersionName": "1.0.56",
+    "finalVersionCode": 77,
+    "installedApkSha256": "4d6a4465d4cc45c7b0811586ddfd381acde5c1641cd6e4e6e62686ddaec1ea93",
+    "initial55ApkMatchedFrozenDelivery": true,
+    "initialFault": {
+      "originalRsaPrivateKeyUnwrapFailed": true,
+      "oldRecoveryRsaPrivateKeyUnwrapFailed": true,
+      "androidError": "KeyPermanentlyInvalidatedException",
+      "oldRecoveryAccountEntries": 0,
+      "authRequired": false,
+      "invalidatedByBiometricEnrollment": false,
+      "originalInvalidationCause": "UNKNOWN",
+      "oldCiphertextRecovered": false
+    },
+    "excludedConfoundedTrial": {
+      "createdLocalTime": "2026-11-05 10:12",
+      "readLocalTime": "2026-11-05 10:35",
+      "userReportedReinstalled52AndLoggedInBothPlatformsDuringInterval": true,
+      "notEvidenceThatOrdinaryCoverInvalidatesKeys": true,
+      "entireSessionOriginalFileBytesUnchanged": false
+    },
+    "controlledSyntheticChecks": {
+      "newRsaAndAesIndependentProcesses": true,
+      "newRsaAndAesAfterFinalSameCodeReplacement": true,
+      "actualShippedNativeSlotSaveReopenAndSeparateProcess": true,
+      "actualShippedNativeSlotReadAfterReplacement": true,
+      "syntheticTombstoneReopen": true,
+      "syntheticAccountValuesOnly": true
+    },
+    "realAccountChecks": {
+      "newLoginPerformedByUser": [
+        "netease",
+        "kugou"
+      ],
+      "newLoginWithoutAgentClearingData": true,
+      "bothNewRecordsUnwrappedAndDecryptedInIndependentProcess": true,
+      "kugouColdRestoreBeforeCover": true,
+      "kugouToSavedNetease": true,
+      "neteaseColdRestoreBeforeCover": true,
+      "sameFinalApkSameCodeReplacementWithoutDataClear": true,
+      "credentialPointerAndSecureFileBytesIdenticalAcrossReplacement": true,
+      "bothNewRecordsDecryptAfterReplacement": true,
+      "neteaseColdRestoreAfterCover": true,
+      "neteaseToSavedKugouAfterCover": true,
+      "kugouColdRestoreAfterCover": true,
+      "noReauthenticationDuringControlledRestoresAndSwitches": true,
+      "versionCodeIncrementedInControlledRealAccountTest": false
+    },
+    "cleanup": {
+      "helperUninstalled": true,
+      "onlyOwnedSyntheticKeysDeleted": true,
+      "targetRelaunched": true,
+      "targetDataCleared": false
+    },
+    "agentClearedTargetData": false,
+    "agentUninstalledTarget": false,
+    "agentRemovedOldKeyOrCiphertext": false,
+    "agentChangedVpnSettings": false,
+    "credentialsOrOtpExported": false,
+    "pending": [
+      "Version-code-incremented future update with these retained accounts",
+      "Readable legacy 50/51 real-device upgrade path",
+      "Same VPN node on/off and network-switch matrix",
+      "First-login artwork, complete playback and Android GPU behavior",
+      "Kugou official profile/statistics/level/medal real-account acceptance"
+    ],
+    "loginStorageScopePassedOnThisDevice": true,
+    "allDeviceAcceptanceComplete": false
+  },
+  "artifact": {
+    "apkSha256": "4d6a4465d4cc45c7b0811586ddfd381acde5c1641cd6e4e6e62686ddaec1ea93",
+    "apkBytes": 108669453,
+    "originalSignature": true,
+    "doubleArm": true,
+    "customEngineAndSevenShadersUnchanged": true,
+    "allTwelveNonAppNativeLibrariesMatch55": true,
+    "jniClasses": 3,
+    "jniMethods": 5,
+    "jniFields": 12,
+    "newNativeClassPresentAndExecutedOnDevice": true,
+    "buildInputs": 1516,
+    "buildInputsMatchFinalApkPreparation": true,
+    "apkReleaseNotesProductionReader": {
+      "version": "1.0.56",
+      "versionCode": 77,
+      "notesCount": 8,
+      "productionReader": true,
+      "currentVersionOfflineHistoryMatches": true,
+      "rangeRequests": 3,
+      "bytesRead": 66238,
+      "networkAccess": false,
+      "deviceAccess": false,
+      "published": false
+    }
+  },
+  "preservation": {
+    "at": "2026-11-05T02:56:16.121674+00:00",
+    "oldFrozenArtifacts": 102,
+    "oldFrozenArtifactBytesUnchanged": true,
+    "buildInputs": 1516,
+    "allFinalBuildInputsUnchanged": true,
+    "preexistingSourcePathsPreserved": 2575,
+    "intentionalModifiedExistingSourcePaths": [
+      "assets/data/release-notes.json",
+      "lib/core/security/retained_credential_vault.dart",
+      "lib/features/app_update/domain/release_history.dart",
+      "lib/features/music_platform/music_platform_providers.dart",
+      "pubspec.yaml",
+      "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/FlutterSecureStorage.java",
+      "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/FlutterSecureStoragePlugin.java",
+      "tool/build_android_md3_beta_apk.ps1",
+      "tool/build_android_release_apk.ps1"
+    ],
+    "originalSigningUnchanged": true,
+    "pubspecLockUnchanged": true,
+    "branch": "beta",
+    "head": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+    "indexEmpty": true,
+    "gitMutation": false,
+    "uploaded": false,
+    "published": false
+  },
+  "inheritedNotRerun": {
+    "networkMediaJvm": 35,
+    "rust": 136,
+    "rustExternalIgnored": 6,
+    "ringSdk": 563
+  },
+  "historicalListeningTotalAndOctober683m10sResolved": false,
+  "oldAcceptedOrUnknownPlaybackRecordsReplayed": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "backendAccess": false,
+  "uploaded": false,
+  "published": false
+}

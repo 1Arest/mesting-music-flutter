@@ -69,6 +69,7 @@ final platformAccountProvider =
 /// credential after a later logout has already removed it.
 class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   Future<void> _pendingMutation = Future<void>.value();
+  MusicPlatform? _failedRestorePlatform;
 
   /// Installed by the application audio binding. Keeping this boundary injected
   /// makes authentication/storage testable without constructing a second player.
@@ -79,6 +80,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   }
 
   void _publish(PlatformSession? session) {
+    _failedRestorePlatform = null;
     // Kugou transports must never see a NetEase cookie or public projection.
     ref.read(musicPlatformApiProvider).session =
         session?.platform == MusicPlatform.netease ? null : session;
@@ -97,6 +99,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
 
   @override
   Future<PlatformSession?> build() async {
+    _failedRestorePlatform = null;
     if (DistributionChannel.isBeta) {
       ref.listen(betaAccountChoiceProvider, (previous, choice) {
         if (choice == BetaAccountChoice.mesting ||
@@ -127,6 +130,12 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
           .read()
           .timeout(const Duration(seconds: 12));
     } on Object catch (error) {
+      // A failed platform does not establish that the other platform's store
+      // failed. Keep healthy account lists on the ordinary read/write path.
+      _failedRestorePlatform =
+          ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease
+          ? MusicPlatform.netease
+          : MusicPlatform.kugou;
       if (error is! CredentialStoreException) {
         MusicNetworkDiagnostics.shared.record(
           platform:
@@ -247,7 +256,10 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     PlatformSession? previous;
     KugouAccountSnapshot? snapshot;
     try {
-      if (verifiedLogin && state.hasError && _isStorageFailure(state.error!)) {
+      if (verifiedLogin &&
+          state.hasError &&
+          _failedRestorePlatform == MusicPlatform.kugou &&
+          _isStorageFailure(state.error!)) {
         // The last cold read already established the failure. Do not wait for
         // the same stalled legacy operation a second time before fresh login.
         throw state.error!;
@@ -429,6 +441,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     final previousSession = ref.read(neteaseApiProvider).session;
     try {
       if (state.hasError &&
+          _failedRestorePlatform == MusicPlatform.netease &&
           _isStorageFailure(state.error!) &&
           store is NeteaseVerifiedLoginRecovery) {
         recovery = await (store as NeteaseVerifiedLoginRecovery)

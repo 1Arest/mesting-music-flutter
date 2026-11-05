@@ -23,6 +23,7 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
     private static final String TAG = "FlutterSecureStoragePlugin";
     private MethodChannel channel;
     private Context applicationContext;
+    private VerifiedCredentialSlots verifiedSlots;
     private final Map<String, FlutterSecureStorage> storagesBySharedPreferencesName = new HashMap<>();
     // Each fully isolated namespace owns one serial queue. A stalled legacy
     // KeyStore operation cannot block a verified login in the recovery namespace.
@@ -32,6 +33,7 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
     public void initInstance(BinaryMessenger messenger, Context context) {
         try {
             applicationContext = context.getApplicationContext();
+            verifiedSlots = new VerifiedCredentialSlots(applicationContext);
 
             channel = new MethodChannel(messenger, "plugins.it_nomads.com/flutter_secure_storage");
             channel.setMethodCallHandler(this);
@@ -60,6 +62,7 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
             storagesBySharedPreferencesName.clear();
         }
         applicationContext = null;
+        verifiedSlots = null;
     }
 
     @Override
@@ -69,7 +72,11 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
             Map<String, Object> options = call.argument("options");
             FlutterSecureStorageConfig config = new FlutterSecureStorageConfig(
                     options == null ? new HashMap<>() : options);
-            String name = config.hasStorageNamespace()
+            // All archive pointers share one queue. Dynamic login slots must
+            // not allocate an unbounded worker or race an older rollback.
+            String name = call.method.equals("mestingArchiveRead") ? "mesting.archive.read"
+                    : call.method.equals("mestingVerifyReopen") ? "mesting.primary.verify"
+                    : call.method.startsWith("mestingArchive") ? "mesting.verified.logins" : config.hasStorageNamespace()
                     ? "ns:" + config.getStorageNamespace() : config.getSharedPreferencesName();
             synchronized (workers) {
                 HandlerThread worker = workers.get(name);
@@ -179,6 +186,7 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
                     options = new HashMap<>();
                 }
                 FlutterSecureStorageConfig config = new FlutterSecureStorageConfig(options);
+                if (runVerifiedSlotMethod(config)) return;
                 FlutterSecureStorage secureStorage = getOrCreateStorage(config);
 
                 secureStorage.initialize(config, new SecurePreferencesCallback<>() {
@@ -268,6 +276,36 @@ public class FlutterSecureStoragePlugin implements MethodCallHandler, FlutterPlu
             } catch (Exception e) {
                 handleException(e);
             }
+        }
+
+        /** These methods never initialize a failed old store before a fresh save. */
+        private boolean runVerifiedSlotMethod(FlutterSecureStorageConfig config) {
+            if (!call.method.startsWith("mestingArchive") && !call.method.equals("mestingVerifyReopen")) return false;
+            String key = call.argument("key");
+            if (key == null || !key.startsWith("mesting_music_platform_")) {
+                handleException(new IllegalArgumentException("Unknown music credential key"));
+                return true;
+            }
+            SecurePreferencesCallback<Object> callback = new SecurePreferencesCallback<Object>() {
+                @Override public void onSuccess(Object value) { result.success(value); }
+                @Override public void onError(Exception error) { handleException(error); }
+            };
+            switch (call.method) {
+                case "mestingArchiveRead": verifiedSlots.read(key, adapt(callback)); break;
+                case "mestingArchiveSave": verifiedSlots.save(key, call.argument("value"), adapt(callback)); break;
+                case "mestingArchiveWrite": verifiedSlots.write(key, call.argument("value"), adapt(callback)); break;
+                case "mestingArchiveRollback": verifiedSlots.rollback(key, call.argument("generation"), call.argument("previous"), adapt(callback)); break;
+                case "mestingVerifyReopen": verifiedSlots.verifyPrimary(config, key, call.argument("value"), adapt(callback)); break;
+                default: result.notImplemented();
+            }
+            return true;
+        }
+
+        private <T> SecurePreferencesCallback<T> adapt(SecurePreferencesCallback<Object> callback) {
+            return new SecurePreferencesCallback<T>() {
+                @Override public void onSuccess(T value) { callback.onSuccess(value); }
+                @Override public void onError(Exception error) { callback.onError(error); }
+            };
         }
 
 
