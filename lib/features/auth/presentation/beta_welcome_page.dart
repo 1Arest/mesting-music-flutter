@@ -5,7 +5,6 @@ import '../../../core/persistence/app_preferences.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
-import '../../../shared/widgets/beta_edge_back.dart';
 import '../../legal/presentation/disclaimer_dialog.dart';
 import '../../legal/presentation/legal_documents_page.dart';
 import '../../legal/domain/legal_documents.dart';
@@ -17,15 +16,7 @@ import 'mesting_music_companions.dart';
 import 'beta_consent_row.dart';
 
 /// Every entry/form uses a painted page with reversible spatial movement.
-Route<T> betaEntryRoute<T>(Widget page) => PageRouteBuilder<T>(
-  transitionDuration: const Duration(milliseconds: 340),
-  reverseTransitionDuration: const Duration(milliseconds: 260),
-  pageBuilder: (_, _, _) => BetaEdgeBack(child: page),
-  // Move the opaque page surface together with its body in both directions.
-  // A transparent Scaffold would expose the previous login during the push.
-  transitionsBuilder: (context, animation, secondary, child) =>
-      BetaPageMotion(animation: animation, child: child),
-);
+Route<T> betaEntryRoute<T>(Widget page) => betaContentRoute<T>(page);
 
 class BetaWelcomePage extends ConsumerStatefulWidget {
   const BetaWelcomePage({this.onExperience, super.key});

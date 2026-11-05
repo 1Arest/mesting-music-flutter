@@ -1,0 +1,15 @@
+00:00 +0: loading <BASELINE_SDK>/test/app_upgrade_hybrid_flow_test.dart
+00:00 +0: P8P adds a late peer after the initial connection budget expires
+00:07 +0 -1: P8P adds a late peer after the initial connection budget expires [E]
+  Expected: non-empty
+    Actual: WhereIterable<AppUpgradeP2PDiagnostic>:[]
+  A same-release node that becomes ready after startup must be usable in the current P8P transfer: [{"at":"2026-10-28T04:47:09.023523Z","stage":"peers","code":"request_started","task":1,"elapsed_ms":1044,"app_version":"unknown"},{"at":"2026-10-28T04:47:09.023523Z","stage":"peers","code":"http_ok","http_status":200,"task":1,"elapsed_ms":1083,"duration_ms":38,"app_version":"unknown"},{"at":"2026-10-28T04:47:09.023523Z","stage":"peers","code":"discovered","peer_count":0,"task":1,"elapsed_ms":1085,"app_version":"unknown"},{"at":"2026-10-28T04:47:09.023523Z","stage":"p8p","code":"multisource_started","task":1,"elapsed_ms":1918,"app_version":"unknown"},{"at":"2026-10-28T04:47:09.023523Z","stage":"performance","code":"multisource_profile","task":1,"elapsed_ms":5081,"app_version":"unknown","metrics":{"requests":13,"verified_bytes":12582991,"peak_reservations":4,"peak_reserved_bytes":4194304,"repeat_reserved_bytes":0}},{"at":"2026-10-28T04:47:09.023523Z","stage":"performance","code":"source_profile","task":1,"elapsed_ms":5081,"source":"seed","attempt":"seed","app_version":"unknown","metrics":{"source_seed_requests":10,"source_seed_verified_bytes":9437263,"source_seed_busy_us":3475345,"source_seed_cancelled":0,"source_seed_failures":0}},{"at":"2026-10-28T04:47:09.023523Z","stage":"performance","code":"source_profile","task":1,"elapsed_ms":5081,"source":"https","app_version":"unknown","metrics":{"source_https_requests":3,"source_https_verified_bytes":3145728,"source_https_busy_us":2509594,"source_https_cancelled":0,"source_https_failures":0}},{"at":"2026-10-28T04:47:09.023523Z","stage":"performance","code":"transfer_profile","task":1,"elapsed_ms":5569,"app_version":"unknown","metrics":{"piece_verify_us":418538,"piece_verify_calls":13,"piece_open_count":1,"piece_write_us":15796,"piece_write_calls":13,"persisted_bytes":12582991,"piece_flush_us":32329,"piece_flush_calls":4,"full_sha_us":482084,"full_sha_scans":1,"source_wait_us":0,"steady_source_wait_us":0}}]
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\app_upgrade_hybrid_flow_test.dart 117:7        main.<fn>
+
+00:08 +0 -1: Some tests failed.
+
+Failing tests:
+  <BASELINE_SDK>/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires

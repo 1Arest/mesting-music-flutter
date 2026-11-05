@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../shared/widgets/beta_page_route_observer.dart';
 import '../../shared/widgets/beta_tab_navigation.dart';
+import '../../shared/widgets/beta_page_motion.dart';
 
 /// Retained root branches live under the existing music Navigator. Query views
 /// (daily, favorites, etc.) are secondary pages, not another instance of the
@@ -14,7 +15,7 @@ List<RouteBase> betaTabShellRoutes(List<GoRoute> roots) {
   return [
     StatefulShellRoute(
       pageBuilder: (context, state, shell) =>
-          NoTransitionPage<void>(key: state.pageKey, child: shell),
+          BetaRootTransitionPage<void>(key: state.pageKey, child: shell),
       navigatorContainerBuilder: (context, shell, children) =>
           _BetaTabStackBinding(
             index: shell.currentIndex,

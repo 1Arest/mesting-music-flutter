@@ -1,0 +1,811 @@
+{
+  "version": "1.0.50",
+  "androidVersionCode": 71,
+  "packageName": "com.mesting.music",
+  "internalNativeUiFlavor": "beta",
+  "createdAtUtc": "2026-11-04T06:59:32.701560+00:00",
+  "hostChecks": {
+    "beta-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 157,
+      "counts": {
+        "success": 1840,
+        "skipped": 2
+      },
+      "perFile": {
+        "D:/AnLi/test/artwork_image_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/beta10_entry_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/beta10_feedback_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/beta10_quality_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/beta11_search_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/beta16_output_and_search_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/beta16_playback_order_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/beta18_refinements_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/beta6_audio_refresh_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/beta8_navigation_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/beta9_playback_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/beta9_interactions_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/beta_account_exclusivity_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/beta_login_entry_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/beta_update_isolation_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/beta_shared_page_search_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/chat_message_actions_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/dual_music_platform_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/dual_music_platform_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/followup_controls_regression_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/frame_timing_probe_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/library_cloud_persistence_test.dart": {
+          "skipped": 1
+        },
+        "D:/AnLi/test/local_library_integrity_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/music_home_catalogues_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/login_artwork_test.dart": {
+          "success": 19
+        },
+        "D:/AnLi/test/netease_data_adapters_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/netease_full_contracts_test.dart": {
+          "success": 553
+        },
+        "D:/AnLi/test/netease_full_ui_test.dart": {
+          "success": 27
+        },
+        "D:/AnLi/test/netease_full_workflows_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_message_card_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_v112_contracts_test.dart": {
+          "success": 68
+        },
+        "D:/AnLi/test/netease_message_card_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/netease_v112_fallback_download_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_v112_listening_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/netease_v114_workflows_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/netease_v112_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/netease_v115_sources_test.dart": {
+          "success": 20
+        },
+        "D:/AnLi/test/netease_v116_recovery_test.dart": {
+          "success": 26
+        },
+        "D:/AnLi/test/netease_v115_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/netease_v117_flows_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/netease_v118_data_test.dart": {
+          "success": 22
+        },
+        "D:/AnLi/test/netease_v117_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_v118_ui_test.dart": {
+          "success": 18
+        },
+        "D:/AnLi/test/netease_v119_data_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/netease_v119_ui_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/netease_v120_data_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/persistent_network_image_cache_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/netease_v120_ui_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/platform_cloud_library_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/platform_rewards_controller_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/platform_rewards_repository_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/platform_search_paging_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/playback_progress_thumb_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/playing_equalizer_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/profile_playlist_navigation_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_103_audio_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/release_103_sleep_playback_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_105_regression_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_103_ui_test.dart": {
+          "success": 28
+        },
+        "D:/AnLi/test/release_106_update_notes_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_107_listening_sync_test.dart": {
+          "success": 13
+        },
+        "D:/AnLi/test/release_107_local_music_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_107_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_120_render_test.dart": {
+          "success": 1
+        },
+        "D:/AnLi/test/release_120_shadow_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_108_diagnostics_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_121_artwork_transport_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_121_matte_cache_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_121_navigation_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_123_player_ui_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_122_profile_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_123_together_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/release_124_accounts_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_124_diagnostics_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_124_downloads_ui_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_124_pages_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_browse_cache_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_126_cache_integration_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_message_protocol_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_126_tab_motion_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_127_message_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_129_artwork_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_128_presentation_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_129_discovery_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_129_user_ui_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_129_users_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_131_library_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_130_artwork_reveal_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_131_refresh_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_131_tab_input_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_132_notes_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_132_search_swipe_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_133_region_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_133_clearance_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_133_together_totals_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_134_together_history_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_135_listening_report_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_136_listening_audit_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_135_scroll_frontier_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_137_footprint_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_136_listening_audit_ui_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_137_footprint_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_138_footprint_units_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_138_listening_safety_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_138_native_log_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_138_native_transport_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_138_ui_refresh_test.dart": {
+          "skipped": 1,
+          "success": 6
+        },
+        "D:/AnLi/test/release_139_listening_rollback_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_140_together_records_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/release_140_shell_search_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/release_140_together_records_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_140_users_badge_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/release_141_type51_message_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/release_142_player_chrome_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_142_together_sync_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_143_background_sync_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_143_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_144_background_sync_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_144_kugou_favorites_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_144_discovery_refresh_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_144_navigation_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_144_player_menu_motion_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_144_room_theme_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_145_background_diagnostics_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_145_connections_test.dart": {
+          "success": 19
+        },
+        "D:/AnLi/test/release_145_footprint_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_145_connections_ui_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/release_145_footprint_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_145_loading_geometry_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_145_messages_back_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/release_145_profile_actions_test.dart": {
+          "success": 5
+        },
+        "D:/AnLi/test/release_145_snapshot_poll_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_146_download_resume_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_146_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_147_collection_ui_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_147_collection_window_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": {
+          "success": 12
+        },
+        "D:/AnLi/test/release_147_footprint_ui_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_147_local_history_performance_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/release_147_platform_paging_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_148_data_test.dart": {
+          "success": 13
+        },
+        "D:/AnLi/test/release_148_playback_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_148_ui_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/release_149_bookmarks_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_149_regressions_test.dart": {
+          "success": 7
+        },
+        "D:/AnLi/test/release_149_ui_test.dart": {
+          "success": 15
+        },
+        "D:/AnLi/test/remote_lyrics_repository_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/saved_messages_page_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/scene_catalog_contract_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/search_menu_fm_regression_test.dart": {
+          "success": 14
+        },
+        "D:/AnLi/test/social_repository_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/release_150_data_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/release_150_package_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_navigation_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_queue_test.dart": {
+          "success": 3
+        },
+        "D:/AnLi/test/release_150_ui_test.dart": {
+          "success": 15
+        }
+      },
+      "failures": [],
+      "log": "final-beta-complete.jsonl",
+      "logSha256": "0834f1ef01b464a21e1dbbc7800a13001e1ae6fe2ee63a00595fc2daf0a323f1",
+      "completeFileRerunProvenance": {
+        "D:/AnLi/test/artwork_image_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta10_entry_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta10_feedback_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta10_quality_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta11_search_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta16_output_and_search_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta16_playback_order_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta18_refinements_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta6_audio_refresh_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta8_navigation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta9_playback_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta9_interactions_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta_account_exclusivity_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta_login_entry_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta_update_isolation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/beta_shared_page_search_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/chat_message_actions_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/dual_music_platform_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/dual_music_platform_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/followup_controls_regression_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/frame_timing_probe_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/library_cloud_persistence_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/local_library_integrity_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/music_home_catalogues_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/login_artwork_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_data_adapters_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_contracts_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_full_workflows_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_message_card_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_contracts_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_message_card_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_fallback_download_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_listening_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v114_workflows_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v112_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v115_sources_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v116_recovery_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v115_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v117_flows_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v118_data_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v117_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v118_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v119_data_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v119_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v120_data_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/persistent_network_image_cache_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/netease_v120_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/platform_cloud_library_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/platform_rewards_controller_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/platform_rewards_repository_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/platform_search_paging_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/playback_progress_thumb_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/playing_equalizer_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/profile_playlist_navigation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_103_audio_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_103_sleep_playback_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_105_regression_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_103_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_106_update_notes_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_107_listening_sync_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_107_local_music_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_107_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_120_render_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_120_shadow_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_108_diagnostics_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_121_artwork_transport_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_121_matte_cache_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_121_navigation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_123_player_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_122_profile_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_123_together_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_124_accounts_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_124_diagnostics_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_124_downloads_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_124_pages_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_126_browse_cache_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_126_cache_integration_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_126_message_protocol_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_126_tab_motion_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_127_message_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_129_artwork_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_128_presentation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_129_discovery_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_129_user_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_129_users_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_131_library_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_130_artwork_reveal_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_131_refresh_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_131_tab_input_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_132_notes_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_132_search_swipe_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_133_region_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_133_clearance_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_133_together_totals_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_134_together_history_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_135_listening_report_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_136_listening_audit_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_135_scroll_frontier_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_137_footprint_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_136_listening_audit_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_137_footprint_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_138_footprint_units_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_138_listening_safety_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_138_native_log_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_138_native_transport_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_138_ui_refresh_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_139_listening_rollback_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_140_together_records_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_140_shell_search_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_140_together_records_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_140_users_badge_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_141_type51_message_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_142_player_chrome_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_142_together_sync_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_143_background_sync_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_143_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_background_sync_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_kugou_favorites_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_discovery_refresh_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_navigation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_player_menu_motion_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_144_room_theme_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_background_diagnostics_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_connections_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_footprint_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_connections_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_footprint_ui_test.dart": "final-footprint.jsonl",
+        "D:/AnLi/test/release_145_loading_geometry_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_messages_back_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_profile_actions_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_145_snapshot_poll_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_146_download_resume_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_146_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_147_collection_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_147_collection_window_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_147_footprint_ui_test.dart": "final-footprint.jsonl",
+        "D:/AnLi/test/release_147_local_history_performance_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_147_platform_paging_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_148_data_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_148_playback_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_148_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_149_bookmarks_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_149_regressions_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_149_ui_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/remote_lyrics_repository_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/saved_messages_page_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/scene_catalog_contract_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/search_menu_fm_regression_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/social_repository_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_150_data_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_150_package_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_150_navigation_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_150_queue_test.dart": "final-beta-complete.jsonl",
+        "D:/AnLi/test/release_150_ui_test.dart": "visual-round2.jsonl"
+      },
+      "singleCleanInvocation": false,
+      "finalFullInvocationSucceeded": true
+    },
+    "stable-complete.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 6,
+      "counts": {
+        "success": 63
+      },
+      "perFile": {
+        "D:/AnLi/test/app_update_test.dart": {
+          "success": 10
+        },
+        "D:/AnLi/test/beta17_player_ui_test.dart": {
+          "success": 2
+        },
+        "D:/AnLi/test/chat_page_test.dart": {
+          "success": 27
+        },
+        "D:/AnLi/test/csnas_app_update_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/music_search_ui_test.dart": {
+          "success": 11
+        },
+        "D:/AnLi/test/playlist_detail_ui_test.dart": {
+          "success": 5
+        }
+      },
+      "failures": [],
+      "log": "final-stable-complete.jsonl",
+      "logSha256": "d8b4ed300c55d04b64be0114655dbf617c3fd66c2551e703e4791b8e77233534"
+    },
+    "search-back-player.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 1,
+      "counts": {
+        "success": 54
+      },
+      "perFile": {
+        "D:/AnLi/test/beta5_ui_test.dart": {
+          "success": 54
+        }
+      },
+      "failures": [],
+      "log": "final-navigation-fixed.jsonl",
+      "logSha256": "937dfe206e0ccdf6343fd6a94e1a1b8d8e1040c76d68594f14162b925b9d72fc"
+    },
+    "supplementalFinalFootprint": {
+      "completeAndSuccessful": true,
+      "files": 2,
+      "counts": {
+        "success": 15
+      },
+      "perFile": {
+        "D:/AnLi/test/release_145_footprint_ui_test.dart": {
+          "success": 8
+        },
+        "D:/AnLi/test/release_147_footprint_ui_test.dart": {
+          "success": 7
+        }
+      },
+      "failures": [],
+      "log": "final-footprint.jsonl",
+      "logSha256": "4d5857e2abc1889b402a944038953cc4cb353299849fefd95cf5885b4c6ab636"
+    },
+    "visual-round2.jsonl": {
+      "completeAndSuccessful": true,
+      "files": 1,
+      "counts": {
+        "success": 15
+      },
+      "perFile": {
+        "D:/AnLi/test/release_150_ui_test.dart": {
+          "success": 15
+        }
+      },
+      "failures": [],
+      "log": "visual-round2.jsonl",
+      "logSha256": "6eee0d085bbfeecbd15e8fe9815cb3d262d7b1cf68a00c83054f4f9c8a62d071"
+    },
+    "analysisPassed": true,
+    "analysisIssues": 0,
+    "finalHostFrames": 22,
+    "visualRounds": 2,
+    "deviceAccess": false,
+    "hostImagesAreNotPhoneGpuAcceptance": true,
+    "initialFailedAndIntermediateLogsRetained": true,
+    "countingRule": "Complete files only, each selected file counted once; no sum across versions or independent navigation checks"
+  },
+  "actualAndroidBuild": {
+    "version": "1.0.50",
+    "versionCode": 71,
+    "sourceFileHashesMatched": 1382,
+    "actualBuildReceiptPresent": true,
+    "buildOutputNewerThanFinalSourceManifest": true,
+    "compilerDefinitionsObservedDuringThisBuild": true,
+    "diagnosticsDisabled": true,
+    "appUpdateChecksEnabled": true,
+    "inputApkSha256": "f14e14b000f3824e87aa655a5a7817be105078c84481d33cb94d2439e2da54a7"
+  },
+  "apk": {
+    "path": "release/Mesting-Music-v1.0.50.apk",
+    "bytes": 109553414,
+    "sha256": "17ecd20b20aa1187a399de23d89bbe908bcf6a0e89ee16843de48d83dac758de",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+    "v2": true,
+    "v3": true,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "customEngineBytesVerified": true,
+    "glassShaderCount": 7,
+    "sdkLibraryCount": 8,
+    "installedPackageReadFromActualApk": "com.mesting.music"
+  },
+  "source": "Mesting-Music-v1.0.50-source.zip",
+  "sourceSummaryExternal": "release/Mesting-Music-v1.0.50-source-verification.json",
+  "nativeMediaBridge": {
+    "inheritedR4Scenarios": 16,
+    "rerunThisVersion": false,
+    "inputFilesStillByteIdentical": true,
+    "actualThisApkBridgeAndPermissionsChecked": true,
+    "newRendererFlavorDecisionActuallyCompiled": true
+  },
+  "actualApkNotes": {
+    "version": "1.0.50",
+    "versionCode": 71,
+    "notesCount": 8,
+    "productionReader": true,
+    "currentVersionOfflineHistoryMatches": true,
+    "rangeRequests": 3,
+    "bytesRead": 66349,
+    "networkAccess": false,
+    "deviceAccess": false,
+    "published": false
+  },
+  "legacyBetaInPlaceUpgradePossible": false,
+  "legacyBetaDataAutomaticallyMigrated": false,
+  "legacyStableSamePackagePhysicalUpgradeTested": false,
+  "originalDirtyWorkspacePreserved": true,
+  "originalIndexPreserved": true,
+  "originalFrozenArtifactsPreserved": 90,
+  "branch": "beta",
+  "head": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+  "staged": [],
+  "noPhysicalDeviceAcceptance": true,
+  "noRealAccountAcceptance": true,
+  "noCDNAcceptance": true,
+  "historicalDurationFixed": false,
+  "october683Minutes10SecondsRecovered": false,
+  "oldLogsReplayed": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false,
+  "phoneAccess": false,
+  "musicAccountOrBackendAccess": false,
+  "privateReferenceMaterialInSourceZip": false
+}

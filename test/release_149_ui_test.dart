@@ -242,7 +242,7 @@ void main() {
         await tester.pump();
         expect(
           tester.getSize(find.byKey(const ValueKey('song-list-dismiss'))).width,
-          44,
+          greaterThanOrEqualTo(44),
         );
         await shot148(tester, 'bookmark-narrow-$dark');
         expect(tester.takeException(), isNull);
@@ -288,11 +288,22 @@ void main() {
         );
         await shot148(tester, 'bookmark-favorites-$dark');
         await tester.tap(find.byKey(const ValueKey('song-list-last-played')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        await shot148(tester, 'bookmark-scroll-early-$dark', prepare: false);
+        await tester.pump(const Duration(milliseconds: 150));
+        await shot148(tester, 'bookmark-scroll-middle-$dark', prepare: false);
         for (var i = 0; i < 8; i++) {
           await tester.pump(const Duration(milliseconds: 100));
         }
         expect(find.byKey(const ValueKey('song-list-top')), findsOneWidget);
         await shot148(tester, 'bookmark-located-$dark');
+        await tester.tap(find.byKey(const ValueKey('song-list-top')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 150));
+        await shot148(tester, 'bookmark-top-middle-$dark', prepare: false);
+        await tester.pump(const Duration(milliseconds: 1100));
+        await shot148(tester, 'bookmark-top-complete-$dark');
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       },

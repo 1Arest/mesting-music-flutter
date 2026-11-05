@@ -11,8 +11,9 @@ import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 
-/** Per-engine network adapter. No addresses, SSIDs or persistent identifiers
- * cross the channel. A failed query never authorizes sharing. */
+/** Per-engine network adapter. Network events contain no addresses or SSIDs.
+ * The optional RTC tuner accepts only this SDK's local host bindings; it returns
+ * aggregate status and never persists them. A failed query never authorizes sharing. */
 public final class RingDownloadPlugin implements FlutterPlugin,
     MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
   private ConnectivityManager manager;
@@ -22,18 +23,41 @@ public final class RingDownloadPlugin implements FlutterPlugin,
   private ConnectivityManager.NetworkCallback callback;
   private final Handler main = new Handler(Looper.getMainLooper());
   private int generation;
+  private RingRtcReceiveBuffer receiveBuffer;
+  private RingSharingResources sharingResources;
+  private EventChannel resourceEvents;
 
   @Override public void onAttachedToEngine(FlutterPluginBinding binding) {
+    receiveBuffer = new RingRtcReceiveBuffer();
     manager = (ConnectivityManager) binding.getApplicationContext()
         .getSystemService(Context.CONNECTIVITY_SERVICE);
     methods = new MethodChannel(binding.getBinaryMessenger(), "ring_download_sdk/network");
     events = new EventChannel(binding.getBinaryMessenger(), "ring_download_sdk/network_events");
     methods.setMethodCallHandler(this);
     events.setStreamHandler(this);
+    sharingResources = new RingSharingResources(binding.getApplicationContext(), main, this::current);
+    resourceEvents = new EventChannel(binding.getBinaryMessenger(), "ring_download_sdk/sharing_resources");
+    resourceEvents.setStreamHandler(sharingResources);
   }
 
   @Override public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if ("getNetworkType".equals(call.method)) result.success(current());
+    else if ("getSharingResources".equals(call.method)) {
+      result.success(sharingResources == null ? null : sharingResources.snapshot());
+    }
+    else if ("beginRtcReceiveBuffer".equals(call.method)) {
+      Object owner=call.argument("owner");
+      result.success(receiveBuffer!=null && owner instanceof String && receiveBuffer.begin((String)owner));
+    } else if ("closeRtcReceiveBuffer".equals(call.method)) {
+      Object owner=call.argument("owner");
+      result.success(receiveBuffer!=null && owner instanceof String && receiveBuffer.close((String)owner));
+    } else if ("tuneRtcReceiveBuffer".equals(call.method)) {
+      Object owner=call.argument("owner"),bindings=call.argument("bindings"),expires=call.argument("expiresAt");
+      if(receiveBuffer==null || !(owner instanceof String) || !(bindings instanceof java.util.List) ||
+          !(expires instanceof Long || expires instanceof Integer)) {
+        result.success(java.util.Collections.singletonMap("code","invalid"));
+      } else result.success(receiveBuffer.tune((String)owner,(java.util.List<?>)bindings,((Number)expires).longValue()));
+    }
     else result.notImplemented();
   }
 
@@ -89,6 +113,12 @@ public final class RingDownloadPlugin implements FlutterPlugin,
   @Override public void onCancel(Object arguments) { stop(); }
 
   @Override public void onDetachedFromEngine(FlutterPluginBinding binding) {
+    if (sharingResources != null) sharingResources.stop();
+    if (resourceEvents != null) resourceEvents.setStreamHandler(null);
+    sharingResources = null;
+    resourceEvents = null;
+    if (receiveBuffer != null) receiveBuffer.detach();
+    receiveBuffer = null;
     stop();
     methods.setMethodCallHandler(null);
     events.setStreamHandler(null);

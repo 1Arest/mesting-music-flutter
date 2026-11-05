@@ -1,7 +1,8 @@
 param(
-    # Public releases retain this internal flavor/package for in-place upgrades.
-    [string]$VersionName = '1.0.49',
-    [ValidateRange(1, 2147483647)][int]$VersionCode = 70,
+    # Retain this internal native/UI flavor, with the requested public package
+    # com.mesting.music. The old .beta installation remains a separate app.
+    [string]$VersionName = '1.0.51',
+    [ValidateRange(1, 2147483647)][int]$VersionCode = 72,
     [ValidateSet('debug', 'profile', 'release')][string]$Mode = 'release',
     [string]$TargetPlatform = 'android-arm,android-arm64',
     [string]$FlutterSdkRoot = $env:MESTING_BETA_FLUTTER_ROOT,
@@ -43,7 +44,7 @@ try {
         '--dart-define=MESTING_NATIVE_PLAYBACK_LOGGING=false' `
         '--dart-define=MESTING_LOCAL_DIAGNOSTICS=false' `
         "--dart-define=TOGETHER_SYNC_DIAGNOSTICS=$($TogetherSyncDiagnostics.IsPresent.ToString().ToLowerInvariant())" `
-        '--dart-define=APP_UPDATE_PACKAGE_NAME=com.mesting.music.beta'
+        '--dart-define=APP_UPDATE_PACKAGE_NAME=com.mesting.music'
     if ($LASTEXITCODE -ne 0) { throw 'Beta APK build failed.' }
     $lockAfter = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $appRoot 'pubspec.lock')).Hash
     if ($lockAfter -ne $lockBefore) { throw 'Dependency lock changed during the build; review it before packaging.' }

@@ -1,0 +1,28 @@
+{
+  "version": "1.1.2-dev.2",
+  "date": "2026-10-29",
+  "formal_publication": false,
+  "change": "Restore the existing first_payload_received diagnostic in the leased P8P path; one event per active transport.",
+  "diagnostic_scope": "Local closed event log; no new required server field, no proof of verified data or socket drops.",
+  "regression": {
+    "total": 508,
+    "passed": 508,
+    "failed": 0,
+    "static_analysis": "passed",
+    "targeted_existing_cases": 2,
+    "targeted_counts_overlap": true,
+    "before_missing_events": 2,
+    "after_seed_and_peer_events_once": true
+  },
+  "source_inputs_verified_unchanged": true,
+  "inherited_cancellation_fix": true,
+  "wire_and_timeouts_unchanged": true,
+  "HTTPS_first_and_external_COS_independent": true,
+  "website_formal_SDK": "1.1.1",
+  "formal_App_built": false,
+  "server_or_nodes_deployed": false,
+  "real_device_tested_this_revision": false,
+  "network_or_receive_buffer_problem_fixed": false,
+  "full_log_sha256": "fabd158ab6c2a442effbd1448d62f56402497eb88e4d3144edc5a2b8342c8bfc",
+  "analysis_log_sha256": "475a97e76f6840543b492b0e713b8705584cb95562d2b6b12ed029aafe131a81"
+}

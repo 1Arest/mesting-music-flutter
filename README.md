@@ -1,21 +1,5 @@
 # Mesting Music
 
-**最新维护交付：1.0.49 / Android code70（Beta 安装通道）。** [Latest Release](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.49) · [分通道下载目录](docs/apk-downloads.md) · [版本目录](docs/versions.md)。
-
-| 安装通道 | 包名 | 导航 |
-| --- | --- | --- |
-| 正式稳定版 | `com.mesting.music` | [历史包按版本倒序](docs/apk-downloads.md#正式稳定版) |
-| Beta | `com.mesting.music.beta` | [正式交付按版本倒序](docs/apk-downloads.md#beta-通道正式交付)、[早期实验系列](docs/apk-downloads.md#早期-beta-实验系列) |
-| Java/MySQL 测试 | `com.mesting.music.javatest` 等 | [独立测试包](docs/apk-downloads.md#javamysql-独立测试包) |
-
-本次补齐 1.0.25～1.0.37、1.0.39～1.0.49 共24版的独立源码提交、标签和正式 GitHub Release，263个附件均保持原始字节。1.0.38 的私有候选不公开。安装通道按真实包名分组，与 Release 的正式/预发布状态分别记录；1.0.49 设为 GitHub Latest，应用内更新后台未改动。
-
-当前页面位于 `beta` 分支。`beta` 维护当前产品；`main` 保留原产品源码，仅同步本下载导航。新电脑继续开发应从 [beta 分支接续](https://github.com/Mesting42/mesting-music-flutter/blob/beta/docs/CONTINUE-BETA.md)。设备、账号和历史时长的未完成验收如实保留，GitHub 归档不替代它们。
-
----
-
-下面保留此前产品介绍的历史原文；其中旧版本状态和下载提示请以本页上方目录为准。
-
 **当前维护代码：1.0.24 / Android code45，开发分支 beta，待手机验收。** 新电脑先读[跨电脑总交接](HANDOFF-GITHUB-2026-10-31-v1.0.24.md)、[接续入口](docs/CONTINUE-BETA.md)与AGENTS.md。
 
 [1.0.23 R2 正式归档](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.23)和[1.0.24 预发布](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.24)均附原签名APK、完整源码ZIP及校验资料，全部31个附件摘要已回读核验。1.0.23源码为本次恢复且通过回归/构建的资料，业务二进制完全重现未证明；1.0.24直接采用原冻结交付。详情见[归档来源](docs/version-archive/RELEASE-ARCHIVE-2026-10-31-v123-v124.md)。

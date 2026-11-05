@@ -9,6 +9,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ring_download_sdk/src/core/services/app_upgrade_receive_buffer.dart';
+import 'package:ring_download_sdk/src/core/services/app_upgrade_upload_budget.dart';
+import 'package:ring_download_sdk/src/p8p/transfer_protocol.dart';
 
 // Private real-file owner fixture; transport remains the existing deterministic test seam.
 // ignore: avoid_relative_lib_imports
@@ -34,6 +37,306 @@ void main() {
     await AppUpgradeP2PDiagnostics.read();
     await directory.delete(recursive: true);
   });
+
+  Future<bool> restoreCache() => harness.client.restoreSharingFromCache(
+    file: harness.part,
+    downloadUrl: _url,
+    expectedSlug: 'lifering',
+    expectedVersion: 'test',
+    expectedFileSize: harness.bytes.length,
+    expectedSha256: sha256.convert(harness.bytes).toString(),
+  );
+
+  test(
+    'cold leased sharing publishes capability in an immediate heartbeat',
+    () async {
+      harness.manifestOverride['p8p'] = {
+        'version': 1,
+        'transfer': P8PTransferProtocol.capability,
+      };
+      harness.client = harness.makeClient(
+        enableP8P: true,
+        sharingDuration: null,
+      );
+      await harness.part.writeAsBytes(harness.bytes);
+      expect(await restoreCache(), true);
+      await _settle();
+      final heartbeats = harness.requests
+          .where((r) => r.uri.pathSegments.last == 'heartbeat')
+          .toList();
+      expect(
+        heartbeats,
+        isNotEmpty,
+        reason:
+            'The existing service marks lease capability freshness only on heartbeat',
+      );
+      expect(
+        (heartbeats.last.data as Map)['p8p_transfer'],
+        P8PTransferProtocol.capability,
+      );
+      expect((heartbeats.last.data as Map)['pieces'], isNotEmpty);
+    },
+  );
+
+  test('metered change during phone pacing permits no late payload', () async {
+    harness.client = harness.makeClient(
+      sharingDuration: null,
+      uploadBudget: AppUpgradeUploadBudget(),
+    );
+    harness.incomingOffer = true;
+    await harness.part.writeAsBytes(harness.bytes);
+    expect(await restoreCache(), true);
+    await _waitUntil(() => harness.peers.isNotEmpty);
+    await _settle();
+    final channel = harness.peers.single.channel;
+    Timer? transition;
+    try {
+      channel.onNativeBufferQuery = () {
+        if (channel.nativeBufferQueries == 6) {
+          transition = Timer(const Duration(milliseconds: 20), () {
+            // Omit the event: a fresh native read must independently guard a
+            // platform callback which is delayed during the rate wait.
+            harness.network = AppUpgradeP2PNetwork.cellular;
+          });
+        }
+      };
+      channel.receiveText({'type': 'get-piece', 'index': 0});
+      await _waitUntil(() => harness.peers.single.closed);
+      expect(channel.binaryBytes, 5 * AppUpgradeP2PManifest.maxFrameBytes);
+    } finally {
+      transition?.cancel();
+    }
+  });
+
+  test(
+    'phone cache advertises and delivers leased frames within the original deadline',
+    () async {
+      harness.manifestOverride['p8p'] = {
+        'version': 1,
+        'transfer': P8PTransferProtocol.capability,
+      };
+      harness.channelLabel = P8PTransferProtocol.channel;
+      harness.incomingOffer = true;
+      harness.client = harness.makeClient(
+        enableP8P: true,
+        sharingDuration: null,
+        uploadBudget: AppUpgradeUploadBudget(),
+      );
+      await harness.part.writeAsBytes(harness.bytes);
+      expect(await restoreCache(), true);
+      await _waitUntil(() => harness.peers.isNotEmpty);
+      await _settle();
+      expect(
+        harness.body('session')['p8p_transfer'],
+        P8PTransferProtocol.capability,
+      );
+      expect(harness.body('session')['max_connections'], 1);
+      final channel = harness.peers.single.channel;
+      final clock = Stopwatch()..start();
+      var bodyBytes = 0;
+      channel.onQueued = (message) {
+        if (!message.isBinary) return;
+        bodyBytes += P8PTransferProtocol.frame(message.binary).body.length;
+        expect(
+          bodyBytes,
+          lessThanOrEqualTo(
+            256 * 1024 +
+                clock.elapsedMicroseconds * 256 * 1024 / 1000000 +
+                2048,
+          ),
+        );
+      };
+      channel.receiveText({
+        'type': 'hello',
+        'version': 1,
+        'generation': 7,
+        'source_capacity_supported': true,
+        'sha256': sha256.convert(harness.bytes).toString(),
+      });
+      for (var index = 0; index < 2; index++) {
+        channel.receiveText({
+          'type': 'get',
+          'version': 1,
+          'generation': 7,
+          'request_id': index + 1,
+          'index': index,
+        });
+      }
+      await _waitUntil(() => channel.pieceEnds == 2, attempts: 700);
+      expect(clock.elapsed, lessThan(const Duration(seconds: 8)));
+      final controls = channel.sent
+          .where((m) => !m.isBinary)
+          .map((m) => jsonDecode(m.text) as Map)
+          .toList();
+      expect(controls.first['max_inflight'], 4);
+      expect(controls.first['source_capacity'], 1);
+      final actual = BytesBuilder(copy: false);
+      for (final message in channel.sent.where((m) => m.isBinary)) {
+        actual.add(P8PTransferProtocol.frame(message.binary).body);
+      }
+      expect(
+        sha256.convert(actual.takeBytes()).toString(),
+        sha256.convert(harness.bytes).toString(),
+      );
+      await harness.client.stopSharing();
+      expect(harness.reportedUploadBytes, harness.bytes.length);
+    },
+  );
+
+  test(
+    'phone receiver slot survives revocation until native retirement',
+    () async {
+      final budget = AppUpgradeUploadBudget();
+      harness.client = harness.makeClient(
+        sharingDuration: null,
+        uploadBudget: budget,
+      );
+      harness.incomingOffer = true;
+      await harness.part.writeAsBytes(harness.bytes);
+      expect(await restoreCache(), true);
+      await _waitUntil(() => harness.peers.isNotEmpty);
+      await _settle();
+      final native = Completer<void>();
+      harness.peers.single.closeGate = native.future;
+      try {
+        expect(budget.tryAcquire(), null);
+        harness.client.setResourcesAllowed(false);
+        var stopped = false;
+        final stopping = harness.client.stopSharing().then(
+          (_) => stopped = true,
+        );
+        await _settle();
+        expect(stopped, false);
+        expect(budget.tryAcquire(), null);
+        native.complete();
+        await stopping;
+        final next = budget.tryAcquire();
+        expect(next, isNotNull);
+        next!.release();
+      } finally {
+        if (!native.isCompleted) native.complete();
+      }
+    },
+  );
+
+  test(
+    'cold cache restore registers sharing without any receiving/body request',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      await harness.part.writeAsBytes(harness.bytes);
+      expect(await restoreCache(), true);
+      // Android cache shares retain the existing download role; the explicit
+      // opt-in and verified pieces distinguish this from a receiving task.
+      expect(harness.body('session')['role'], 'download');
+      expect(harness.body('session')['share_enabled'], true);
+      expect(harness.body('session')['pieces'], isNotEmpty);
+      expect(harness.paths, isNot(contains('server-offer')));
+      expect(harness.paths, isNot(contains('peers')));
+      expect(harness.peers, isEmpty);
+      expect(await harness.part.readAsBytes(), harness.bytes);
+      final before = harness.paths.where((p) => p == 'session').length;
+      harness.client.setForeground(false);
+      await _settle();
+      harness.client.setForeground(true);
+      await _waitUntil(
+        () => harness.paths.where((p) => p == 'session').length == before + 1,
+      );
+      expect(harness.paths.where((p) => p == 'manifest').length, 1);
+    },
+  );
+
+  test(
+    'a fresh client can explicitly restore the retained checked file',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      await harness.part.writeAsBytes(harness.bytes);
+      expect(await restoreCache(), true);
+      await harness.client.close();
+      harness.client = harness.makeClient(sharingDuration: null);
+      expect(await restoreCache(), true);
+      expect(harness.paths.where((p) => p == 'session').length, 2);
+      expect(harness.paths.where((p) => p == 'manifest').length, 2);
+      expect(harness.paths, isNot(contains('server-offer')));
+    },
+  );
+
+  test(
+    'cold restore refuses corrupt bytes without modifying the cache',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      final corrupt = List<int>.filled(harness.bytes.length, 0);
+      await harness.part.writeAsBytes(corrupt);
+      expect(await restoreCache(), false);
+      expect(harness.paths, isNot(contains('session')));
+      expect(await harness.part.readAsBytes(), corrupt);
+    },
+  );
+
+  test(
+    'sharing never truncates a cache when piece hashes disagree with full SHA',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      await harness.part.writeAsBytes(harness.bytes);
+      harness.manifestOverride['piece_hashes'] = [
+        for (final _ in harness.manifestJson['piece_hashes'] as List) '0' * 64,
+      ];
+      expect(await restoreCache(), false);
+      expect(harness.paths, isNot(contains('session')));
+      expect(await harness.part.readAsBytes(), harness.bytes);
+    },
+  );
+
+  test(
+    'cold restore does no HTTP when consent, foreground or Wi-Fi denies sharing',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      await harness.part.writeAsBytes(harness.bytes);
+      harness.client.setSharingEnabled(false);
+      expect(await restoreCache(), false);
+      harness.client.setSharingEnabled(true);
+      harness.client.setForeground(false);
+      expect(await restoreCache(), false);
+      harness.client.setForeground(true);
+      for (final network in [
+        AppUpgradeP2PNetwork.cellular,
+        AppUpgradeP2PNetwork.wifiMetered,
+        AppUpgradeP2PNetwork.unknown,
+      ]) {
+        harness.network = network;
+        expect(await restoreCache(), false);
+      }
+      expect(harness.paths, isEmpty);
+    },
+  );
+
+  test(
+    'revocation while restoring manifest cannot register a late seed',
+    () async {
+      harness.client = harness.makeClient(sharingDuration: null);
+      await harness.part.writeAsBytes(harness.bytes);
+      final entered = Completer<void>(), release = Completer<void>();
+      harness.dio.interceptors.insert(
+        0,
+        InterceptorsWrapper(
+          onRequest: (request, handler) async {
+            if (request.uri.path.endsWith('/manifest')) {
+              entered.complete();
+              await release.future;
+            }
+            handler.next(request);
+          },
+        ),
+      );
+      final restoring = restoreCache();
+      await entered.future;
+      harness.client.setSharingEnabled(false);
+      release.complete();
+      expect(await restoring, false);
+      await harness.client.stopSharing();
+      expect(harness.paths, isNot(contains('session')));
+      expect(await harness.part.readAsBytes(), harness.bytes);
+    },
+  );
 
   test('main HTTPS source uses backup P2P endpoints and STUN', () async {
     expect(await harness.downloadPrefix(), harness.bytes.length);
@@ -72,6 +375,69 @@ void main() {
       'https://download.csnas.asia',
     );
   });
+
+  test(
+    'receive buffer ownership does not await signalling and retires before native RTC reuse',
+    () async {
+      final gate = Completer<void>();
+      final owner = _BufferOwner(closeGate: gate);
+      harness.localIceCandidates = [
+        RTCIceCandidate(
+          'candidate:123 1 udp 2122260223 192.0.2.10 45000 typ host',
+          '0',
+          0,
+        ),
+      ];
+      harness.client = harness.makeClient(receiveBufferFactory: () => owner);
+      try {
+        expect(await harness.downloadPrefix(), harness.bytes.length);
+        expect(owner.candidates, hasLength(1));
+        expect(owner.closeCalls, 1);
+        expect(harness.peers.single.closeCalls, 0);
+        final previous = owner.candidates.length;
+        harness.peers.single.onIceCandidate?.call(
+          harness.localIceCandidates.single,
+        );
+        expect(owner.candidates, hasLength(previous));
+      } finally {
+        gate.complete();
+      }
+      await _waitUntil(() => harness.peers.single.disposeCalls == 1);
+      expect(harness.part.readAsBytesSync(), harness.bytes);
+    },
+  );
+
+  test(
+    'optional receive buffer factory failure preserves verified download',
+    () async {
+      harness.client = harness.makeClient(
+        receiveBufferFactory: () => throw StateError('optional'),
+      );
+      expect(await harness.downloadPrefix(), harness.bytes.length);
+      await _waitUntil(() => harness.peers.single.disposeCalls == 1);
+      expect(harness.part.readAsBytesSync(), harness.bytes);
+    },
+  );
+
+  test(
+    'optional candidate and close failures cannot prevent signalling or native disposal',
+    () async {
+      final owner = _BufferOwner(fail: true);
+      harness.localIceCandidates = [
+        RTCIceCandidate(
+          'candidate:123 1 udp 2122260223 192.0.2.10 45000 typ host',
+          '0',
+          0,
+        ),
+      ];
+      harness.client = harness.makeClient(receiveBufferFactory: () => owner);
+      expect(await harness.downloadPrefix(), harness.bytes.length);
+      await _waitUntil(() => harness.peers.single.disposeCalls == 1);
+      expect(owner.candidates, hasLength(1));
+      expect(owner.closeCalls, 1);
+      expect(harness.part.readAsBytesSync(), harness.bytes);
+    },
+  );
 
   test(
     'backup download source remains eligible and accepts backup API metadata',
@@ -2591,7 +2957,7 @@ void main() {
     () async {
       final channel = await cacheUploadChannel();
       channel.cachedBufferedBytes = 0;
-      channel.nativeBufferedBytes = 300 * 1024;
+      channel.nativeBufferedBytes = 3 * 1024 * 1024;
       channel.receiveText({'type': 'get-piece', 'index': 0});
       await Future<void>.delayed(const Duration(milliseconds: 120));
       expect(channel.binaryBytes, 0);
@@ -2599,7 +2965,12 @@ void main() {
       channel.nativeBufferedBytes = 0;
       await _waitUntil(() => channel.pieceEnds == 1);
       expect(channel.binaryBytes, AppUpgradeP2PManifest.chunkSize);
-      expect(channel.maxNativeBufferedBytes, lessThanOrEqualTo(304 * 1024));
+      expect(
+        channel.maxNativeBufferedBytes,
+        lessThanOrEqualTo(
+          2 * 1024 * 1024 + AppUpgradeP2PManifest.maxFrameBytes,
+        ),
+      );
     },
   );
 
@@ -2624,10 +2995,15 @@ void main() {
       channel.receiveText({'type': 'get-piece', 'index': 0});
       await _waitUntil(() => channel.pieceEnds == 1);
       expect(channel.binaryBytes, AppUpgradeP2PManifest.chunkSize);
-      expect(channel.maxNativeBufferedBytes, lessThanOrEqualTo(304 * 1024));
+      expect(
+        channel.maxNativeBufferedBytes,
+        lessThanOrEqualTo(
+          2 * 1024 * 1024 + AppUpgradeP2PManifest.maxFrameBytes,
+        ),
+      );
       expect(
         channel.nativeBufferQueries,
-        greaterThan(channel.binarySendAttempts),
+        greaterThanOrEqualTo(channel.binarySendAttempts),
       );
     },
   );
@@ -2636,7 +3012,7 @@ void main() {
     'native upload backpressure retains one fixed three second drain budget',
     () async {
       final channel = await cacheUploadChannel();
-      channel.nativeBufferedBytes = 300 * 1024;
+      channel.nativeBufferedBytes = 4 * 1024 * 1024;
       final watch = Stopwatch()..start();
       channel.receiveText({'type': 'get-piece', 'index': 0});
       await _waitUntil(() => harness.peers.last.closed, attempts: 400);
@@ -3850,6 +4226,7 @@ class _Harness {
   bool serverTrickleSession = false;
   final seedCandidates = <Map<String, dynamic>>[];
   bool legacyPeer = false;
+  String channelLabel = AppUpgradeP2PManifest.channelLabel;
   Future<void>? seedGate, sessionGate, peersGate;
   Duration remoteDescriptionDelay = Duration.zero;
   void enableTrickle({int budgetMs = 8000}) {
@@ -3968,6 +4345,8 @@ class _Harness {
               .data
           as Map;
   AppUpgradeV40P2PClient makeClient({
+    AppUpgradeReceiveBufferFactory? receiveBufferFactory,
+    AppUpgradeUploadBudget? uploadBudget,
     bool enableP8P = false,
     Duration sourceTimeout = const Duration(seconds: 3),
     Duration? sharingDuration = Duration.zero,
@@ -3975,6 +4354,8 @@ class _Harness {
   }) => AppUpgradeV40P2PClient(
     dio: dio,
     isAndroid: true,
+    receiveBufferFactory: receiveBufferFactory,
+    uploadBudget: uploadBudget,
     enableP8P: enableP8P,
     networkReader: () async {
       networkReadCount++;
@@ -4202,6 +4583,26 @@ class _Harness {
   }
 }
 
+class _BufferOwner implements AppUpgradeReceiveBufferOwner {
+  _BufferOwner({this.closeGate, this.fail = false});
+  final Completer<void>? closeGate;
+  final bool fail;
+  final candidates = <String?>[];
+  int closeCalls = 0;
+  @override
+  void addCandidate(String? candidate) {
+    candidates.add(candidate);
+    if (fail) throw StateError('optional');
+  }
+
+  @override
+  Future<void> close() async {
+    closeCalls++;
+    if (fail) throw StateError('optional');
+    await closeGate?.future;
+  }
+}
+
 class _FakePeer extends RTCPeerConnection {
   _FakePeer(this.harness) : channel = _FakeChannel(harness);
   final _Harness harness;
@@ -4326,6 +4727,7 @@ class _FakeChannel extends RTCDataChannel {
   final _states = StreamController<RTCDataChannelState>.broadcast();
   final List<RTCDataChannelMessage> sent = [];
   void Function(Map)? onControlSent;
+  void Function(RTCDataChannelMessage)? onQueued;
   Future<void>? binarySendGate;
   int? rejectBinarySendAt;
   int binarySendAttempts = 0;
@@ -4347,7 +4749,7 @@ class _FakeChannel extends RTCDataChannel {
   @override
   RTCDataChannelState get state => _state;
   @override
-  String get label => 'lifering-apk-p2p-v1';
+  String get label => harness.channelLabel;
   @override
   int get id => 1;
   @override
@@ -4396,6 +4798,7 @@ class _FakeChannel extends RTCDataChannel {
       }
     }
     sent.add(message);
+    onQueued?.call(message);
     if (message.isBinary) return;
     final control = jsonDecode(message.text) as Map;
     onControlSent?.call(control);

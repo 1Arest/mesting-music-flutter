@@ -68,7 +68,9 @@ class RingDownloadSdk with WidgetsBindingObserver {
     if (config.observeLifecycle) {
       WidgetsBinding.instance.addObserver(this);
       final state = WidgetsBinding.instance.lifecycleState;
-      setForeground(state == null || state == AppLifecycleState.resumed);
+      // An unobserved startup state is not foreground authorization. Receiving
+      // still works; sharing waits for the real resumed lifecycle callback.
+      setForeground(state == AppLifecycleState.resumed);
     }
   }
 
@@ -125,6 +127,51 @@ class RingDownloadSdk with WidgetsBindingObserver {
     }
     _engine.setSharingEnabled(enabled);
     _sharingEnabled = enabled;
+  }
+
+  /// Restore only a host-authorized hosted artifact. The engine revalidates the
+  /// actual cache and current manifest. False means no cache was admitted;
+  /// true retains verified sharing intent, still gated by foreground/Wi-Fi.
+  Future<bool> restoreSharing(RingDownloadRequest request, File file) async {
+    if (_disposed) {
+      throw const RingDownloadException(RingDownloadError.disposed);
+    }
+    request.validate(appId: config.appId);
+    if (!_sharingEnabled ||
+        !request.usesHostedService ||
+        _active != null ||
+        _busyApps.contains(config.appId)) {
+      return false;
+    }
+    final engine = _engine;
+    if (engine is! RingCachedSharing) return false;
+    return (engine as RingCachedSharing).restoreSharing(request, file);
+  }
+
+  /// Revoke immediately and forget the retained artifact before admitting a
+  /// different authorization. Receiving and its HTTP owner remain active.
+  Future<void> stopSharing() async {
+    if (_disposed) return;
+    setSharingEnabled(false);
+    final engine = _engine;
+    if (engine is RingCachedSharing) {
+      await (engine as RingCachedSharing).stopSharing();
+    }
+  }
+
+  /// Resource/network eligibility only; it is not a registration or file receipt.
+  bool get sharingResourcesAllowed {
+    final engine = _engine;
+    return !_disposed &&
+        (engine is! RingSharingResourceEvents ||
+            (engine as RingSharingResourceEvents).sharingResourcesAllowed);
+  }
+
+  Stream<bool> get sharingResourceAvailability {
+    final engine = _engine;
+    return engine is RingSharingResourceEvents
+        ? (engine as RingSharingResourceEvents).sharingResourceAvailability
+        : const Stream.empty();
   }
 
   RingDownloadTask download(RingDownloadRequest request) {

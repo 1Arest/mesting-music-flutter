@@ -1,3 +1,4 @@
+import '../music_platform/presentation/song_actions_sheet.dart';
 import '../../shared/widgets/song_list_tools.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
@@ -9,7 +10,6 @@ import '../../shared/widgets/audio_resolving_wave.dart';
 import '../app_update/presentation/apple_download_progress.dart';
 import '../../shared/widgets/beta_glass_controls.dart';
 import '../../shared/widgets/beta_page_motion.dart';
-import '../../shared/widgets/liquid_glass_sheet.dart';
 import '../../shared/widgets/track_artwork.dart';
 import '../music_platform/music_platform_providers.dart';
 import '../music_platform/data/music_platform_api.dart';
@@ -119,52 +119,30 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
           playAll: all ? tracks : null,
         );
       });
-  Future<void> _menu(AudioDownloadTask task) async {
-    final action = await showLiquidGlassBottomSheet<String>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (sheet) => Padding(
-        padding: const EdgeInsets.fromLTRB(12, 18, 12, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(
-                task.track.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: const Text('已下载的音乐'),
-            ),
-            ListTile(
-              leading: const Icon(CupertinoIcons.play_fill),
-              title: const Text('播放'),
-              onTap: () => Navigator.pop(sheet, 'play'),
-            ),
-            ListTile(
-              leading: const Icon(CupertinoIcons.share),
-              title: const Text('导出音乐文件'),
-              onTap: () => Navigator.pop(sheet, 'export'),
-            ),
-            ListTile(
-              leading: const Icon(CupertinoIcons.folder),
-              title: const Text('打开所在文件夹'),
-              onTap: () => Navigator.pop(sheet, 'folder'),
-            ),
-          ],
-        ),
+  Future<void> _menu(AudioDownloadTask task) => showSongActions(
+    context,
+    ref,
+    downloadedPlaybackTrack(task),
+    prepareForQueue: () async {
+      if (!await _storage.readable(task.uri)) {
+        throw StateError('文件已被移动或授权失效，请重新授权');
+      }
+      return downloadedPlaybackTrack(task);
+    },
+    extras: [
+      SongMenuExtraAction('播放', CupertinoIcons.play_fill, () => _play([task])),
+      SongMenuExtraAction(
+        '导出音乐文件',
+        CupertinoIcons.share,
+        () => _act(() => _storage.export(task.uri, task.track)),
       ),
-    );
-    if (!mounted) return;
-    if (action == 'play') await _play([task]);
-    if (action == 'export') {
-      await _act(() => _storage.export(task.uri, task.track));
-    }
-    if (action == 'folder') {
-      await _act(() => _storage.openDirectory(uri: task.uri));
-    }
-  }
+      SongMenuExtraAction(
+        '打开所在文件夹',
+        CupertinoIcons.folder,
+        () => _act(() => _storage.openDirectory(uri: task.uri)),
+      ),
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -398,7 +376,7 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                       trailing: done
                           ? IconButton(
                               tooltip: '下载文件操作',
-                              icon: const Icon(CupertinoIcons.ellipsis),
+                              icon: const Icon(Icons.more_vert_rounded),
                               onPressed: _busy ? null : () => _menu(task),
                             )
                           : task.phase == AudioDownloadPhase.paused

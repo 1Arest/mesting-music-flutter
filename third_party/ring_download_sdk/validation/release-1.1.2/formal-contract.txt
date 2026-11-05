@@ -1,0 +1,55 @@
+00:00 +0: loading ${SDK}/test/sdk_contract_test.dart
+00:00 +0: ${SDK}/test/sdk_contract_test.dart: SDK status version matches source package metadata
+00:00 +1: ${SDK}/test/sdk_contract_test.dart: sharing waits for a positively resumed lifecycle state
+00:00 +2: ${SDK}/test/sdk_contract_test.dart: invalid applications and insecure requests fail before transfer
+00:00 +3: ${SDK}/test/sdk_contract_test.dart: task resolves only after exact file size and SHA are verified
+00:00 +4: ${SDK}/test/sdk_contract_test.dart: a transport returning corrupt bytes never produces a successful receipt
+00:00 +5: ${SDK}/test/sdk_contract_test.dart: truncated files and an over-optimistic progress callback are rejected
+00:00 +6: ${SDK}/test/sdk_contract_test.dart: cancellation before scheduled start performs no engine or network work
+00:00 +7: ${SDK}/test/sdk_contract_test.dart: active tenant is exclusive even across SDK instances; other tenants proceed
+00:00 +8: ${SDK}/test/sdk_contract_test.dart: dispose cancels a running transfer, awaits cleanup, and is idempotent
+00:00 +9: ${SDK}/test/sdk_contract_test.dart: transport errors expose no signed URL or raw exception text
+00:00 +10: ${SDK}/test/sdk_contract_test.dart: standalone SDK uses actual HTTPS engine for a business-selected CDN URL
+00:00 +11: ${SDK}/test/sdk_contract_test.dart: sharing is opt-in and does not follow a metered or unknown network
+00:00 +12: ${SDK}/test/sdk_contract_test.dart: installation revalidation rejects a file changed after successful download
+00:00 +13: ${SDK}/test/sdk_contract_test.dart: missing verification file returns a stable storage error
+00:00 +14: ${SDK}/test/sdk_contract_test.dart: hosted service URLs cannot cross the configured application boundary
+00:01 +15: loading ${SDK}/test/sdk_cache_sharing_test.dart
+00:03 +15: ${SDK}/test/sdk_cache_sharing_test.dart: public restore delegates a hosted authorized snapshot without downloading
+00:03 +16: ${SDK}/test/sdk_cache_sharing_test.dart: external COS and explicit opt-out never invoke cache sharing
+00:03 +17: ${SDK}/test/sdk_cache_sharing_test.dart: a restore cannot compete with the active receive owner
+00:03 +18: ${SDK}/test/sdk_cache_sharing_test.dart: disposed SDK refuses restoring a retained file
+00:03 +19: ${SDK}/test/sdk_cache_sharing_test.dart: explicit stop forgets the artifact and requires a new opt-in
+00:03 +20: loading ${SDK}/test/sdk_external_https_test.dart
+00:05 +20: ${SDK}/test/sdk_external_https_test.dart: COS URL alone completes while hosted metadata is unavailable
+00:05 +21: ${SDK}/test/sdk_external_https_test.dart: P8P opt-in never makes external COS depend on hosted health
+00:05 +22: ${SDK}/test/sdk_external_https_test.dart: LifeRing COS response accepts absent size/hash and stale protocol
+00:05 +23: ${SDK}/test/sdk_external_https_test.dart: provided SHA remains enforced for external downloads
+00:06 +24: ${SDK}/test/sdk_external_https_test.dart: known size without SHA is a size-only receipt
+00:06 +25: ${SDK}/test/sdk_external_https_test.dart: SHA without known size is supported for an external source
+00:06 +26: ${SDK}/test/sdk_external_https_test.dart: wrong supplied SHA cannot yield download success
+00:06 +27: ${SDK}/test/sdk_external_https_test.dart: wrong supplied size cannot yield download success
+00:06 +28: ${SDK}/test/sdk_external_https_test.dart: chunked unknown-length body reports real bytes and final actual total
+00:06 +29: ${SDK}/test/sdk_external_https_test.dart: truncated HTTP body fails after bounded recovery attempts
+00:06 +30: ${SDK}/test/sdk_external_https_test.dart: cancelled COS transfer resumes with source-scoped strong ETag
+00:06 +31: ${SDK}/test/sdk_external_https_test.dart: unknown identity without ETag restarts safely after cancellation
+00:06 +32: ${SDK}/test/sdk_external_https_test.dart: server ignoring Range replaces the partial instead of appending
+00:06 +33: ${SDK}/test/sdk_external_https_test.dart: wrong Content-Range cannot splice a resumed file
+00:06 +34: ${SDK}/test/sdk_external_https_test.dart: changed ETag on 206 cannot splice a resumed file
+00:06 +35: ${SDK}/test/sdk_external_https_test.dart: HTTPS redirects stay on the direct route with clean headers
+00:06 +36: ${SDK}/test/sdk_external_https_test.dart: HTTP downgrade redirect is rejected before destination request
+00:06 +37: ${SDK}/test/sdk_external_https_test.dart: redirect loops have a bounded request count
+00:06 +38: ${SDK}/test/sdk_external_https_test.dart: expired COS URL refreshes through business callback without health
+00:06 +39: ${SDK}/test/sdk_external_https_test.dart: refresh callback cannot change expected file identity
+00:06 +40: ${SDK}/test/sdk_external_https_test.dart: stale hosted backup never becomes a COS health dependency
+00:06 +41: ${SDK}/test/sdk_external_https_test.dart: business-provided external backup works without hosted service
+00:07 +42: ${SDK}/test/sdk_external_https_test.dart: hosted sources still require complete metadata before transfer
+00:07 +43: ${SDK}/test/sdk_external_https_test.dart: host boundary uses exact domain instead of substring matching
+00:07 +44: ${SDK}/test/sdk_external_https_test.dart: LifeRing adapter keeps actual APK build separate from business code
+00:07 +45: ${SDK}/test/sdk_external_https_test.dart: external receipt revalidation detects later file mutation
+00:07 +46: ${SDK}/test/sdk_external_https_test.dart: invalid supplied metadata remains an explicit input error
+00:07 +47: loading ${SDK}/test/sdk_installation_events_test.dart
+00:09 +47: ${SDK}/test/sdk_installation_events_test.dart: host installation events retain actual build reconciliation
+00:09 +48: ${SDK}/test/sdk_installation_events_test.dart: COS install never depends on hosted events even with empty metadata
+00:09 +49: ${SDK}/test/sdk_installation_events_test.dart: unavailable installation telemetry never blocks the host installer
+00:09 +50: All tests passed!

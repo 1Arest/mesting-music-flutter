@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "version": "1.1.2",
+  "candidate_version": "1.1.2-dev.7",
+  "candidate_archive_sha256": "629378651892f8769659746d34023233b1b8db960916e24373b266a6b4a8544a",
+  "runtime_files": 48,
+  "version_literal_only": [
+    "lib/src/sdk/models.dart"
+  ],
+  "transmission_runtime_changes": []
+}

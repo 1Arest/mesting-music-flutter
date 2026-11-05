@@ -35,7 +35,7 @@ void main() {
       final data =
           jsonDecode(store.preferences.getString(SongListMemory.storageKey)!)
               as Map;
-      expect((data.values.first as Map).keys.toSet(), {'id', 'title', 'at'});
+      expect((data.values.first as Map).keys.toSet(), {'id', 'title', 'at', 'cover'});
       restored.dispose();
       store.dispose();
     },
@@ -146,7 +146,7 @@ void main() {
         expect(find.byKey(const ValueKey('song-list-top')), findsOneWidget);
         await tester.tap(find.byKey(const ValueKey('song-list-top')));
         await tester.pump();
-        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 1100));
         await tester.pump();
         expect(scroll.offset, closeTo(0, 1));
         expect(plays, 0);

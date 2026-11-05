@@ -1,8 +1,7 @@
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
-import '../../../shared/widgets/beta_popup_menu_button.dart';
-import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,11 +9,8 @@ import '../../../core/audio/playback_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/track_artwork.dart';
-import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
-import '../../auth/account_capabilities.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
-import '../../music_platform/presentation/platform_comments_page.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../search_providers.dart';
 
@@ -208,81 +204,7 @@ class _SearchSongRow extends ConsumerWidget {
                           ),
                         ),
                         FavoriteToggleButton(track: track, compact: true),
-                        BetaPopupMenuButton<String>(
-                          tooltip: '歌曲操作',
-                          icon: Icon(
-                            CupertinoIcons.ellipsis,
-                            size: 21,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          onSelected: (action) async {
-                            if (action == 'source') {
-                              await showNeteaseTrackSources(
-                                context,
-                                ref,
-                                track,
-                              );
-                              return;
-                            }
-                            if (action == 'comments') {
-                              await openPlatformSongComments(
-                                context,
-                                ref,
-                                track,
-                              );
-                              return;
-                            }
-                            try {
-                              final added = await ref
-                                  .read(audioHandlerProvider)
-                                  .appendToUpcomingQueue(track);
-                              if (context.mounted) {
-                                showMusicNotice(
-                                  context,
-                                  icon: CupertinoIcons.text_badge_plus,
-                                  title: added ? '已加入播放队列' : '已在播放队列',
-                                  message: '',
-                                );
-                              }
-                            } catch (error) {
-                              if (context.mounted) {
-                                showPlatformFailure(context, error);
-                              }
-                            }
-                          },
-                          itemBuilder: (_) => [
-                            if (track.source == TrackSource.netease)
-                              const PopupMenuItem(
-                                value: 'source',
-                                child: Text('选择音乐来源'),
-                              ),
-                            if (ref.read(showPlatformFeaturesProvider) &&
-                                track.source == TrackSource.kugou)
-                              const PopupMenuItem(
-                                value: 'comments',
-                                child: Row(
-                                  children: [
-                                    Icon(CupertinoIcons.text_bubble, size: 20),
-                                    SizedBox(width: 12),
-                                    Text('歌曲评论'),
-                                  ],
-                                ),
-                              ),
-                            const PopupMenuItem(
-                              value: 'queue',
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.text_badge_plus,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text('加入播放队列'),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                        SongActionsButton(track: track),
                       ],
                     ),
                   ),

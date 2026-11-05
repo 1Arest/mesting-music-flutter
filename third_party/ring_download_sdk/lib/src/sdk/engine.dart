@@ -6,9 +6,12 @@ import '../core/models/app_upgrade_models.dart';
 import '../core/services/app_upgrade_p2p_diagnostics.dart';
 import '../core/services/app_upgrade_v40_download_client.dart';
 import '../core/services/app_upgrade_v40_p2p_client.dart';
+import '../core/services/app_upgrade_upload_budget.dart';
 import 'models.dart';
 import 'network.dart';
 import 'direct_https.dart';
+import 'receive_buffer.dart';
+import 'sharing_resources.dart';
 
 /// Internal seam for meaningful SDK contract tests without WebRTC mocks leaking
 /// into the public enterprise integration API.
@@ -31,8 +34,24 @@ abstract interface class RingInstallationEvents {
   Future<void> reportInstallationFailure(RingDownloadRequest request);
 }
 
+/// Hosts retain business authorization and the persisted artifact receipt.
+/// No download or installation is initiated by this optional capability.
+abstract interface class RingCachedSharing {
+  Future<bool> restoreSharing(RingDownloadRequest request, File file);
+  Future<void> stopSharing();
+}
+
+abstract interface class RingSharingResourceEvents {
+  bool get sharingResourcesAllowed;
+  Stream<bool> get sharingResourceAvailability;
+}
+
 class DefaultRingTransferEngine
-    implements RingTransferEngine, RingInstallationEvents {
+    implements
+        RingTransferEngine,
+        RingInstallationEvents,
+        RingCachedSharing,
+        RingSharingResourceEvents {
   DefaultRingTransferEngine(this.config, {Dio? http}) {
     _http =
         http ??
@@ -54,6 +73,18 @@ class DefaultRingTransferEngine
       networkReader: RingNetwork.read,
       networkEvents: RingNetwork.events,
       isAndroid: config.enableP2P && Platform.isAndroid,
+      uploadBudget: config.enableP2P && Platform.isAndroid
+          ? AppUpgradeUploadBudget.mobile
+          : null,
+      receiveBufferFactory: config.enableP2P && Platform.isAndroid
+          ? () => RingRtcReceiveBufferOwner(
+              onResult: (code) {
+                config.onDiagnostic?.call(
+                  RingDownloadDiagnostic(stage: 'rtc', code: code),
+                );
+              },
+            )
+          : null,
       allowSharing: config.allowSharing,
       enableP8P: config.enableP8P,
       // Foreground only; heartbeat renews the server lease while Wi-Fi permits.
@@ -97,6 +128,13 @@ class DefaultRingTransferEngine
         );
       },
     );
+    if (config.enableP2P && Platform.isAndroid) {
+      _p2p.setResourcesAllowed(false);
+      _sharingResources = RingSharingResourcesOwner(
+        onAllowedChanged: _p2p.setResourcesAllowed,
+      );
+      _sharingResources!.setEnabled(config.allowSharing);
+    }
   }
 
   final RingDownloadConfig config;
@@ -117,6 +155,7 @@ class DefaultRingTransferEngine
 
   Future<void>? _disposing;
   bool _disposed = false;
+  RingSharingResourcesOwner? _sharingResources;
   late final Dio _http, _signal;
   late final AppUpgradeV40P2PClient _p2p;
   late final AppUpgradeV40DownloadClient _client;
@@ -214,10 +253,44 @@ class DefaultRingTransferEngine
   }
 
   @override
-  void setForeground(bool foreground) => _client.setForeground(foreground);
+  void setForeground(bool foreground) {
+    _client.setForeground(foreground);
+    _sharingResources?.setForeground(foreground);
+  }
 
   @override
-  void setSharingEnabled(bool enabled) => _p2p.setSharingEnabled(enabled);
+  void setSharingEnabled(bool enabled) {
+    _p2p.setSharingEnabled(enabled);
+    _sharingResources?.setEnabled(enabled);
+  }
+
+  @override
+  bool get sharingResourcesAllowed => _sharingResources?.allowed ?? true;
+  @override
+  Stream<bool> get sharingResourceAvailability =>
+      _sharingResources?.changes ?? const Stream.empty();
+
+  @override
+  Future<bool> restoreSharing(RingDownloadRequest request, File file) async {
+    if (_disposed || !config.enableP2P || !request.usesHostedService) {
+      return false;
+    }
+    final resources = _sharingResources;
+    if (resources != null && !await resources.ensureCurrent()) return false;
+    if (_disposed) return false;
+    return _p2p.restoreSharingFromCache(
+      file: file,
+      downloadUrl: request.url.toString(),
+      expectedSlug: config.appId,
+      expectedVersion: request.version,
+      expectedFileSize: request.fileSize,
+      expectedSha256: request.sha256.toLowerCase(),
+      expectedVersionCode: request.androidVersionCode,
+    );
+  }
+
+  @override
+  Future<void> stopSharing() => _p2p.stopSharing();
 
   @override
   Future<void> dispose() => _disposing ??= _dispose();
@@ -226,8 +299,10 @@ class DefaultRingTransferEngine
     _disposed = true;
     _p2p.setForeground(false);
     _p2p.setSharingEnabled(false);
+    _sharingResources?.setForeground(false);
     await _client.cancelAndWait();
     await _p2p.close();
+    await _sharingResources?.close();
     _http.close(force: true);
     _signal.close(force: true);
   }

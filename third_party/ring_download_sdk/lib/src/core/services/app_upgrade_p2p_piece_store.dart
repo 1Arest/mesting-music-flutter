@@ -72,13 +72,14 @@ class AppUpgradeP2PPieceStore {
     return frozen;
   }
 
-  Future<int> verifyPrefix() async {
+  /// Receiving may repair a prefix; sharing must inspect without altering it.
+  Future<int> verifyPrefix({bool repairInvalid = true}) async {
     await close();
     verifiedPieces.clear();
     if (!file.existsSync()) return 0;
     var length = await file.length();
     if (length > manifest.fileSize) {
-      await _truncate(0);
+      if (repairInvalid) await _truncate(0);
       return 0;
     }
     for (var index = 0; index < manifest.pieceHashes.length; index++) {
@@ -87,7 +88,7 @@ class AppUpgradeP2PPieceStore {
       if (end > length) break; // Keep partial HTTPS tail, but never share it.
       final digest = await sha256.bind(file.openRead(start, end)).first;
       if (digest.toString() != manifest.pieceHashes[index]) {
-        await _truncate(start);
+        if (repairInvalid) await _truncate(start);
         length = start;
         break;
       }

@@ -14,3 +14,5 @@ git merge-base --is-ancestor v1.0.49 HEAD
 此机原D:/AnLi主HEAD仍保留b6bcd542、原脏改动和空暂存，远端已领先本地主HEAD。不要在这个脏工作区自动pull/reset/clean；新电脑从beta克隆接续。签名材料须私下转移，定制引擎和完整许可随源码保留。
 
 真实账号/CDN/IME/GPU、一起听剩余设备范围仍待验收；历史总听歌时长及十月683分钟未解决。此归档任务未访问手机/ADB、音乐账号、业务后台或重发旧日志。
+
+最终远端beta：`917cd332ea6500cbb0f1e5d2d7e33595c7e00a9e`；main文档提交：`9f011b1d3d2ec2f83d99681f856404aa79400123`。本地新入口创建于49源码ZIP冻结之后，不回填旧ZIP。原主HEAD/index/既有文件保持；新电脑直接克隆远端beta。

@@ -1,4 +1,5 @@
 import '../../shared/widgets/beta_content_insets.dart';
+import '../../shared/widgets/beta_page_motion.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -416,9 +417,9 @@ class _AudiobooksPageState extends ConsumerState<AudiobooksPage> {
     unawaited(_load());
   }
 
-  void _openAlbum(BookAlbum album) => Navigator.of(context).push(
-    CupertinoPageRoute<void>(builder: (_) => AudiobookAlbumPage(album: album)),
-  );
+  void _openAlbum(BookAlbum album) => Navigator.of(
+    context,
+  ).push(mestingCupertinoRoute<void>(AudiobookAlbumPage(album: album)));
   Future<void> _resume(BookResume entry) async {
     setState(() => _resuming = true);
     try {

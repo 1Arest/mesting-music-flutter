@@ -5,6 +5,12 @@ enum P8PPiecePhase { missing, leased, ready, writing, persisted }
 
 enum P8PLeasePhase { active, cancelling }
 
+/// A trusted adapter observed its own cancellation, rather than a transport
+/// fault. This error alone never acknowledges physical stop or frees a lease.
+class P8PLeaseCancelled extends StateError {
+  P8PLeaseCancelled() : super('p8p_request_cancelled');
+}
+
 class P8PLease {
   P8PLease._(
     this.id,
@@ -203,7 +209,9 @@ class P8PLeaseBook {
   /// rejection. Capacity and accounting remain owned until physical stop.
   /// Ordinary cancellation, corruption or partial bodies never use this path.
   bool rejectAdmission(P8PLease lease) {
-    if (lease.source != 'https' || _admissionRejections >= 2 || !accepts(lease)) {
+    if (lease.source != 'https' ||
+        _admissionRejections >= 2 ||
+        !accepts(lease)) {
       return false;
     }
     _admissionRejections++;

@@ -1,3 +1,4 @@
+import 'song_list_bookmark_capsule.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,7 @@ import 'beta_content_insets.dart';
 import 'beta_glass_controls.dart';
 import 'music_notice.dart';
 import 'keyboard_visibility_builder.dart';
+import 'song_list_scroll_motion.dart';
 
 /// The app supplies identity/storage once. Standalone widgets and host tests
 /// without an owner scope retain their original behavior and do no storage IO.
@@ -194,8 +196,9 @@ class _SongListToolsState extends State<SongListTools> {
       if (!mounted || !_current(epoch)) return;
       final index = tracks.indexWhere((t) => t.id == bookmark.trackId);
       if (index < 0) throw StateError('当前列表中暂未找到这首歌，可稍后继续定位');
-      // Lazy slivers need an approximate jump before their target has a render
-      // object. Calibrate against an actual row, then ensureVisible precisely;
+      // Lazy slivers need a measured destination before the target has a render
+      // object. Animate to it, then ensureVisible precisely; all intermediate
+      // rows remain part of the visible journey, including long distances.
       // headers and text scaling therefore do not become hardcoded offsets.
       for (var attempt = 0; attempt < 14 && _current(epoch); attempt++) {
         _SongListEntryState? target;
@@ -249,9 +252,12 @@ class _SongListToolsState extends State<SongListTools> {
             box.localToGlobal(Offset.zero).dy -
             top +
             (index - anchor) * box.size.height;
-        position.jumpTo(
-          offset.clamp(position.minScrollExtent, position.maxScrollExtent),
+        await SongListScrollMotion.move(
+          position,
+          offset,
+          reduceMotion: MediaQuery.disableAnimationsOf(context),
         );
+        if (!_current(epoch)) return;
         await WidgetsBinding.instance.endOfFrame;
       }
       throw StateError('歌曲已加载，当前未能完成定位，请重试');
@@ -270,17 +276,27 @@ class _SongListToolsState extends State<SongListTools> {
   }
 
   Future<void> _top() async {
+    _cancelLocate();
     final position = _position;
     if (position == null || !position.hasContentDimensions) return;
-    if (MediaQuery.disableAnimationsOf(context)) {
-      position.jumpTo(position.minScrollExtent);
-      return;
-    }
-    await position.animateTo(
+    await SongListScrollMotion.move(
+      position,
       position.minScrollExtent,
-      duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
+      reduceMotion: MediaQuery.disableAnimationsOf(context),
     );
+  }
+
+  void _cancelLocate() {
+    // A deliberate user scroll or a new shortcut owns the viewport immediately.
+    // An interrupted animateTo also completes its Future; the epoch prevents
+    // the old locate loop from starting another animation or highlighting it.
+    _epoch++;
+    if (_locating && mounted) setState(() => _locating = false);
+  }
+
+  bool _userScroll(UserScrollNotification notification) {
+    if (notification.direction != ScrollDirection.idle) _cancelLocate();
+    return false;
   }
 
   @override
@@ -306,114 +322,78 @@ class _SongListToolsState extends State<SongListTools> {
             math.max(400, position.viewportDimension * .65);
     return _SongListScope(
       state: this,
-      child: KeyboardVisibilityBuilder(
-        builder: (context, keyboard) => LayoutBuilder(
-          builder: (context, constraints) {
-            if (!constraints.hasBoundedHeight) return widget.child;
-            return Stack(
-              fit: StackFit.passthrough,
-              children: [
-                widget.child,
-                if (!keyboard && (showHint || showTop))
-                  Positioned(
-                    key: const ValueKey('song-list-tools'),
-                    right: 18,
-                    bottom:
-                        widget.bottom ??
-                        (BetaContentInsets.musicBottomOf(context) + 10).clamp(
-                          12,
-                          math.max(12, constraints.maxHeight - 150),
-                        ),
-                    width: math.min(
-                      300,
-                      math.max(100, constraints.maxWidth - 36),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (showTop)
-                          BetaGlassButton(
-                            key: const ValueKey('song-list-top'),
-                            onPressed: _top,
-                            width: 48,
-                            height: 48,
-                            horizontalPadding: 0,
-                            label: '回到列表顶部',
-                            child: const Icon(
-                              CupertinoIcons.arrow_up,
-                              size: 23,
+      child: NotificationListener<UserScrollNotification>(
+        onNotification: _userScroll,
+        child: KeyboardVisibilityBuilder(
+          builder: (context, keyboard) => LayoutBuilder(
+            builder: (context, constraints) {
+              if (!constraints.hasBoundedHeight) return widget.child;
+              return Stack(
+                fit: StackFit.passthrough,
+                children: [
+                  widget.child,
+                  if (!keyboard && (showHint || showTop))
+                    Positioned(
+                      key: const ValueKey('song-list-tools'),
+                      right: 18,
+                      bottom:
+                          widget.bottom ??
+                          (BetaContentInsets.musicBottomOf(context) + 10).clamp(
+                            12,
+                            math.max(12, constraints.maxHeight - 150),
+                          ),
+                      width: math.min(
+                        238,
+                        math.max(100, constraints.maxWidth - 36),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (showTop)
+                            BetaGlassButton(
+                              key: const ValueKey('song-list-top'),
+                              onPressed: _top,
+                              width: 48,
+                              height: 48,
+                              horizontalPadding: 0,
+                              label: '回到列表顶部',
+                              child: const Icon(
+                                CupertinoIcons.arrow_up,
+                                size: 23,
+                              ),
                             ),
-                          ),
-                        if (showTop && showHint) const SizedBox(height: 8),
-                        if (showHint)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: BetaGlassButton(
-                                  key: const ValueKey('song-list-last-played'),
-                                  onPressed: _locating
-                                      ? null
-                                      : () => _locate(bookmark),
-                                  loading: _locating,
-                                  height:
-                                      48 +
-                                      (MediaQuery.textScalerOf(
-                                                context,
-                                              ).scale(14) -
-                                              14)
-                                          .clamp(0, 16),
-                                  horizontalPadding: 12,
-                                  label: '定位上次播放的歌曲：${bookmark.title}',
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        '上次播放到这首',
-                                        style: TextStyle(fontSize: 11),
-                                      ),
-                                      Text(
-                                        bookmark.title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              BetaGlassButton(
-                                key: const ValueKey('song-list-dismiss'),
-                                onPressed: () => setState(() {
-                                  // Dismiss also cancels a pending locate after
-                                  // its current request; no further pages run.
-                                  _epoch++;
-                                  _locating = false;
-                                  _dismissed = bookmark.updatedAt;
-                                }),
-                                width: 44,
-                                height: 44,
-                                horizontalPadding: 0,
-                                label: '关闭上次播放提示',
-                                child: const Icon(
-                                  CupertinoIcons.xmark,
-                                  size: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
+                          if (showTop && showHint) const SizedBox(height: 8),
+                          if (showHint)
+                            SongListBookmarkCapsule(
+                              title: bookmark.title,
+                              cover:
+                                  _tracks()
+                                      .where(
+                                        (t) =>
+                                            t.id == bookmark.trackId &&
+                                            t.coverAsset.isNotEmpty,
+                                      )
+                                      .firstOrNull
+                                      ?.coverAsset ??
+                                  bookmark.cover,
+                              locating: _locating,
+                              onLocate: () => _locate(bookmark),
+                              onDismiss: () => setState(() {
+                                // Stop after the in-flight request, without erasing
+                                // the bookmark or starting any playback command.
+                                _epoch++;
+                                _locating = false;
+                                _dismissed = bookmark.updatedAt;
+                              }),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

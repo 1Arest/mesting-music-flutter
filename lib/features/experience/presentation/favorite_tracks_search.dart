@@ -1,3 +1,4 @@
+import '../../library/favorite_pins_provider.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -158,9 +159,17 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
 
   Widget _body(BuildContext context, FavoriteTrackWindow? window) {
     final searching = _query.trim().isNotEmpty && window != null;
-    final tracks = searching
+    final pins = ref.watch(favoritePinsProvider);
+    final owner = ref.watch(activeLibraryOwnerProvider);
+    final candidates = searching
         ? _results
         : filterFavoriteTracks(widget.tracks, _query);
+    // Search preserves its own server cursor and only reorders actual matches.
+    final tracks = pins.apply(
+      owner,
+      candidates,
+      candidates.map((t) => t.id).toSet(),
+    );
     final loading = searching ? _searching : window?.loading ?? false;
     final more = searching ? _searchMore : window?.hasMore ?? false;
     final error = searching ? _searchError : window?.error;
@@ -251,6 +260,7 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                             : const MusicListEnd();
                       }
                       return EditorialTrackRow(
+                        favorites: true,
                         track: tracks[index - 2],
                         contextTracks: tracks,
                       );

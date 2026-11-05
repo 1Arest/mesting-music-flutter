@@ -1,11 +1,10 @@
+import 'song_actions_sheet.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/music_list_footer.dart';
-import '../netease/fallback/netease_source_picker.dart';
-import '../../../shared/widgets/beta_popup_menu_button.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/song_list_tools.dart';
@@ -19,7 +18,6 @@ import '../../../shared/widgets/track_artwork.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../player/presentation/music_hub_top_bar.dart';
 import '../../search/search_providers.dart';
-import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../library/library_providers.dart';
 import 'platform_feedback.dart';
 import 'platform_recommendations_page.dart';
@@ -194,42 +192,19 @@ class _TrackList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             FavoriteToggleButton(track: track, compact: true),
-            BetaPopupMenuButton<String>(
-              tooltip: '歌曲操作',
-              icon: const Icon(Icons.more_horiz),
-              itemBuilder: (_) => [
-                const PopupMenuItem(value: 'add', child: Text('加入歌单')),
-                if (track.source == TrackSource.netease && !track.hasLocalAudio)
-                  const PopupMenuItem(value: 'source', child: Text('选择音乐来源')),
-                if (ref.read(showPlatformFeaturesProvider))
-                  const PopupMenuItem(value: 'comments', child: Text('酷狗歌曲评论')),
+            SongActionsButton(
+              track: track,
+              extras: [
                 if (playlistId != null)
-                  const PopupMenuItem(value: 'remove', child: Text('从云端歌单移除')),
-              ],
-              onSelected: (action) async {
-                if (!context.mounted) return;
-                if (action == 'source') {
-                  await showNeteaseTrackSources(context, ref, track);
-                  return;
-                }
-                if (action == 'add') {
-                  await showAddToPlaylistSheet(context, ref, track);
-                }
-                if (action == 'comments' && context.mounted) {
-                  await openPlatformSongComments(context, ref, track);
-                }
-                if (action == 'remove' && playlistId != null) {
-                  try {
-                    await ref
+                  SongMenuExtraAction(
+                    '从云端歌单移除',
+                    Icons.remove_circle_outline,
+                    () => ref
                         .read(libraryRepositoryProvider)
-                        .removeTrackFromPlaylist(playlistId!, track.id);
-                  } catch (error) {
-                    if (context.mounted) {
-                      showPlatformFailure(context, error);
-                    }
-                  }
-                }
-              },
+                        .removeTrackFromPlaylist(playlistId!, track.id),
+                    destructive: true,
+                  ),
+              ],
             ),
           ],
         ),

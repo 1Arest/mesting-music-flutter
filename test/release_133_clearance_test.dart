@@ -85,6 +85,12 @@ void main() {
           scroll.jumpTo(scroll.maxScrollExtent);
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 700));
+          // Release history grows with each version. A large-text lazy list's
+          // initial maximum is an estimate; settle at its actual last row.
+          for (var i = 0; i < 4; i++) {
+            scroll.jumpTo(scroll.maxScrollExtent);
+            await tester.pump(const Duration(milliseconds: 100));
+          }
           final last = find.byKey(
             const PageStorageKey('release-history-1.0.1'),
           );

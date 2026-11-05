@@ -1,0 +1,106 @@
+{
+  "version": "1.1.2-dev.5",
+  "status": "verified_local_candidate_and_B_node_hotfix",
+  "SDK_tests_passed": 521,
+  "static_analysis_passed": true,
+  "targeted_upload_tests_passed": 9,
+  "node_sender_tests_passed": 14,
+  "multi_stun_tests_passed": 9,
+  "incremental_ice_tests_passed": 9,
+  "local_real_rtc_tests_passed": 3,
+  "B_full_node_tests": {
+    "ran": 119,
+    "passed": 118,
+    "skipped": 1,
+    "failed": 0
+  },
+  "B_node_version": "1.0.23+p2p1",
+  "B_node_pid": 342002,
+  "B_to_NAS_1MiB_rounds": [
+    {
+      "round": 1,
+      "channel_open_ms": 618,
+      "received_body_bytes": 687904,
+      "complete_wire_frames": 14,
+      "wire_frames_per_piece": 22,
+      "sender_reported_bytes": 1048576,
+      "verified_piece": false
+    },
+    {
+      "round": 2,
+      "channel_open_ms": 1056,
+      "received_body_bytes": 982720,
+      "complete_wire_frames": 20,
+      "wire_frames_per_piece": 22,
+      "sender_reported_bytes": 1048576,
+      "verified_piece": false
+    },
+    {
+      "round": 3,
+      "channel_open_ms": 552,
+      "received_body_bytes": 1031856,
+      "complete_wire_frames": 21,
+      "wire_frames_per_piece": 22,
+      "sender_reported_bytes": 1048576,
+      "verified_piece": false
+    }
+  ],
+  "APK_rebuilt": false,
+  "formal_website_replaced": false,
+  "LifeRing_branch_replaced": false,
+  "C_patch_applied": true,
+  "C_to_NAS_after_config": [
+    {
+      "round": 1,
+      "body_bytes": 0,
+      "channel_open_ms": null,
+      "verified_piece": false,
+      "multi_stun": true,
+      "incremental_ice_enabled": true,
+      "stun_responses": 2,
+      "local_candidates": 4,
+      "close_reason": "idle_timeout"
+    },
+    {
+      "round": 2,
+      "body_bytes": 0,
+      "channel_open_ms": null,
+      "verified_piece": false,
+      "multi_stun": true,
+      "incremental_ice_enabled": true,
+      "stun_responses": 2,
+      "local_candidates": 4,
+      "close_reason": "idle_timeout"
+    },
+    {
+      "round": 3,
+      "body_bytes": 0,
+      "channel_open_ms": null,
+      "verified_piece": false,
+      "multi_stun": true,
+      "incremental_ice_enabled": true,
+      "stun_responses": 2,
+      "local_candidates": 4,
+      "close_reason": "idle_timeout"
+    }
+  ],
+  "C_route_comparison": {
+    "B_target_interface": "Ethernet",
+    "B_target_source": "192.168.110.44",
+    "B_target_gateway": "192.168.110.1",
+    "NAS_target_interface": "Ethernet",
+    "NAS_target_source": "192.168.110.44",
+    "NAS_target_gateway": "192.168.110.1",
+    "same_route_for_B_and_NAS": true,
+    "secondary_WLAN_address": "192.168.1.102",
+    "secondary_WLAN_gateway": "192.168.1.1",
+    "secondary_WLAN_selected_for_either_target": false,
+    "C_and_B_public_network": "CHINANET-GD",
+    "NAS_public_network": "CMNET",
+    "local_route_or_program_explains_failure": false,
+    "target_specific_upstream_UDP_policy_supported": true,
+    "exact_company_filter_device_identified": false
+  },
+  "TURN_integrated": false,
+  "evidence": "p8p/validation/p2p-queue-throughput-20261029/summary.json"
+}

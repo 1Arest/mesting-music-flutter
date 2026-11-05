@@ -240,3 +240,8 @@ MV 全屏请求横屏，退出/系统返回恢复竖屏和原详情，同一控�
 ## 2026-10-28 1.0.8 性能专项
 
 保留1.0.7功能和Apple玻璃视觉，新增严格条件下的重复采样／背景读取复用及schema2用户自行导出的流畅度报告。报告以原始帧时间关联CPU绘制计数和光栅耗时，不将显示120Hz或主机验证冒充实际120fps。发布身份1.0.8/code29，详细边界见同版接续。
+
+
+## 1.0.50 approved package and song-list extension (2026-11-04)
+
+The user confirmed public Android package com.mesting.music from 1.0.50 onward, with no automatic migration from the separate .beta installation. The internal beta flavor still selects the current UI/native libraries and patched engine; the update feed is unchanged and this task authorizes local delivery only. Ordinary nested pages share reversible parent/child horizontal travel; special entries keep their original forms. Song lists use a compact real-cover bookmark capsule with integrated close, and platform-aware song menus with real non-trading operations and metadata. Favorites support account-isolated persistent local pins without changing official order. See docs/fixes-2026-11-04-v1.0.50.md for exact data/validation boundaries.

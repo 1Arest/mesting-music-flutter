@@ -1,4 +1,5 @@
 import '../../../shared/widgets/music_notice.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import 'dart:async';
 
@@ -29,8 +30,8 @@ void openNeteasePersonalConnections(
   required String ownerId,
   bool initialFollowers = false,
 }) => Navigator.of(context).push(
-  CupertinoPageRoute<void>(
-    builder: (_) => NeteasePersonalConnectionsPage(
+  mestingCupertinoRoute<void>(
+    NeteasePersonalConnectionsPage(
       ownerId: ownerId,
       initialFollowers: initialFollowers,
     ),

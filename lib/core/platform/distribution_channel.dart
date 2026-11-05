@@ -8,11 +8,11 @@ class DistributionChannel {
   static bool get isBeta => appFlavor == 'beta';
   static bool get isJavaTest => appFlavor == 'javaMysqlTest';
 
-  static String get packageName => isBeta
-      ? 'com.mesting.music.beta'
-      : isJavaTest
-      ? 'com.mesting.music.javatest'
-      : 'com.mesting.music';
+  // Installation identity is independent of the internal native/UI flavor.
+  // Keep the established update feed; changing the package does not authorize
+  // publishing or switching the application to the old stable implementation.
+  static String get packageName =>
+      isJavaTest ? 'com.mesting.music.javatest' : 'com.mesting.music';
 
   static String get updateManifestUrl {
     const root =

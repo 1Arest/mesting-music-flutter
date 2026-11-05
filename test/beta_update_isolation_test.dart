@@ -8,30 +8,31 @@ import 'package:mesting_music/features/app_update/data/app_update_platform.dart'
 import 'package:mesting_music/features/app_update/data/app_update_repository.dart';
 import 'package:mesting_music/features/app_update/domain/app_update_models.dart';
 
-/// Reproduces a correctly installed Beta receiving a misplaced formal manifest.
+/// The existing native/UI flavor now installs under the public package.
+/// An old .beta package manifest must still be rejected, not cross-installed.
 class _BetaUpdatePlatform extends AppUpdatePlatform {
   @override
   Future<AppVersionInfo> currentVersion() async => const AppVersionInfo(
-    packageName: 'com.mesting.music.beta',
-    versionName: '1.0.37-beta.1',
-    versionCode: 1,
+    packageName: 'com.mesting.music',
+    versionName: '1.0.50',
+    versionCode: 71,
   );
 }
 
 void main() {
   test(
-    'Beta requests its own feed and rejects a formal package manifest',
+    'current flavor keeps its feed and rejects the old Beta package manifest',
     () async {
       Uri? requestedUrl;
       final client = MockClient((request) async {
         requestedUrl = request.url;
         return http.Response(
           jsonEncode({
-            'packageName': 'com.mesting.music',
-            'versionName': '1.0.38',
-            'versionCode': 59,
-            'title': 'Formal update accidentally in Beta feed',
-            'releaseNotes': ['Must never be accepted by Beta'],
+            'packageName': 'com.mesting.music.beta',
+            'versionName': '1.0.51',
+            'versionCode': 72,
+            'title': 'Old package accidentally in current feed',
+            'releaseNotes': ['Must never change installation package'],
             'apkUrl': 'https://updates.example.com/formal.apk',
             'sha256': List.filled(64, '0').join(),
             'sizeBytes': 100,

@@ -1,17 +1,13 @@
-import '../../../shared/widgets/beta_page_motion.dart';
+import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
-import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import '../../downloads/audio_downloads_page.dart';
 import 'cold_start_greeting.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
-import '../../music_platform/netease/full/netease_full_page.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +21,6 @@ import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/platform_profile_provider.dart';
 import '../../music_platform/presentation/platform_avatar.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
-import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 
@@ -384,6 +379,7 @@ class EditorialTrackRow extends ConsumerWidget {
     required this.track,
     required this.contextTracks,
     this.rank,
+    this.favorites = false,
     this.onPlay,
     super.key,
   });
@@ -391,58 +387,14 @@ class EditorialTrackRow extends ConsumerWidget {
   final Track track;
   final List<Track> contextTracks;
   final int? rank;
+  final bool favorites;
   @override
   Widget build(BuildContext context, WidgetRef ref) => SongListEntry(
     track: track,
     tracks: contextTracks,
     child: InkWell(
-      onLongPress: track.isRemote
-          ? () => showCupertinoModalPopup<void>(
-              context: context,
-              builder: (c) => CupertinoActionSheet(
-                title: Text(track.title),
-                actions: [
-                  if (track.source == TrackSource.netease)
-                    CupertinoActionSheetAction(
-                      onPressed: () {
-                        Navigator.pop(c);
-                        showNeteaseTrackSources(context, ref, track);
-                      },
-                      child: const Text('选择音乐来源'),
-                    ),
-                  CupertinoActionSheetAction(
-                    onPressed: () {
-                      Navigator.pop(c);
-                      enqueueAudioDownload(context, ref, track);
-                    },
-                    child: const Text('下载音乐'),
-                  ),
-                  if (track.source == TrackSource.netease)
-                    CupertinoActionSheetAction(
-                      onPressed: () {
-                        Navigator.pop(c);
-                        Navigator.of(context).push(
-                          MestingPageRoute<void>(
-                            builder: (_) => NeteaseFullHubPage(
-                              entityKind: 'song',
-                              seed: {
-                                'id': track.platformSongId,
-                                'ids': track.platformSongId,
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text('网易云相关功能'),
-                    ),
-                ],
-                cancelButton: CupertinoActionSheetAction(
-                  onPressed: () => Navigator.pop(c),
-                  child: const Text('取消'),
-                ),
-              ),
-            )
-          : null,
+      onLongPress: () =>
+          showSongActions(context, ref, track, favorites: favorites),
       onTap: () {
         SongListTools.remember(context, track);
         if (onPlay != null) {
@@ -498,11 +450,7 @@ class EditorialTrackRow extends ConsumerWidget {
               ),
             ),
             FavoriteToggleButton(track: track, compact: true),
-            IconButton(
-              tooltip: '加入歌单',
-              onPressed: () => showAddToPlaylistSheet(context, ref, track),
-              icon: const Icon(Icons.playlist_add_rounded, size: 22),
-            ),
+            SongActionsButton(track: track, favorites: favorites),
           ],
         ),
       ),

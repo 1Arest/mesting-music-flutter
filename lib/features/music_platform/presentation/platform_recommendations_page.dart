@@ -342,7 +342,10 @@ class _PlatformRecommendationDetailState
     return PlatformPageFrame(
       title: widget.title,
       child: value.when(
-        skipLoadingOnRefresh: false,
+        // Keep the mounted list and its scroll offset during a refresh. The
+        // refresh owner paints the top indicator; continuation/artwork waits
+        // remain at the trailing frontier of this same viewport.
+        skipLoadingOnRefresh: true,
         loading: () => const _RecommendationLoading(),
         error: (_, _) =>
             EditorialEmpty('推荐暂时无法读取', onRetry: () => ref.invalidate(provider)),
@@ -420,7 +423,8 @@ class _PlatformRecommendationDetailState
               await ref.read(provider.future);
             },
             child: AutomaticSongPaging(
-              songListId: 'recommendations:${widget.kind?.name ?? 'daily'}:${widget.newSongs}',
+              songListId:
+                  'recommendations:${widget.kind?.name ?? 'daily'}:${widget.newSongs}',
               fillInitialViewport: widget.kind != PlatformRecommendationKind.fm,
               enabled: widget.kind == null
                   ? visibleCount < tracks.length

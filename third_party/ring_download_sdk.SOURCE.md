@@ -1,3 +1,15 @@
+# 2026-11-04 Music 1.0.51：升级 Ring Download SDK 1.1.2
+
+- 用户确认将 SDK 更新与本轮页面修复一起交付；使用官方最新正式包，非开发候选。
+- 来源：[SDK 下载页](https://download.csnas.asia/sdk)；[1.1.2 ZIP](https://download.csnas.asia/static/ring-download-sdk-1.1.2.zip)；[官方 SHA-256](https://download.csnas.asia/static/ring-download-sdk-1.1.2.sha256)。
+- 官方 ZIP SHA-256：`387a6b8f5f3ec1bf2e0551d57427f6053a841fb90dd1b2bd670dad376d143665`。
+- 242 个原始文件逐一按解压字节校验；宿主 Dart 3.11.5 分析兼容仅在 `lib/src/core/services/app_upgrade_v40_download_client.dart` 删除已由前序长度检查证明非空的重复 `!` 并补注释，不改变传输流程；其余 241 项保持原始字节。原本地 1.1.0 目录和宿主依赖锁另存私有保护副本。原 LICENSE 和第三方声明原文保留。
+- 新版增加 Android 接收缓冲本地库、取消与收尾、缓存恢复及受限分享能力；Music 继续 `allowSharing: false`，不启用用户上传。
+- Music 继续通过公开 `ring_download_sdk.dart` 调用，保留 appId=`music`、更新源、P2P/P8P 开关和原安装器。宿主离线解析只将 SDK 锁定版本 1.1.0 改为 1.1.2，其余依赖版本保持。
+- 本轮主机与实际 APK 验证结果见 `docs/fixes-2026-11-04-v1.0.51.md` 和 `docs/validation-2026-11-04-v1.0.51.json`。供应方自带的实测/回归材料仅为来源证据，不能冒充本 App 设备验收。
+
+以下为旧版集成的历史记录。
+
 # Ring Download SDK 来源
 
 **2026-10-28 分发边界更新**：用户在本次会话明确确认已取得 SDK 源码公开分发授权，并要求将 1.0.4 / 1.0.5 完整源码推送 GitHub，供另一台电脑接续。下方本机集成时期的“仅私有”操作说明属于当时状态；本次授权记录见 `docs/version-archive/RELEASE-BACKFILL-2026-10-28.md`。原 LICENSE、所有权和第三方声明保持原文，不重新宣称 SDK 采用 Music 的开源许可。

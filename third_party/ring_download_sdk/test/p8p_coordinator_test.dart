@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -6,9 +7,12 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ring_download_sdk/compat.dart';
 import 'package:ring_download_sdk/src/p8p/leases.dart';
+import 'package:ring_download_sdk/src/p8p/diagnostics.dart';
 import 'package:ring_download_sdk/src/p8p/ordered_writer.dart';
 import 'package:ring_download_sdk/src/p8p/sources.dart';
 import 'package:ring_download_sdk/src/p8p/coordinator.dart';
+import 'package:ring_download_sdk/src/p8p/transfer_protocol.dart';
+import 'package:ring_download_sdk/src/p8p/transfer_receiver.dart';
 
 void main() {
   const chunk = AppUpgradeP2PManifest.chunkSize;
@@ -20,6 +24,7 @@ void main() {
   late P8POrderedWriter writer;
   late P8PCoordinator coordinator;
   late Stopwatch clock;
+  late List<P8PSourceDiagnostic> diagnostics;
   Uint8List piece(int index) => Uint8List.fromList(
     payload.sublist(index * chunk, (index * chunk + manifest.pieceSize(index))),
   );
@@ -30,6 +35,8 @@ void main() {
     Duration hedgeAfter = const Duration(milliseconds: 40),
     bool paused = false,
     int Function()? readClock,
+    Duration stopGrace = const Duration(milliseconds: 30),
+    bool failObserver = false,
   }) async {
     directory = await Directory.systemTemp.createTemp('p8p-coordinator-');
     payload = Uint8List.fromList(
@@ -70,12 +77,17 @@ void main() {
       repeatBudgetBytes: repeat,
     );
     writer = await P8POrderedWriter.open(book, store, paused: paused);
+    diagnostics = [];
     coordinator = P8PCoordinator(
       writer,
       clockMicros: readClock ?? () => clock.elapsedMicroseconds,
       requestTimeout: requestTimeout,
       hedgeAfter: hedgeAfter,
-      stopGrace: const Duration(milliseconds: 30),
+      stopGrace: stopGrace,
+      onDiagnostic: (event) {
+        diagnostics.add(event);
+        if (failObserver) throw StateError('private diagnostic observer');
+      },
     );
   }
 
@@ -267,6 +279,82 @@ void main() {
       }
     },
   );
+
+  test('a faster late user peer wins work from an already warm seed', () async {
+    var now = 0;
+    await setup(
+      10,
+      paused: true,
+      readClock: () => now,
+      requestTimeout: const Duration(seconds: 5),
+      hedgeAfter: const Duration(seconds: 1),
+    );
+    final pending = <int, Completer<Uint8List>>{};
+    final starts = <int, Completer<String>>{};
+    P8PRangeReader reader(String id) => (index, token) async {
+      final gate = Completer<Uint8List>();
+      pending[index] = gate;
+      starts.putIfAbsent(index, () => Completer<String>()).complete(id);
+      try {
+        return await Future.any([
+          gate.future,
+          token.whenCancel.then<Uint8List>((error) => throw error),
+        ]);
+      } finally {
+        pending.remove(index);
+      }
+    };
+    Future<String> started(int index) => starts
+        .putIfAbsent(index, () => Completer<String>())
+        .future
+        .timeout(const Duration(seconds: 2));
+    void finish(int index) => pending[index]!.complete(piece(index));
+    coordinator.add(
+      P8PHttpPieceSource(writer, reader('server'), id: 'server'),
+      diagnosticAlias: 'seed',
+    );
+    final seedProbe = coordinator.probe(0, 'server')!;
+    now = 300000;
+    finish(0);
+    await seedProbe.verified;
+    await seedProbe.stopped;
+    final download = coordinator.run(active: () => true);
+    try {
+      expect(await started(1), 'server');
+      expect(await started(2), 'server');
+      coordinator.add(
+        P8PHttpPieceSource(writer, reader('B-home'), id: 'B-home'),
+        diagnosticAlias: 'peer1',
+      );
+      expect(
+        await started(3),
+        'B-home',
+        reason: 'The late user peer gets a real cold probe',
+      );
+      now = 400000;
+      finish(3);
+      expect(
+        await started(4),
+        'B-home',
+        reason: 'A verified 100ms peer outranks the 300ms seed',
+      );
+      now = 600000;
+      finish(1);
+      expect(
+        await started(5),
+        'B-home',
+        reason: 'The server keeps serving while faster peer gets next work',
+      );
+      expect(coordinator.metrics['source_peer1_verified_bytes'], chunk);
+      expect(coordinator.metrics['source_seed_verified_bytes'], 2 * chunk);
+      expect(coordinator.metrics['source_failures'] ?? 0, 0);
+      expect(book.peakReservations, lessThanOrEqualTo(4));
+      expect(book.repeatReservedBytes, 0);
+    } finally {
+      await coordinator.close();
+      await download;
+    }
+  });
 
   test('shared-source queue time does not demote the faster source', () async {
     var now = 0;
@@ -759,6 +847,70 @@ void main() {
       await request.stopped;
       expect(book.reservations, 0);
       expect(store.file.existsSync(), false);
+      expect(diagnostics.map((event) => event.reason), [
+        P8PDiagnosticCode.requestDeadlineExceeded,
+        P8PDiagnosticCode.stopGraceExceeded,
+      ]);
+    },
+  );
+
+  test(
+    'partial piece reports the original eight second deadline and one second stop grace',
+    () async {
+      var now = 0;
+      await setup(
+        3,
+        paused: true,
+        readClock: () => now,
+        requestTimeout: const Duration(seconds: 8),
+        stopGrace: const Duration(seconds: 1),
+        failObserver: true,
+      );
+      final release = Completer<Uint8List>();
+      final source = _MeteredSource(
+        writer,
+        (_, token) => release.future,
+        () => 884448,
+      );
+      coordinator.add(source, diagnosticAlias: 'peer1');
+      final request = coordinator.probe(0, source.id)!;
+      final failure = expectLater(
+        request.verified,
+        throwsA(isA<P8PLeaseCancelled>()),
+      );
+      now = 7999999;
+      coordinator.poll();
+      expect(diagnostics, isEmpty);
+      expect(source.closed, false);
+      now = 8000000;
+      coordinator.poll();
+      expect(
+        diagnostics.single.reason,
+        P8PDiagnosticCode.requestDeadlineExceeded,
+      );
+      expect(diagnostics.single.alias, 'peer1');
+      expect(diagnostics.single.actualBytes, 884448);
+      expect(diagnostics.single.expectedBytes, chunk);
+      now = 8999999;
+      coordinator.poll();
+      expect(source.closed, false);
+      now = 9000000;
+      coordinator.poll();
+      coordinator.poll();
+      expect(diagnostics.last.reason, P8PDiagnosticCode.stopGraceExceeded);
+      expect(diagnostics, hasLength(2));
+      expect(source.closed, true);
+      expect(
+        book.reservations,
+        1,
+        reason: 'Observer failure cannot release a live owner',
+      );
+      expect(book.persistedBytes, 0);
+      release.complete(piece(0));
+      await failure;
+      await request.stopped;
+      expect(book.reservations, 0);
+      expect(coordinator.metrics['source_failures'] ?? 0, 0);
     },
   );
 
@@ -934,6 +1086,137 @@ void main() {
       expect(coordinator.metrics['source_failures'], greaterThanOrEqualTo(1));
       expect(await store.completeAndVerified(), true);
       expect(book.reservations, 0);
+    },
+  );
+
+  test(
+    'RTC cancellation acknowledged before poll does not retire its source',
+    () async {
+      var now = 0;
+      await setup(
+        4,
+        paused: true,
+        readClock: () => now,
+        requestTimeout: const Duration(milliseconds: 100),
+      );
+      var transportClosed = false;
+      final controls = <Map<String, Object?>>[];
+      final receiver = P8PTransferReceiver(
+        source: 'node',
+        writer: writer,
+        send: (value) async {
+          controls.add(value);
+        },
+        closeTransport: () async {
+          transportClosed = true;
+        },
+      );
+      final ready = receiver.connect(const Duration(seconds: 1));
+      receiver.acceptControl(
+        jsonEncode({
+          'type': 'hello',
+          'version': 1,
+          'generation': 1,
+          'sha256': manifest.sha256,
+          'max_inflight': 4,
+        }),
+      );
+      await ready;
+      coordinator.add(P8PRtcPieceSource(receiver), diagnosticAlias: 'peer1');
+      final request = coordinator.probe(0, 'node')!;
+      final cancelled = expectLater(
+        request.verified,
+        throwsA(isA<StateError>()),
+      );
+      // The writer/request ledger can expire a lease between coordinator polls.
+      // A late RTC frame observes that cancellation and sends its own cancel.
+      now = 110000;
+      book.expire();
+      receiver.acceptBinary(
+        P8PTransferProtocol.encode(1, request.lease.id, 0, Uint8List(1)),
+      );
+      expect(controls.last['type'], 'cancel');
+      receiver.acceptControl(
+        jsonEncode({
+          'type': 'cancelled',
+          'version': 1,
+          'generation': 1,
+          'request_id': request.lease.id,
+        }),
+      );
+      await cancelled;
+      await request.stopped;
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        transportClosed,
+        false,
+        reason: 'An acknowledged local cancel is not a source failure',
+      );
+      expect(coordinator.metrics['source_failures'] ?? 0, 0);
+      expect(coordinator.metrics['source_peer1_failures'], 0);
+      expect(book.reservations, 0);
+      expect(book.persistedBytes, 0);
+      final retry = coordinator.probe(0, 'node');
+      expect(
+        retry,
+        isNotNull,
+        reason:
+            'The same live source remains eligible within the original retry budget',
+      );
+      expect(book.repeatReservedBytes, chunk);
+    },
+  );
+
+  test(
+    'HTTP completion after ledger expiry does not retire its live source',
+    () async {
+      var now = 0;
+      await setup(
+        4,
+        paused: true,
+        readClock: () => now,
+        requestTimeout: const Duration(milliseconds: 100),
+      );
+      final body = Completer<Uint8List>();
+      final source = P8PHttpPieceSource(writer, (_, token) => body.future);
+      coordinator.add(source, diagnosticAlias: 'https');
+      final request = coordinator.probe(0, 'https')!;
+      final cancelled = expectLater(
+        request.verified,
+        throwsA(isA<StateError>()),
+      );
+      now = 110000;
+      book.expire();
+      body.complete(piece(0));
+      await cancelled;
+      await request.stopped;
+      await Future<void>.delayed(Duration.zero);
+      expect(source.closed, false);
+      expect(coordinator.metrics['source_https_failures'], 0);
+      expect(coordinator.metrics['source_https_cancelled'], 1);
+      expect(book.reservations, 0);
+      expect(book.persistedBytes, 0);
+      expect(coordinator.probe(0, 'https'), isNotNull);
+      expect(book.repeatReservedBytes, chunk);
+    },
+  );
+
+  test(
+    'ordinary source errors cannot claim cancellation by copying its text',
+    () async {
+      await setup(4, paused: true);
+      final source = P8PHttpPieceSource(
+        writer,
+        (_, token) async => throw StateError('p8p_request_cancelled'),
+      );
+      coordinator.add(source, diagnosticAlias: 'https');
+      final request = coordinator.probe(0, 'https')!;
+      await expectLater(request.verified, throwsA(isA<StateError>()));
+      await request.stopped;
+      await Future<void>.delayed(Duration.zero);
+      expect(source.closed, true);
+      expect(coordinator.metrics['source_https_failures'], 1);
+      expect(coordinator.probe(0, 'https'), isNull);
     },
   );
 
