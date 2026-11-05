@@ -7,6 +7,7 @@ import 'domain/platform_rewards.dart';
 import 'domain/platform_session.dart';
 import 'retained_kugou_scope.dart';
 import '../../core/diagnostics/diagnostic_activity.dart';
+import 'netease/netease_rewards_provider.dart';
 
 final platformRewardServiceProvider = Provider<PlatformRewardService>(
   (ref) => PlatformRewardsRepository(
@@ -91,6 +92,7 @@ final platformRewardsProvider =
 /// music shell for each reward progress update. Only the Beta shell watches it.
 final platformRewardAutomationProvider = Provider<void>((ref) {
   ref.watch(platformRewardsProvider.select((s) => s.ownerId));
+  ref.watch(neteaseRewardsProvider.select((s) => s.ownerId));
 });
 
 /// Account-owned orchestration. Every await is followed by an owner/generation

@@ -9,6 +9,9 @@ import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/quiet_pull_to_refresh.dart';
 import '../domain/platform_rewards.dart';
 import '../platform_rewards_provider.dart';
+import '../platform_backend_providers.dart';
+import '../netease/netease_rewards.dart';
+import '../netease/netease_rewards_provider.dart';
 import 'platform_reward_verification.dart';
 import 'platform_reward_day.dart';
 import '../../themes/beta_appearance.dart';
@@ -20,6 +23,8 @@ class PlatformRewardEntry extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(platformRewardsProvider);
+    final netease = ref.watch(usesNeteaseProvider);
+    final neteaseState = ref.watch(neteaseRewardsProvider);
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: scheme.surfaceContainerLow,
@@ -33,7 +38,15 @@ class PlatformRewardEntry extends ConsumerWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          state.ownerId == null
+          netease
+              ? neteaseState.ownerId == null
+                    ? '使用网易云账号查看签到与免费听'
+                    : neteaseState.action == NeteaseRewardAction.signIn
+                    ? '正在签到…'
+                    : neteaseState.action == NeteaseRewardAction.ad
+                    ? '广告领取，本次已确认 ${neteaseState.confirmedAds} 次'
+                    : '打卡记录与免费听时长'
+              : state.ownerId == null
               ? '使用酷狗账号查看签到日历'
               : state.action == RewardAction.signIn
               ? '正在签到…'

@@ -12,11 +12,12 @@ class PlatformRewardDay extends StatelessWidget {
     required this.checked,
     required this.today,
     required this.future,
+    this.unconfirmed = false,
     super.key,
   });
 
   final int number, month;
-  final bool checked, today, future;
+  final bool checked, today, future, unconfirmed;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +30,8 @@ class PlatformRewardDay extends StatelessWidget {
               ? '已签到'
               : future
               ? '未到日期'
+              : unconfirmed
+              ? '暂无确认记录'
               : '未签到'}',
       child: ExcludeSemantics(
         child: Center(

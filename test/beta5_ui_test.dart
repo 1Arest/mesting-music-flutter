@@ -22,6 +22,7 @@ import 'package:mesting_music/features/music_platform/platform_category_search_p
 import 'package:mesting_music/features/search/presentation/beta_category_search_results.dart';
 import 'package:mesting_music/features/library/presentation/library_access.dart';
 import 'dart:async';
+import 'package:mesting_music/features/music_platform/netease/netease_rewards_provider.dart';
 import 'package:mesting_music/app/router/app_router.dart' as production;
 import 'package:mesting_music/features/experience/presentation/floating_playback_pill.dart';
 import 'package:mesting_music/features/experience/presentation/beta_music_shell.dart';
@@ -409,6 +410,9 @@ void main() {
     );
     container = ProviderContainer(
       overrides: [
+        // Navigation acceptance has no reward account or platform keystore.
+        // The dedicated reward tests exercise automation through mock services.
+        neteaseRewardServiceProvider.overrideWith((ref) async => null),
         effectiveMusicThemeProvider.overrideWith((ref) => qaPreset),
         appDatabaseProvider.overrideWithValue(database),
         sharedPreferencesProvider.overrideWithValue(

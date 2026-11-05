@@ -11,6 +11,7 @@ import '../../music_platform/platform_recommendation_providers.dart';
 import '../../music_platform/netease/netease_features_page.dart';
 import '../../music_platform/netease/netease_features_repository.dart';
 import '../../music_platform/presentation/platform_collection_play.dart';
+import '../../music_platform/presentation/platform_mode_play.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import '../../music_platform/presentation/platform_recommendations_page.dart';
 import '../../music_platform/presentation/platform_search_landing.dart'
@@ -75,6 +76,14 @@ class _ModeCard extends ConsumerWidget {
       _Mode.heart => '心动模式',
       _Mode.fm => netease ? '私人 FM' : '猜你喜欢',
     };
+    final play = PlatformModePlayButton(
+      mode: switch (mode) {
+        _Mode.daily => PlatformHighlightMode.daily,
+        _Mode.heart => PlatformHighlightMode.heart,
+        _Mode.fm => PlatformHighlightMode.fm,
+      },
+      title: title,
+    );
     final provider = mode == _Mode.daily
         ? platformDailyProvider
         : platformFmProvider;
@@ -112,6 +121,7 @@ class _ModeCard extends ConsumerWidget {
         height: height,
         subtitle: '正在读取推荐',
         onTap: open,
+        coverAction: play,
       ),
       error: (_, _) => _ModeFallback(
         title: title,
@@ -119,6 +129,7 @@ class _ModeCard extends ConsumerWidget {
         height: height,
         subtitle: '打开后重试',
         onTap: open,
+        coverAction: play,
       ),
       data: (tracks) => tracks.isEmpty
           ? _ModeFallback(
@@ -127,6 +138,7 @@ class _ModeCard extends ConsumerWidget {
               height: height,
               subtitle: mode == _Mode.heart ? '从喜欢的音乐继续探索' : '打开查看推荐',
               onTap: open,
+              coverAction: play,
             )
           : EditorialCover(
               cover: tracks.first.coverAsset,
@@ -141,6 +153,7 @@ class _ModeCard extends ConsumerWidget {
               width: width,
               height: height,
               onTap: open,
+              coverAction: play,
             ),
     );
   }
@@ -153,10 +166,12 @@ class _ModeFallback extends StatelessWidget {
     required this.width,
     required this.height,
     required this.onTap,
+    this.coverAction,
   });
   final String title, subtitle;
   final double width, height;
   final VoidCallback onTap;
+  final Widget? coverAction;
   @override
   Widget build(BuildContext context) => SizedBox(
     width: width,
@@ -173,32 +188,43 @@ class _ModeFallback extends StatelessWidget {
             colors: [Color(0xFF734B67), Color(0xFF243947)],
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(
-                Icons.music_note_rounded,
-                size: 44,
-                color: Colors.white70,
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                coverAction == null ? 20 : 66,
+                20,
               ),
-              const Spacer(),
-              Text(
-                subtitle,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.music_note_rounded,
+                    size: 44,
+                    color: Colors.white70,
+                  ),
+                  const Spacer(),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
+            ),
+            if (coverAction != null)
+              Positioned(right: 8, bottom: 8, child: coverAction!),
+          ],
         ),
       ),
     ),

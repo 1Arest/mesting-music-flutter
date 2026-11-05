@@ -6,6 +6,7 @@ import '../../../core/platform/share_bridge.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../library/library_providers.dart';
@@ -42,6 +43,7 @@ class PlatformPublicPlaylistHeader extends ConsumerStatefulWidget {
 }
 
 class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
+  PlatformCoverPlayLease? _playLease;
   late final _owner = ref.read(platformAccountProvider).value;
   PublicPlaylistInfo? _info;
   bool _revoked = false, _reading = false, _busy = false, _playing = false;
@@ -132,31 +134,38 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
 
   Future<void> _play({bool download = false}) async {
     if (!_current || _busy) return;
+    final lease = download
+        ? null
+        : PlatformCoverPlayLease(ref, context, () => mounted);
+    if (lease != null) _playLease = lease;
+    bool current() => _current && (lease?.current ?? true);
     setState(() {
       _busy = true;
       _playing = !download;
     });
     try {
-      final tracks = await completePublicCollection(
-        ref,
-        widget.item,
-        () => _current,
-      );
-      if (!mounted || !_current || tracks.isEmpty) return;
+      final tracks = await completePublicCollection(ref, widget.item, current);
+      if (!mounted) return;
+      if (!current() || tracks.isEmpty) return;
       if (download) {
         await enqueueAudioDownloads(context, ref, tracks);
       } else {
-        await playBetaSelection(
-          context,
-          ref,
-          tracks.first,
-          playAll: tracks,
-          stillCurrent: () => _current,
-        );
+        await lease!.withPlaybackDialog(() {
+          if (!mounted) return Future.value(false);
+          return playBetaSelection(
+            context,
+            ref,
+            tracks.first,
+            playAll: tracks,
+            stillCurrent: current,
+          );
+        });
       }
     } catch (error) {
-      if (mounted && _current) showPlatformFailure(context, error);
+      if (mounted && current()) showPlatformFailure(context, error);
     } finally {
+      lease?.dispose();
+      if (identical(_playLease, lease)) _playLease = null;
       if (mounted) {
         setState(() {
           _busy = false;
@@ -164,6 +173,21 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
         });
       }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _playLease?.observePageVisibility();
+    if (!BetaTabVisibility.of(context)) {
+      _playLease?.revoke();
+    }
+  }
+
+  @override
+  void dispose() {
+    _playLease?.dispose();
+    super.dispose();
   }
 
   Future<void> _share() async {
@@ -236,6 +260,12 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
           ].join(' · '),
           onSearch: () => GoRouter.maybeOf(context)?.push('/music/search'),
           onDetails: _details,
+          coverAction: PlatformCoverPlayControl(
+            key: const ValueKey('playlist-cover-play'),
+            label: '播放${widget.item.title}全部歌曲',
+            loading: _playing,
+            onPressed: _busy ? null : () => unawaited(_play()),
+          ),
           actions: [
             PlatformCollectionAction(
               id: 'save',

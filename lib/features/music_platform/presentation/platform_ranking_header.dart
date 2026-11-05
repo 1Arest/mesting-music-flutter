@@ -7,6 +7,7 @@ import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../core/platform/share_bridge.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
@@ -23,6 +24,7 @@ import '../music_platform_providers.dart';
 import '../platform_backend_providers.dart';
 import '../platform_explore_providers.dart';
 import 'platform_comments_page.dart';
+import 'platform_collection_play.dart';
 import 'platform_feedback.dart';
 
 /// The chart interaction boundary owns pending state; protocols and complete
@@ -43,6 +45,7 @@ class PlatformRankingHeader extends ConsumerStatefulWidget {
 }
 
 class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
+  PlatformCoverPlayLease? _playLease;
   PlatformRankingInfo? _info;
   late final PlatformSession? _owner;
   PlatformRankingRepository? _repository;
@@ -56,9 +59,9 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
   String? _error, _snapshotId;
   var _date = DateTime.now();
   bool get _current {
+    if (!mounted) return false;
     final now = ref.read(platformAccountProvider).value;
-    return mounted &&
-        !_revoked &&
+    return !_revoked &&
         _owner != null &&
         now?.ownerId == _owner.ownerId &&
         now?.token == _owner.token;
@@ -133,23 +136,48 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
 
   Future<void> _play() async {
     if (!_current || _busy) return;
+    final lease = PlatformCoverPlayLease(ref, context, () => mounted);
+    _playLease = lease;
+    bool current() => _current && lease.current;
     setState(() => _playing = true);
     try {
       final all = await _complete();
-      if (mounted && _current && all.isNotEmpty) {
-        await playBetaSelection(
-          context,
-          ref,
-          all.first,
-          playAll: all,
-          stillCurrent: () => _current,
-        );
+      if (!mounted) return;
+      if (current() && all.isNotEmpty) {
+        await lease.withPlaybackDialog(() {
+          if (!mounted) return Future.value(false);
+          return playBetaSelection(
+            context,
+            ref,
+            all.first,
+            playAll: all,
+            stillCurrent: current,
+          );
+        });
       }
     } catch (error) {
-      if (mounted && _current) showPlatformFailure(context, error);
+      if (mounted && current()) showPlatformFailure(context, error);
     } finally {
+      lease.dispose();
+      if (identical(_playLease, lease)) _playLease = null;
       if (mounted) setState(() => _playing = false);
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _playLease?.observePageVisibility();
+    // A retained hidden tab must not later replace the visible tab's queue.
+    if (!BetaTabVisibility.of(context)) {
+      _playLease?.revoke();
+    }
+  }
+
+  @override
+  void dispose() {
+    _playLease?.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
@@ -320,6 +348,12 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
           period: _info?.period ?? '',
           onSearch: () => GoRouter.maybeOf(context)?.push('/music/search'),
           onDetails: _details,
+          coverAction: PlatformCoverPlayControl(
+            key: const ValueKey('ranking-cover-play'),
+            label: '播放${widget.item.title}全部歌曲',
+            loading: _playing,
+            onPressed: _busy ? null : () => unawaited(_play()),
+          ),
           actions: [
             PlatformCollectionAction(
               id: 'save',
@@ -460,8 +494,10 @@ class PlatformCollectionMasthead extends StatelessWidget {
     required this.onDetails,
     this.updatedAt,
     this.secondary,
+    this.coverAction,
   });
   final String? secondary;
+  final Widget? coverAction;
   final String title, cover, period;
   final MusicPlatform platform;
   final DateTime? updatedAt;
@@ -575,13 +611,31 @@ class PlatformCollectionMasthead extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        Text(
-                          date,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Padding(
+                              // Reserve the same space on both sides so the
+                              // real date/creator remains centered at 2x text.
+                              padding: EdgeInsets.symmetric(
+                                horizontal: coverAction == null ? 0 : 52,
+                              ),
+                              child: Text(
+                                date,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (coverAction != null)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: coverAction!,
+                              ),
+                          ],
                         ),
                       ],
                     ),

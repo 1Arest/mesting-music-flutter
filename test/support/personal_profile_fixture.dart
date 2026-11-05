@@ -17,6 +17,7 @@ import 'package:mesting_music/features/music_platform/platform_profile_provider.
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_api.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_session.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_rewards_provider.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_music_repository.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_library_repository.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_account_overview.dart';
@@ -135,6 +136,10 @@ class PersonalProfileFixture {
         if (audioHandler != null)
           audioHandlerProvider.overrideWithValue(audioHandler),
         sharedPreferencesProvider.overrideWithValue(prefs),
+        // This profile fixture owns synthetic browsing data, not a platform
+        // keystore or live automatic rewards. Reward controller/UI acceptance
+        // uses its own explicit service fixtures in release_159_* tests.
+        neteaseRewardServiceProvider.overrideWith((ref) async => null),
         platformAccountProvider.overrideWith(
           accountFactory ?? SyntheticProfileAccount.new,
         ),
