@@ -135,7 +135,6 @@ class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
               onSign: _sign,
             ),
           ),
-          const _ProfilePart(child: _PersonalStorageEntry()),
           _ProfilePart(child: _PersonalMusicHeading(signedIn: session != null)),
           const _ProfilePart(child: _PersonalLikedPlaylist()),
           const _PersonalPlaylists(),
@@ -424,23 +423,6 @@ class _PersonalQuickLink extends StatelessWidget {
         ),
       ),
     ),
-  );
-}
-
-class _PersonalStorageEntry extends StatelessWidget {
-  const _PersonalStorageEntry();
-  @override
-  Widget build(BuildContext context) => ListTile(
-    key: const ValueKey('profile-download-storage'),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 26),
-    leading: Icon(
-      CupertinoIcons.folder,
-      color: BetaAppearance.feature(context, BetaFeatureTone.downloads),
-    ),
-    title: const Text('下载与存储', style: TextStyle(fontWeight: FontWeight.w500)),
-    subtitle: const Text('下载任务、保存目录与文件管理'),
-    trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
-    onTap: () => openAudioDownloads(context),
   );
 }
 

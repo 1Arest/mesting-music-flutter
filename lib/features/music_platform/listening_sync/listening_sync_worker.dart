@@ -352,6 +352,14 @@ class ListeningSyncWorker {
         accepted ? ListeningSyncState.accepted : ListeningSyncState.unknown,
         now(),
       );
+    } on KugouListeningRejected {
+      await store.change(
+        batch,
+        ListeningSyncState.rejected,
+        now(),
+        payload: {...batch.payload, 'result': 'lite_grade_rejected'},
+      );
+      return;
     } on Object {
       await store.change(batch, ListeningSyncState.unknown, now());
     }

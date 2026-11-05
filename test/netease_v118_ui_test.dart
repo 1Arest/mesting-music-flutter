@@ -425,20 +425,22 @@ void main() {
       expect(find.text('重新加载'), findsOneWidget);
     },
   );
-  testWidgets('personal page exposes storage and uses lighter scoped weights', (
-    tester,
-  ) async {
-    await mount(tester, const BetaPersonalProfile());
-    expect(find.text('下载与存储'), findsOneWidget);
-    expect(find.text('Lv.9'), findsOneWidget);
-    final nickname = tester.widget<Text>(find.text('林间听雨'));
-    expect(nickname.style!.fontWeight, FontWeight.w600);
-    await capture(tester, 'personal');
-    await tester.scrollUntilVisible(find.text('收藏的歌单 · 1'), 160);
-    expect(find.byType(ArtworkImage), findsWidgets);
-    await capture(tester, 'playlist-covers');
-    expect(tester.takeException(), isNull);
-  });
+  testWidgets(
+    'personal page keeps one download entry and lighter scoped weights',
+    (tester) async {
+      await mount(tester, const BetaPersonalProfile());
+      expect(find.text('已下载'), findsOneWidget);
+      expect(find.text('下载与存储'), findsNothing);
+      expect(find.text('Lv.9'), findsOneWidget);
+      final nickname = tester.widget<Text>(find.text('林间听雨'));
+      expect(nickname.style!.fontWeight, FontWeight.w600);
+      await capture(tester, 'personal');
+      await tester.scrollUntilVisible(find.text('收藏的歌单 · 1'), 160);
+      expect(find.byType(ArtworkImage), findsWidgets);
+      await capture(tester, 'playlist-covers');
+      expect(tester.takeException(), isNull);
+    },
+  );
   testWidgets(
     'touch scroll clears menu highlight before finger up and never invokes an action',
     (tester) async {

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import '../../../core/network/music_http_client.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 
 import '../domain/platform_session.dart';
 import 'kugou_official_api.dart';
@@ -32,12 +34,14 @@ class KugouV4GradeRepository implements KugouStandardGradeGateway {
     required this.currentIdentity,
     required this.device,
     DateTime Function()? clock,
+    this.requestTimeout = const Duration(seconds: 15),
   }) : clock = clock ?? DateTime.now;
 
   final http.Client client;
   final PlatformSession? Function() currentIdentity;
   final Future<Map<String, String>> Function() device;
   final DateTime Function() clock;
+  final Duration requestTimeout;
 
   void _check(PlatformSession expected) {
     final current = currentIdentity();
@@ -114,30 +118,32 @@ class KugouV4GradeRepository implements KugouStandardGradeGateway {
     final uri = KugouV4GradeRequest.endpoint.replace(
       queryParameters: encoded.query,
     );
-    final request = http.Request('POST', uri)
-      ..followRedirects = false
-      ..headers.addAll({
-        'Content-Type': 'application/json;charset=utf-8',
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
-      })
-      ..body = encoded.body;
     try {
-      final response = await client
-          .send(request)
-          .timeout(const Duration(seconds: 15));
-      final bytes = <int>[];
-      await for (final chunk in response.stream.timeout(
-        const Duration(seconds: 15),
-      )) {
-        bytes.addAll(chunk);
-        if (bytes.length > 1024 * 1024) throw const FormatException();
-      }
+      // A single deadline covers headers and the entire body. The old per-chunk
+      // idle timeout let a trickling response hold the worker's drain forever.
+      // Aborting an upload never authorizes another send of that measured delta.
+      final response = await sendMusicRequest(
+        client: client,
+        platform: 'kugou',
+        operation: MusicNetworkOperation.read,
+        timeout: requestTimeout,
+        maximumResponseBytes: 1024 * 1024,
+        phase: MusicDiagnosticPhase.networkSend,
+        build: (abort) =>
+            http.AbortableRequest('POST', uri, abortTrigger: abort)
+              ..followRedirects = false
+              ..headers.addAll({
+                'Content-Type': 'application/json;charset=utf-8',
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache',
+              })
+              ..body = encoded.body,
+      );
       _check(identity);
       if (response.statusCode != 200) {
         throw const KugouOfficialException('酷狗等级服务暂时不可用，请稍后重试');
       }
-      final decoded = jsonDecode(utf8.decode(bytes));
+      final decoded = jsonDecode(utf8.decode(response.bodyBytes));
       if (decoded is! Map) throw const FormatException();
       final payload = Map<String, dynamic>.from(decoded);
       final codes = [

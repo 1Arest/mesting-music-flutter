@@ -24,6 +24,7 @@ class BetaGlassButton extends StatelessWidget {
     this.red = false,
     this.fontSize = 15,
     this.horizontalPadding = 18,
+    this.embeddedInPill = false,
     super.key,
   });
   final Widget child;
@@ -35,6 +36,10 @@ class BetaGlassButton extends StatelessWidget {
   final double fontSize;
   final double horizontalPadding;
   final double? width;
+
+  /// A segmented action capsule provides one optical layer for its children.
+  /// Standalone buttons retain their own layer and all existing press behavior.
+  final bool embeddedInPill;
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +89,12 @@ class BetaGlassButton extends StatelessWidget {
               canRequestFocus: interactive,
               height: height,
               width: width,
-              useOwnLayer: true,
+              useOwnLayer: !embeddedInPill,
+              // A shared capsule owns the visible lens. Keep per-action
+              // highlight, focus and spring without painting three inner pills.
+              style: embeddedInPill
+                  ? GlassButtonStyle.transparent
+                  : GlassButtonStyle.filled,
               quality: GlassQuality.premium,
               stretch: .12,
               // A ListView winning the gesture must cancel every button's press

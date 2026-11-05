@@ -17,6 +17,7 @@ import '../data/platform_explore.dart';
 import '../music_platform_providers.dart';
 import '../platform_recommendation_providers.dart';
 import 'platform_design.dart';
+import 'platform_ranking_header.dart';
 import 'apple_hot_search.dart';
 import '../data/music_platform_api.dart';
 import '../data/platform_recommendations.dart';
@@ -305,6 +306,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
   bool _loaded = false;
   PlatformExploreItem? _resolvedItem;
   int _sourceOffset = 0;
+  int? _total;
   bool _downloadingAll = false;
   @override
   void initState() {
@@ -339,6 +341,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
             resolved: resolved,
             tracks: trackPage?.items ?? <Track>[],
             nextOffset: trackPage?.nextOffset ?? offset,
+            total: trackPage?.total,
             more: trackPage?.hasMore ?? false,
             collections: collectionScene
                 ? await repository.sceneCollections(resolved, page: page)
@@ -374,6 +377,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                   ? current.collections.length >= 30
                   : current.more;
               _sourceOffset = current.nextOffset;
+              _total = current.total;
             }
           });
         },
@@ -403,6 +407,7 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
             ? collections.length >= 30 && newCollections.isNotEmpty
             : batch.more;
         _sourceOffset = batch.nextOffset;
+        _total = batch.total;
         _owner = owner;
         _token = token;
         _loaded = true;
@@ -432,139 +437,149 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
     }
     final collectionScene =
         _resolvedItem?.sceneContent == PlatformSceneContent.collections;
-    return PlatformPageFrame(
-      title: widget.item.title,
-      child: AutomaticSongPaging(
-        songListId: 'explore:${widget.item.kind.name}:${widget.item.id}',
-        enabled: _more && !_busy && _error == null,
-        onLoadMore: _load,
-        child: ListView.builder(
-          cacheExtent: MediaQuery.sizeOf(context).height,
-          padding: BetaContentInsets.musicPaddingOf(
-            context,
-            EdgeInsets.only(bottom: 190),
-          ),
-          itemCount:
-              (collectionScene ? _collections.length : _tracks.length) + 2,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              if (!ref.watch(usesNeteaseProvider)) {
-                return const SizedBox.shrink();
-              }
-              return Column(
-                children: [
-                  NeteaseResourceActions(
-                    item: NeteaseItem(
-                      id: widget.item.id,
-                      name: widget.item.title,
-                      kind: widget.item.kind == PlatformExploreKind.album
-                          ? NeteaseEntity.album
-                          : NeteaseEntity.playlist,
-                    ),
-                    showDownload: !collectionScene,
-                    onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
-                        ? null
-                        : () async {
-                            final current = ref
-                                .read(platformAccountProvider)
-                                .value;
-                            if (current?.ownerId != _owner ||
-                                current?.token != _token) {
+    final content = AutomaticSongPaging(
+      songListId: 'explore:${widget.item.kind.name}:${widget.item.id}',
+      enabled: _more && !_busy && _error == null,
+      onLoadMore: _load,
+      child: ListView.builder(
+        cacheExtent: MediaQuery.sizeOf(context).height,
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.only(bottom: 190),
+        ),
+        itemCount: (collectionScene ? _collections.length : _tracks.length) + 2,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            if (widget.item.kind == PlatformExploreKind.rank) {
+              return PlatformRankingHeader(
+                item: widget.item,
+                tracks: _tracks,
+                total: _total,
+              );
+            }
+            if (!ref.watch(usesNeteaseProvider)) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                NeteaseResourceActions(
+                  item: NeteaseItem(
+                    id: widget.item.id,
+                    name: widget.item.title,
+                    kind: widget.item.kind == PlatformExploreKind.album
+                        ? NeteaseEntity.album
+                        : NeteaseEntity.playlist,
+                  ),
+                  showDownload: !collectionScene,
+                  onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
+                      ? null
+                      : () async {
+                          final current = ref
+                              .read(platformAccountProvider)
+                              .value;
+                          if (current?.ownerId != _owner ||
+                              current?.token != _token) {
+                            return;
+                          }
+                          setState(() => _downloadingAll = true);
+                          try {
+                            final all = await ref
+                                .read(neteaseMusicRepositoryProvider)
+                                .exploreTracks(_resolvedItem ?? widget.item);
+                            if (!context.mounted ||
+                                ref
+                                        .read(platformAccountProvider)
+                                        .value
+                                        ?.ownerId !=
+                                    _owner ||
+                                ref
+                                        .read(platformAccountProvider)
+                                        .value
+                                        ?.token !=
+                                    _token) {
                               return;
                             }
-                            setState(() => _downloadingAll = true);
-                            try {
-                              final all = await ref
-                                  .read(neteaseMusicRepositoryProvider)
-                                  .exploreTracks(_resolvedItem ?? widget.item);
-                              if (!context.mounted ||
-                                  ref
-                                          .read(platformAccountProvider)
-                                          .value
-                                          ?.ownerId !=
-                                      _owner ||
-                                  ref
-                                          .read(platformAccountProvider)
-                                          .value
-                                          ?.token !=
-                                      _token) {
-                                return;
-                              }
-                              await enqueueAudioDownloads(context, ref, all);
-                            } catch (failure) {
-                              if (context.mounted) {
-                                showMusicNotice(
-                                  context,
-                                  icon: Icons.error_outline,
-                                  title: '歌曲读取未完成，请重试',
-                                  message: '',
-                                );
-                              }
-                            } finally {
-                              if (mounted) {
-                                setState(() => _downloadingAll = false);
-                              }
+                            await enqueueAudioDownloads(context, ref, all);
+                          } catch (failure) {
+                            if (context.mounted) {
+                              showMusicNotice(
+                                context,
+                                icon: Icons.error_outline,
+                                title: '歌曲读取未完成，请重试',
+                                message: '',
+                              );
                             }
-                          },
-                  ),
-                ],
-              );
-            }
-            index--;
-            if (collectionScene && index < _collections.length) {
-              final collection = _collections[index];
-              return ListTile(
-                key: ValueKey('scene-collection-${collection.id}'),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                  vertical: 10,
+                          } finally {
+                            if (mounted) {
+                              setState(() => _downloadingAll = false);
+                            }
+                          }
+                        },
                 ),
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: ArtworkImage(
-                    uri: collection.cover,
-                    width: 58,
-                    height: 58,
-                  ),
+              ],
+            );
+          }
+          index--;
+          if (collectionScene && index < _collections.length) {
+            final collection = _collections[index];
+            return ListTile(
+              key: ValueKey('scene-collection-${collection.id}'),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 10,
+              ),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: ArtworkImage(
+                  uri: collection.cover,
+                  width: 58,
+                  height: 58,
                 ),
-                title: Text(
-                  collection.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              title: Text(
+                collection.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: collection.subtitle.isEmpty
+                  ? null
+                  : Text(
+                      collection.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MestingPageRoute<void>(
+                  builder: (_) => PlatformExploreSongsPage(item: collection),
                 ),
-                subtitle: collection.subtitle.isEmpty
-                    ? null
-                    : Text(
-                        collection.subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => Navigator.of(context).push(
-                  MestingPageRoute<void>(
-                    builder: (_) => PlatformExploreSongsPage(item: collection),
-                  ),
-                ),
-              );
-            }
-            if (!collectionScene && index < _tracks.length) {
-              return EditorialTrackRow(
-                track: _tracks[index],
-                contextTracks: _tracks,
-              );
-            }
-            if (_busy) return const PlatformFeedbackState(loading: true);
-            if (_error != null) {
-              return TextButton(onPressed: _load, child: Text(_error!));
-            }
-            if ((collectionScene ? _collections.isEmpty : _tracks.isEmpty) &&
-                !_more) {
-              return EditorialEmpty(collectionScene ? '平台暂未返回歌单' : '平台暂未返回歌曲');
-            }
-            return _more ? const SizedBox(height: 12) : const MusicListEnd();
-          },
-        ),
+              ),
+            );
+          }
+          if (!collectionScene && index < _tracks.length) {
+            return EditorialTrackRow(
+              track: _tracks[index],
+              contextTracks: _tracks,
+            );
+          }
+          if (_busy) return const PlatformFeedbackState(loading: true);
+          if (_error != null) {
+            return TextButton(onPressed: _load, child: Text(_error!));
+          }
+          if ((collectionScene ? _collections.isEmpty : _tracks.isEmpty) &&
+              !_more) {
+            return EditorialEmpty(collectionScene ? '平台暂未返回歌单' : '平台暂未返回歌曲');
+          }
+          return _more ? const SizedBox(height: 12) : const MusicListEnd();
+        },
       ),
+    );
+    return PlatformPageFrame(
+      title: widget.item.title,
+      headerInScroll: widget.item.kind == PlatformExploreKind.rank,
+      child: widget.item.kind == PlatformExploreKind.rank
+          ? PlatformRankingScrollShell(title: widget.item.title, child: content)
+          : content,
     );
   }
 }

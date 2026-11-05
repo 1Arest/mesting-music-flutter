@@ -136,6 +136,7 @@ class PlatformPageFrame extends StatelessWidget {
     this.titleWeight = FontWeight.w700,
     this.titleFontSize = 18,
     this.musicChrome = true,
+    this.headerInScroll = false,
     super.key,
   });
   final String title;
@@ -148,6 +149,10 @@ class PlatformPageFrame extends StatelessWidget {
   /// Composer pages already own a bottom glass input surface. Music navigation
   /// must never be stacked over their send/reply controls.
   final bool musicChrome;
+
+  /// Collection mastheads own their navigation and scroll with the artwork.
+  /// All other secondary pages retain the established fixed glass header.
+  final bool headerInScroll;
   final FontWeight titleWeight;
   final double titleFontSize;
   @override
@@ -162,88 +167,93 @@ class PlatformPageFrame extends StatelessWidget {
             key: pageKey,
             backgroundColor: Theme.of(context).colorScheme.surface,
             body: SafeArea(
+              top: !headerInScroll,
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: centerTitle
-                        ? SizedBox(
-                            height: 52,
-                            child: CustomMultiChildLayout(
-                              delegate: _CenteredPlatformHeader(),
-                              children: [
-                                LayoutId(
-                                  id: 'back',
-                                  child: BetaGlassBackButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).maybePop(),
-                                  ),
-                                ),
-                                LayoutId(
-                                  id: 'title',
-                                  child: Text(
-                                    title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: titleFontSize,
-                                      fontWeight: titleWeight,
+                  if (!headerInScroll)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: centerTitle
+                          ? SizedBox(
+                              height: 52,
+                              child: CustomMultiChildLayout(
+                                delegate: _CenteredPlatformHeader(),
+                                children: [
+                                  LayoutId(
+                                    id: 'back',
+                                    child: BetaGlassBackButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).maybePop(),
                                     ),
                                   ),
-                                ),
-                                LayoutId(
-                                  id: 'actions',
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: actions,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Row(
-                            children: [
-                              BetaGlassBackButton(
-                                onPressed: () =>
-                                    Navigator.of(context).maybePop(),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    OverflowMarquee(
+                                  LayoutId(
+                                    id: 'title',
+                                    child: Text(
                                       title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        fontSize: 21,
+                                        fontSize: titleFontSize,
                                         fontWeight: titleWeight,
-                                        height: 1.2,
-                                        color: context
-                                            .musicThemeTokens
-                                            .textPrimary,
-                                        letterSpacing: -.5,
                                       ),
                                     ),
-                                    if (subtitle.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 5),
-                                        child: Text(
-                                          subtitle,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: context
-                                                .musicThemeTokens
-                                                .textSecondary,
-                                          ),
+                                  ),
+                                  LayoutId(
+                                    id: 'actions',
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: actions,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Row(
+                              children: [
+                                BetaGlassBackButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).maybePop(),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      OverflowMarquee(
+                                        title,
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          fontWeight: titleWeight,
+                                          height: 1.2,
+                                          color: context
+                                              .musicThemeTokens
+                                              .textPrimary,
+                                          letterSpacing: -.5,
                                         ),
                                       ),
-                                  ],
+                                      if (subtitle.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 5,
+                                          ),
+                                          child: Text(
+                                            subtitle,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: context
+                                                  .musicThemeTokens
+                                                  .textSecondary,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              ...actions,
-                            ],
-                          ),
-                  ),
+                                ...actions,
+                              ],
+                            ),
+                    ),
                   // Keep an opaque backdrop in the same scroll compositing pass.
                   Expanded(
                     child: ColoredBox(

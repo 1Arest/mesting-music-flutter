@@ -69,6 +69,7 @@ class ListeningSyncSummary {
     this.accepted = 0,
     this.verified = 0,
     this.uncertain = 0,
+    this.rejected = 0,
   });
   ListeningSyncSummary(Iterable<ListeningSyncEntry> rows)
     : queued = rows.where((e) => e.state == ListeningSyncState.queued).length,
@@ -84,6 +85,9 @@ class ListeningSyncSummary {
                 e.state == ListeningSyncState.unknown ||
                 e.state == ListeningSyncState.dispatched,
           )
+          .length,
+      rejected = rows
+          .where((e) => e.state == ListeningSyncState.rejected)
           .length;
-  final int queued, accepted, verified, uncertain;
+  final int queued, accepted, verified, uncertain, rejected;
 }

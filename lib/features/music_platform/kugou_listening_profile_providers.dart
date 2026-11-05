@@ -90,12 +90,14 @@ final kugouListeningProfileReaderProvider =
       return reader;
     });
 
-/// 每项读取独立保留成功快照，失败不会清空邻项，也不会重试已成功的项。
+/// 每项独立保留成功快照；有效期后可重新读取，失败不清空已有资料或邻项。
 class KugouProfileRead<T> {
   T? value;
   String? error;
   bool loading = false, loginRequired = false;
   Future<void>? _pending;
+  DateTime? _readAt;
+  int _revision = 0;
 }
 
 /// 轻量页面订阅边界，资料变化不重建整份个人歌单。所有快照只活在本账号周期。
@@ -107,6 +109,7 @@ class KugouListeningProfileReader extends ChangeNotifier {
   final grade = KugouProfileRead<KugouGrade>();
   final medals = KugouProfileRead<KugouMedalCollection>();
   final _statistics = <String, KugouProfileRead<KugouListeningStatistics>>{};
+  final _queries = <String, (KugouListenPeriod, DateTime)>{};
   bool _closed = false;
 
   bool belongsTo(PlatformSession session) =>
@@ -121,7 +124,39 @@ class KugouListeningProfileReader extends ChangeNotifier {
   KugouProfileRead<KugouListeningStatistics> statistics(
     KugouListenPeriod period,
     DateTime date,
-  ) => _statistics.putIfAbsent(_key(period, date), KugouProfileRead.new);
+  ) {
+    final key = _key(period, date);
+    _queries[key] = (period, period.start(date));
+    return _statistics.putIfAbsent(key, KugouProfileRead.new);
+  }
+
+  /// An independently read official daily result can refresh the visible
+  /// snapshot. It never turns a local upload into proof of official booking.
+  void acceptStatistics(KugouListeningStatistics value) {
+    if (_closed) return;
+    final state = statistics(value.period, value.date);
+    state.value = value;
+    state._revision++;
+    state._readAt = value.readAt;
+    state.error = null;
+    state.loginRequired = false;
+    notifyListeners();
+  }
+
+  /// Refresh only already requested, current periods. No historical reports,
+  /// medals or whole-library collections are polled after each listening tick.
+  Future<void> refreshCurrentStatistics() async {
+    if (_closed) return;
+    final now = repository.clock();
+    final pending = <Future<void>>[];
+    for (final (period, date) in _queries.values.toList()) {
+      if (period != KugouListenPeriod.year && date == period.start(now)) {
+        pending.add(loadStatistics(period, date));
+      }
+    }
+    if (grade.value != null) pending.add(loadGrade());
+    await Future.wait(pending);
+  }
 
   Future<void> loadStatistics(
     KugouListenPeriod period,
@@ -156,21 +191,27 @@ class KugouListeningProfileReader extends ChangeNotifier {
     if (state._pending != null) {
       return state._pending!;
     }
-    if (!force && (state.value != null || state.error != null)) {
+    final fresh =
+        state._readAt != null &&
+        repository.clock().difference(state._readAt!) <
+            const Duration(minutes: 2);
+    if (!force && (state.error != null || state.value != null && fresh)) {
       return Future.value();
     }
     state.loading = true;
     state.error = null;
     state.loginRequired = false;
     notifyListeners();
+    final revision = state._revision;
     Future<void> run() async {
       try {
         final value = await request();
-        if (!_closed) {
+        if (!_closed && revision == state._revision) {
           state.value = value;
+          state._readAt = repository.clock();
         }
       } catch (error) {
-        if (!_closed) {
+        if (!_closed && revision == state._revision) {
           state.error = error is KugouOfficialException
               ? error.message
               : error is MusicPlatformException
@@ -195,6 +236,7 @@ class KugouListeningProfileReader extends ChangeNotifier {
   void dispose() {
     _closed = true;
     _statistics.clear();
+    _queries.clear();
     super.dispose();
   }
 }

@@ -101,6 +101,13 @@ final platformListeningSyncProvider = Provider<ListeningSyncCoordinator>((ref) {
       if (seconds == null) {
         throw const FormatException('Official daily duration is absent');
       }
+      final reader = ref.read(kugouListeningProfileReaderProvider);
+      if (reader?.belongsTo(identity) == true) {
+        reader!.acceptStatistics(fact);
+        // Read-back refreshes shared snapshots without replaying uploads or
+        // waiting for network/profile work on the audio event thread.
+        unawaited(reader.refreshCurrentStatistics());
+      }
       return OfficialListeningDayFact(
         day: fact.date,
         seconds: seconds,

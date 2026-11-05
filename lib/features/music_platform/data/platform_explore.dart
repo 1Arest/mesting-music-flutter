@@ -246,13 +246,40 @@ class PlatformExploreRepository {
     throw const MusicPlatformException('此场景暂未提供可播放的音乐内容');
   }
 
-  static final _fixedSnapshots = Expando<Map<String, Future<List<Track>>>>('fixed-collection-pages');
-  Map<String, Future<List<Track>>> get _fixedTrackSnapshots => _fixedSnapshots[this] ??= {};
+  static final _fixedSnapshots = Expando<Map<String, Future<List<Track>>>>(
+    'fixed-collection-pages',
+  );
+  Map<String, Future<List<Track>>> get _fixedTrackSnapshots =>
+      _fixedSnapshots[this] ??= {};
   Future<TrackPage> tracksPage(
     PlatformExploreItem item, {
     int offset = 0,
     int limit = 30,
   }) async {
+    if (item.kind == PlatformExploreKind.rank) {
+      // Page boundaries follow upstream rows, not the number of song DTOs we
+      // could decode. Otherwise one incomplete row can truncate a 500-song rank.
+      final payload = await api.get(
+        '/rank/audio',
+        query: {
+          'rankid': item.id,
+          'rank_cid': item.rankCid.isEmpty ? '0' : item.rankCid,
+          'page': '${offset ~/ 30 + 1}',
+          'pagesize': '30',
+        },
+      );
+      final rows = PlatformCatalog.rows(payload);
+      final data = MusicPlatformApi.objectMap(payload['data']);
+      final total = int.tryParse('${data['total'] ?? payload['total']}');
+      final next = offset + rows.length;
+      return TrackPage(
+        await PlatformCatalog.tracksAsync(rows),
+        offset: offset,
+        nextOffset: next,
+        total: total,
+        hasMore: total != null ? next < total : rows.length >= 30,
+      );
+    }
     if (item.kind == PlatformExploreKind.theme) {
       if (BrowseResponseCache.observing) {
         final current = tracks(item);

@@ -59,6 +59,13 @@ abstract interface class ListeningPlatformGateway {
   );
 }
 
+/// A parsed negative business response is final, unlike a lost or malformed
+/// reply. Keeping this distinction prevents a known rejection from permanently
+/// blocking every later fresh measurement as an ambiguous successful upload.
+class KugouListeningRejected implements Exception {
+  const KugouListeningRejected();
+}
+
 /// The existing API adapter owns loopback transport and credentials. This layer
 /// adds typed reporting contracts and never logs payloads, tokens or device IDs.
 class KugouListeningRepository implements ListeningPlatformGateway {
@@ -246,21 +253,29 @@ class KugouListeningRepository implements ListeningPlatformGateway {
     int delta,
   ) async {
     final uuid = await _registeredUuid();
-    return businessAccepted(
-      await api.post(
-        '/user/grade/info',
-        expectedSession: identity,
-        query: {
-          'uuid': uuid,
-          // d_sec is the separately observed server baseline. The expected
-          // post-write target is journal evidence, never an input baseline.
-          'd_sec': '$baseline',
-          'diff_sec': '$delta',
-          'y_type': '0',
-          'm_type': '0',
-        },
-      ),
+    final result = await api.post(
+      '/user/grade/info',
+      expectedSession: identity,
+      query: {
+        'uuid': uuid,
+        // d_sec is the separately observed server baseline. The expected
+        // post-write target is journal evidence, never an input baseline.
+        'd_sec': '$baseline',
+        'diff_sec': '$delta',
+        'y_type': '0',
+        'm_type': '0',
+      },
     );
+    if ('${result['status']}' == '0' ||
+        ['errcode', 'error_code', 'err_code'].any(
+          (key) =>
+              result.containsKey(key) &&
+              int.tryParse('${result[key]}') != null &&
+              int.parse('${result[key]}') != 0,
+        )) {
+      throw const KugouListeningRejected();
+    }
+    return businessAccepted(result);
   }
 
   @override

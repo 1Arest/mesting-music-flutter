@@ -86,6 +86,7 @@ class ListeningSyncStore {
           accepted: counts['accepted'] ?? 0,
           verified: counts['verified'] ?? 0,
           uncertain: (counts['unknown'] ?? 0) + (counts['dispatched'] ?? 0),
+            rejected: counts['rejected'] ?? 0,
         );
       });
 

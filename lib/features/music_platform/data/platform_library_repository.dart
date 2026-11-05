@@ -498,6 +498,85 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   @override
   Future<void> addTrackToPlaylist(String playlistId, Track track) async =>
       _write(() async => _add(await _row(playlistId), track));
+
+  /// Save the user-requested chart edition as an ordinary cloud playlist.
+  /// The name identifies the captured date/edition; it is never a subscription
+  /// to tomorrow's rank. A retry first reconciles the cloud, without creating
+  /// a second list or resending an uncertain batch in the same repository.
+  final _uncertainRankingWrites = <String>{};
+  Future<String?> findRankingSnapshot(String name) async {
+    final matches = (await _loadLists())
+        .where((r) => _owned(r) && r['name'] == name)
+        .toList();
+    if (matches.length > 1) {
+      throw const MusicPlatformException('发现同名收藏歌单，请在音乐库核对');
+    }
+    return matches.isEmpty ? null : _id(matches.single);
+  }
+
+  Future<String> saveRankingSnapshot({
+    required String draftId,
+    required String name,
+    required List<Track> tracks,
+  }) async {
+    if (tracks.isEmpty) throw const MusicPlatformException('榜单暂无可收藏歌曲');
+    var id = await findRankingSnapshot(name);
+    if (id == null) {
+      await createPlaylist(id: draftId, name: name);
+      id = _createdDrafts[draftId];
+    }
+    if (id == null) throw const MusicPlatformException('收藏歌单尚未确认，请在音乐库核对');
+    final savedId = id;
+    return _write(() async {
+      final row = await _row(savedId);
+      _requireOwned(row);
+      final existing = (await _fetchTracks(row)).map((t) => t.id).toSet();
+      final wanted = {for (final t in tracks) t.id: t};
+      if (wanted.keys.every(existing.contains)) return savedId;
+      if (_uncertainRankingWrites.contains(savedId)) {
+        throw const MusicPlatformException('部分收藏结果尚未确认，请稍后在音乐库核对，暂不重复发送');
+      }
+      final remaining = wanted.values
+          .where((t) => !existing.contains(t.id))
+          .toList();
+      for (var i = 0; i < remaining.length; i += 10) {
+        final batch = remaining.skip(i).take(10).toList();
+        final values = <String>[];
+        for (final track in batch) {
+          if (track.source != TrackSource.kugou ||
+              !RegExp(r'^kugou_[a-fA-F0-9]{32}$').hasMatch(track.id)) {
+            throw const MusicPlatformException('榜单中包含非酷狗录音，未继续收藏');
+          }
+          // This existing cloud contract permits an omitted album as 0. Use
+          // the authoritative mixsongid where present, never a title match.
+          values.add(
+            '${track.title.replaceAll(RegExp(r'[|,]'), ' ')}|${track.id.substring(6)}|0|${int.tryParse(track.platformSongId) ?? 0}',
+          );
+        }
+        _uncertainRankingWrites.add(savedId);
+        final result = await api.post(
+          '/playlist/tracks/add',
+          expectedSession: identity,
+          query: {'listid': '${row['listid']}', 'data': values.join(',')},
+        );
+        if ('${result['status']}' != '1' ||
+            ['error_code', 'errcode', 'err_code'].any(
+              (key) => result.containsKey(key) && '${result[key]}' != '0',
+            )) {
+          throw const MusicPlatformException('酷狗未确认这批收藏，已保留云歌单，请稍后核对');
+        }
+        _uncertainRankingWrites.remove(savedId);
+      }
+      _invalidate();
+      final observed = (await _fetchTracks(row)).map((t) => t.id).toSet();
+      if (!wanted.keys.every(observed.contains)) {
+        _uncertainRankingWrites.add(savedId);
+        throw const MusicPlatformException('收藏尚未全部读回，请在音乐库核对，暂不重复发送');
+      }
+      return savedId;
+    });
+  }
+
   @override
   Future<void> removeTrackFromPlaylist(
     String playlistId,

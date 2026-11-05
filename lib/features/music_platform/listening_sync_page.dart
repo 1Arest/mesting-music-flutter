@@ -46,7 +46,7 @@ class ListeningSyncPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           const Text(
-            '新播放记录在后台同步，暂停、缓冲和拖动进度不计入收听时长。已有歌曲历史按可还原的信息补传；升级前的累计时长完整保留在本地听歌回顾中。',
+            '新播放记录在后台同步，暂停、缓冲和拖动进度不计入收听时长。本机听歌回顾、平台播放历史与官方听歌统计分别核对，本机回顾增加不代表官方日、周、月统计已入账。',
           ),
           const SizedBox(height: 24),
           summary.when(
@@ -62,12 +62,14 @@ class ListeningSyncPage extends ConsumerWidget {
                 Text('等待发送：${state.queued} 项'),
                 const SizedBox(height: 10),
                 Text('结果待核对：${state.uncertain} 项'),
+                const SizedBox(height: 10),
+                Text('平台明确拒绝：${state.rejected} 项'),
               ],
             ),
           ),
           const SizedBox(height: 24),
           const Text(
-            '请求已接收不代表官方时长已经入账。网络中断时，应用会保留结果待核对的记录，避免重复上报；最终以酷狗实际记录为准。',
+            '请求已接收不代表官方时长已经入账。网络中断时保留结果待核对的记录，避免重复上报。明确拒绝的请求不重发，后续新播放独立处理；最终以酷狗实际记录为准。',
           ),
           const SizedBox(height: 24),
           BetaGlassButton(

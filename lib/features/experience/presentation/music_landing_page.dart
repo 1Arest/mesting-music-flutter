@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/models/track.dart';
 import '../../history/listening_history_providers.dart';
-import '../../library/library_providers.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/platform_catalog_providers.dart';
 import '../../music_platform/presentation/platform_discovery_page.dart';
@@ -38,7 +37,6 @@ class MusicLandingPage extends ConsumerWidget {
     final discoverySongs = ref.watch(platformDiscoveryProvider);
     final signedIn = ref.watch(platformAccountProvider).value != null;
     final recent = ref.watch(recentPlaybackProvider);
-    final favorites = ref.watch(favoriteTracksProvider);
     final featured = ref.watch(platformFeaturedProvider);
     return PlatformStyle(
       child: EditorialScroll(
@@ -86,18 +84,6 @@ class MusicLandingPage extends ConsumerWidget {
                               width: width,
                               feature: true,
                               onTap: () => context.push('/music?view=daily'),
-                            ),
-                            EditorialCover(
-                              cover:
-                                  favorites.value?.firstOrNull?.coverAsset ??
-                                  tracks.last.coverAsset,
-                              title: '我的喜欢',
-                              subtitle:
-                                  '${ref.watch(favoriteCollectionCountProvider)} 首珍藏的旋律',
-                              width: width,
-                              feature: true,
-                              onTap: () =>
-                                  context.push('/music?view=favorites'),
                             ),
                           ],
                         );
