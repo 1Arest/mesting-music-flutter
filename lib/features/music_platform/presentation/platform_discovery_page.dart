@@ -1,10 +1,10 @@
+import 'platform_search_landing.dart' show PlatformExploreSongsPage;
+import '../data/platform_explore.dart';
 import 'song_actions_sheet.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
-import '../../../shared/widgets/automatic_song_paging.dart';
-import '../../../shared/widgets/music_list_footer.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/song_list_tools.dart';
@@ -23,12 +23,9 @@ import 'platform_feedback.dart';
 import 'platform_recommendations_page.dart';
 import '../music_platform_providers.dart';
 import '../platform_catalog_providers.dart';
-import '../../auth/account_capabilities.dart';
-import 'platform_comments_page.dart';
 import 'platform_design.dart';
 import 'retained_platform_snapshot.dart';
 import '../../themes/music_theme_tokens.dart';
-import '../../experience/presentation/editorial_widgets.dart';
 
 /// The incumbent Mesting shell with live upstream content. Each section owns
 /// its loading/error state; a failed playlist request cannot hide valid songs.
@@ -309,73 +306,12 @@ class PlatformPublicPlaylistPage extends ConsumerWidget {
   final String cover;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final value = ref.watch(platformPublicPlaylistProvider(id));
-    final window = ref.exists(publicPlaylistWindowProvider(id))
-        ? ref.watch(publicPlaylistWindowProvider(id))
-        : null;
-    return PlatformPageFrame(
-      title: name,
-      subtitle: '酷狗精选歌单',
-      actions: [
-        if (ref.watch(showPlatformFeaturesProvider))
-          IconButton(
-            tooltip: '酷狗歌单评论',
-            icon: const Icon(Icons.comment_outlined),
-            onPressed: () =>
-                openPlatformPlaylistComments(context, ref, id: id, name: name),
-          ),
-      ],
-      child: ListenableBuilder(
-        listenable: window ?? const AlwaysStoppedAnimation(0),
-        builder: (context, _) => AutomaticSongPaging(
-          enabled:
-              window != null &&
-              window.hasMore &&
-              !window.loading &&
-              window.error == null,
-          onLoadMore: () => window?.loadMore() ?? Future.value(),
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: value.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, _) => const SizedBox.shrink(),
-                  data: (tracks) => EditorialCollectionHero(
-                    cover: cover,
-                    tracks: window?.items ?? tracks,
-                    total: window?.total,
-                    loadComplete: window?.complete,
-                  ),
-                ),
-              ),
-              PlatformSongs(
-                sliver: true,
-                value: value.whenData((tracks) => window?.items ?? tracks),
-                retry: () {
-                  ref.invalidate(publicPlaylistWindowProvider(id));
-                  ref.invalidate(platformPublicPlaylistProvider(id));
-                },
-              ),
-              SliverToBoxAdapter(
-                child: window?.loading == true
-                    ? const PlatformFeedbackState(loading: true)
-                    : window?.error != null
-                    ? TextButton(
-                        onPressed: window!.loadMore,
-                        child: const Text('加载未完成，点击重试'),
-                      )
-                    : window?.hasMore == true
-                    ? const SizedBox(height: 12)
-                    : const MusicListEnd(),
-              ),
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: BetaContentInsets.musicBottomOf(context, 210),
-                ),
-              ),
-            ],
-          ),
-        ),
+    return PlatformExploreSongsPage(
+      item: PlatformExploreItem(
+        id: id,
+        title: name,
+        cover: cover,
+        kind: PlatformExploreKind.playlist,
       ),
     );
   }

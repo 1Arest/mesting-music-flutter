@@ -100,12 +100,11 @@ void main() {
         final repository = fixture.container.read(
           neteaseMusicRepositoryProvider,
         );
-        Finder song(String title) => netease
-            ? find.text(title)
-            : find.byWidgetPredicate(
-                (widget) =>
-                    widget is EditorialCover && widget.track?.title == title,
-              );
+        // Both platforms now present daily recommendations as a cover card;
+        // inspect its actual track snapshot rather than an obsolete song row.
+        Finder song(String title) => find.byWidgetPredicate(
+          (widget) => widget is EditorialCover && widget.track?.title == title,
+        );
         expect(song('old-song'), findsOneWidget);
         pending = Completer<List<Track>>();
         final refresh = tester

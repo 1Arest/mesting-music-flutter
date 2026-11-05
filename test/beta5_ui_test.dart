@@ -715,7 +715,15 @@ void main() {
               matching: find.byType(Scrollable),
             )
             .first;
-        for (final title in ['猜你喜欢', '新歌首发', '热门榜单', '新碟上架', '主题歌单', '场景音乐']) {
+        for (final title in [
+          '推荐歌单',
+          '猜你喜欢的歌',
+          '热门榜单',
+          '新歌首发',
+          '新碟上架',
+          '主题歌单',
+          '场景音乐',
+        ]) {
           // Each entering batch waits for its real artwork decode. A single
           // fake-time scrollUntilVisible loop cannot cross that frontier.
           for (

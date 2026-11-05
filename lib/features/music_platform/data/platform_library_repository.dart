@@ -499,6 +499,101 @@ class PlatformLibraryRepository extends CloudLibraryRepository {
   Future<void> addTrackToPlaylist(String playlistId, Track track) async =>
       _write(() async => _add(await _row(playlistId), track));
 
+  /// Public subscriptions point at the creator's cloud list. They do not copy
+  /// songs or change the layout/ownership of the user's existing playlists.
+  Future<Map<String, dynamic>?> publicSubscription(String globalId) async {
+    // A visible subscription toggle needs current cloud state, including after
+    // an ambiguous mutation. Do not reconcile against the library's old cache.
+    final matches = (await _fetchLists())
+        .where(
+          (row) =>
+              '${row['list_create_gid'] ?? row['global_collection_id']}' ==
+              globalId,
+        )
+        .toList();
+    if (matches.length > 1) {
+      throw const MusicPlatformException('收藏状态不唯一，请在音乐库核对');
+    }
+    return matches.firstOrNull;
+  }
+
+  final _uncertainPublicSubscriptions = <String, bool>{};
+
+  void _checkPublicSubscriptionReply(
+    Map<String, dynamic> reply,
+    String globalId,
+  ) {
+    if ('${reply['status']}' == '0') {
+      // A parsed refusal is known not to be a successful subscription. Keep
+      // transport timeouts/malformed replies uncertain, but allow a deliberate
+      // later retry after an explicit refusal instead of locking the toggle.
+      _uncertainPublicSubscriptions.remove(globalId);
+      throw const MusicPlatformException('酷狗未接受这次收藏操作，请核对登录后重试');
+    }
+  }
+
+  Future<void> subscribePublicPlaylist({
+    required String globalId,
+    required String name,
+    required String creatorId,
+    required String creatorListId,
+    required bool subscribe,
+  }) => _write(() async {
+    if (_uncertainPublicSubscriptions.containsKey(globalId)) _invalidate();
+    final existing = await publicSubscription(globalId);
+    final unresolved = _uncertainPublicSubscriptions[globalId];
+    if (unresolved != null) {
+      if ((existing != null) != unresolved) {
+        throw const MusicPlatformException('此前收藏结果尚未确认，请稍后在音乐库核对，暂不重复提交');
+      }
+      _uncertainPublicSubscriptions.remove(globalId);
+    }
+    if (subscribe && existing == null) {
+      if (!RegExp(r'^\d+$').hasMatch(creatorId) ||
+          !RegExp(r'^\d+$').hasMatch(creatorListId)) {
+        throw const MusicPlatformException('歌单缺少原创建者标识，请刷新资料后重试');
+      }
+      _uncertainPublicSubscriptions[globalId] = true;
+      try {
+        final reply = await api.post(
+          '/playlist/add',
+          expectedSession: identity,
+          query: {
+            'type': '1',
+            'source': '2',
+            'name': name,
+            'list_create_gid': globalId,
+            'list_create_userid': creatorId,
+            'list_create_listid': creatorListId,
+          },
+        );
+        _checkPublicSubscriptionReply(reply, globalId);
+      } finally {
+        _invalidate();
+      }
+    } else if (!subscribe && existing != null) {
+      if (_owned(existing)) {
+        throw const MusicPlatformException('这是你创建的歌单，请在音乐库管理');
+      }
+      _uncertainPublicSubscriptions[globalId] = false;
+      try {
+        final reply = await api.post(
+          '/playlist/del',
+          expectedSession: identity,
+          query: {'listid': '${existing['listid']}', 'type': '1'},
+        );
+        _checkPublicSubscriptionReply(reply, globalId);
+      } finally {
+        _invalidate();
+      }
+    }
+    _invalidate();
+    if ((await publicSubscription(globalId) != null) != subscribe) {
+      throw const MusicPlatformException('收藏结果尚未读回，请稍后核对，暂不重复发送');
+    }
+    _uncertainPublicSubscriptions.remove(globalId);
+  });
+
   /// Save the user-requested chart edition as an ordinary cloud playlist.
   /// The name identifies the captured date/edition; it is never a subscription
   /// to tomorrow's rank. A retry first reconciles the cloud, without creating

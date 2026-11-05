@@ -1,3 +1,5 @@
+import 'platform_search_landing.dart' show PlatformExploreSongsPage;
+import '../data/platform_explore.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../platform_backend_providers.dart';
@@ -45,7 +47,9 @@ class _PlatformCatalogDetailPageState
     final account = ref.read(platformAccountProvider).value;
     _owner = account?.ownerId;
     _token = account?.token;
-    Future<void>.microtask(_load);
+    if (widget.hit.kind != PlatformSearchKind.playlists) {
+      Future<void>.microtask(_load);
+    }
   }
 
   Future<void> _load() async {
@@ -204,6 +208,16 @@ class _PlatformCatalogDetailPageState
 
   @override
   Widget build(BuildContext context) {
+    if (widget.hit.kind == PlatformSearchKind.playlists) {
+      return PlatformExploreSongsPage(
+        item: PlatformExploreItem(
+          id: widget.hit.globalId.isEmpty ? widget.hit.id : widget.hit.globalId,
+          title: widget.hit.title,
+          cover: widget.hit.cover,
+          kind: PlatformExploreKind.playlist,
+        ),
+      );
+    }
     final account = ref.watch(platformAccountProvider).value;
     if (account?.ownerId != _owner || account?.token != _token) {
       return PlatformPageFrame(

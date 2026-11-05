@@ -1,3 +1,5 @@
+import '../../experience/presentation/music_discovery_sections.dart';
+import '../presentation/platform_collection_play.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -85,13 +87,13 @@ class NeteaseDiscoveryPage extends ConsumerWidget {
       ]),
       children: const [
         EditorialHeader('发现'),
-        PlatformRecommendedSection(title: '每日推荐'),
-        PlatformFmSection(),
+        MusicDiscoveryHighlights(),
         NeteaseHomeShelf(feed: NeteaseFeed.recommended),
-        NeteaseHomeShelf(feed: NeteaseFeed.premium),
+        MusicDiscoverySongGroups(),
         MusicHomeCatalogueShelf(PlatformExploreKind.rank),
         PlatformRecommendedSection(title: '新歌速递', newSongs: true),
         NeteaseHomeShelf(feed: NeteaseFeed.albums),
+        NeteaseHomeShelf(feed: NeteaseFeed.premium),
         NeteaseHomeShelf(feed: NeteaseFeed.artists),
         NeteaseHomeShelf(feed: NeteaseFeed.mvs),
         NeteaseFullNavigation(tab: '发现'),
@@ -106,6 +108,9 @@ class NeteaseHomeShelf extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final title = NeteaseFeaturesRepository.titles[feed]!;
+    final shelfHeight =
+        248.0 +
+        (MediaQuery.textScalerOf(context).scale(32) - 32).clamp(0.0, 80.0);
     // A restored provider already has pixels/data. Route deferral is for live
     // work only; blanking a restored shelf until an animation settles causes a
     // second cold-start flash despite successfully restored disk snapshots.
@@ -122,7 +127,7 @@ class NeteaseHomeShelf extends ConsumerWidget {
         data: (batch) => batch.items.isEmpty
             ? EditorialEmpty('暂无$title')
             : EditorialShelf(
-                height: 248,
+                height: shelfHeight,
                 children: [
                   for (final item in batch.items.take(12))
                     EditorialCover(
@@ -130,6 +135,16 @@ class NeteaseHomeShelf extends ConsumerWidget {
                       title: item.name,
                       subtitle: item.subtitle,
                       width: 170,
+                      coverAction: item.kind == NeteaseEntity.playlist
+                          ? PlatformCollectionPlayButton(
+                              item: PlatformExploreItem(
+                                id: item.id,
+                                title: item.name,
+                                cover: item.cover,
+                                kind: PlatformExploreKind.playlist,
+                              ),
+                            )
+                          : null,
                       onTap: () => openNeteaseItem(context, item),
                     ),
                 ],
@@ -144,7 +159,7 @@ class NeteaseHomeShelf extends ConsumerWidget {
           contents(context)
         else
           RouteSettledContent(
-            placeholder: const SizedBox(height: 248),
+            placeholder: SizedBox(height: shelfHeight),
             builder: contents,
           ),
       ],

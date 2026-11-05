@@ -212,6 +212,7 @@ class EditorialCover extends StatelessWidget {
     this.feature = false,
     this.height,
     this.rank,
+    this.coverAction,
     required this.onTap,
     super.key,
   });
@@ -223,6 +224,9 @@ class EditorialCover extends StatelessWidget {
   final bool feature;
   final double? height;
   final int? rank;
+
+  /// A separate overlay target leaves the cover's navigation tap unchanged.
+  final Widget? coverAction;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -291,7 +295,7 @@ class EditorialCover extends StatelessWidget {
                   if (feature)
                     Positioned(
                       left: 18,
-                      right: 18,
+                      right: coverAction == null ? 18 : 66,
                       bottom: 18,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,6 +324,8 @@ class EditorialCover extends StatelessWidget {
                         ],
                       ),
                     ),
+                  if (coverAction != null)
+                    Positioned(right: 8, bottom: 8, child: coverAction!),
                 ],
               ),
             ),

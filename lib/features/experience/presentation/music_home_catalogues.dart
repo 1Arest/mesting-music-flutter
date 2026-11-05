@@ -1,3 +1,4 @@
+import '../../music_platform/presentation/platform_collection_play.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -126,6 +127,13 @@ class MusicHomeCatalogueShelf extends ConsumerWidget {
                     title: item.title,
                     subtitle: item.subtitle,
                     width: 170,
+                    coverAction:
+                        {
+                          PlatformExploreKind.rank,
+                          PlatformExploreKind.playlist,
+                        }.contains(item.kind)
+                        ? PlatformCollectionPlayButton(item: item)
+                        : null,
                     onTap: () => _openCollection(context, item),
                   ),
               ],

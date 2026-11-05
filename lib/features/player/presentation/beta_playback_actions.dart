@@ -12,11 +12,20 @@ Future<bool> playBetaSelection(
   WidgetRef ref,
   Track track, {
   List<Track>? playAll,
+  bool Function()? stillCurrent,
 }) async {
   try {
-    return await _playSelection(context, ref, track, playAll: playAll);
+    return await _playSelection(
+      context,
+      ref,
+      track,
+      playAll: playAll,
+      stillCurrent: stillCurrent,
+    );
   } catch (error) {
-    if (context.mounted) showPlatformFailure(context, error);
+    if (context.mounted && stillCurrent?.call() != false) {
+      showPlatformFailure(context, error);
+    }
     return false;
   }
 }
@@ -26,7 +35,9 @@ Future<bool> _playSelection(
   WidgetRef ref,
   Track track, {
   List<Track>? playAll,
+  bool Function()? stillCurrent,
 }) async {
+  if (stillCurrent?.call() == false) return false;
   final handler = ref.read(audioHandlerProvider);
   final pending = handler.manuallyQueuedItems;
   var replace = playAll != null;
@@ -52,10 +63,13 @@ Future<bool> _playSelection(
         ],
       ),
     );
-    if (choice == null || !context.mounted) return false;
+    if (choice == null || !context.mounted || stillCurrent?.call() == false) {
+      return false;
+    }
     replace = choice;
   }
   if (playAll != null) {
+    if (stillCurrent?.call() == false) return false;
     // Keep is meaningful for Play All too: the newly selected collection plays
     // first and the old, deliberately queued songs follow it without duplicates.
     final ids = playAll.map((song) => song.id).toSet();

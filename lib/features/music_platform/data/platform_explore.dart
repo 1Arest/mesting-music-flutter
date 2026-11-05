@@ -256,14 +256,20 @@ class PlatformExploreRepository {
     int offset = 0,
     int limit = 30,
   }) async {
-    if (item.kind == PlatformExploreKind.rank) {
+    if (item.kind == PlatformExploreKind.rank ||
+        item.kind == PlatformExploreKind.playlist) {
       // Page boundaries follow upstream rows, not the number of song DTOs we
       // could decode. Otherwise one incomplete row can truncate a 500-song rank.
       final payload = await api.get(
-        '/rank/audio',
+        item.kind == PlatformExploreKind.rank
+            ? '/rank/audio'
+            : '/playlist/track/all',
         query: {
-          'rankid': item.id,
-          'rank_cid': item.rankCid.isEmpty ? '0' : item.rankCid,
+          if (item.kind == PlatformExploreKind.rank) ...{
+            'rankid': item.id,
+            'rank_cid': item.rankCid.isEmpty ? '0' : item.rankCid,
+          } else
+            'global_collection_id': item.id,
           'page': '${offset ~/ 30 + 1}',
           'pagesize': '30',
         },

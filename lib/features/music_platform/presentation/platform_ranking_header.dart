@@ -137,7 +137,13 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
     try {
       final all = await _complete();
       if (mounted && _current && all.isNotEmpty) {
-        await playBetaSelection(context, ref, all.first, playAll: all);
+        await playBetaSelection(
+          context,
+          ref,
+          all.first,
+          playAll: all,
+          stillCurrent: () => _current,
+        );
       }
     } catch (error) {
       if (mounted && _current) showPlatformFailure(context, error);
@@ -306,7 +312,7 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _RankingMasthead(
+        PlatformCollectionMasthead(
           title: widget.item.title,
           platform: _owner!.platform,
           cover: _info?.cover ?? widget.item.cover,
@@ -315,7 +321,7 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
           onSearch: () => GoRouter.maybeOf(context)?.push('/music/search'),
           onDetails: _details,
           actions: [
-            _RankingPillAction(
+            PlatformCollectionAction(
               id: 'save',
               label: _saving
                   ? '收藏中'
@@ -328,14 +334,14 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
               count: _info?.collections,
               onPressed: _busy ? null : () => unawaited(_save()),
             ),
-            _RankingPillAction(
+            PlatformCollectionAction(
               id: 'comments',
               label: _netease ? '评论' : '歌单评论',
               icon: Icons.chat_bubble_outline,
               count: _info?.comments,
               onPressed: _busy ? null : () => unawaited(_comments()),
             ),
-            _RankingPillAction(
+            PlatformCollectionAction(
               id: 'share',
               label: '分享',
               icon: Icons.share_outlined,
@@ -442,8 +448,9 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
 
 /// Presentation-only masthead: official update dates and counts are supplied by
 /// the repository, never synthesized from the local clock or loaded row count.
-class _RankingMasthead extends StatelessWidget {
-  const _RankingMasthead({
+class PlatformCollectionMasthead extends StatelessWidget {
+  const PlatformCollectionMasthead({
+    super.key,
     required this.title,
     required this.platform,
     required this.cover,
@@ -452,21 +459,25 @@ class _RankingMasthead extends StatelessWidget {
     required this.onSearch,
     required this.onDetails,
     this.updatedAt,
+    this.secondary,
   });
+  final String? secondary;
   final String title, cover, period;
   final MusicPlatform platform;
   final DateTime? updatedAt;
-  final List<_RankingPillAction> actions;
+  final List<PlatformCollectionAction> actions;
   final VoidCallback onSearch, onDetails;
   @override
   Widget build(BuildContext context) {
     final netease = platform == MusicPlatform.netease;
     final updated = updatedAt;
-    final date = updated != null
-        ? '${updated.month}月${updated.day}日更新'
-        : period.isNotEmpty
-        ? '第$period期'
-        : '官方榜单';
+    final date =
+        secondary ??
+        (updated != null
+            ? '${updated.month}月${updated.day}日更新'
+            : period.isNotEmpty
+            ? '第$period期'
+            : '官方榜单');
     final theme = Theme.of(context);
     final top = MediaQuery.paddingOf(context).top;
     return Theme(
@@ -660,8 +671,8 @@ class _RankingScrollShellState extends State<PlatformRankingScrollShell> {
       );
 }
 
-class _RankingPillAction {
-  const _RankingPillAction({
+class PlatformCollectionAction {
+  const PlatformCollectionAction({
     required this.id,
     required this.label,
     required this.icon,
@@ -686,7 +697,7 @@ class _RankingPillAction {
 /// scale and every action remains reachable instead of shrinking or clipping.
 class _RankingActionCapsule extends StatelessWidget {
   const _RankingActionCapsule({required this.actions});
-  final List<_RankingPillAction> actions;
+  final List<PlatformCollectionAction> actions;
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {

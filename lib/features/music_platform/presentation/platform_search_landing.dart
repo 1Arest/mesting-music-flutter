@@ -1,3 +1,5 @@
+import 'platform_collection_play.dart';
+import 'platform_public_playlist_header.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -258,10 +260,26 @@ class _ExploreSection extends ConsumerWidget {
                                   children: [
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(14),
-                                      child: ArtworkImage(
-                                        uri: item.cover,
-                                        width: 132,
-                                        height: 132,
+                                      child: Stack(
+                                        children: [
+                                          ArtworkImage(
+                                            uri: item.cover,
+                                            width: 132,
+                                            height: 132,
+                                          ),
+                                          if ({
+                                            PlatformExploreKind.rank,
+                                            PlatformExploreKind.playlist,
+                                          }.contains(item.kind))
+                                            Positioned(
+                                              right: 4,
+                                              bottom: 4,
+                                              child:
+                                                  PlatformCollectionPlayButton(
+                                                    item: item,
+                                                  ),
+                                            ),
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(height: 9),
@@ -435,6 +453,9 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
         child: const EditorialEmpty('账号已变化，请返回后重新打开'),
       );
     }
+    final collectionHeader =
+        widget.item.kind == PlatformExploreKind.rank ||
+        widget.item.kind == PlatformExploreKind.playlist;
     final collectionScene =
         _resolvedItem?.sceneContent == PlatformSceneContent.collections;
     final content = AutomaticSongPaging(
@@ -452,6 +473,13 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
           if (index == 0) {
             if (widget.item.kind == PlatformExploreKind.rank) {
               return PlatformRankingHeader(
+                item: widget.item,
+                tracks: _tracks,
+                total: _total,
+              );
+            }
+            if (widget.item.kind == PlatformExploreKind.playlist) {
+              return PlatformPublicPlaylistHeader(
                 item: widget.item,
                 tracks: _tracks,
                 total: _total,
@@ -576,8 +604,8 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
     );
     return PlatformPageFrame(
       title: widget.item.title,
-      headerInScroll: widget.item.kind == PlatformExploreKind.rank,
-      child: widget.item.kind == PlatformExploreKind.rank
+      headerInScroll: collectionHeader,
+      child: collectionHeader
           ? PlatformRankingScrollShell(title: widget.item.title, child: content)
           : content,
     );
