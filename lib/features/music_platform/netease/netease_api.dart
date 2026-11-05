@@ -16,6 +16,7 @@ import 'netease_crypto.dart';
 import 'netease_session.dart';
 import 'netease_extended_routes.dart';
 import 'netease_native_transport.dart';
+import 'netease_request_exception.dart';
 import 'messages/netease_message_protocol.dart';
 
 /// Embedded HTTPS transport. Only fixed upstream music hosts receive cookies;
@@ -693,7 +694,11 @@ class NeteaseApi {
         throw const MusicPlatformException('音乐平台已切换，请重新操作');
       }
       if (response.statusCode != 200) {
-        throw MusicPlatformException('网易云请求未完成（${response.statusCode}）');
+        throw NeteaseRequestException(
+          '网易云请求未完成（${response.statusCode}）',
+          outcome: MusicNetworkOutcome.http,
+          httpStatus: response.statusCode,
+        );
       }
       final result = MusicPlatformApi.objectMap(
         await decodeJsonBytes(response.bodyBytes),
@@ -755,9 +760,12 @@ class NeteaseApi {
       if (error.outcome == MusicNetworkOutcome.timeout) {
         throw TimeoutException(error.message);
       }
-      throw MusicPlatformException(error.message);
+      throw NeteaseRequestException(error.message, outcome: error.outcome);
     } on FormatException {
-      throw const MusicPlatformException('网易云返回格式异常，请稍后重试');
+      throw const NeteaseRequestException(
+        '网易云返回格式异常，请稍后重试',
+        outcome: MusicNetworkOutcome.format,
+      );
     }
   }
 }

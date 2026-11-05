@@ -68,6 +68,33 @@ class _Api extends NeteaseApi {
   int count(String path) => calls.where((call) => call.path == path).length;
 }
 
+// Synthetic positive source/context; not a claimed live NetEase entry value.
+const _entrySource = 987654321;
+final _entryUrl = Uri(
+  scheme: 'orpheus',
+  host: 'motivationAd',
+  path: '/show',
+  queryParameters: {
+    'adPosition': '123456',
+    'resourceId': '',
+    'source': '$_entrySource',
+    'isNeedGetRights': 'true',
+    'ext': jsonEncode({'bizReportInfo': 'synthetic-entry-context'}),
+  },
+).toString();
+
+/// Claim fixtures include the official progress→actionUrl prerequisite. The
+/// protocol still uses the repository and actual staged request boundary.
+_Api _claimApi(_Reply reply) => _Api((call) async {
+  if (call.path == NeteaseRewardsRepository.progressPath) {
+    return {
+      'code': 200,
+      'data': {'actionUrl': _entryUrl},
+    };
+  }
+  return reply(call);
+});
+
 Map<String, dynamic> _qualified({Map<String, Object?> extra = const {}}) => {
   'code': 200,
   'data': {
@@ -345,9 +372,13 @@ void main() {
   test(
     'direct claim forwards server entitlement allowlist without ad proof',
     () async {
-      final api = _Api((call) async {
+      final api = _claimApi((call) async {
         if (call.path == NeteaseRewardsRepository.qualificationPath) {
-          expect(call.data['reqParam'], {'userId': 101});
+          final context = jsonDecode(call.data['reqParam'] as String) as Map;
+          expect(context['source'], _entrySource);
+          expect(context['resourceId'], '');
+          expect(context['isNeedGetRights'], isTrue);
+          expect(context.containsKey('userId'), isFalse);
           return _qualified(
             extra: {
               'creativeType': 'AUDIO',
@@ -363,7 +394,7 @@ void main() {
         final payload = jsonDecode(call.data['reqParam'] as String) as Map;
         expect(payload, {
           'userId': 101,
-          'source': 'SYNTHETIC_PLATFORM_ISSUED_ENTRY',
+          'source': _entrySource,
           'rightsGainMethod': 'DIRECT',
           'rightsGainDuration': 1800000,
           'creativeType': 'AUDIO',
@@ -387,7 +418,7 @@ void main() {
   test(
     'code 200 with gainFlag false is a refusal rather than a success',
     () async {
-      final api = _Api(
+      final api = _claimApi(
         (call) async => call.path == NeteaseRewardsRepository.qualificationPath
             ? _qualified()
             : {
@@ -407,7 +438,7 @@ void main() {
   test(
     'code 200 without gainFlag stays pending across reconstructed services',
     () async {
-      final api = _Api(
+      final api = _claimApi(
         (call) async => call.path == NeteaseRewardsRepository.qualificationPath
             ? _qualified()
             : {'code': 200, 'data': {}},
@@ -426,7 +457,7 @@ void main() {
   test(
     'an explicit rights upper limit stops without counting a reward',
     () async {
-      final api = _Api(
+      final api = _claimApi(
         (call) async => call.path == NeteaseRewardsRepository.qualificationPath
             ? _qualified()
             : {
@@ -445,7 +476,7 @@ void main() {
   test(
     'lost gain reply cannot be inferred from a later higher balance',
     () async {
-      final api = _Api((call) async {
+      final api = _claimApi((call) async {
         if (call.path == NeteaseRewardsRepository.qualificationPath) {
           return _qualified();
         }
@@ -473,7 +504,7 @@ void main() {
   test(
     'an unknown previous-day claim does not become a permanent new-day block',
     () async {
-      final api = _Api(
+      final api = _claimApi(
         (call) async => call.path == NeteaseRewardsRepository.qualificationPath
             ? _qualified()
             : {'code': 200, 'data': {}},
@@ -492,7 +523,7 @@ void main() {
     },
     {
       'code': 200,
-      'data': {'qualified': true},
+      'data': {'qualified': 'not-a-boolean'},
     },
     {
       'code': 200,
@@ -503,7 +534,7 @@ void main() {
     test(
       'unusable qualification cannot create a gain request: $hint',
       () async {
-        final api = _Api((_) async => hint);
+        final api = _claimApi((_) async => hint);
         final result = await repository(api).claimAd();
         expect(result.success, isFalse);
         expect(api.count(NeteaseRewardsRepository.claimPath), 0);
@@ -516,7 +547,7 @@ void main() {
     () async {
       final gate = Completer<Map<String, dynamic>>();
       var current = true;
-      final api = _Api((_) => gate.future);
+      final api = _claimApi((_) => gate.future);
       final pending = repository(api).claimAd(stillCurrent: () => current);
       await Future<void>.delayed(Duration.zero);
       current = false;
@@ -530,7 +561,7 @@ void main() {
     'credential change while qualification is in flight prevents gain',
     () async {
       final gate = Completer<Map<String, dynamic>>();
-      final api = _Api((_) => gate.future);
+      final api = _claimApi((_) => gate.future);
       final pending = repository(api).claimAd();
       await Future<void>.delayed(Duration.zero);
       api.configure(_other);
@@ -543,7 +574,7 @@ void main() {
   test(
     'diagnostic gate blocks reward writes before any qualification request',
     () async {
-      final api = _Api((_) async => throw StateError('must not request'));
+      final api = _claimApi((_) async => throw StateError('must not request'));
       final repo = repository(api, allowed: () => false);
       expect((await repo.claimAd()).success, isFalse);
       expect((await repo.signIn()).success, isFalse);
@@ -558,7 +589,7 @@ void main() {
         NeteaseRewardJournal.key('netease:101', 'ad'),
         '{broken',
       );
-      final api = _Api((_) async => throw StateError('must not request'));
+      final api = _claimApi((_) async => throw StateError('must not request'));
       expect((await repository(api).claimAd()).uncertain, isTrue);
       expect(api.calls, isEmpty);
     },
@@ -597,7 +628,7 @@ void main() {
   );
 
   test('already-stopped claim never starts a qualification read', () async {
-    final api = _Api((_) async => throw StateError('must not request'));
+    final api = _claimApi((_) async => throw StateError('must not request'));
     expect(
       (await repository(api).claimAd(stillCurrent: () => false)).success,
       isFalse,

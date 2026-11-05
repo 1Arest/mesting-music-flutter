@@ -71,6 +71,11 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
     'qr' => '扫码',
     'restore' => '本机账号恢复',
     'storage' => '本机账号保存',
+    'rewardBalance' => '免费听余额',
+    'rewardProgress' => '领取进度',
+    'rewardQualification' => '领取资格',
+    'rewardClaim' => '奖励领取',
+    'rewardSignIn' => '每日签到',
     _ => '资料读取',
   };
   static String _phase(Object? name) => switch (name) {

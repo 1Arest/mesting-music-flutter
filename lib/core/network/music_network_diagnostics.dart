@@ -15,6 +15,14 @@ enum MusicNetworkOperation {
   storage,
   read,
   other,
+
+  // Reward stages use fixed names so an exported receipt can distinguish a
+  // qualification failure from a submitted claim without exposing its payload.
+  rewardBalance,
+  rewardProgress,
+  rewardQualification,
+  rewardClaim,
+  rewardSignIn,
 }
 
 enum MusicNetworkOutcome {

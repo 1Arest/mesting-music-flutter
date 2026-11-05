@@ -2,10 +2,11 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/cache/browse_response_cache.dart';
 import '../domain/platform_rewards.dart' show rewardDateKey;
+import 'netease_free_listen_entry.dart';
 import 'netease_music_repository.dart';
 import 'netease_reward_journal.dart';
+import 'netease_reward_requests.dart';
 import 'netease_rewards.dart';
 
 /// NetEase's daily task and direct free-listening rights are separate writes.
@@ -59,13 +60,11 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
   Future<Map<String, dynamic>> _request(
     String path, [
     Map<String, Object?> data = const {},
-  ]) => BrowseResponseCache.live(
-    () => music.api.request(
-      path,
-      data,
-      expectedCredential: music.credential,
-      allowBusinessError: true,
-    ),
+  ]) => NeteaseRewardRequests.send(
+    api: music.api,
+    credential: music.credential,
+    path: path,
+    data: data,
   );
 
   Future<Map<String, dynamic>?> _read(
@@ -160,22 +159,6 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
     );
   }
 
-  static NeteaseRewardResult _refusal(Map<String, dynamic> value) {
-    final code = _integer(value['code']);
-    final verification = {405, 415, 460}.contains(code);
-    return NeteaseRewardResult(
-      success: false,
-      needsVerification: verification,
-      uncertain: code == null,
-      message: switch (code) {
-        301 || 302 => '网易云登录已失效，请重新登录后重试',
-        405 || 415 || 460 => '网易云要求安全验证，本次领取已停止',
-        null => '平台回执不完整，请刷新核对；不会自动重复提交',
-        _ => '网易云暂未同意本次请求（$code），本次操作已停止',
-      },
-    );
-  }
-
   Future<NeteaseRewardResult> _exclusive(
     Future<NeteaseRewardResult> Function() operation,
   ) async {
@@ -191,6 +174,8 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
     _writing = true;
     try {
       return await operation();
+    } on NeteaseRewardRequestFailure catch (error) {
+      return error.result;
     } on Object {
       // The journal remains pending if transport or decoding failed after the
       // write. Neither this repository nor the HTTP layer retries that POST.
@@ -242,8 +227,10 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
     final result = await _request('/api/point/dailyTask', {'type': 0});
     final code = _integer(result['code']);
     if (code != 200 && code != -2) {
-      if (code != null) await _journal.clear(ownerId, 'sign');
-      return _refusal(result);
+      if (NeteaseRewardRequests.definiteRefusal(result)) {
+        await _journal.clear(ownerId, 'sign');
+      }
+      return NeteaseRewardRequests.refused(NeteaseRewardStage.signIn, result);
     }
     await _journal.clear(ownerId, 'sign');
     final receivedDay = rewardDateKey(_clock());
@@ -290,18 +277,58 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
         message: '网易云账号资料不完整，请重新登录',
       );
     }
-    // Qualification is read with the real account only. The server supplies
-    // the entry/source and right type; no ad completion or identity is forged.
-    final qualification = await _request(qualificationPath, {
-      // The native qualification caller supplies an object, unlike the gain
-      // form's JSON string. A minimum real-account query is attempted here;
-      // whether a current account needs further entry parameters is unverified.
-      'reqParam': {'userId': userId},
+    // Official free-listening UI obtains its button context from this exact
+    // progress response. Fetch a fresh owner-bound entry for every attempt;
+    // never reuse an old account's link or reconstruct one from a user ID.
+    final progress = await _request(progressPath, const {
+      'entranceType': 'FREE_LISTEN',
     });
     if (!current()) {
       return const NeteaseRewardResult(success: false, message: '领取已停止');
     }
-    if (!_ok(qualification)) return _refusal(qualification);
+    if (!_ok(progress)) {
+      return NeteaseRewardRequests.refused(
+        NeteaseRewardStage.progress,
+        progress,
+      );
+    }
+    final entry = NeteaseFreeListenEntry.parse(
+      _object(progress['data'])['actionUrl'],
+    );
+    if (entry == null) {
+      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
+      return const NeteaseRewardResult(
+        success: false,
+        message: '网易云未提供可识别的免费听领取入口，尚未提交奖励领取',
+      );
+    }
+    if (!entry.requestsQualification) {
+      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
+      return const NeteaseRewardResult(
+        success: false,
+        message: '网易云当前入口未提供直接领取资格流程，尚未提交奖励领取',
+      );
+    }
+    if (day != rewardDateKey(_clock())) {
+      return const NeteaseRewardResult(
+        success: false,
+        message: '日期已变化，请刷新领取入口后重试',
+      );
+    }
+    final qualification = await _request(qualificationPath, {
+      // Although the caller starts with a Map, official form serialization
+      // converts reqParam to a JSON string before the eapi boundary.
+      'reqParam': entry.qualificationJson,
+    });
+    if (!current()) {
+      return const NeteaseRewardResult(success: false, message: '领取已停止');
+    }
+    if (!_ok(qualification)) {
+      return NeteaseRewardRequests.refused(
+        NeteaseRewardStage.qualification,
+        qualification,
+      );
+    }
     final hint = _object(qualification['data']);
     if (day != rewardDateKey(_clock())) {
       return const NeteaseRewardResult(
@@ -315,11 +342,19 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
         message: '网易云暂未提供直接领取资格，已停止本次领取',
       );
     }
-    final params = <String, Object?>{'userId': userId};
+    // Native gain construction retains the video's entry source. A hint's
+    // source has not been proved equivalent, so it cannot replace the entry.
+    if (entry.source <= 0) {
+      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
+      return const NeteaseRewardResult(
+        success: false,
+        message: '网易云领取入口未提供有效来源，尚未提交奖励领取',
+      );
+    }
+    final params = <String, Object?>{'userId': userId, 'source': entry.source};
     // These are descriptive entitlement values from the qualification result.
     // Ad reqUid, exposure/click times, appInfo and video proof are excluded.
     for (final key in const [
-      'source',
       'creativeType',
       'rightsGainMethod',
       'rightsGainType',
@@ -333,11 +368,10 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
       final value = hint[key];
       if (value is String || value is num || value is bool) params[key] = value;
     }
-    if (params['source'] == null || '${params['source']}'.isEmpty) {
-      return const NeteaseRewardResult(
-        success: false,
-        message: '网易云未返回领取来源，无法直接申请本次奖励',
-      );
+    // Retain the platform's same-response opaque entitlement extension as-is.
+    // It is not an advertising completion token and is never manufactured.
+    if (hint['rightsExtJson'] case final String extension) {
+      params['rightsExtJson'] = extension;
     }
     await _journal.begin(ownerId, 'ad', {'day': day});
     if (!current() || day != rewardDateKey(_clock())) {
@@ -346,8 +380,10 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
     }
     final result = await _request(claimPath, {'reqParam': jsonEncode(params)});
     if (!_ok(result)) {
-      if (_integer(result['code']) != null) await _journal.clear(ownerId, 'ad');
-      return _refusal(result);
+      if (NeteaseRewardRequests.definiteRefusal(result)) {
+        await _journal.clear(ownerId, 'ad');
+      }
+      return NeteaseRewardRequests.refused(NeteaseRewardStage.claim, result);
     }
     final data = _object(result['data']);
     final gained = _boolean(data['gainFlag']);
