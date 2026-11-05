@@ -4,7 +4,9 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:ffi/ffi.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import '../../../core/network/music_network_diagnostics.dart';
 
 typedef _StartNative = Int32 Function(Int32, Pointer<Utf8>);
 typedef _StartDart = int Function(int, Pointer<Utf8>);
@@ -42,6 +44,31 @@ class EmbeddedMusicServer implements MusicServer {
   Future<Uri> _start() async {
     if (!Platform.isAndroid) {
       throw StateError('音乐平台本机服务目前仅在 Android 版中提供');
+    }
+    // Install the captured Java class/VM before any Rust module can dispatch an
+    // external request. A missing engine plugin is retried only before dispatch;
+    // no SMS/login is replayed through a second transport after an uncertain send.
+    const network = MethodChannel('com.mesting.music/network');
+    final watch = Stopwatch()..start();
+    try {
+      for (var attempt = 0; ; attempt++) {
+        try {
+          final ready = await network.invokeMethod<bool>('prepareKugou')
+              .timeout(const Duration(seconds: 8));
+          if (ready != true) throw const FormatException('System transport not ready');
+          break;
+        } on MissingPluginException {
+          if (attempt >= 15) rethrow;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+      }
+    } on Object catch (error) {
+      final outcome = classifyMusicNetworkError(error);
+      MusicNetworkDiagnostics.shared.record(platform: 'kugou',
+        operation: MusicNetworkOperation.other, outcome: outcome,
+        phase: MusicDiagnosticPhase.networkPrepare, transport: 'system',
+        elapsedMs: watch.elapsedMilliseconds);
+      throw MusicTransportException(outcome);
     }
     final root = await getApplicationSupportDirectory();
     final directory = Directory('${root.path}/music_platform/runtime');

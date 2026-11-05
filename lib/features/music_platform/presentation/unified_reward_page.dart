@@ -1,7 +1,7 @@
+import '../../../core/network/system_music_io_client.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../core/diagnostics/diagnostic_activity.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -31,7 +31,7 @@ final retainedNeteaseRewardProvider =
           .read()
           .timeout(const Duration(seconds: 5));
       if (!ref.mounted || session == null) return null;
-      final client = http.Client();
+      final client = SystemMusicIoClient();
       final api = NeteaseApi(client)..configure(session);
       ref.onDispose(() {
         api.configure(null);

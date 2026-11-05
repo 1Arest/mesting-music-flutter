@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -30,7 +31,7 @@ class CloudBaseAuthRepository
     String accountFunctionName = 'social-api',
   }) : _baseUrl = 'https://${environmentId.trim()}.api.tcloudbasegateway.com',
        _sessionStore = sessionStore,
-       _client = client ?? http.Client(),
+       _client = client ?? SystemMusicIoClient(),
        _ownsClient = client == null,
        _enableAccountCloudProfile = enableAccountCloudProfile,
        _accountFunctionName = accountFunctionName,
@@ -688,7 +689,7 @@ class CloudBaseAuthRepository
         // that has already failed its TLS handshake.
         await Future<void>.delayed(const Duration(milliseconds: 250));
         if (_ownsClient) {
-          final retryClient = http.Client();
+          final retryClient = SystemMusicIoClient();
           try {
             response = await send(retryClient);
           } finally {

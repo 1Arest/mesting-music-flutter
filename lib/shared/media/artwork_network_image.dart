@@ -1,3 +1,4 @@
+import '../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:ui' as ui;
 
@@ -27,7 +28,7 @@ class ArtworkNetworkImage extends ImageProvider<ArtworkNetworkImage> {
 
   /// Injection is only needed by local transport/decoder regression tests.
   final http.Client? client;
-  static final _sharedClient = http.Client();
+  static final _sharedClient = SystemMusicIoClient();
 
   @override
   Future<ArtworkNetworkImage> obtainKey(ImageConfiguration configuration) =>

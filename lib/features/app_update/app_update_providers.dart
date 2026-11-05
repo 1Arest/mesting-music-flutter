@@ -1,3 +1,4 @@
+import '../../core/network/system_music_io_client.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -19,7 +20,7 @@ const _snoozedVersionPreference = 'app_update_snoozed_version';
 const _snoozedUntilPreference = 'app_update_snoozed_until';
 
 final appUpdateHttpClientProvider = Provider<http.Client>((ref) {
-  final client = http.Client();
+  final client = SystemMusicIoClient();
   ref.onDispose(client.close);
   return client;
 });

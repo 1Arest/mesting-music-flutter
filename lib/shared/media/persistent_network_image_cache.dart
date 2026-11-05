@@ -1,3 +1,4 @@
+import '../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -25,7 +26,7 @@ class PersistentNetworkImageCache {
     Duration requestTimeout = const Duration(seconds: 18),
     this.maxBytes = 256 * 1024 * 1024,
     this.maxFiles = 4000,
-  }) : _client = client ?? http.Client(),
+  }) : _client = client ?? SystemMusicIoClient(),
        _directoryProvider = directoryProvider ?? getApplicationSupportDirectory,
        _requestTimeout = requestTimeout;
 

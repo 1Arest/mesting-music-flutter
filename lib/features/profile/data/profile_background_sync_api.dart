@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -50,7 +51,7 @@ class CloudBaseProfileBackgroundSyncApi implements ProfileBackgroundSyncApi {
     Duration requestTimeout = const Duration(seconds: 15),
   }) : _baseUrl = 'https://${environmentId.trim()}.api.tcloudbasegateway.com',
        _sessionProvider = sessionProvider,
-       _client = client ?? http.Client(),
+       _client = client ?? SystemMusicIoClient(),
        _storage = CloudBaseUserMediaStorage(
          environmentId: environmentId,
          sessionProvider: sessionProvider,

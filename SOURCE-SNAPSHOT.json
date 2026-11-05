@@ -1,10 +1,10 @@
 {
-  "version": "1.0.53",
-  "androidVersionCode": 74,
+  "version": "1.0.54",
+  "androidVersionCode": 75,
   "branch": "beta",
   "baseCommit": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
   "workingTreeIncluded": true,
-  "apkSha256": "dd76b332ca6ff0dd85de7e31f99a463525f4ea2d27ed222602da67b850027f52",
+  "apkSha256": "ce4fdaca6d2a1965a4c68ca6b291a5ccab3864965ed047cdd7d4ad0edf572add",
   "published": false,
   "phoneAcceptance": false,
   "packageName": "com.mesting.music",
@@ -24,11 +24,11 @@
         "D:/AnLi/test/artwork_image_test.dart": {
           "success": 5
         },
-        "D:/AnLi/test/beta10_entry_test.dart": {
-          "success": 14
-        },
         "D:/AnLi/test/beta10_feedback_test.dart": {
           "success": 6
+        },
+        "D:/AnLi/test/beta10_entry_test.dart": {
+          "success": 14
         },
         "D:/AnLi/test/beta10_quality_test.dart": {
           "success": 3
@@ -42,11 +42,11 @@
         "D:/AnLi/test/beta16_playback_order_test.dart": {
           "success": 7
         },
-        "D:/AnLi/test/beta18_refinements_test.dart": {
-          "success": 14
-        },
         "D:/AnLi/test/beta6_audio_refresh_test.dart": {
           "success": 7
+        },
+        "D:/AnLi/test/beta18_refinements_test.dart": {
+          "success": 14
         },
         "D:/AnLi/test/beta8_navigation_test.dart": {
           "success": 3
@@ -63,11 +63,11 @@
         "D:/AnLi/test/beta_login_entry_test.dart": {
           "success": 1
         },
-        "D:/AnLi/test/beta_update_isolation_test.dart": {
-          "success": 1
-        },
         "D:/AnLi/test/beta_shared_page_search_test.dart": {
           "success": 3
+        },
+        "D:/AnLi/test/beta_update_isolation_test.dart": {
+          "success": 1
         },
         "D:/AnLi/test/chat_message_actions_test.dart": {
           "success": 4
@@ -78,11 +78,11 @@
         "D:/AnLi/test/dual_music_platform_ui_test.dart": {
           "success": 10
         },
-        "D:/AnLi/test/frame_timing_probe_test.dart": {
-          "success": 1
-        },
         "D:/AnLi/test/followup_controls_regression_test.dart": {
           "success": 15
+        },
+        "D:/AnLi/test/frame_timing_probe_test.dart": {
+          "success": 1
         },
         "D:/AnLi/test/library_cloud_persistence_test.dart": {
           "skipped": 1
@@ -90,11 +90,11 @@
         "D:/AnLi/test/local_library_integrity_test.dart": {
           "success": 2
         },
-        "D:/AnLi/test/login_artwork_test.dart": {
-          "success": 19
-        },
         "D:/AnLi/test/music_home_catalogues_test.dart": {
           "success": 7
+        },
+        "D:/AnLi/test/login_artwork_test.dart": {
+          "success": 19
         },
         "D:/AnLi/test/netease_data_adapters_test.dart": {
           "success": 6
@@ -105,11 +105,11 @@
         "D:/AnLi/test/netease_full_workflows_test.dart": {
           "success": 8
         },
-        "D:/AnLi/test/netease_full_ui_test.dart": {
-          "success": 27
-        },
         "D:/AnLi/test/netease_message_card_test.dart": {
           "success": 9
+        },
+        "D:/AnLi/test/netease_full_ui_test.dart": {
+          "success": 27
         },
         "D:/AnLi/test/netease_message_card_ui_test.dart": {
           "success": 10
@@ -225,11 +225,11 @@
         "D:/AnLi/test/release_121_matte_cache_test.dart": {
           "success": 4
         },
-        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": {
-          "success": 5
-        },
         "D:/AnLi/test/release_121_navigation_test.dart": {
           "success": 8
+        },
+        "D:/AnLi/test/release_122_crash_diagnostics_test.dart": {
+          "success": 5
         },
         "D:/AnLi/test/release_123_player_ui_test.dart": {
           "success": 10
@@ -267,11 +267,11 @@
         "D:/AnLi/test/release_127_message_test.dart": {
           "success": 8
         },
-        "D:/AnLi/test/release_129_artwork_test.dart": {
-          "success": 4
-        },
         "D:/AnLi/test/release_128_presentation_test.dart": {
           "success": 10
+        },
+        "D:/AnLi/test/release_129_artwork_test.dart": {
+          "success": 4
         },
         "D:/AnLi/test/release_129_discovery_test.dart": {
           "success": 3
@@ -288,10 +288,10 @@
         "D:/AnLi/test/release_131_library_test.dart": {
           "success": 4
         },
-        "D:/AnLi/test/release_131_refresh_test.dart": {
+        "D:/AnLi/test/release_131_tab_input_test.dart": {
           "success": 2
         },
-        "D:/AnLi/test/release_131_tab_input_test.dart": {
+        "D:/AnLi/test/release_131_refresh_test.dart": {
           "success": 2
         },
         "D:/AnLi/test/release_132_notes_test.dart": {
@@ -315,11 +315,11 @@
         "D:/AnLi/test/release_135_listening_report_test.dart": {
           "success": 5
         },
-        "D:/AnLi/test/release_135_scroll_frontier_test.dart": {
-          "success": 4
-        },
         "D:/AnLi/test/release_136_listening_audit_test.dart": {
           "success": 7
+        },
+        "D:/AnLi/test/release_135_scroll_frontier_test.dart": {
+          "success": 4
         },
         "D:/AnLi/test/release_137_footprint_test.dart": {
           "success": 9
@@ -333,11 +333,11 @@
         "D:/AnLi/test/release_138_footprint_units_test.dart": {
           "success": 6
         },
-        "D:/AnLi/test/release_138_listening_safety_test.dart": {
-          "success": 8
-        },
         "D:/AnLi/test/release_138_native_log_test.dart": {
           "success": 3
+        },
+        "D:/AnLi/test/release_138_listening_safety_test.dart": {
+          "success": 8
         },
         "D:/AnLi/test/release_138_native_transport_test.dart": {
           "success": 7
@@ -349,11 +349,11 @@
         "D:/AnLi/test/release_139_listening_rollback_test.dart": {
           "success": 3
         },
-        "D:/AnLi/test/release_140_shell_search_test.dart": {
-          "success": 9
-        },
         "D:/AnLi/test/release_140_together_records_test.dart": {
           "success": 17
+        },
+        "D:/AnLi/test/release_140_shell_search_test.dart": {
+          "success": 9
         },
         "D:/AnLi/test/release_140_together_records_ui_test.dart": {
           "success": 8
@@ -373,11 +373,11 @@
         "D:/AnLi/test/release_143_background_sync_test.dart": {
           "success": 4
         },
-        "D:/AnLi/test/release_143_ui_test.dart": {
-          "success": 7
-        },
         "D:/AnLi/test/release_144_background_sync_test.dart": {
           "success": 10
+        },
+        "D:/AnLi/test/release_143_ui_test.dart": {
+          "success": 7
         },
         "D:/AnLi/test/release_144_kugou_favorites_test.dart": {
           "success": 7
@@ -427,17 +427,17 @@
         "D:/AnLi/test/release_146_ui_test.dart": {
           "success": 8
         },
-        "D:/AnLi/test/release_147_collection_window_test.dart": {
-          "success": 6
-        },
         "D:/AnLi/test/release_147_collection_ui_test.dart": {
           "success": 4
         },
-        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": {
-          "success": 12
+        "D:/AnLi/test/release_147_collection_window_test.dart": {
+          "success": 6
         },
         "D:/AnLi/test/release_147_footprint_ui_test.dart": {
           "success": 7
+        },
+        "D:/AnLi/test/release_147_lazy_social_ui_test.dart": {
+          "success": 12
         },
         "D:/AnLi/test/release_147_local_history_performance_test.dart": {
           "success": 4
@@ -451,32 +451,17 @@
         "D:/AnLi/test/release_148_playback_test.dart": {
           "success": 3
         },
-        "D:/AnLi/test/release_149_bookmarks_test.dart": {
-          "success": 8
-        },
         "D:/AnLi/test/release_148_ui_test.dart": {
           "success": 17
+        },
+        "D:/AnLi/test/release_149_bookmarks_test.dart": {
+          "success": 8
         },
         "D:/AnLi/test/release_149_regressions_test.dart": {
           "success": 7
         },
         "D:/AnLi/test/release_149_ui_test.dart": {
           "success": 15
-        },
-        "D:/AnLi/test/remote_lyrics_repository_test.dart": {
-          "success": 4
-        },
-        "D:/AnLi/test/saved_messages_page_test.dart": {
-          "success": 9
-        },
-        "D:/AnLi/test/scene_catalog_contract_test.dart": {
-          "success": 4
-        },
-        "D:/AnLi/test/social_repository_test.dart": {
-          "success": 17
-        },
-        "D:/AnLi/test/search_menu_fm_regression_test.dart": {
-          "success": 14
         },
         "D:/AnLi/test/release_150_data_test.dart": {
           "success": 10
@@ -490,8 +475,8 @@
         "D:/AnLi/test/release_150_queue_test.dart": {
           "success": 3
         },
-        "D:/AnLi/test/release_151_navigation_test.dart": {
-          "success": 16
+        "D:/AnLi/test/release_151_loading_test.dart": {
+          "success": 3
         },
         "D:/AnLi/test/release_150_ui_test.dart": {
           "success": 15
@@ -499,20 +484,20 @@
         "D:/AnLi/test/release_151_login_test.dart": {
           "success": 8
         },
-        "D:/AnLi/test/release_151_loading_test.dart": {
-          "success": 3
-        },
-        "D:/AnLi/test/release_152_accounts_test.dart": {
-          "success": 13
+        "D:/AnLi/test/release_151_navigation_test.dart": {
+          "success": 16
         },
         "D:/AnLi/test/release_151_scroll_test.dart": {
           "success": 2
         },
-        "D:/AnLi/test/release_152_accounts_ui_test.dart": {
-          "success": 5
+        "D:/AnLi/test/release_152_accounts_test.dart": {
+          "success": 13
         },
         "D:/AnLi/test/release_152_kugou_profile_test.dart": {
           "success": 27
+        },
+        "D:/AnLi/test/release_152_accounts_ui_test.dart": {
+          "success": 5
         },
         "D:/AnLi/test/release_152_kugou_standard_login_test.dart": {
           "success": 8
@@ -550,26 +535,46 @@
         "D:/AnLi/test/release_153_storage_test.dart": {
           "success": 2
         },
+        "D:/AnLi/test/release_154_network_test.dart": {
+          "success": 5
+        },
         "D:/AnLi/test/release_153_ui_test.dart": {
           "success": 12
+        },
+        "D:/AnLi/test/release_154_storage_test.dart": {
+          "success": 6
+        },
+        "D:/AnLi/test/remote_lyrics_repository_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/saved_messages_page_test.dart": {
+          "success": 9
+        },
+        "D:/AnLi/test/scene_catalog_contract_test.dart": {
+          "success": 4
+        },
+        "D:/AnLi/test/social_repository_test.dart": {
+          "success": 17
+        },
+        "D:/AnLi/test/search_menu_fm_regression_test.dart": {
+          "success": 14
         }
       },
+      "completeFileRerunProvenance": {
+        "D:/AnLi/test/release_154_storage_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_154_network_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_152_accounts_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_153_storage_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_153_network_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_153_audio_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_151_login_test.dart": "final-regressions.jsonl",
+        "D:/AnLi/test/release_153_ui_test.dart": "final-regressions.jsonl"
+      },
       "counts": {
-        "success": 1998,
+        "success": 2009,
         "skipped": 2
       },
-      "files": 177,
-      "completeFileRerunProvenance": {
-        "D:/AnLi/test/netease_v112_listening_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_140_users_badge_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_142_together_sync_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_145_background_diagnostics_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_153_network_test.dart": "cold-start-final.jsonl",
-        "D:/AnLi/test/release_153_audio_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_153_motion_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_153_storage_test.dart": "final-regressions-fixed.jsonl",
-        "D:/AnLi/test/release_153_ui_test.dart": "final-regressions-fixed.jsonl"
-      }
+      "files": 179
     },
     "stable-complete.jsonl": {
       "completeAndSuccessful": true,
@@ -637,7 +642,19 @@
         },
         {
           "path": "android\\app\\src\\main\\kotlin\\com\\mesting\\mesting_music\\MusicHttpPlugin.kt",
-          "sha256": "90def5d729d62c9eca65dc73c3a31bb27bde1baefe62404d9e7e90d5919b32c2"
+          "sha256": "61cee5cd3c631b45191bc0e0cb1adf3f2e5122ec99dfffb88904c800006ade79"
+        },
+        {
+          "path": "android\\app\\src\\main\\kotlin\\com\\mesting\\mesting_music\\MusicHttpExchange.kt",
+          "sha256": "3a2a77af3a2f27abd0040356b31237fcd38b0a6acc33d87bffeee8d65f3a0f21"
+        },
+        {
+          "path": "android\\app\\src\\main\\kotlin\\com\\mesting\\mesting_music\\MusicNativeTransport.kt",
+          "sha256": "c82885ceee46b7312c3924cded92178363bf37db6aa4f2464dc80b6c796ba866"
+        },
+        {
+          "path": "android\\app\\src\\main\\kotlin\\com\\mesting\\mesting_music\\MusicNetworkState.kt",
+          "sha256": "13c64e09c483b43859eaf853ba44bae2eddba9786dbebe3c6591ba51e3a1594e"
         },
         {
           "path": "test\\native\\release_144_background_scheduler_test.kt",
@@ -650,36 +667,101 @@
         {
           "path": "test\\native\\release_145_background_media_lease_test.kt",
           "sha256": "f9c99eebbf26e4ffb72ca0b7dc57d9a4f462eb6069ebea7d0ef0e9880d79f712"
+        },
+        {
+          "path": "android\\app\\src\\main\\kotlin\\com\\mesting\\mesting_music\\MusicHttpExchange.kt",
+          "sha256": "3a2a77af3a2f27abd0040356b31237fcd38b0a6acc33d87bffeee8d65f3a0f21"
+        },
+        {
+          "path": "test\\native\\release_154_http_test.kt",
+          "sha256": "ab6595c745970d6f27f84d609c339bd8abd5d451fe93508a6b3140875c32322d"
         }
       ],
       "androidApiJar": "D:\\CodexCache\\android-build\\sdk\\platforms\\android-36\\android.jar",
-      "flutterEmbeddingJar": "D:\\AnLi\\.codex-artifacts\\2026-11-04-release153\\flutter-embedding-typecheck.jar",
+      "flutterEmbeddingJar": "D:\\AnLi\\.codex-artifacts\\2026-11-05-release154\\flutter-embedding-typecheck.jar",
       "flutterEmbeddingSource": "\\\\?\\D:\\CodexCache\\android-build\\gradle\\caches\\modules-2\\files-2.1\\io.flutter\\flutter_embedding_release\\1.0.0-42d3d75a56efe1a2e9902f52dc8006099c45d937\\bd40fc81a0c48ef56a167a30d1c90cef8d170830\\flutter_embedding_release-1.0.0-42d3d75a56efe1a2e9902f52dc8006099c45d937.jar",
       "androidPluginRuntimeExecuted": false,
       "deviceAccess": false,
-      "networkAccess": false
+      "networkAccess": "loopbackOnly",
+      "systemHttpScenariosPassed": 13,
+      "httpLibraryHostInputs": [
+        {
+          "coordinate": "com.squareup.okhttp3:okhttp-jvm:5.3.2",
+          "path": "D:\\CodexCache\\mesting-http\\okhttp-jvm-5.3.2.jar",
+          "sha256": "c771f48075b763f6c322055e21129a94b7de4c1faf3f8f58ace320b0c9517a30",
+          "upstreamChecksum": "sha512",
+          "source": "https://repo.maven.apache.org/maven2/com/squareup/okhttp3/okhttp-jvm/5.3.2/okhttp-jvm-5.3.2.jar"
+        },
+        {
+          "coordinate": "com.squareup.okio:okio-jvm:3.16.4",
+          "path": "D:\\CodexCache\\mesting-http\\okio-jvm-3.16.4.jar",
+          "sha256": "2196b993cd34dbbd919e7e01f57a4781b58bee80f86106163e287c20343a96a7",
+          "upstreamChecksum": "sha512",
+          "source": "https://repo.maven.apache.org/maven2/com/squareup/okio/okio-jvm/3.16.4/okio-jvm-3.16.4.jar"
+        },
+        {
+          "coordinate": "org.jetbrains.kotlin:kotlin-stdlib:2.2.21",
+          "path": "D:\\CodexCache\\mesting-http\\kotlin-stdlib-2.2.21.jar",
+          "sha256": "6558a3d233da56a20934b32159f9db5f86ed5816ef098f78a2c223dc6abb79dd",
+          "upstreamChecksum": "sha1",
+          "source": "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21.jar"
+        }
+      ],
+      "localHttpFixtureOnly": true,
+      "vpnAndAndroidRuntimeAccepted": false
+    },
+    "storageFamilyFresh": {
+      "scenariosPassed": 6,
+      "inputs": [
+        {
+          "path": "third_party\\flutter_secure_storage\\package\\android\\src\\main\\java\\com\\it_nomads\\fluttersecurestorage\\StorageErrorFamily.java",
+          "sha256": "2750fe96bb1b318372fa5c2331c92c3955f956654a7db179f902a20af2fc50ca"
+        },
+        {
+          "path": "third_party\\flutter_secure_storage\\package\\android\\src\\main\\java\\com\\it_nomads\\fluttersecurestorage\\SecureCommitException.java",
+          "sha256": "60f63dd709c9e806cdeb31bf44732c6037574ee5568a726ac489042bd2c51d28"
+        },
+        {
+          "path": "test\\native\\Release154StorageFamilyTest.java",
+          "sha256": "33df3cb11200cdd4c6f21be7090c804f67b9544ee674b2940be21e857055fa2e"
+        }
+      ]
+    },
+    "rustHost": {
+      "passed": 136,
+      "ignoredExternalNetworkCases": 6,
+      "failed": 0,
+      "sameHostInputsAfterAndroidOnlyEofFix": true
     },
     "sdkHistoricalOnly": {
       "counts": {
         "success": 563
       },
       "files": 29,
-      "sameSdkSourceFilesVerified": 242
+      "sameSdkSourceFilesVerified": 242,
+      "rerunForVersion154": false,
+      "wholeAppLockUnchanged": false,
+      "lockException": "flutter_secure_storage10.3.1 same version; hosted -> local fork only"
     },
-    "finalHostImages": 12,
+    "finalHostImages": 40,
+    "coreWelcomeLoginDiagnosticsImages": 12,
+    "allLoginNavigationImages": 28,
     "welcomeFrameScheduling": {
       "sampleDisplayHz": 120,
       "sampleIntervals": 720,
       "scheduledFrames": 193,
       "priorContinuousControllerFrameDemand": 720,
-      "physicalGpuMeasured": false
-    }
+      "physicalGpuMeasured": false,
+      "inheritedFromVersion": "1.0.53",
+      "remeasuredForVersion154": false
+    },
+    "physicalDeviceAcceptance": false
   },
   "buildCachesAndSigningExcluded": true,
   "externalVerificationExcludedToAvoidSelfReference": [
-    "release/Mesting-Music-v1.0.53-SHA256.txt",
-    "release/Mesting-Music-v1.0.53-source-verification.json",
-    "release/Mesting-Music-v1.0.53-source.sha256"
+    "release/Mesting-Music-v1.0.54-SHA256.txt",
+    "release/Mesting-Music-v1.0.54-source-verification.json",
+    "release/Mesting-Music-v1.0.54-source.sha256"
   ],
   "generatedBuildReportsExcluded": [
     "android/build/reports/problems/problems-report.html"
@@ -697,8 +779,8 @@
     },
     {
       "path": ".gitignore",
-      "size": 1373,
-      "sha256": "9bab3a58181229240e28cb4af15144f9018dd704788f78a99ce9818867e6c92c"
+      "size": 1484,
+      "sha256": "2c2b3193c466575d5306d1b2892d660d9e90429fa8caddf407bc20b705356625"
     },
     {
       "path": ".impeccable/design.json",
@@ -777,8 +859,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 21842,
-      "sha256": "e84f77c45d7df0d1f9d2ad63f170807ec39c12f3aa78259fd0d8c5f36a4ac0ce"
+      "size": 22733,
+      "sha256": "8fa8c99fcfcd3e5d349ff15a88e4acee609af274a5be63c4bc08e2ffc9708367"
     },
     {
       "path": "DESIGN.md",
@@ -1081,6 +1163,11 @@
       "sha256": "56ee7610c9288e52554a8a8252ceb355af4517f7657fbb4653226bad36cd2082"
     },
     {
+      "path": "HANDOFF-CURRENT-SESSION-2026-11-05-v1.0.54.md",
+      "size": 4261,
+      "sha256": "7f7e544d7611e19b5412bd420f2372e8757da095df06018c664f85ccfb5dc618"
+    },
+    {
       "path": "HANDOFF-GITEE-BACKUP-2026-11-04.md",
       "size": 3265,
       "sha256": "cbd4868c9dda6ebd0c2899ce4c7a7a4adbb897bc88ebd580a3f1f7f8501e3b2a"
@@ -1212,8 +1299,8 @@
     },
     {
       "path": "analysis_options.yaml",
-      "size": 1448,
-      "sha256": "b63207cf529949ec4727b68c23dbb38ce255b6f6f4ae1effcb5c1dcf2852d238"
+      "size": 1758,
+      "sha256": "3da1999fea48c1f2bd09acdcd2baf9dab8a0bf3db728051f58f8b4e135f4f0ae"
     },
     {
       "path": "android/.gitignore",
@@ -1222,8 +1309,8 @@
     },
     {
       "path": "android/app/build.gradle.kts",
-      "size": 7971,
-      "sha256": "ae550c4e89e3214696cc25153e10176748c93a8c9cb4bbafc9fb7b917d440ed3"
+      "size": 8171,
+      "sha256": "d8ddd2b12a5b0a6b6afd877389bcfda5409a9d3d5baba4a46997a1ba8b5be708"
     },
     {
       "path": "android/app/src/beta/AndroidManifest.xml",
@@ -1232,13 +1319,13 @@
     },
     {
       "path": "android/app/src/beta/jniLibs/arm64-v8a/libkugou_server.so",
-      "size": 5398920,
-      "sha256": "bf111e46b00e7920dc00b8f82a7f145b9f8b3888802dd5e320a3aa523ba4c80c"
+      "size": 3369384,
+      "sha256": "65ec54c56650d719201143c19c0d96ef7e670ad405f1b66890cdc868ef5b8544"
     },
     {
       "path": "android/app/src/beta/jniLibs/armeabi-v7a/libkugou_server.so",
-      "size": 3743160,
-      "sha256": "e480c98cd9fb9effc203156004138cf80107a39d0afe919816f2a03829133a10"
+      "size": 2350268,
+      "sha256": "686db42a51ca7fbeadda46fad30073d5aafccdb00899367d65cf841424e034d8"
     },
     {
       "path": "android/app/src/beta/jniLibs/x86_64/libkugou_server.so",
@@ -1297,8 +1384,8 @@
     },
     {
       "path": "android/app/src/main/AndroidManifest.xml",
-      "size": 14690,
-      "sha256": "c6605ce528a1443d026413a0395471e0d598f8a5527432a30675a514a77119c0"
+      "size": 14850,
+      "sha256": "8ef4f22ea332008fcfcf917cca6fff9055df5d93199e1a30e3e9f137c1f57a64"
     },
     {
       "path": "android/app/src/main/java/com/ryanheise/audioservice/MestingTogetherMediaLease.java",
@@ -1376,9 +1463,24 @@
       "sha256": "5bcc97b121da1cef64481db595ea11de0347c08b621e622c9fc522b1b2fad588"
     },
     {
+      "path": "android/app/src/main/kotlin/com/mesting/mesting_music/MusicHttpExchange.kt",
+      "size": 9689,
+      "sha256": "3a2a77af3a2f27abd0040356b31237fcd38b0a6acc33d87bffeee8d65f3a0f21"
+    },
+    {
       "path": "android/app/src/main/kotlin/com/mesting/mesting_music/MusicHttpPlugin.kt",
-      "size": 6629,
-      "sha256": "90def5d729d62c9eca65dc73c3a31bb27bde1baefe62404d9e7e90d5919b32c2"
+      "size": 5649,
+      "sha256": "61cee5cd3c631b45191bc0e0cb1adf3f2e5122ec99dfffb88904c800006ade79"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/mesting/mesting_music/MusicNativeTransport.kt",
+      "size": 4022,
+      "sha256": "c82885ceee46b7312c3924cded92178363bf37db6aa4f2464dc80b6c796ba866"
+    },
+    {
+      "path": "android/app/src/main/kotlin/com/mesting/mesting_music/MusicNetworkState.kt",
+      "size": 3743,
+      "sha256": "13c64e09c483b43859eaf853ba44bae2eddba9786dbebe3c6591ba51e3a1594e"
     },
     {
       "path": "android/app/src/main/kotlin/com/mesting/mesting_music/MusicPlayerOutputRoutes.kt",
@@ -1907,8 +2009,8 @@
     },
     {
       "path": "assets/data/release-notes.json",
-      "size": 1106,
-      "sha256": "9cbef667d6ea06cc1c2a369e6f7119622a51e30da1d123a697a34d1603abde27"
+      "size": 1026,
+      "sha256": "7b30346a381ee2a800cb82004a458f57667480b5067e0da1cc8a68a30676aad5"
     },
     {
       "path": "assets/images/player/netease-style-tonearm.png",
@@ -2736,6 +2838,11 @@
       "sha256": "09ada9216a9011cc58f2bff9e5d3bb30bb853081e5e23ad1fde3b35288ded32e"
     },
     {
+      "path": "docs/INSTALL-v1.0.54.md",
+      "size": 3397,
+      "sha256": "6b451cb32c06bed71e9e5512ab12ca6bd4017e6856bc6fcce5bdeb55de5ef8ab"
+    },
+    {
       "path": "docs/LONG-LISTS-2026-11-03-v1.0.47.md",
       "size": 9416,
       "sha256": "0746b3379f7289d0b5d442ace904bd068f61ebb5bdca95a1e0fdcafc5ead91f9"
@@ -3311,6 +3418,11 @@
       "sha256": "b2265a897c497d648b046fb92641110545cb48082da75347d2cf74e78af66098"
     },
     {
+      "path": "docs/fixes-2026-11-05-v1.0.54.md",
+      "size": 7488,
+      "sha256": "9bcfb30b054343e80af7e3d135e62110c15170d9931f93aad202f66f13842dc6"
+    },
+    {
       "path": "docs/followup-2026-10-31-v1.0.24.md",
       "size": 5493,
       "sha256": "df4e01f15b3365439716eb7b49e6e47e31c1d246ed51ea041974458354ebcb63"
@@ -3594,6 +3706,11 @@
       "path": "docs/validation-2026-11-04-v1.0.53.json",
       "size": 1808,
       "sha256": "a57f64ec5983d6d56f6e172e055f0486a9b1cfa5c0a2fa3a072135629cb62ded"
+    },
+    {
+      "path": "docs/validation-2026-11-05-v1.0.54.json",
+      "size": 7551,
+      "sha256": "788a59e9c0e94fe20b4c4e604d5fc87a7a76b48e9b886b36088ac75a22a6b993"
     },
     {
       "path": "docs/validation-netease-full-2026-10-29.json",
@@ -4237,8 +4354,8 @@
     },
     {
       "path": "lib/core/audio/mesting_audio_handler.dart",
-      "size": 86479,
-      "sha256": "7be34767a89e4457e0e8470fc952ec87ade4cc6ade69d4437b82e9832c1ac8e1"
+      "size": 86803,
+      "sha256": "02fa38668a4c7b6089b5a61030899ce42c99cf2fec0290cc221d88d30fc498ba"
     },
     {
       "path": "lib/core/audio/music_equalizer.dart",
@@ -4312,8 +4429,8 @@
     },
     {
       "path": "lib/core/cloud/cloudbase_user_media_storage.dart",
-      "size": 6996,
-      "sha256": "c6d4b0384a13610132eff811113e318364cea3fc10031a5c8be6792258ade211"
+      "size": 7054,
+      "sha256": "709c437e6ef6d58a2b9af3cfcc744e12c25100197a191f9c43b34bdea0ef68b5"
     },
     {
       "path": "lib/core/database/app_database.dart",
@@ -4362,13 +4479,18 @@
     },
     {
       "path": "lib/core/network/music_http_client.dart",
-      "size": 8359,
-      "sha256": "b4f6e83cf363cf8b7a418439c7ad98a2e3bc943899b1ec649e8c76afc79f13f8"
+      "size": 8133,
+      "sha256": "6278c5c32204ad8f22f436cc51e58ea5809ab7e3263e2405da88b3760f716713"
     },
     {
       "path": "lib/core/network/music_network_diagnostics.dart",
-      "size": 3966,
-      "sha256": "5f915e73912857453b983abfecccec72a9afd97b9c954a76b4f296ce2645efae"
+      "size": 4761,
+      "sha256": "45da9921f7e94106c359c7a54b290725ca9386ec54909fce10c3a77dc85ac0cb"
+    },
+    {
+      "path": "lib/core/network/system_music_io_client.dart",
+      "size": 8594,
+      "sha256": "10bfceda3e3dbf57db6e213e8ef4539798638dfb51cc0a76e1b2a3a2a5d0396a"
     },
     {
       "path": "lib/core/performance/background_json.dart",
@@ -4436,9 +4558,19 @@
       "sha256": "b198a77bfc28d78434b0395860998beeac8cfc451577296df5d6f880aee4e113"
     },
     {
+      "path": "lib/core/security/credential_failure.dart",
+      "size": 2957,
+      "sha256": "a02f152f907c53051675552f962a80a01cf52187e64efd79ad1b0c3ce6f147a1"
+    },
+    {
+      "path": "lib/core/security/retained_credential_vault.dart",
+      "size": 6211,
+      "sha256": "e15b2bcf99a7de0bf8d7d83ea5546fca7068c025bfee267b130fdc8341fdb86f"
+    },
+    {
       "path": "lib/core/security/retained_secure_read.dart",
-      "size": 788,
-      "sha256": "59117edbb54dc523eae57d06527e3f72c706d656d2c14f47bda5361483ab9f7d"
+      "size": 1797,
+      "sha256": "153eb63a59ee97c590cb0a9135b3cae34fdceace7ba186a60c84037448bae737"
     },
     {
       "path": "lib/core/security/retained_secure_storage.dart",
@@ -4457,8 +4589,8 @@
     },
     {
       "path": "lib/features/app_update/app_update_providers.dart",
-      "size": 14079,
-      "sha256": "3eaf7552018e583c5937f085b75d3269921fe8eda316a8e0548bf0c67c04cf4f"
+      "size": 14145,
+      "sha256": "d9f82b6188f36c21778919caaf413227c001abc487d3b24cd95be0442cc995a4"
     },
     {
       "path": "lib/features/app_update/data/app_update_platform.dart",
@@ -4502,8 +4634,8 @@
     },
     {
       "path": "lib/features/app_update/domain/release_history.dart",
-      "size": 36372,
-      "sha256": "ee10469f6a437f0fa72c4e98c03f5183afaf84f5bd8182bb830ac7573d0183e4"
+      "size": 37342,
+      "sha256": "660da65c0e2b045080e0f8b197c99acb6e369218a62ea0ed46137b1d041b83a3"
     },
     {
       "path": "lib/features/app_update/presentation/app_update_coordinator.dart",
@@ -4587,13 +4719,13 @@
     },
     {
       "path": "lib/features/auth/data/auth_repository.dart",
-      "size": 33254,
-      "sha256": "59ce0f066bff4e2827f57dff9b09f62f1d9d9a3d9eb0bf24e9acf6a31e130b47"
+      "size": 33323,
+      "sha256": "de74f4351b5dea2a1b102fd24533953251e4e8ea474e0d5dc95be3a3c1165ff3"
     },
     {
       "path": "lib/features/auth/data/cloudbase_auth_repository.dart",
-      "size": 48753,
-      "sha256": "30d7ab27460b473ffd718aec1aefdece624785b27ac376a6bb094119a9c2991d"
+      "size": 48830,
+      "sha256": "541fe5a09a470ebdaf8baa8bc6617c044609aabb306f40252fd2c69e5cadd316"
     },
     {
       "path": "lib/features/auth/data/device_phone_number_service.dart",
@@ -4757,8 +4889,8 @@
     },
     {
       "path": "lib/features/downloads/audio_downloads.dart",
-      "size": 32253,
-      "sha256": "3976fc066c8c4a01f5c327e63e3c2735385f34f0629065ec2a229661a07bcf59"
+      "size": 32319,
+      "sha256": "09e9c6a8737025238ad7d9d17985d39ed1caa5ff6a1dc675a7d884ba01fb30d8"
     },
     {
       "path": "lib/features/downloads/audio_downloads_page.dart",
@@ -5002,8 +5134,8 @@
     },
     {
       "path": "lib/features/library/data/library_sync_api.dart",
-      "size": 8744,
-      "sha256": "febd0e4ac0b112f7382ea7c6caabdc6a9b221102b936ab916b24a05ccf7003b0"
+      "size": 8813,
+      "sha256": "45437ee3c717f8874c4d59116a4a42d9afb3a80ffa7140603eb70ff7e1ea0b67"
     },
     {
       "path": "lib/features/library/data/playlist_directory_window.dart",
@@ -5102,13 +5234,13 @@
     },
     {
       "path": "lib/features/music_platform/data/embedded_music_server.dart",
-      "size": 2357,
-      "sha256": "e866bb28f359df03daf3ffbed9fb46d5cad96bf03405f63238668477ad3241bc"
+      "size": 3691,
+      "sha256": "1b73051c042fbe2aaf1d5c39d234a99aa6f3d668461d3c432baa9305f3c2d9ab"
     },
     {
       "path": "lib/features/music_platform/data/kugou_account_store.dart",
-      "size": 9926,
-      "sha256": "d311d48252b4ad022437841f421b7995c9373adff759f86a964ec0a4839e4e5e"
+      "size": 10781,
+      "sha256": "ad17cfcbbd770321b993256b115bbc419649dc1b8db0fa9c6738b981486ec0f3"
     },
     {
       "path": "lib/features/music_platform/data/kugou_favorite_index.dart",
@@ -5237,8 +5369,8 @@
     },
     {
       "path": "lib/features/music_platform/data/platform_session_store.dart",
-      "size": 2309,
-      "sha256": "33be1326fcdded64ade93667d8cc61b190d93aedd8bd4d944589dd2c4bc0257c"
+      "size": 1526,
+      "sha256": "7a52bb1602f84b5a9b748fb80795a0b905834e36267393e93c575c55a05901fc"
     },
     {
       "path": "lib/features/music_platform/data/platform_song_identity.dart",
@@ -5317,8 +5449,8 @@
     },
     {
       "path": "lib/features/music_platform/kugou_listening_profile_providers.dart",
-      "size": 6625,
-      "sha256": "f898c9b03f3836bfe858494672f8b3613cdb61caf1bd0c605b52f8587944bcf6"
+      "size": 6649,
+      "sha256": "4fee6787a8d134b5a73ef8c95821b4c51b968ceef12cb3a537c3e06301042a51"
     },
     {
       "path": "lib/features/music_platform/listening_sync/listening_clock.dart",
@@ -5342,8 +5474,8 @@
     },
     {
       "path": "lib/features/music_platform/listening_sync/listening_sync_providers.dart",
-      "size": 6826,
-      "sha256": "e8a58a6c7d8e3838ab6d56f9d7b8a26ef0482ea5fabee83b7c092dd05c356c0b"
+      "size": 6853,
+      "sha256": "a418a43a77005bc5e4c5d01d5186fe98d5727f99b03812be0f4d5b5120008a3b"
     },
     {
       "path": "lib/features/music_platform/listening_sync/listening_sync_repository.dart",
@@ -5367,8 +5499,8 @@
     },
     {
       "path": "lib/features/music_platform/music_platform_providers.dart",
-      "size": 25264,
-      "sha256": "56f8541b8f7e8a5d46e11336c1b8fb94add64de182954f94e0a29eadf14b64ec"
+      "size": 31003,
+      "sha256": "2f51f682d7bd43e4fb28f9bf65bda6cf9c70b8e672e23f08d5f43e530130401b"
     },
     {
       "path": "lib/features/music_platform/netease/diagnostics/netease_listening_audit.dart",
@@ -5652,8 +5784,8 @@
     },
     {
       "path": "lib/features/music_platform/netease/netease_fallback.dart",
-      "size": 33338,
-      "sha256": "18f5321037a7dcaf589a74717dc17a832fb91bef21f78f3ef3f8252fa3837ccc"
+      "size": 33407,
+      "sha256": "0069ffae68fa2cfef457059d4932174e433efd6dbd2d2e4f38409d6c98de21b1"
     },
     {
       "path": "lib/features/music_platform/netease/netease_features_page.dart",
@@ -5767,8 +5899,8 @@
     },
     {
       "path": "lib/features/music_platform/netease/netease_session.dart",
-      "size": 3049,
-      "sha256": "8f93d9bc41a0f294efd49eb7eacc06c1743f3d0d2667599bdb08be4f992cff38"
+      "size": 3541,
+      "sha256": "82fa15fd7df3ac1032fa052218c6cab9449881e8a3217ca4b108e03bf3b8f6fb"
     },
     {
       "path": "lib/features/music_platform/netease/netease_song_metadata.dart",
@@ -5987,8 +6119,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/kugou_official_page.dart",
-      "size": 12649,
-      "sha256": "df6be2a22f42274e9f29d7eabffeac4d825cbb71b11a921acbf58e3e948f8d53"
+      "size": 13078,
+      "sha256": "5619e231f2666568a3f455b2a956842a8cf7a658a8d555c75b5046934f65b26a"
     },
     {
       "path": "lib/features/music_platform/presentation/kugou_standard_authorization_page.dart",
@@ -6017,8 +6149,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/platform_account_page.dart",
-      "size": 35576,
-      "sha256": "aa1ad4e2930a62fd6a3596ab475f6d65ebf2d4ee55c7efb759211a99564fc15a"
+      "size": 35664,
+      "sha256": "ec3f3323b6df04bb53b81ceaa95f720c0e5d85207952621203734742032cbd39"
     },
     {
       "path": "lib/features/music_platform/presentation/platform_avatar.dart",
@@ -6142,8 +6274,8 @@
     },
     {
       "path": "lib/features/music_platform/presentation/unified_reward_page.dart",
-      "size": 6697,
-      "sha256": "f20bcfcbc70288ed2ae00572969364c3f44033ae5db131cb4a67f46e0806a170"
+      "size": 6904,
+      "sha256": "9a59e0ec665c52c14947beb57010dd35d0e230740df9bcb7ddeab0c878b5d4ce"
     },
     {
       "path": "lib/features/music_platform/retained_kugou_scope.dart",
@@ -6242,8 +6374,8 @@
     },
     {
       "path": "lib/features/profile/data/profile_background_sync_api.dart",
-      "size": 7664,
-      "sha256": "9e6a4a0847cbbe2470aee5f649e938cfa475d88735c1465e1a30d37d5db4eb4e"
+      "size": 7733,
+      "sha256": "fab4cb65918294861cde488c56497fbf705cab8ac993fd840d2838b85f7b3023"
     },
     {
       "path": "lib/features/profile/presentation/avatar_preview_page.dart",
@@ -6412,8 +6544,8 @@
     },
     {
       "path": "lib/features/search/search_providers.dart",
-      "size": 16494,
-      "sha256": "62afda4b59ee9486840b504f973d3620e734185ee7ff4fc2e05d327fbf4e02a1"
+      "size": 16560,
+      "sha256": "974244d24693ca9df255ecba719712bf801dabe12e4d54d46f56b24e178685be"
     },
     {
       "path": "lib/features/settings/presentation/frame_diagnostics_page.dart",
@@ -6432,8 +6564,8 @@
     },
     {
       "path": "lib/features/settings/presentation/music_network_diagnostics_page.dart",
-      "size": 3300,
-      "sha256": "834b45b27b3bb799e2f19778dba63025f08b22d690ac6a55dbcd5f18877d5231"
+      "size": 4297,
+      "sha256": "d07eb3515b5395605f4b626d5ba9f654dd1b38d0616bc73a884b7beff4b6bc83"
     },
     {
       "path": "lib/features/settings/presentation/music_sleep_timer_sheet.dart",
@@ -6452,8 +6584,8 @@
     },
     {
       "path": "lib/features/social/data/cloudbase_social_repository.dart",
-      "size": 25362,
-      "sha256": "a57ad3e46faa35e29c1c1c4d7f9b4ee4a771bfa127cdac2641670cc6b16e03f3"
+      "size": 25439,
+      "sha256": "82feb74edd803fe8c14d1f780ad4c1f9f878743308206e9adc7b4673a8f5aa05"
     },
     {
       "path": "lib/features/social/data/listen_together_repository.dart",
@@ -6642,8 +6774,8 @@
     },
     {
       "path": "lib/shared/media/artwork_network_image.dart",
-      "size": 2832,
-      "sha256": "657a65821e255ba61554e7d44f8fa5e29c51194baf98268b000e37d3ca37aaa0"
+      "size": 2898,
+      "sha256": "493eee322dcd5e63f60c1944131c9cc1e0c6fbd9df76b10e08dba78553985dc9"
     },
     {
       "path": "lib/shared/media/artwork_refresh_coordinator.dart",
@@ -6652,8 +6784,8 @@
     },
     {
       "path": "lib/shared/media/persistent_network_image_cache.dart",
-      "size": 16672,
-      "sha256": "202fd4f5c6f56e1cb406d9c41a0dbdbd464eb84af0b408cc6e01f1be9d772eeb"
+      "size": 16738,
+      "sha256": "d3c43532086b4e099e40cae4dbe81e6707af19f6df98dcd9664e9d3c720d9ec7"
     },
     {
       "path": "lib/shared/models/audio_origin.dart",
@@ -6972,13 +7104,13 @@
     },
     {
       "path": "pubspec.lock",
-      "size": 45442,
-      "sha256": "7293689c92ee42bff5e0fd6a1e0f61d675767128395e7cf806ebd45f6f07c9fa"
+      "size": 45372,
+      "sha256": "34c7d6e357e5f08a81f85b492582c0f9a18367fa264b0548acdbf6c401ca4f51"
     },
     {
       "path": "pubspec.yaml",
-      "size": 12606,
-      "sha256": "aa491a61e9f163bfa5aa5077cd908194bf393a959e6acf67dc1a48d8fcd87c9a"
+      "size": 13024,
+      "sha256": "75e46359076192455511263ad3b0af012cbbf87e93911abd193661986b39855a"
     },
     {
       "path": "release/1.0.1-安装说明.txt",
@@ -8281,6 +8413,21 @@
       "sha256": "2d3a98dd7a58b2c8cf82aca6b95819a07216f643b63102a06aa5c5ab8983f9c5"
     },
     {
+      "path": "release/Mesting-Music-v1.0.53-SHA256.txt",
+      "size": 193,
+      "sha256": "3f34a9795b66bef06c6095d19a6169402494511740a839686941de5f1bd63baa"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.53-source-verification.json",
+      "size": 774,
+      "sha256": "73769ef60df1c36c0c264dea98c4e035d86573346ba41ea7b4e67ecb5e682af8"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.53-source.sha256",
+      "size": 100,
+      "sha256": "6073924a1782584de7e3916c63a6eb718d6696b64de426ef00c02f5954379d78"
+    },
+    {
       "path": "release/Mesting-Music-v1.0.53-verification.json",
       "size": 11020,
       "sha256": "641a5057e8dfe2d3b88c5ad29271ce33c7397ff03574d7979421371b2dc31f87"
@@ -8289,6 +8436,16 @@
       "path": "release/Mesting-Music-v1.0.53.apk.sha256",
       "size": 93,
       "sha256": "665b56df111f31bb6885b8eedbc4946b00383ed0153ca0180e1fed5ea0ecf1f5"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.54-verification.json",
+      "size": 11258,
+      "sha256": "b56115b539957e3308bb6f097d5db2e54e6d6dd73f5a2765894331259cb6d58b"
+    },
+    {
+      "path": "release/Mesting-Music-v1.0.54.apk.sha256",
+      "size": 93,
+      "sha256": "af4874f7a8cad820449675cc48dd7d6ba3a40a56cf021dbb6fd67a65ed6cc778"
     },
     {
       "path": "release/Mesting-Music-v1.0.6-SHA256.txt",
@@ -8831,6 +8988,11 @@
       "sha256": "03129fcb60df211938ceed4fa313ba0920add6a699e8430866a15f8f705ce09c"
     },
     {
+      "path": "test/native/Release154StorageFamilyTest.java",
+      "size": 1061,
+      "sha256": "33df3cb11200cdd4c6f21be7090c804f67b9544ee674b2940be21e857055fa2e"
+    },
+    {
       "path": "test/native/release_144_background_scheduler_test.kt",
       "size": 2976,
       "sha256": "a86e9d9cdaa212737fb2d18f59af954aecac3583c145b36e4901fc9f46b2f6ec"
@@ -8844,6 +9006,11 @@
       "path": "test/native/release_145_background_media_lease_test.kt",
       "size": 4149,
       "sha256": "f9c99eebbf26e4ffb72ca0b7dc57d9a4f462eb6069ebea7d0ef0e9880d79f712"
+    },
+    {
+      "path": "test/native/release_154_http_test.kt",
+      "size": 8755,
+      "sha256": "ab6595c745970d6f27f84d609c339bd8abd5d451fe93508a6b3140875c32322d"
     },
     {
       "path": "test/native_audio_output/MestingAudioOutputHostTest.java",
@@ -9677,8 +9844,8 @@
     },
     {
       "path": "test/release_152_accounts_test.dart",
-      "size": 12954,
-      "sha256": "05c913f44b8dd10f041e991fa1ef490e2326c80a338194651dfdf423bd1b8281"
+      "size": 13737,
+      "sha256": "2e2e7c1013d95d65db0ba0f334b50480806cd2336bc7957b33e4f603adb2475a"
     },
     {
       "path": "test/release_152_accounts_ui_test.dart",
@@ -9747,13 +9914,23 @@
     },
     {
       "path": "test/release_153_storage_test.dart",
-      "size": 2627,
-      "sha256": "253eb7837b72c547fdb01ee1b7ad7cffc1803b230c7af8f222566def50d5bf3c"
+      "size": 2897,
+      "sha256": "59a8d7cacb4e9ec2123182124de011c2ec2f38efd862f34473a5deadc8f13f20"
     },
     {
       "path": "test/release_153_ui_test.dart",
       "size": 4954,
       "sha256": "b10bb4e2d642d91222cfcf4f0523fba3da6bcee410e6b96e9f23331918d3ac99"
+    },
+    {
+      "path": "test/release_154_network_test.dart",
+      "size": 7222,
+      "sha256": "85899a2648e2999cd259498339d4da1408313765fa68cb7643bcdb306ab72af8"
+    },
+    {
+      "path": "test/release_154_storage_test.dart",
+      "size": 11509,
+      "sha256": "f97c435742f2d625dd7222ec46afd327c9551fbc1fe09b4b05fc1bc16cd25c31"
     },
     {
       "path": "test/remote_lyrics_repository_test.dart",
@@ -9996,6 +10173,266 @@
       "sha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66"
     },
     {
+      "path": "third_party/flutter_secure_storage/NOTICE.md",
+      "size": 425,
+      "sha256": "5e387b3b4ef0a212d042ea80929ceb44caf5f6c7e02b8e435f49926dde93e78c"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/CHANGELOG.md",
+      "size": 23997,
+      "sha256": "a58db2630559f56c857c171a26ee7b5fd1cff0fc9b50a49d8713d2b24863a432"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/LICENSE",
+      "size": 1509,
+      "sha256": "55dafb084270616f95b9bea53654adda8bdcad95c022a83c4cf8769073f829fa"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/README.md",
+      "size": 21621,
+      "sha256": "ed389e61659e959af64263e6acd92f784123abf5879db078a4bf94ff2cbdd269"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/analysis_options.yaml",
+      "size": 180,
+      "sha256": "294311f7ba00ebc5065e994815298a0e0d033402732021e39859068dbb81a65b"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/build.gradle",
+      "size": 2004,
+      "sha256": "5c4a6b3dee00a19ae77083ded682324b1fd7a62dfb25e1146051d926c0c5b995"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/gradle.properties",
+      "size": 29,
+      "sha256": "034fd3f15ac7a699cf7393150e318cd3e0afb51826b0decc69a548db53fa1116"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/gradle/wrapper/gradle-wrapper.properties",
+      "size": 232,
+      "sha256": "c363ca43e87761f5de17c603d9aa3d555b217fc544b41d7af28b5e3e6fbea5ea"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/settings.gradle",
+      "size": 44,
+      "sha256": "b5fb1df0485dcc39fb62a5d323d02af51a27ba387ba7d297fcbb12594a271e14"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/AndroidManifest.xml",
+      "size": 23,
+      "sha256": "21058c692532098e42afc39cf09de946c38229ec414bb7ac32f4fc90ba9a5f45"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/FlutterSecureStorage.java",
+      "size": 102526,
+      "sha256": "e205983485dd2d9bb57b0c26e95c576ab4bf35469666256a9eecd8dfa5791623"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/FlutterSecureStorageConfig.java",
+      "size": 11400,
+      "sha256": "7c93130f9a6d0fb14570bf646746b60405eb19f345f30cfc56c139f23b2bc0a2"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/FlutterSecureStoragePlugin.java",
+      "size": 12040,
+      "sha256": "668af1fae0e879e050ff87e59445e538039eb6b86469f75e9282e22f07a3d071"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/MigrationBackup.java",
+      "size": 18815,
+      "sha256": "4056700281183d57526c4fe5e0c3c1fa0ebe23bdc56f055b5dec5025de177b0a"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/NamespacedConfigSource.java",
+      "size": 3025,
+      "sha256": "efee7d10515b89c4818b675a6fc53dc9fc13a2f702f4c6988e6e5a92e33d40e6"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/SecureCommitException.java",
+      "size": 284,
+      "sha256": "60f63dd709c9e806cdeb31bf44732c6037574ee5568a726ac489042bd2c51d28"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/SecurePreferencesCallback.java",
+      "size": 156,
+      "sha256": "69eb5e1b4352cb8a95aaf21771dfd11dc61454318c5022d65ca06b0c9b44bfcd"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/StorageErrorFamily.java",
+      "size": 1182,
+      "sha256": "2750fe96bb1b318372fa5c2331c92c3955f956654a7db179f902a20af2fc50ca"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipher.java",
+      "size": 436,
+      "sha256": "93bacae5ab581d30ee021f236b4d012a3a2a6f4d2bae57dd14959b3d0d0822e6"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipherAlgorithm.java",
+      "size": 923,
+      "sha256": "5c0f7ed8a65997945b50651e1d24436c95cbf9659264728bd0c063bbbca86649"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipherFunction.java",
+      "size": 299,
+      "sha256": "78b0ef9bb0822d467f98775f80e02445bbc85b033c0b0c794e12d398750982f2"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipherImplementationAES23.java",
+      "size": 10726,
+      "sha256": "2ee13850b564dd562670d4629dd1bae004e2be979a2a68c329933ab00f1102d8"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipherImplementationRSA18.java",
+      "size": 6862,
+      "sha256": "c9cdd8acd909599fd5336bd3d093ec28fcdf305c26d96080ab017c0955eac159"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/KeyCipherImplementationRSAOAEP.java",
+      "size": 2205,
+      "sha256": "4b9a921c528ba576dc40c42ff597ea7ada57fee199aefefc23e672fbeb88efdd"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipher.java",
+      "size": 279,
+      "sha256": "ad98553e18024ec390feaf6b6a2afdaa4c3f932a01cb83a3dd7788d93a49a7c0"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherAlgorithm.java",
+      "size": 838,
+      "sha256": "e68a1999a0d7004457f7b751bfdc804a3aa0d65d1eb63945912ca6ff858cba3d"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherFactory.java",
+      "size": 6869,
+      "sha256": "a8c22398f6ba0131516abec33c270bb72f902d61ee481f2214ab83e9af9f7d39"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherFunction.java",
+      "size": 373,
+      "sha256": "b9dfdc1f68617b5f01439fe142749d575dbebbf2c04410fddd4cb2e10520ec39"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherImplementationAES18.java",
+      "size": 4240,
+      "sha256": "254d3ac4ca992d8d37c77457b885fcf791550e713eca576c52ec4c0231c211f9"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherImplementationAES23.java",
+      "size": 4799,
+      "sha256": "ee902201a7dcabe6d9c0d5b493d8e38109ac1f0b130a5162051c601c4cc4cee8"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherImplementationGCM.java",
+      "size": 4317,
+      "sha256": "25509c654254b9677da974be669e949edec1a13e1e993db15de4c9ff00babb49"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/crypto/EncryptedSharedPreferences.java",
+      "size": 25062,
+      "sha256": "57c8e656a735ab4dffde2144e11afd9e84ba9541a93f34ce57d4122825057852"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/crypto/MasterKey.java",
+      "size": 16102,
+      "sha256": "d931ade8ec9fb9d27877b41a2d9b04d479d7b7702f26a3c5a238fb2d87ff151a"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/main/java/com/it_nomads/fluttersecurestorage/crypto/MasterKeys.java",
+      "size": 4946,
+      "sha256": "2a291ca072e656d8f50e5f9414cea624761234d7c77ce4f60c2c2998eeadc7f3"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/FlutterSecureStorageConfigAndroidTest.java",
+      "size": 1505,
+      "sha256": "e87acd675eb3b383573b85c3dcf133967798f63b02082f2c070f660baf4cf19b"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/FlutterSecureStorageConfigTest.java",
+      "size": 15418,
+      "sha256": "d2290344b6cc9b4685e5564b26ddcaa8d49cb7a8778b793cd1afee01c1d896e0"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/MigrationBackupTest.java",
+      "size": 29696,
+      "sha256": "16a39dabad2de67f692ed30370a53fe25713b258a7422505ee881c308132461f"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/NamespacedConfigSourceTest.java",
+      "size": 4754,
+      "sha256": "b055ffa187b40d8223bdc5191fed46693b38b24aba6abed843f451781bfd04f6"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/ciphers/CipherAlgorithmTest.java",
+      "size": 3719,
+      "sha256": "254134c4f6a9be6c13a8bbb6d36f7943a4e5503b4dda7b6b65d0ecd0e2dbce2d"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherFactoryTest.java",
+      "size": 11534,
+      "sha256": "84f0058b0ae461975919c3c0f8cb492e0366d6f338d91a3012457ed3a8eea969"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/android/src/test/java/com/it_nomads/fluttersecurestorage/ciphers/StorageCipherTest.java",
+      "size": 8608,
+      "sha256": "9e4b3e4c09b64c585167b5fbbfa7d14576543e7acdf76ec14271c03f7c8bb939"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/flutter_secure_storage.dart",
+      "size": 12059,
+      "sha256": "62b49aecbef5849d5f5fc234c279f5dbd6296418230ecc568e92800c1bf11951"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/android_options.dart",
+      "size": 14290,
+      "sha256": "269ec3bca33beb5e6a38090a801ae57558688d993016d4c1dce20914ebc8eb07"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/apple_options.dart",
+      "size": 9231,
+      "sha256": "6a2b6e1b9f7e601d56a102ab1e7de298f24606111047b2e67bdfca472c382576"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/ios_options.dart",
+      "size": 1092,
+      "sha256": "7d000d8210524f98dc6d93c4b52f53d7655bf6e443026c2d3350227b79767f2e"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/linux_options.dart",
+      "size": 850,
+      "sha256": "bc48c7ac492f7ac60879d03ddffcf822740b94b999fb69ed3668f90d7ee58c65"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/macos_options.dart",
+      "size": 1403,
+      "sha256": "e033f9fea3dea5dba1c29e847d7e0aaade01cb2a3fb3419e11b2672da5f30498"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/web_options.dart",
+      "size": 2037,
+      "sha256": "261ffb9dd5873802b587fbc16c27ef13b82dd748a163db5905c1014cae05df38"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/options/windows_options.dart",
+      "size": 2006,
+      "sha256": "0e92ae5044f9496b0850df5fd28cd5c4f2e8b8438cf8495dae1af6f712b4d142"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/lib/test/test_flutter_secure_storage_platform.dart",
+      "size": 1567,
+      "sha256": "bf6fa13a7d3063ef69a68612737f27afd6f58a53ccda6818c3e0ad193e03dd99"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/pubspec.yaml",
+      "size": 1598,
+      "sha256": "eabf6c28a4173445e84ae682993170536e8dc294dd9cf2816e986c52f8169780"
+    },
+    {
+      "path": "third_party/flutter_secure_storage/package/test/flutter_secure_storage_test.dart",
+      "size": 43962,
+      "sha256": "41c6644754edb73c1d667524ab75395a013a6e95aa98c023f97b1a0a19fe0f20"
+    },
+    {
       "path": "third_party/just_audio/NOTICE.md",
       "size": 1420,
       "sha256": "4c65a8f58fdf8bf24b43393852590d5f4335909102b89d12cc0eda4f7cf791e7"
@@ -10182,8 +10619,8 @@
     },
     {
       "path": "third_party/just_audio/package/lib/just_audio.dart",
-      "size": 175610,
-      "sha256": "bd524e5781e4d3c122faf1460e1e9f5eaa464b5641950e218dbea8f39f201eb5"
+      "size": 176342,
+      "sha256": "ed0740ce8493e82b42421278941d5adc39418c887766a6e7e8304d5b2248f1a4"
     },
     {
       "path": "third_party/just_audio/package/pubspec.yaml",
@@ -11131,6 +11568,11 @@
       "sha256": "fee607a075ab1993391833daf03145baf35a5ee5122a1a9ccb7c9e27d0aa066a"
     },
     {
+      "path": "third_party/md3music/rust/src/android_transport.rs",
+      "size": 8381,
+      "sha256": "ae2554eef3e05e7b34d78ba615abd2fff2393e70180ad3da3eb776b2083adb24"
+    },
+    {
       "path": "third_party/md3music/rust/src/cache.rs",
       "size": 6625,
       "sha256": "30ecc28b03d295afe4c165e3d7823f0c721527d96c3c1e3792771f1c61577055"
@@ -11157,8 +11599,8 @@
     },
     {
       "path": "third_party/md3music/rust/src/lib.rs",
-      "size": 3927,
-      "sha256": "5299228e27138a578a683799c7384c767fc00efa52041fe6fc129287a132d018"
+      "size": 3986,
+      "sha256": "cbf282591039fcb57086c9c78b7c11f73383143609db45d284a899a352c7b77b"
     },
     {
       "path": "third_party/md3music/rust/src/modules/album.rs",
@@ -11417,8 +11859,8 @@
     },
     {
       "path": "third_party/md3music/rust/src/request.rs",
-      "size": 37894,
-      "sha256": "5d76aff76547f8ec2b42ec763e68eb6f514af3fe61b0fd423a4964ad40f7b7e4"
+      "size": 41060,
+      "sha256": "0f861646655bc023705589fb280efc9749efe8432265b13b6e97e398523d4e33"
     },
     {
       "path": "third_party/md3music/rust/src/server.rs",
@@ -11714,6 +12156,16 @@
       "path": "third_party/netease_protocol/afp/afp.wasm.js",
       "size": 308360,
       "sha256": "489cf7cb90732c0e89bc44f43acd90e15fdd4f7dc0e34b6a3fdf28326e5be155"
+    },
+    {
+      "path": "third_party/okhttp/LICENSE",
+      "size": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "path": "third_party/okhttp/NOTICE.md",
+      "size": 436,
+      "sha256": "8def981ed6268a5b6f30072d695b9f96de5fc246bfa83d39bec6e3d29f749b11"
     },
     {
       "path": "third_party/region_data/LICENSE",
@@ -13018,12 +13470,12 @@
     {
       "path": "tool/build_android_md3_beta_apk.ps1",
       "size": 3475,
-      "sha256": "6cf10f2978a5c97ccf1c023fa970768d21cfce00f126655be4b22e2dc6c01c4c"
+      "sha256": "bd6419f372800d860b87d9e3ea499617444fc77c15d8bdb79c7954acef09b1e4"
     },
     {
       "path": "tool/build_android_release_apk.ps1",
       "size": 1485,
-      "sha256": "fddf603cc42fb52d023386b67cc1fe86ef6301ad736bea3abe7ee7a2d0765cc3"
+      "sha256": "d44cbd1170ecee48e669bbe4d52378d5618f16eb6ca793f8773c5bebce936b9f"
     },
     {
       "path": "tool/build_flutter_engine_release.sh",

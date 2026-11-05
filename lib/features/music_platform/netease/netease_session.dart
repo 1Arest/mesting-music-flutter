@@ -1,4 +1,4 @@
-import '../../../core/security/retained_secure_read.dart';
+import '../../../core/security/retained_credential_vault.dart';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
@@ -63,31 +63,48 @@ abstract interface class NeteaseSessionStore {
   Future<void> clear();
 }
 
-class SecureNeteaseSessionStore implements NeteaseSessionStore {
+abstract interface class NeteaseVerifiedLoginRecovery {
+  Future<CredentialRecoveryWrite> recoverVerifiedLogin(NeteaseSession session);
+}
+
+class SecureNeteaseSessionStore
+    implements NeteaseSessionStore, NeteaseVerifiedLoginRecovery {
   const SecureNeteaseSessionStore({
     FlutterSecureStorage storage = retainedSecureStorage,
-  }) : _storage = storage;
+    FlutterSecureStorage? recoveryStorage,
+  }) : _storage = storage,
+       _recovery = recoveryStorage;
   static const key = 'mesting_music_platform_netease_session_v1';
   final FlutterSecureStorage _storage;
+  final FlutterSecureStorage? _recovery;
+  RetainedCredentialVault get _vault =>
+      RetainedCredentialVault(_storage, recovery: _recovery);
 
   @override
   Future<NeteaseSession?> read() async {
     // A failed restore must leave the encrypted bytes available for recovery.
-    final encoded = await readRetainedSecureValue(_storage, key);
+    final encoded = await _vault.read(key);
     return encoded == null
         ? null
-        : NeteaseSession.fromJson(jsonDecode(encoded) as Map<String, dynamic>);
+        : _vault.decode(
+            key,
+            () => NeteaseSession.fromJson(
+              jsonDecode(encoded) as Map<String, dynamic>,
+            ),
+          );
   }
 
   @override
   Future<void> write(NeteaseSession session) async {
     final encoded = jsonEncode(session.toJson());
-    await _storage.write(key: key, value: encoded);
-    if (await _storage.read(key: key) != encoded) {
-      throw StateError('网易云账号保存未完成，请重试');
-    }
+    await _vault.write(key, encoded);
   }
 
   @override
-  Future<void> clear() => _storage.delete(key: key);
+  Future<CredentialRecoveryWrite> recoverVerifiedLogin(
+    NeteaseSession session,
+  ) => _vault.recover(key, jsonEncode(session.toJson()));
+
+  @override
+  Future<void> clear() => _vault.clear(key);
 }

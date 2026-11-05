@@ -1,3 +1,4 @@
+import '../../core/network/system_music_io_client.dart';
 import '../music_platform/netease/netease_track_sources.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -786,7 +787,7 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
       ? <AudioDownloadTask>[]
       : _decodeDownloadSnapshot(raw);
   final manager = AudioDownloadManager(
-    client: http.Client(),
+    client: SystemMusicIoClient(),
     restored: restored,
     currentOwner: () => ref.read(platformAccountProvider).value?.ownerId,
     directory: () async =>

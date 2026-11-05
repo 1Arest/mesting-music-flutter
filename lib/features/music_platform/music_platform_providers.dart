@@ -1,5 +1,8 @@
 import '../../core/network/music_network_diagnostics.dart';
 import 'dart:convert';
+import 'dart:async';
+import '../../core/security/credential_failure.dart';
+import '../../core/security/retained_credential_vault.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart' show PlatformException;
@@ -108,12 +111,13 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       }
     }
     final PlatformSession? session;
+    final restoreWatch = Stopwatch()..start();
     try {
       if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease) {
         final saved = await ref
             .read(neteaseSessionStoreProvider)
             .read()
-            .timeout(const Duration(seconds: 5));
+            .timeout(const Duration(seconds: 12));
         ref.read(musicPlatformApiProvider).session = null;
         ref.read(neteaseApiProvider).configure(saved);
         return saved?.identity;
@@ -121,13 +125,25 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       session = await ref
           .watch(platformSessionStoreProvider)
           .read()
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 12));
     } on Object catch (error) {
-      MusicNetworkDiagnostics.shared.record(
-        platform: 'other',
-        operation: MusicNetworkOperation.restore,
-        outcome: MusicNetworkOutcome.storage,
-      );
+      if (error is! CredentialStoreException) {
+        MusicNetworkDiagnostics.shared.record(
+          platform:
+              ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease
+              ? 'netease'
+              : 'kugou',
+          operation: MusicNetworkOperation.restore,
+          outcome: MusicNetworkOutcome.storage,
+          elapsedMs: restoreWatch.elapsedMilliseconds,
+          phase: error is TimeoutException
+              ? MusicDiagnosticPhase.storageRead
+              : error is FormatException
+              ? MusicDiagnosticPhase.storageDecode
+              : MusicDiagnosticPhase.accountPublish,
+          family: credentialFailureFamily(error),
+        );
+      }
       // An opt-in diagnostic records categories only. Exception messages and
       // encrypted/decrypted account values must never enter timing logs.
       if (StartupTimingProbe.enabled) {
@@ -178,12 +194,33 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       throw const MusicPlatformException('请先退出当前 Mesting 账号');
     }
     final hadAccount = state.value != null;
-    final session = PlatformSession.fromJson(
-      {...result}
-        ..remove('mesting_kugou_standard_token')
-        ..remove('mesting_kugou_standard_vip_token'),
+    final PlatformSession session;
+    try {
+      session = PlatformSession.fromJson(
+        {...result}
+          ..remove('mesting_kugou_standard_token')
+          ..remove('mesting_kugou_standard_vip_token'),
+      );
+    } on FormatException {
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'kugou',
+        operation: MusicNetworkOperation.login,
+        outcome: MusicNetworkOutcome.format,
+        phase: MusicDiagnosticPhase.credentialValidate,
+        family: MusicFailureFamily.credentialIncomplete,
+      );
+      throw const MusicPlatformException('酷狗返回的登录凭据不完整，请重试登录');
+    }
+    final saveWatch = Stopwatch()..start();
+    await _selectKugou(session, loginMethod: loginMethod, verifiedLogin: true);
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'kugou',
+      operation: MusicNetworkOperation.login,
+      outcome: MusicNetworkOutcome.success,
+      phase: MusicDiagnosticPhase.accountPublish,
+      transport: 'local',
+      elapsedMs: saveWatch.elapsedMilliseconds,
     );
-    await _selectKugou(session, loginMethod: loginMethod);
     if (DistributionChannel.isBeta && !hadAccount) {
       ref.read(betaEntryFlowProvider.notifier).authenticated();
     }
@@ -195,6 +232,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     PlatformSession session, {
     String? loginMethod,
     bool Function()? isCurrent,
+    bool verifiedLogin = false,
   }) async {
     void check() {
       if (isCurrent != null && !isCurrent()) {
@@ -205,9 +243,57 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     check();
     final store = ref.read(platformSessionStoreProvider);
     var committed = session;
-    final previous = await store.read();
-    final snapshot = store is KugouAccountStore ? await store.snapshot() : null;
     final choice = ref.read(betaAccountChoiceProvider);
+    PlatformSession? previous;
+    KugouAccountSnapshot? snapshot;
+    try {
+      if (verifiedLogin && state.hasError && _isStorageFailure(state.error!)) {
+        // The last cold read already established the failure. Do not wait for
+        // the same stalled legacy operation a second time before fresh login.
+        throw state.error!;
+      }
+      // One snapshot gives both rollback and current identity; avoid repeatedly
+      // decrypting the same account list on every fresh login.
+      if (store is KugouAccountStore) {
+        snapshot = await store.snapshot();
+        previous = snapshot.selected;
+      } else {
+        previous = await store.read();
+      }
+    } on Object catch (error) {
+      if (!verifiedLogin || !_isStorageFailure(error)) rethrow;
+      // Local restore failure must not invalidate a platform-confirmed login.
+      // Recovery writes only its isolated encrypted overlay, never the old DB.
+      check();
+      if (state.value?.ownerId != session.ownerId) {
+        await _prepare(session.ownerId);
+      }
+      KugouRecoverySave? recovery;
+      try {
+        if (store is KugouVerifiedLoginRecovery) {
+          recovery = await (store as KugouVerifiedLoginRecovery)
+              .recoverVerifiedLogin(session, loginMethod: loginMethod);
+          committed = recovery.session;
+        } else {
+          await store.write(session);
+        }
+        check();
+        if (DistributionChannel.isBeta) {
+          await ref
+              .read(betaAccountChoiceProvider.notifier)
+              .select(BetaAccountChoice.kugou);
+        }
+        check();
+        _publishKugou(committed);
+      } on Object {
+        if (recovery != null) await recovery.rollback();
+        if (choice != null && ref.read(betaAccountChoiceProvider) != choice) {
+          await ref.read(betaAccountChoiceProvider.notifier).select(choice);
+        }
+        rethrow;
+      }
+      return;
+    }
     check();
     if (state.value?.ownerId != session.ownerId) {
       await _prepare(session.ownerId);
@@ -237,6 +323,16 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       }
       rethrow;
     }
+    _publishKugou(committed);
+  }
+
+  static bool _isStorageFailure(Object error) =>
+      error is CredentialStoreException ||
+      error is PlatformException ||
+      error is FormatException ||
+      error is TimeoutException;
+
+  void _publishKugou(PlatformSession committed) {
     ref.read(retainedKugouMutationProvider.notifier).publish(committed);
     ref.invalidate(savedKugouSessionProvider);
     _publish(committed);
@@ -315,14 +411,65 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       throw const MusicPlatformException('请先退出当前 Mesting 账号');
     }
     final hadAccount = state.value != null;
-    await ref.read(neteaseSessionStoreProvider).write(session);
-    ref.read(retainedNeteaseEpochProvider.notifier).advance();
-    await _prepare(session.identity.ownerId);
-    await ref
-        .read(betaAccountChoiceProvider.notifier)
-        .select(BetaAccountChoice.netease);
-    ref.read(neteaseApiProvider).configure(session);
-    _publish(session.identity);
+    if (session.userId.isEmpty ||
+        session.deviceId.isEmpty ||
+        (session.cookies['MUSIC_U'] ?? '').isEmpty) {
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'netease',
+        operation: MusicNetworkOperation.login,
+        outcome: MusicNetworkOutcome.format,
+        phase: MusicDiagnosticPhase.credentialValidate,
+        family: MusicFailureFamily.credentialIncomplete,
+      );
+      throw const MusicPlatformException('网易云返回的登录凭据不完整，请重试登录');
+    }
+    final store = ref.read(neteaseSessionStoreProvider);
+    CredentialRecoveryWrite? recovery;
+    final previousChoice = ref.read(betaAccountChoiceProvider);
+    final previousSession = ref.read(neteaseApiProvider).session;
+    try {
+      if (state.hasError &&
+          _isStorageFailure(state.error!) &&
+          store is NeteaseVerifiedLoginRecovery) {
+        recovery = await (store as NeteaseVerifiedLoginRecovery)
+            .recoverVerifiedLogin(session);
+      } else {
+        try {
+          await store.write(session);
+        } on Object catch (error) {
+          if (!_isStorageFailure(error) ||
+              store is! NeteaseVerifiedLoginRecovery) {
+            rethrow;
+          }
+          recovery = await (store as NeteaseVerifiedLoginRecovery)
+              .recoverVerifiedLogin(session);
+        }
+      }
+      await _prepare(session.identity.ownerId);
+      await ref
+          .read(betaAccountChoiceProvider.notifier)
+          .select(BetaAccountChoice.netease);
+      ref.read(retainedNeteaseEpochProvider.notifier).advance();
+      ref.read(neteaseApiProvider).configure(session);
+      _publish(session.identity);
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'netease',
+        operation: MusicNetworkOperation.login,
+        outcome: MusicNetworkOutcome.success,
+        phase: MusicDiagnosticPhase.accountPublish,
+        transport: 'local',
+      );
+    } on Object {
+      if (recovery != null) await recovery.rollback();
+      ref.read(neteaseApiProvider).configure(previousSession);
+      if (previousChoice != null &&
+          ref.read(betaAccountChoiceProvider) != previousChoice) {
+        await ref
+            .read(betaAccountChoiceProvider.notifier)
+            .select(previousChoice);
+      }
+      rethrow;
+    }
     if (!hadAccount) ref.read(betaEntryFlowProvider.notifier).authenticated();
   });
 

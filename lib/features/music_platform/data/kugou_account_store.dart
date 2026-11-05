@@ -1,7 +1,6 @@
-import '../../../core/security/retained_secure_read.dart';
+import '../../../core/security/retained_credential_vault.dart';
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/security/retained_secure_storage.dart';
@@ -61,6 +60,21 @@ abstract interface class KugouAccountStore implements PlatformSessionStore {
   Future<void> restore(KugouAccountSnapshot snapshot);
 }
 
+/// Optional recovery capability; old/injected repositories keep their original
+/// interface. Only the controller's verified interactive login may call this.
+abstract interface class KugouVerifiedLoginRecovery {
+  Future<KugouRecoverySave> recoverVerifiedLogin(
+    PlatformSession session, {
+    String? loginMethod,
+  });
+}
+
+class KugouRecoverySave {
+  const KugouRecoverySave(this.session, this.rollback);
+  final PlatformSession session;
+  final Future<void> Function() rollback;
+}
+
 class _KugouCredential {
   const _KugouCredential(this.session, this.loginMethod);
   final PlatformSession session;
@@ -69,15 +83,17 @@ class _KugouCredential {
 
 /// 旧版单账号仅作为迁移来源。新快照写入且逐字节回读成功之后，才删除旧槽。
 /// 空列表仍写成有效快照，不能因退出/移除最后一个账号而再次恢复旧登录。
-class SecureKugouAccountStore implements KugouAccountStore {
+class SecureKugouAccountStore
+    implements KugouAccountStore, KugouVerifiedLoginRecovery {
   SecureKugouAccountStore({
     FlutterSecureStorage storage = retainedSecureStorage,
     PlatformSessionStore? legacy,
-  }) : _storage = storage,
+    FlutterSecureStorage? recoveryStorage,
+  }) : _vault = RetainedCredentialVault(storage, recovery: recoveryStorage),
        _legacy = legacy ?? SecurePlatformSessionStore(storage: storage);
 
   static const key = 'mesting_music_platform_kugou_accounts_v2';
-  final FlutterSecureStorage _storage;
+  final RetainedCredentialVault _vault;
   final PlatformSessionStore _legacy;
   Future<void> _pending = Future<void>.value();
 
@@ -128,30 +144,18 @@ class SecureKugouAccountStore implements KugouAccountStore {
   });
 
   Future<String?> _readRaw() async {
-    // 沿用旧存储的短暂 KeyStore 挂载重试；读取失败绝不当成空列表覆盖。
-    for (var attempt = 0; ; attempt++) {
-      try {
-        final value = await readRetainedSecureValue(_storage, key);
-        if (value != null || attempt >= 2) return value;
-      } on PlatformException {
-        if (attempt >= 2) rethrow;
-      }
-      await Future<void>.delayed(Duration(milliseconds: 100 * (attempt + 1)));
-    }
+    return _vault.read(key);
   }
 
   Future<void> _writeRaw(String raw, {String? previous}) async {
     try {
-      await _storage.write(key: key, value: raw);
-      if (await _storage.read(key: key) != raw) {
-        throw StateError('酷狗账号保存未完成，请重试');
-      }
+      await _vault.write(key, raw);
     } on Object {
       // 写入回执不明确时恢复旧快照；UI 在此之前不会发布目标账号。
       // 首次迁移没有旧快照，保留旧单账号槽，下一次可继续读取/迁移。
       if (previous != null) {
         try {
-          await _storage.write(key: key, value: previous);
+          await _vault.write(key, previous);
         } on Object {
           // 账号仍不发布；安全存储恢复后由显式重试重新核对。
         }
@@ -162,7 +166,7 @@ class SecureKugouAccountStore implements KugouAccountStore {
 
   Future<KugouAccountSnapshot> _load() async {
     final raw = await _readRaw();
-    if (raw != null) return _decode(raw);
+    if (raw != null) return _vault.decode(key, () => _decode(raw));
     final legacy = await _legacy.read();
     final migrated = KugouAccountSnapshot._(
       legacy == null ? const [] : [_KugouCredential(legacy, '')],
@@ -196,6 +200,27 @@ class SecureKugouAccountStore implements KugouAccountStore {
 
   @override
   Future<void> write(PlatformSession session) => select(session);
+
+  @override
+  Future<KugouRecoverySave> recoverVerifiedLogin(
+    PlatformSession session, {
+    String? loginMethod,
+  }) {
+    // A timed-out legacy read has already released this repository's UI queue;
+    // the native recovery namespace has its own queue and never resets legacy.
+    return _serialize(() async {
+      if (session.platform != MusicPlatform.kugou ||
+          session.userId.isEmpty ||
+          session.token.isEmpty) {
+        throw const FormatException('音乐平台登录凭据不完整');
+      }
+      final next = KugouAccountSnapshot._([
+        _KugouCredential(session, _method(loginMethod)),
+      ], session.userId);
+      final receipt = await _vault.recover(key, _encode(next));
+      return KugouRecoverySave(session, receipt.rollback);
+    });
+  }
 
   @override
   Future<void> select(PlatformSession session, {String? loginMethod}) =>

@@ -1,6 +1,5 @@
-import '../../../core/security/retained_secure_read.dart';
+import '../../../core/security/retained_credential_vault.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -22,42 +21,27 @@ class SecurePlatformSessionStore implements PlatformSessionStore {
 
   static const key = 'mesting_music_platform_kugou_session_v1';
   final FlutterSecureStorage _storage;
+  RetainedCredentialVault get _vault => RetainedCredentialVault(_storage);
 
   @override
   Future<PlatformSession?> read() async {
-    // Android may briefly reject an encrypted read while its engine/keystore
-    // attaches. Retry only that transport failure; never delete credentials on
-    // a cold-start read or JSON failure. Explicit signOut is the sole eraser.
-    for (var attempt = 0; ; attempt++) {
-      try {
-        final value = await readRetainedSecureValue(_storage, key);
-        if (value == null) {
-          if (attempt >= 2) return null;
-          await Future<void>.delayed(
-            Duration(milliseconds: 100 * (attempt + 1)),
+    final value = await _vault.read(key);
+    return value == null
+        ? null
+        : _vault.decode(
+            key,
+            () => PlatformSession.fromJson(
+              jsonDecode(value) as Map<String, dynamic>,
+            ),
           );
-          continue;
-        }
-        return PlatformSession.fromJson(
-          jsonDecode(value) as Map<String, dynamic>,
-        );
-      } on PlatformException {
-        if (attempt >= 2) rethrow;
-        await Future<void>.delayed(Duration(milliseconds: 100 * (attempt + 1)));
-      }
-    }
   }
 
   @override
   Future<void> write(PlatformSession session) async {
     final encoded = jsonEncode(session.toJson());
-    await _storage.write(key: key, value: encoded);
-    // Publish success only after a durable round-trip, not just a platform ACK.
-    if (await _storage.read(key: key) != encoded) {
-      throw StateError('账号保存未完成，请重试登录');
-    }
+    await _vault.write(key, encoded);
   }
 
   @override
-  Future<void> clear() => _storage.delete(key: key);
+  Future<void> clear() => _vault.clear(key);
 }

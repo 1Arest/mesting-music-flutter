@@ -8,6 +8,8 @@
 //!  - 纯 C FFI：start_server / stop_server / is_server_running / get_server_port
 
 pub mod cache;
+#[cfg(target_os = "android")]
+pub mod android_transport;
 pub mod config;
 pub mod crypto;
 pub mod device;

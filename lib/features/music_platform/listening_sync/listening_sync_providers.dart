@@ -1,10 +1,10 @@
+import '../../../core/network/system_music_io_client.dart';
 import '../domain/platform_session.dart';
 import '../domain/kugou_listening_profile.dart';
 import '../kugou_listening_profile_providers.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 
 import '../../../core/audio/playback_providers.dart';
 import '../../../core/persistence/app_preferences.dart';
@@ -57,7 +57,7 @@ final kugouV4GradeRepositoryProvider = Provider<KugouV4GradeRepository>((ref) {
     ),
   );
   final api = ref.watch(musicPlatformApiProvider);
-  final client = http.Client();
+  final client = SystemMusicIoClient();
   var closed = false;
   ref.listen(platformAccountProvider, (previous, next) {
     final before = previous?.value, after = next.value;

@@ -117,6 +117,9 @@ configurations.configureEach {
     }
 }
 dependencies {
+    // Pinned system transport; fast IPv4/IPv6 connection fallback precedes
+    // dispatch. Replay policy is enforced by MusicHttpExchange.
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
     add("betaReleaseImplementation", files(recoveryEngineJars.map { recoveryEngineDirectory.resolve(it) }))
     // audio_service already supplies media 1.7.0 at runtime through its
     // implementation dependency. Our narrow foreground bridge also needs the

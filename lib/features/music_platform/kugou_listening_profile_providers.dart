@@ -1,6 +1,6 @@
+import '../../core/network/system_music_io_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 
 import 'data/kugou_listening_profile_repository.dart';
 import 'data/kugou_official_api.dart';
@@ -28,7 +28,7 @@ final kugouListeningProfileRepositoryProvider =
         ),
       );
       final api = ref.watch(musicPlatformApiProvider);
-      final client = http.Client();
+      final client = SystemMusicIoClient();
       var closed = false;
       // 监听在账号状态发布时同步关闭旧身份，不能等待下一帧provider重建。
       // 这样同一帧内的A→B→A也无法让第一轮A的迟到回执复活。

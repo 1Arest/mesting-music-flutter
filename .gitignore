@@ -69,3 +69,6 @@ app.*.map.json
 
 # Local Beta.21 host screenshots; source and portable summaries remain separate.
 /.impeccable/review/beta21/
+
+# Local Cargo checks generate cache files, never product/source inputs.
+/third_party/md3music/rust/target/

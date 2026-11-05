@@ -3384,6 +3384,22 @@ class StreamAudioResponse {
 /// access to the file system (e.g. web).
 @experimental
 class LockCachingAudioSource extends StreamAudioSource {
+  /// Optional application-owned streaming transport policy. Keeps large audio
+  /// out of JSON method channels while respecting Android DNS/proxy/VPN changes.
+  static Future<HttpClient> Function(Uri uri)? networkClientFactory;
+
+  Future<HttpClient> _networkClient() async {
+    try {
+      final client = networkClientFactory == null
+          ? _createHttpClient(userAgent: _player?._userAgent)
+          : await networkClientFactory!(uri);
+      if (_player?._userAgent != null) client.userAgent = _player!._userAgent;
+      return client;
+    } catch (_) {
+      _downloading = false;
+      rethrow;
+    }
+  }
   Future<HttpClientResponse>? _response;
   final Uri uri;
   final Map<String, String>? headers;
@@ -3515,7 +3531,7 @@ class LockCachingAudioSource extends StreamAudioSource {
     File getEffectiveCacheFile() =>
         partialCacheFile.existsSync() ? partialCacheFile : cacheFile;
 
-    final httpClient = _createHttpClient(userAgent: _player?._userAgent);
+    final httpClient = await _networkClient();
     final response = await _openNetwork(httpClient, headers);
     if (response.statusCode != 200) {
       httpClient.close();
@@ -3634,7 +3650,13 @@ class LockCachingAudioSource extends StreamAudioSource {
         _requests.remove(request);
         final start = request.start!;
         final end = request.end ?? sourceLength;
-        final httpClient = _createHttpClient(userAgent: _player?._userAgent);
+        final HttpClient httpClient;
+        try {
+          httpClient = await _networkClient();
+        } catch (error, stack) {
+          request.fail(error, stack);
+          continue;
+        }
 
         final rangeRequest = _HttpRangeRequest(start, end);
         _openNetwork(httpClient, {

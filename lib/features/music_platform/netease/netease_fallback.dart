@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'netease_track_sources.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -702,7 +703,7 @@ class NeteaseFallbackResolver {
 final neteaseFallbackResolverProvider = Provider<NeteaseFallbackResolver>((
   ref,
 ) {
-  final client = http.Client();
+  final client = SystemMusicIoClient();
   // A session epoch owns its own anonymous caches, even though no credential
   // is sent to these adapters. Account switches dispose all pending I/O.
   ref.watch(

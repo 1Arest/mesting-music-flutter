@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -622,7 +623,7 @@ class HttpAuthRepository implements AuthRepository, RenewableAuthRepository {
     http.Client? client,
   }) : _baseUrl = baseUrl.replaceFirst(RegExp(r'/$'), ''),
        _sessionStore = sessionStore,
-       _client = client ?? http.Client();
+       _client = client ?? SystemMusicIoClient();
 
   final String _baseUrl;
   final SessionStore _sessionStore;

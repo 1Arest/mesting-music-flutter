@@ -1,3 +1,4 @@
+import '../network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -30,7 +31,7 @@ class CloudBaseUserMediaStorage {
     Duration requestTimeout = const Duration(seconds: 18),
   }) : _baseUrl = 'https://${environmentId.trim()}.api.tcloudbasegateway.com',
        _sessionProvider = sessionProvider,
-       _client = client ?? http.Client(),
+       _client = client ?? SystemMusicIoClient(),
        _requestTimeout = requestTimeout;
 
   final String _baseUrl;

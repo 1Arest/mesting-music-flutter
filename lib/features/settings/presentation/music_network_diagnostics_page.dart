@@ -53,6 +53,7 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
                   '${row['platform']} · ${_operation(row['operation'])}\n'
                   '${_outcome(row['outcome'])} · ${row['elapsedMs']} ms'
                   '${row['status'] == null ? '' : ' · ${row['status']}'}\n'
+                  '${row['phase'] == null ? '' : '${_phase(row['phase'])}${row['family'] == null ? '' : ' · ${_family(row['family'])}'}\n'}'
                   '${row['at']}',
                   style: const TextStyle(height: 1.5),
                 ),
@@ -69,7 +70,29 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
     'login' => '登录',
     'qr' => '扫码',
     'restore' => '本机账号恢复',
+    'storage' => '本机账号保存',
     _ => '资料读取',
+  };
+  static String _phase(Object? name) => switch (name) {
+    'credentialValidate' => '平台凭据校验',
+    'storageRead' => '读取加密资料',
+    'storageDecode' => '解析本机资料',
+    'storageWrite' => '保存加密资料',
+    'storageVerify' => '回读保存结果',
+    'recoveryWrite' => '保存恢复资料',
+    'accountPublish' => '本机登录确认',
+    _ => '准备连接',
+  };
+  static String _family(Object? name) => switch (name) {
+    'timeout' => '等待超时',
+    'keyUnavailable' => '密钥暂不可用',
+    'keyInvalidated' => '密钥失效',
+    'decrypt' => '解密失败',
+    'io' => '本机读写失败',
+    'pluginUnavailable' => '存储尚未就绪',
+    'format' => '资料格式异常',
+    'credentialIncomplete' => '凭据不完整',
+    _ => '未分类故障',
   };
   static String _outcome(Object? name) => switch (name) {
     'success' => '连接完成',

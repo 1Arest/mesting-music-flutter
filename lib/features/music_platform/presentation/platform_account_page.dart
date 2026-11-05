@@ -1,4 +1,5 @@
 import '../../../core/errors/user_facing_error.dart';
+import '../../../core/security/credential_failure.dart';
 import '../../settings/presentation/music_network_diagnostics_page.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../domain/platform_session.dart';
@@ -412,9 +413,10 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
   );
 
   String _error(Object error) {
+    if (error is CredentialStoreException) return error.message;
     if (error is MusicPlatformException) return error.message;
-    if (error is PlatformException || error is FormatException) {
-      return '本机登录资料未能读写，旧登录信息已保留；请查看连接诊断';
+    if (error is FormatException) {
+      return '音乐平台返回的登录资料不完整，请重试或查看连接诊断';
     }
     return userFacingErrorMessage(error, fallback: '登录未能完成，请重试或查看连接诊断');
   }

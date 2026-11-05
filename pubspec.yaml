@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.53+74
+version: 1.0.54+75
 
 environment:
   sdk: ^3.11.0
@@ -100,6 +100,10 @@ dev_dependencies:
 # Keep the optical correction reproducible in APK and source archives. The
 # local MIT fork removes a synthetic dark-mode perimeter, not refraction.
 dependency_overrides:
+  # Same upstream format/algorithms; local Android durability and namespace
+  # scheduling fixes. Never patch the shared Pub cache used by other projects.
+  flutter_secure_storage:
+    path: third_party/flutter_secure_storage/package
   # The pinned local adapter exposes per-player Android AudioTrack routing.
   # It never changes the shared Pub cache or creates a second music player.
   just_audio:
@@ -122,6 +126,10 @@ flutter:
     - assets/data/music-regions.json
     - assets/data/release-notes.json
     - assets/data/netease-full-catalog.json
+    - third_party/flutter_secure_storage/package/LICENSE
+    - third_party/flutter_secure_storage/NOTICE.md
+    - third_party/okhttp/LICENSE
+    - third_party/okhttp/NOTICE.md
     - third_party/region_data/LICENSE
     - third_party/region_data/NOTICE.md
     - third_party/md3music/MESTING-1.0.3-PORTS.md

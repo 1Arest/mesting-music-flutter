@@ -1,3 +1,4 @@
+import '../../core/network/system_music_io_client.dart';
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/netease/netease_catalog_adapters.dart';
 import 'dart:async';
@@ -22,7 +23,7 @@ import 'data/netease_music_source.dart';
 import 'domain/music_source.dart';
 
 final musicSearchHttpClientProvider = Provider<http.Client>((ref) {
-  final client = http.Client();
+  final client = SystemMusicIoClient();
   ref.onDispose(client.close);
   return client;
 });

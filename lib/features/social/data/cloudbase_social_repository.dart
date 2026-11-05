@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -35,7 +36,7 @@ class CloudBaseSocialRepository
            : 'https://${environmentId!.trim()}.api.tcloudbasegateway.com',
        _sessionProvider = sessionProvider,
        _sessionRefresher = sessionRefresher,
-       _client = client ?? http.Client(),
+       _client = client ?? SystemMusicIoClient(),
        _ownsClient = client == null,
        _actionPath = actionPath ?? '/v1/functions/$functionName?webfn=true',
        _requestTimeout = requestTimeout;
@@ -455,7 +456,7 @@ class CloudBaseSocialRepository
         // retry does not reuse a broken proxy/TLS connection.
         await Future<void>.delayed(const Duration(milliseconds: 250));
         if (_ownsClient) {
-          final retryClient = http.Client();
+          final retryClient = SystemMusicIoClient();
           try {
             response = await send(retryClient);
           } finally {

@@ -26,3 +26,10 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+# Upstream plugin Dart sources are unchanged. Its separate mocktail/very_good
+# development test suite is not part of the application dependency graph;
+# Android changes are compiled by Gradle and exercised by our native checks.
+analyzer:
+  exclude:
+    - third_party/flutter_secure_storage/package/**

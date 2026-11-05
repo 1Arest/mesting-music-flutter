@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -129,7 +130,7 @@ class _KugouOfficialPageState extends ConsumerState<KugouOfficialPage> {
     if (!_current) return;
     final epoch = ++_epoch;
     _client?.close();
-    final client = _client = http.Client();
+    final client = _client = SystemMusicIoClient();
     setState(() {
       _loading = true;
       _error = null;

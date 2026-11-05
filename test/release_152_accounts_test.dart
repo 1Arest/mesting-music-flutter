@@ -1,3 +1,5 @@
+import 'package:mesting_music/core/security/credential_failure.dart';
+import 'package:mesting_music/core/network/music_network_diagnostics.dart';
 import 'dart:convert';
 import 'dart:async';
 
@@ -107,7 +109,7 @@ void main() {
   test('ambiguous migration write never deletes the old login', () async {
     storage.values[SecurePlatformSessionStore.key] = jsonEncode(_a.toJson());
     storage.failAfterWrite = true;
-    await expectLater(store.read(), throwsStateError);
+    await expectLater(store.read(), throwsA(isA<CredentialStoreException>()));
     expect(
       storage.values[SecurePlatformSessionStore.key],
       jsonEncode(_a.toJson()),
@@ -150,7 +152,16 @@ void main() {
     'malformed encrypted snapshot is not treated as an empty list',
     () async {
       storage.values[SecureKugouAccountStore.key] = '{bad';
-      await expectLater(store.select(_a), throwsFormatException);
+      await expectLater(
+        store.select(_a),
+        throwsA(
+          isA<CredentialStoreException>().having(
+            (e) => e.phase,
+            'phase',
+            MusicDiagnosticPhase.storageDecode,
+          ),
+        ),
+      );
       expect(storage.writes, 0);
       expect(storage.values[SecureKugouAccountStore.key], '{bad');
     },
@@ -159,7 +170,10 @@ void main() {
     await store.select(_a);
     final raw = storage.values[SecureKugouAccountStore.key];
     storage.failAfterWrite = true;
-    await expectLater(store.select(_b), throwsStateError);
+    await expectLater(
+      store.select(_b),
+      throwsA(isA<CredentialStoreException>()),
+    );
     expect(storage.values[SecureKugouAccountStore.key], raw);
     expect((await store.read())?.userId, '1');
     expect(await store.account('2'), isNull);
@@ -339,7 +353,7 @@ void main() {
         container
             .read(platformAccountProvider.notifier)
             .switchKugouAccount('2'),
-        throwsStateError,
+        throwsA(isA<CredentialStoreException>()),
       );
       expect(container.read(platformAccountProvider).value?.userId, '1');
       expect(container.read(musicPlatformApiProvider).session?.token, _a.token);

@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
+import 'system_music_io_client.dart';
 
 import 'music_network_diagnostics.dart';
 
@@ -16,14 +16,7 @@ class MusicHttpClient extends http.BaseClient {
     http.Client? fallback,
     bool? android,
     MethodChannel? channel,
-  }) : _fallback =
-           fallback ??
-           IOClient(
-             HttpClient()
-               ..connectionTimeout = const Duration(seconds: 8)
-               ..idleTimeout = const Duration(seconds: 5)
-               ..findProxy = ((_) => 'DIRECT'),
-           ),
+  }) : _fallback = fallback ?? SystemMusicIoClient(),
        _android = android ?? (!kIsWeb && Platform.isAndroid),
        _channel = channel ?? const MethodChannel('com.mesting.music/network');
   final http.Client _fallback;

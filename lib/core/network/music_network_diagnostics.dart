@@ -12,6 +12,7 @@ enum MusicNetworkOperation {
   login,
   qr,
   restore,
+  storage,
   read,
   other,
 }
@@ -29,6 +30,31 @@ enum MusicNetworkOutcome {
   storage,
 }
 
+/// Closed vocabularies keep authentication diagnostics useful without exporting
+/// raw platform exceptions, key names, credential fields or request payloads.
+enum MusicDiagnosticPhase {
+  credentialValidate,
+  storageRead,
+  storageDecode,
+  storageWrite,
+  storageVerify,
+  recoveryWrite,
+  accountPublish,
+  networkPrepare,
+}
+
+enum MusicFailureFamily {
+  timeout,
+  keyUnavailable,
+  keyInvalidated,
+  decrypt,
+  io,
+  pluginUnavailable,
+  format,
+  credentialIncomplete,
+  unknown,
+}
+
 /// Only fixed categories and numeric receipts enter the diagnostic buffer.
 /// URLs, cookies, account IDs, phone numbers and raw exceptions never enter it.
 class MusicNetworkDiagnostics extends ChangeNotifier {
@@ -44,6 +70,8 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     int attempt = 1,
     int? status,
     String transport = 'dart',
+    MusicDiagnosticPhase? phase,
+    MusicFailureFamily? family,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -56,10 +84,18 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
         'elapsedMs': elapsedMs.clamp(0, 3600000),
         'attempt': attempt.clamp(1, 2),
         'transport':
-            {'system', 'dart', 'nativeAudio', 'cache'}.contains(transport)
+            {
+              'system',
+              'dart',
+              'nativeAudio',
+              'cache',
+              'local',
+            }.contains(transport)
             ? transport
             : 'other',
         if (status != null && status >= 0 && status <= 999999) 'status': status,
+        if (phase != null) 'phase': phase.name,
+        if (family != null) 'family': family.name,
       }),
     );
     if (_rows.length > 80) _rows.removeAt(0);
@@ -68,7 +104,7 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
 
   String export() => const JsonEncoder.withIndent(
     '  ',
-  ).convert({'schema': 1, 'memoryOnly': true, 'events': _rows});
+  ).convert({'schema': 2, 'memoryOnly': true, 'events': _rows});
   void clear() {
     _rows.clear();
     notifyListeners();

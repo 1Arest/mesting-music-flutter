@@ -1,3 +1,4 @@
+import '../../../core/network/system_music_io_client.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -40,7 +41,7 @@ class CloudBaseLibrarySyncApi implements LibrarySyncApi {
            ? apiBaseUrl.replaceFirst(RegExp(r'/$'), '')
            : 'https://${environmentId!.trim()}.api.tcloudbasegateway.com',
        _sessionProvider = sessionProvider,
-       _client = client ?? http.Client(),
+       _client = client ?? SystemMusicIoClient(),
        _mediaStorage = environmentId == null
            ? null
            : CloudBaseUserMediaStorage(

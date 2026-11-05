@@ -6,6 +6,7 @@ use crate::util::{encode_uri_component, js_string, parse_cookie_string, to_numbe
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::io::Read;
+#[cfg(not(target_os = "android"))]
 use std::time::Duration;
 
 pub const DEFAULT_UA: &str = "Android15-1070-11083-46-0-DiscoveryDRADProtocol-wifi";
@@ -324,6 +325,7 @@ fn encode_query_value(v: &Value) -> String {
     }
 }
 
+#[cfg(not(target_os = "android"))]
 fn agent() -> ureq::Agent {
     static AGENT: std::sync::OnceLock<ureq::Agent> = std::sync::OnceLock::new();
     AGENT
@@ -342,6 +344,7 @@ struct RawResponse {
 }
 
 /// 只有完整读完上游响应才返回body；读取中断不能被误当成成功响应。
+#[cfg(not(target_os = "android"))]
 fn read_response_body(mut reader: impl Read) -> Result<Vec<u8>, String> {
     let mut body = Vec::new();
     reader
@@ -405,6 +408,36 @@ fn do_send(opts: &RequestOptions, params: &Value, final_headers: &HashMap<String
         }
     }
 
+    // Android keeps the existing signed/encrypted bytes but uses the system
+    // HTTPS stack, including its VPN/default network, proxy and trust store.
+    // This precedes the desktop socket/MSS workaround; there is no transport
+    // fallback after dispatch, so an uncertain login/SMS is never replayed.
+    #[cfg(target_os = "android")]
+    {
+        let mut headers: HashMap<String, String> = final_headers.iter()
+            .map(|(key, value)| (key.to_ascii_lowercase(), value.clone())).collect();
+        for (key, value) in extra { headers.insert(key.to_ascii_lowercase(), value.clone()); }
+        let (body, content_type) = match &opts.data {
+            BodyData::None => (Vec::new(), None),
+            BodyData::Json(value) => (crate::util::json_stringify(value).into_bytes(),
+                Some("application/json;charset=utf-8")),
+            BodyData::String(value) => (value.as_bytes().to_vec(), Some("text/plain; charset=utf-8")),
+            BodyData::Bytes(value) => (value.clone(), Some("application/octet-stream")),
+        };
+        if let Some(content_type) = content_type {
+            if !headers.keys().any(|key| key.eq_ignore_ascii_case("content-type")) {
+                headers.insert("Content-Type".to_owned(), content_type.to_owned());
+            }
+        }
+        let reply = crate::android_transport::exchange(&opts.method, &url, &headers,
+            &body, opts.timeout_secs.unwrap_or(20).saturating_mul(1000), true)?;
+        if !(200..300).contains(&reply.status) { return Err(format!("status {}", reply.status)); }
+        return Ok(RawResponse { cookies: reply.cookies.iter().map(|value| parse_cookie_string(value)).collect(),
+            ssa_code: reply.ssa_code, body: reply.body });
+    }
+
+    #[cfg(not(target_os = "android"))]
+    {
     // 小-MSS 传输分支（黑名单等大上行端点 opt-in）：签名/头/SSA 重试逻辑
     // 全部复用本管线，仅替换 socket/TLS 层。见 mss_http 模块注释。
     if let Some(mss) = opts.mss_clamp {
@@ -488,11 +521,13 @@ fn do_send(opts: &RequestOptions, params: &Value, final_headers: &HashMap<String
         ssa_code,
         body,
     })
+    }
 }
 
 /// 小-MSS 传输（黑名单等 mss_clamp 端点专用，见 mss_http 模块注释）：
 /// 请求体序列化与 ureq 路径同源（Json → json_stringify），响应映射回
 /// RawResponse 后走与 ureq 完全相同的 SSA 重试/响应塑形管线。
+#[cfg(not(target_os = "android"))]
 fn mss_transport_send(
     opts: &RequestOptions,
     url: &str,
@@ -811,6 +846,7 @@ impl RawCapture {
 
 /// 不跟随重定向的 agent（QQ 扫码的 proxy.htm 跳转必须手工走：
 /// ureq 在重定向时会剥掉 Cookie 头，而 QQ 的跳转依赖会话 cookie）。
+#[cfg(not(target_os = "android"))]
 fn agent_no_redirect() -> ureq::Agent {
     static AGENT: std::sync::OnceLock<ureq::Agent> = std::sync::OnceLock::new();
     AGENT
@@ -840,6 +876,26 @@ fn raw_fetch_inner(
             full = format!("{}?{}", full, qs);
         }
     }
+    #[cfg(target_os = "android")]
+    {
+        let mut headers = headers.clone();
+        let body = match &data {
+            BodyData::None => Vec::new(),
+            BodyData::Json(value) => {
+                headers.insert("Content-Type".to_owned(), "application/json;charset=utf-8".to_owned());
+                crate::util::json_stringify(value).into_bytes()
+            },
+            BodyData::String(value) => value.as_bytes().to_vec(),
+            BodyData::Bytes(value) => value.clone(),
+        };
+        let reply = crate::android_transport::exchange(method, &full, &headers, &body,
+            20000, follow_redirects).map_err(transport_error_with)?;
+        if reply.status >= 400 { return Err(transport_error_with(format!("status {}", reply.status))); }
+        return Ok(RawCapture { status: reply.status, body: reply.body, cookies: reply.cookies,
+            final_url: reply.final_url, location: reply.location });
+    }
+    #[cfg(not(target_os = "android"))]
+    {
     let client = if follow_redirects { agent() } else { agent_no_redirect() };
     let mut req = client.request(method, &full);
     for (k, v) in headers {
@@ -902,6 +958,7 @@ fn raw_fetch_inner(
         final_url,
         location,
     })
+    }
 }
 
 /// 原始 HTTP 交互，保留 Set-Cookie 与最终 URL；3xx 自动跟随（ureq 默认）。
@@ -961,6 +1018,10 @@ fn transport_error_with(msg: String) -> ModuleResponse {
 pub fn open_stream(
     url: &str,
 ) -> Result<(u16, Option<u64>, String, Box<dyn Read + Send + Sync + 'static>), String> {
+    #[cfg(target_os = "android")]
+    { return crate::android_transport::open_stream(url); }
+    #[cfg(not(target_os = "android"))]
+    {
     let resp = agent().get(url).call().map_err(|e| e.to_string())?;
     let status = resp.status();
     if !(200..300).contains(&status) {
@@ -974,6 +1035,7 @@ pub fn open_stream(
         .unwrap_or("video/mp4")
         .to_string();
     Ok((status, len, ct, resp.into_reader()))
+    }
 }
 
 #[cfg(test)]

@@ -1,3 +1,4 @@
+import 'package:mesting_music/core/security/credential_failure.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -8,6 +9,7 @@ import 'package:mesting_music/features/music_platform/data/kugou_account_store.d
 class _StalledStorage extends FlutterSecureStorage {
   int reads = 0;
   bool stalled = true;
+  final pending = Completer<String?>();
   @override
   Future<String?> read({
     required String key,
@@ -19,7 +21,7 @@ class _StalledStorage extends FlutterSecureStorage {
     WindowsOptions? wOptions,
   }) {
     reads++;
-    if (stalled) return Completer<String?>().future;
+    if (stalled) return pending.future;
     return Future.value('{"version":2,"accounts":[],"selected":null}');
   }
 
@@ -37,22 +39,23 @@ class _StalledStorage extends FlutterSecureStorage {
 
 void main() {
   testWidgets(
-    'hung encrypted read releases the serialized account queue for explicit recovery',
+    'UI timeout releases the account queue while retry shares the pending native read',
     (tester) async {
       final storage = _StalledStorage();
       final store = SecureKugouAccountStore(storage: storage);
       final failed = expectLater(
         store.read(),
-        throwsA(isA<TimeoutException>()),
+        throwsA(isA<CredentialStoreException>()),
       );
-      for (var i = 0; i < 55; i++) {
+      for (var i = 0; i < 90; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       await failed;
-      expect(storage.reads, 3);
+      expect(storage.reads, 1);
       storage.stalled = false;
+      storage.pending.complete('{"version":2,"accounts":[],"selected":null}');
       expect(await store.read(), null);
-      expect(storage.reads, 4);
+      expect(storage.reads, 2);
     },
   );
   testWidgets('read retries do not delete credentials on platform failure', (

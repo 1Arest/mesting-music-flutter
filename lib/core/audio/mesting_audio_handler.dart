@@ -19,6 +19,7 @@ import 'queue_engine.dart';
 import 'music_sleep_timer.dart';
 import '../platform/distribution_channel.dart';
 import '../network/music_network_diagnostics.dart';
+import '../network/system_music_io_client.dart';
 
 typedef RadioTrackLoader =
     Future<List<Track>> Function(Set<String> excludedTrackKeys);
@@ -57,6 +58,12 @@ class MestingAudioHandler extends BaseAudioHandler
       pause: _player.pause,
     );
     sleepTimer.addListener(_syncSleepBoundary);
+    if (!kIsWeb && Platform.isAndroid) {
+      // The pinned local fork exposes this tested application transport hook.
+      // ignore: experimental_member_use
+      LockCachingAudioSource.networkClientFactory =
+          MusicSystemNetwork.shared.cacheClient;
+    }
     _player.playbackEventStream.listen(
       _broadcastState,
       onError: (Object error, StackTrace stackTrace) {

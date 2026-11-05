@@ -1,0 +1,227 @@
+{
+  "version": "1.0.54",
+  "androidVersionCode": 75,
+  "packageName": "com.mesting.music",
+  "appName": "Mesting Music",
+  "localOnly": true,
+  "beta": {
+    "files": 179,
+    "counts": {
+      "success": 2009,
+      "skipped": 2
+    },
+    "completeAndSuccessful": true,
+    "completeFileRerunProvenance": {
+      "D:/AnLi/test/release_154_storage_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_154_network_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_152_accounts_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_153_storage_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_153_network_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_153_audio_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_151_login_test.dart": "final-regressions.jsonl",
+      "D:/AnLi/test/release_153_ui_test.dart": "final-regressions.jsonl"
+    }
+  },
+  "stable": {
+    "files": 6,
+    "counts": {
+      "success": 63
+    },
+    "completeAndSuccessful": true
+  },
+  "navigation": {
+    "files": 1,
+    "counts": {
+      "success": 55
+    },
+    "completeAndSuccessful": true
+  },
+  "analysisIssues": 0,
+  "wholeFileSuccessfulRerunsReplacePriorResults": true,
+  "initialFailuresRetainedPrivately": true,
+  "nativeJvm": {
+    "background": 16,
+    "systemHttp": 13,
+    "credentialFamily": 6,
+    "totalPassed": 35,
+    "httpFixturesLoopbackOnly": true,
+    "actualAndroidRuntime": false,
+    "scenarios": [
+      "IPv6 stalled -> IPv4 fast fallback and losing-socket cleanup",
+      "binary POST sent once",
+      "ordered cookies",
+      "gzip decoding",
+      "cross-host private-header removal",
+      "manual GET redirects and no-follow",
+      "POST307 no replay",
+      "HTTP429 receipt",
+      "full body deadline",
+      "18MiB streaming",
+      "userinfo rejected",
+      "HTTP503 Retry-After0 no replay",
+      "global CookieHandler isolation",
+      "fixed native error family without exception text"
+    ]
+  },
+  "rustHost": {
+    "passed": 136,
+    "ignoredExternalNetworkCases": 6,
+    "failed": 0,
+    "sameHostInputsAfterAndroidOnlyEofFix": true
+  },
+  "sdkHistoricalOnly": {
+    "counts": {
+      "success": 563
+    },
+    "files": 29,
+    "sameSdkSourceFilesVerified": 242,
+    "rerunForVersion154": false,
+    "wholeAppLockUnchanged": false,
+    "lockException": "flutter_secure_storage10.3.1 same version; hosted -> local fork only"
+  },
+  "finalHostScreenshots": {
+    "total": 40,
+    "coreWelcomeLoginDiagnostics": 12,
+    "allLoginNavigation": 28,
+    "lightDarkAndLargeText": true,
+    "visuallyInspected": true,
+    "physicalGpuMeasured": false
+  },
+  "welcomeMotion": {
+    "sampleDisplayHz": 120,
+    "sampleIntervals": 720,
+    "scheduledFrames": 193,
+    "priorContinuousControllerFrameDemand": 720,
+    "physicalGpuMeasured": false,
+    "inheritedFromVersion": "1.0.53",
+    "remeasuredForVersion154": false
+  },
+  "diagnostics": {
+    "schema": 2,
+    "memoryOnly": true,
+    "maximumEvents": 80,
+    "fixedPhaseAndFamilyOnly": true,
+    "credentialsOrRawExceptionsIncluded": false
+  },
+  "storage": {
+    "existingCipherConfigurationUnchanged": true,
+    "resetOnError": false,
+    "primaryEncryptedBytesRetainedOnFailure": true,
+    "verifiedLoginRecoveryNamespace": "mesting_verified_recovery_v1",
+    "nativeCommittedDataKeysAndMarkers": true,
+    "readbackBeforeAccountPublish": true,
+    "samePendingNativeReadShared": true,
+    "namespaceQueueIsolation": true,
+    "plugin": "flutter_secure_storage10.3.1 local minimal Android fork",
+    "originalLockBackupPreserved": true,
+    "lockEntriesChanged": [
+      "flutter_secure_storage"
+    ],
+    "otherLockEntriesAndSdkConstraintsUnchanged": true,
+    "androidKeystoreOnAffectedDeviceVerified": false
+  },
+  "network": {
+    "systemDnsProxyTlsDefaultRoute": true,
+    "physicalNetworkBinding": false,
+    "vpnSettingsModified": false,
+    "certificateVerificationDisabled": false,
+    "rustActualAndroidOutboundUsesSystemBridge": true,
+    "streamingBodyPreserved": true,
+    "jniStreamMaximumChunkBytes": 65536,
+    "unknownWriteAutomaticallyReplayed": false,
+    "nativeLibraries": "OkHttp5.3.2 and Okio3.16.4",
+    "fixedLibraryLicensesBundled": true
+  },
+  "actualApk": {
+    "file": "Mesting-Music-v1.0.54.apk",
+    "bytes": 108653069,
+    "sha256": "ce4fdaca6d2a1965a4c68ca6b291a5ccab3864965ed047cdd7d4ad0edf572add",
+    "certificateSha256": "8ce2203ad821ad8d38576f9ae86350d98254ac05f2cb974e773c1973b22e0333",
+    "originalSignature": true,
+    "sourceAndBuildInputsVerified": 1513,
+    "compilerFlagsObservedDuringBuild": true,
+    "nativePlaybackExperiment": false,
+    "localPrivateDiagnosticLogging": false,
+    "updateCheckEnabled": true,
+    "customEngineBytesMatch": true,
+    "glassShadersByteIdentical": 7,
+    "unchangedOldSdkLibraries": 6,
+    "rebuiltRustLibraries": [
+      {
+        "abi": "arm64-v8a",
+        "apkSha256": "63b2b1ba786f4788191ba8c799258c9c22b68c81db366e003513928afe4801fd",
+        "buildInputSha256": "65ec54c56650d719201143c19c0d96ef7e670ad405f1b66890cdc868ef5b8544",
+        "exactNdkStrippedInputMatch": true,
+        "jniInstallAndExistingCAbiExported": true
+      },
+      {
+        "abi": "armeabi-v7a",
+        "apkSha256": "5d4efeb09b9d560dcbd1d9ee4bfe8e77d2b64bbab39cbc8c06149c8a5b09e284",
+        "buildInputSha256": "686db42a51ca7fbeadda46fad30073d5aafccdb00899367d65cf841424e034d8",
+        "exactNdkStrippedInputMatch": true,
+        "jniInstallAndExistingCAbiExported": true
+      }
+    ],
+    "ringReceiveBufferLibrariesVerified": 2,
+    "abis": [
+      "arm64-v8a",
+      "armeabi-v7a"
+    ],
+    "actualDexJniClasses": 3,
+    "actualDexJniMethodSignatures": 5,
+    "actualDexJniPublicFields": 12,
+    "alignmentAndZipCrcVerified": true,
+    "productionNotesReader": {
+      "version": "1.0.54",
+      "versionCode": 75,
+      "notesCount": 8,
+      "productionReader": true,
+      "currentVersionOfflineHistoryMatches": true,
+      "rangeRequests": 3,
+      "bytesRead": 66312,
+      "networkAccess": false,
+      "deviceAccess": false,
+      "published": false
+    }
+  },
+  "preservation": {
+    "oldFormalFrozenArtifacts": 98,
+    "newFormalPairMakes": 100,
+    "oldSourcePathsRetained": 2487,
+    "branch": "beta",
+    "head": "b6bcd5425e0df3e03febdd460b56d0ed42004c52",
+    "indexEmpty": true,
+    "originalSigningKeyPreserved": true,
+    "earlierCandidatesRetained": true
+  },
+  "notPerformed": [
+    "physical52or53Upgrade",
+    "affectedDeviceColdRestore",
+    "realMusicAccountLogin",
+    "sameVpnSameNodeOnOff",
+    "wifiCellularTransition",
+    "completeRealCdnSongPlayback",
+    "physicalGpuMeasurement",
+    "phoneAdbOrEmulatorAccess",
+    "backendAccess",
+    "gitCommitPushUploadPublish"
+  ],
+  "unresolved": [
+    "initialDeviceNativeStorageFailureFamilyUnknown",
+    "neteaseHistoricalTotalDuration",
+    "October683min10sec"
+  ],
+  "oldAcceptedOrUnknownPlaybackRecordsReplayed": false,
+  "officialStaticComparison": {
+    "neteaseVersion": "9.6.15",
+    "kugouVersion": "20.8.6",
+    "matchesUserInstalledOfficialVersions": "UNKNOWN",
+    "runtimeEvidence": false
+  },
+  "sourceZipVerification": "release/Mesting-Music-v1.0.54-source-verification.json",
+  "phoneAcceptance": false,
+  "gitCommitted": false,
+  "gitPushed": false,
+  "uploaded": false,
+  "published": false
+}
