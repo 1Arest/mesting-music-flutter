@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../core/security/retained_credential_vault.dart';
-import '../../../core/security/retained_secure_storage.dart';
+import '../../../core/security/android_credential_archive.dart';
+import '../../../core/security/retained_secure_read.dart';
 
 /// User-owned service configuration. Music-account credentials never belong in
 /// this record; the Bearer token authorizes only the selected signing helper.
@@ -81,29 +83,87 @@ abstract interface class QishuiSignerSettingsStore {
   Future<void> write(QishuiSignerConfig config);
 }
 
-/// Reuses the verified encrypted vault, in a separate namespace. Failed reads
-/// propagate and never masquerade as an empty setting or a public fallback.
+/// Configuration has its own data, wrapped-key and KeyStore namespace. It
+/// never opens or resets a music account's legacy encrypted preferences.
+const qishuiSelfHostedSignerAddress =
+    'https://download.csnas.asia/qishui-signer/';
+const qishuiSignerSecureStorage = FlutterSecureStorage(
+  aOptions: AndroidOptions(
+    storageNamespace: 'mesting_qishui_signer_v1',
+    resetOnError: false,
+  ),
+);
+
+class QishuiSignerSettingsFailure implements Exception {
+  const QishuiSignerSettingsFailure(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
+/// Ordinary namespaced configuration reads do not use the account-recovery
+/// archive. Independent reopen verification uses the native required key prefix.
 class SecureQishuiSignerSettingsStore implements QishuiSignerSettingsStore {
-  const SecureQishuiSignerSettingsStore({this.storage = retainedSecureStorage});
-  static const key = 'mesting_qishui_signer_settings_v1';
+  const SecureQishuiSignerSettingsStore({
+    this.storage = qishuiSignerSecureStorage,
+    this.android,
+  });
+  static const key = 'mesting_music_platform_qishui_signer_settings_v1';
   final FlutterSecureStorage storage;
-  RetainedCredentialVault get _vault => RetainedCredentialVault(storage);
+  final bool? android;
+  static final _writes = Expando<Future<void>>();
   @override
   Future<QishuiSignerConfig?> read() async {
-    final raw = await _vault.read(key);
-    return raw == null
-        ? null
-        : _vault.decode(
-            key,
-            () => QishuiSignerConfig.fromJson(
+    try {
+      final raw = await readRetainedSecureValue(storage, key);
+      return raw == null
+          ? null
+          : QishuiSignerConfig.fromJson(
               jsonDecode(raw) as Map<String, dynamic>,
-            ),
-          );
+            );
+    } on Object {
+      throw const QishuiSignerSettingsFailure('签名服务设置未能读取，请重试；已保存的资料不会被清除');
+    }
   }
 
   @override
-  Future<void> write(QishuiSignerConfig config) =>
-      _vault.write(key, jsonEncode(config.toJson()));
+  Future<void> write(QishuiSignerConfig config) async {
+    if (_writes[storage] != null) {
+      throw const QishuiSignerSettingsFailure('上次保存仍在处理中，请稍后重新读取核对');
+    }
+    final encoded = jsonEncode(config.toJson());
+    final operation = () async {
+      await storage.write(key: key, value: encoded);
+      if (await readRetainedSecureValue(storage, key) != encoded) {
+        throw const QishuiSignerSettingsFailure('签名服务设置保存核对失败，请重新读取核对');
+      }
+      if (android ?? Platform.isAndroid) {
+        await const AndroidCredentialArchive().verifyPrimary(
+          key,
+          encoded,
+          storage.aOptions.toMap(),
+        );
+      }
+    }();
+    _writes[storage] = operation;
+    // A deadline cannot cancel a native write. Keep a single pending operation
+    // until it settles; do not enqueue a second save after an uncertain result.
+    unawaited(
+      operation.then<void>(
+        (_) {
+          if (identical(_writes[storage], operation)) _writes[storage] = null;
+        },
+        onError: (Object _, StackTrace _) {
+          if (identical(_writes[storage], operation)) _writes[storage] = null;
+        },
+      ),
+    );
+    try {
+      await operation.timeout(const Duration(seconds: 15));
+    } on Object {
+      throw const QishuiSignerSettingsFailure('签名服务设置保存结果未确认，请重新读取核对；不会自动重复保存');
+    }
+  }
 }
 
 final qishuiSignerSettingsStoreProvider = Provider<QishuiSignerSettingsStore>(
@@ -112,6 +172,8 @@ final qishuiSignerSettingsStoreProvider = Provider<QishuiSignerSettingsStore>(
 final qishuiSignerSettingsProvider =
     AsyncNotifierProvider<QishuiSignerSettingsController, QishuiSignerConfig?>(
       QishuiSignerSettingsController.new,
+      // Native rejections must become an error instead of automatic retries.
+      retry: (retryCount, error) => null,
     );
 
 /// The API listens to this synchronous revision, not the encrypted settings
@@ -129,8 +191,14 @@ class QishuiSignerSettingsController
     extends AsyncNotifier<QishuiSignerConfig?> {
   bool _saving = false;
   @override
-  Future<QishuiSignerConfig?> build() =>
-      ref.watch(qishuiSignerSettingsStoreProvider).read();
+  Future<QishuiSignerConfig?> build() => ref
+      .watch(qishuiSignerSettingsStoreProvider)
+      .read()
+      .timeout(
+        const Duration(seconds: 9),
+        onTimeout: () =>
+            throw const QishuiSignerSettingsFailure('读取签名服务设置超时，请手动重试'),
+      );
 
   Future<void> save(QishuiSignerConfig config) async {
     if (_saving) throw StateError('签名服务设置正在保存');

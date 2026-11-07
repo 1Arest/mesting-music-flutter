@@ -63,6 +63,8 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
           _failed = true;
           _message = error is QishuiException
               ? error.message
+              : error is QishuiSignerSettingsFailure
+              ? error.message
               : test
               ? '签名服务检查未完成，请检查地址和助手状态'
               : '设置保存失败，请重试；原配置已保留';
@@ -101,13 +103,14 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
           error: (_, _) => Center(
             child: BetaGlassButton(
               onPressed: () => ref.invalidate(qishuiSignerSettingsProvider),
-              child: const Text('设置未能读取，重新读取'),
+              child: const Text('设置未能读取，点击重试'),
             ),
           ),
           data: (saved) {
             if (!_hydrated) {
               _hydrated = true;
-              _address.text = saved?.baseUri.toString() ?? '';
+              _address.text =
+                  saved?.baseUri.toString() ?? qishuiSelfHostedSignerAddress;
               _token.text = saved?.accessToken ?? '';
             }
             return ListView(
@@ -115,7 +118,7 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
               children: [
                 const Text('连接你的签名助手', style: MusicTypography.sectionTitle),
                 const SizedBox(height: 10),
-                Text(saved == null ? '尚未配置自建服务，当前使用参考服务。' : '当前已使用自建服务。'),
+                Text(saved == null ? '未配置访问令牌，填写并保存后才能使用签名服务。' : '当前已使用自建服务。'),
                 const SizedBox(height: 24),
                 TextField(
                   key: const ValueKey('qishui-signer-address'),
@@ -129,7 +132,7 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
                     labelText: '服务地址',
                     hintText: 'https://nas.example.com/qishui-signer/',
                     helperText: '支持 HTTP / HTTPS、端口和路径前缀，也可粘贴 /sign 地址',
-                    helperMaxLines: 3,
+                    helperMaxLines: 6,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -145,7 +148,7 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
                   decoration: InputDecoration(
                     labelText: '访问令牌',
                     helperText: '填写助手生成的令牌，在当前设备加密保存',
-                    helperMaxLines: 2,
+                    helperMaxLines: 6,
                     suffixIcon: IconButton(
                       tooltip: _reveal ? '隐藏访问令牌' : '显示访问令牌',
                       onPressed: enabled

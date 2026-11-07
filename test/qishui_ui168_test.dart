@@ -39,6 +39,10 @@ import 'support/release_152_qa.dart' show theme152;
 import 'package:mesting_music/features/library/library_providers.dart';
 
 const capture168 = bool.fromEnvironment('CAPTURE_UI168');
+const captureDirectory168 = String.fromEnvironment(
+  'UI_CAPTURE_DIRECTORY',
+  defaultValue: '.codex-artifacts/2026-11-06-release168/ui',
+);
 const boundary168 = ValueKey('ui168-capture');
 final song168 = Track(
   id: 'qishui_168',
@@ -86,6 +90,14 @@ Future<void> settle168(WidgetTester tester) async {
   // bounded set of frames instead of waiting for that continuous motion to end.
   for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+class FailedSettings169 extends MemorySignerStore168 {
+  @override
+  Future<QishuiSignerConfig?> read() async {
+    reads++;
+    throw const QishuiSignerSettingsFailure('fixture local read failure');
   }
 }
 
@@ -278,7 +290,7 @@ void main() {
       );
       final picture = await box.toImage();
       final bytes = await picture.toByteData(format: ui.ImageByteFormat.png);
-      final file = File('.codex-artifacts/2026-11-06-release168/ui/$name.png');
+      final file = File('$captureDirectory168/$name.png');
       await file.parent.create(recursive: true);
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       picture.dispose();
@@ -343,7 +355,7 @@ void main() {
     await settle168(tester);
     await tester.tap(find.byKey(const ValueKey('qishui-signer-save')));
     await settle168(tester);
-    expect(find.textContaining('请填写完整的 HTTP'), findsOneWidget);
+    expect(find.textContaining('请填写签名助手生成的访问令牌'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await shot(tester, 'settings-narrow-large');
   });
@@ -456,6 +468,53 @@ void main() {
       await settle168(tester);
       expect(container.read(qishuiMusicLyricsProvider), isFalse);
       expect(find.byKey(const ValueKey('qishui-music-cover')), findsOneWidget);
+    },
+  );
+  testWidgets(
+    '169 initial form prefills NAS with no token and sends no probe',
+    (tester) async {
+      var probes = 0;
+      await mount(
+        tester,
+        probe: (_, _) async {
+          probes++;
+        },
+      );
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey('qishui-signer-address')),
+            )
+            .controller!
+            .text,
+        qishuiSelfHostedSignerAddress,
+      );
+      expect(
+        tester
+            .widget<TextField>(
+              find.byKey(const ValueKey('qishui-signer-token')),
+            )
+            .controller!
+            .text,
+        isEmpty,
+      );
+      expect(find.textContaining('未配置访问令牌'), findsOneWidget);
+      expect(probes, 0);
+      await shot(tester, 'settings-initial-unconfigured');
+    },
+  );
+  testWidgets(
+    '169 rejected local settings show manual retry instead of a spinner',
+    (tester) async {
+      final store = FailedSettings169();
+      await mount(tester, store: store);
+      expect(find.text('正在读取签名服务设置…'), findsNothing);
+      expect(find.text('设置未能读取，点击重试'), findsOneWidget);
+      expect(store.reads, 1);
+      await shot(tester, 'settings-read-failed');
+      await tester.tap(find.text('设置未能读取，点击重试'));
+      await settle168(tester);
+      expect(store.reads, 2);
     },
   );
 }

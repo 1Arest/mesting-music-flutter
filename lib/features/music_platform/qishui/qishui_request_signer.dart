@@ -339,20 +339,21 @@ class ConfiguredQishuiRequestSigner implements QishuiRequestSigner {
   Future<SodaMRequestSigner> _selected() async {
     QishuiSignerConfig? config;
     try {
-      config = await load();
+      config = await load().timeout(const Duration(seconds: 10));
     } on Object {
       throw const QishuiException('签名服务设置未能读取，请前往设置重试', code: 'signer');
     }
+    if (config == null) {
+      throw const QishuiException('请先在设置中填写并保存汽水签名服务的访问令牌', code: 'signer');
+    }
     if (_delegate == null || config != _config) {
       _config = config;
-      _delegate = config == null
-          ? SodaMRequestSigner(client)
-          : SodaMRequestSigner(
-              client,
-              endpoint: config.signUri,
-              accessToken: config.accessToken,
-              custom: true,
-            );
+      _delegate = SodaMRequestSigner(
+        client,
+        endpoint: config.signUri,
+        accessToken: config.accessToken,
+        custom: true,
+      );
     }
     return _delegate!;
   }

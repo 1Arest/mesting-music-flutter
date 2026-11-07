@@ -180,6 +180,8 @@ class MestingAudioHandler extends BaseAudioHandler
   // native events so they cannot become progress/history for the new song.
   int? _pendingQueueEpoch;
   String? _loadedTrackId;
+  ({String id, Duration position})? _deferredRestore;
+  final _deferredPositions = StreamController<Duration>.broadcast();
   String? _resolutionError;
   int _userCommandEpoch = 0;
   // Separate transport intent from serialized Next taps and queue edits. A
@@ -316,7 +318,32 @@ class MestingAudioHandler extends BaseAudioHandler
 
   List<Track> get tracks => List.unmodifiable(_tracks);
 
-  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<Duration> get positionStream => Stream<Duration>.multi((events) {
+    var completed = 0;
+    void done() {
+      if (++completed == 2) events.close();
+    }
+
+    final native = _player.positionStream.listen(
+      (position) => events.add(_deferredPosition ?? position),
+      onError: events.addError,
+      onDone: done,
+    );
+    final restored = _deferredPositions.stream.listen(
+      events.add,
+      onError: events.addError,
+      onDone: done,
+    );
+    if (_deferredPosition case final position?) events.add(position);
+    events.onCancel = () async {
+      await native.cancel();
+      await restored.cancel();
+    };
+  }, isBroadcast: true);
+
+  Duration? get _deferredPosition => _deferredRestore?.id == mediaItem.value?.id
+      ? _deferredRestore?.position
+      : null;
   Stream<Duration?> get durationStream => _player.durationStream;
 
   /// Explicit seek work can leave just_audio's playing flag true. Listening
@@ -387,7 +414,7 @@ class MestingAudioHandler extends BaseAudioHandler
           _resolutionError == null &&
           mediaItem.value?.id == _loadedTrackId
       ? _player.position
-      : Duration.zero;
+      : _deferredPosition ?? Duration.zero;
   int get currentIndex => _player.currentIndex ?? 0;
   @visibleForTesting
   int get debugAudioSourceCount => _player.sequence.length;
@@ -411,6 +438,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _userCommandController.close();
     await _togetherUserCommandController.close();
     await _seekingController.close();
+    await _deferredPositions.close();
     await _player.dispose();
   }
 
@@ -456,6 +484,7 @@ class MestingAudioHandler extends BaseAudioHandler
     int initialIndex = 0,
     Duration initialPosition = Duration.zero,
     bool preload = true,
+    bool deferSource = false,
     int? requiredUserCommandEpoch,
     int? requiredTransportIntentEpoch,
     bool Function()? ownerCurrent,
@@ -483,6 +512,7 @@ class MestingAudioHandler extends BaseAudioHandler
       _knownTracks[track.id] = track;
     }
     if (tracks.isEmpty) {
+      _deferredRestore = null;
       _pendingQueueEpoch = null;
       _loadedTrackId = null;
       _tracks = <Track>[];
@@ -503,6 +533,32 @@ class MestingAudioHandler extends BaseAudioHandler
       ...tracks.skip(safeIndex + 1),
       ...tracks.take(safeIndex),
     ];
+    if (deferSource) {
+      // A restored Qishui queue is paused metadata, not an implicit Play
+      // command. No signature, remote URL or decoder preload is requested.
+      _pendingQueueEpoch = null;
+      _loadedTrackId = null;
+      _deferredRestore = (
+        id: orderedTracks.first.id,
+        position: initialPosition,
+      );
+      _resetConsumptionConfirmation();
+      _completionGate.reset();
+      await _player.stop();
+      if (!isCurrent()) return false;
+      await _player.setAudioSources(const []);
+      if (!isCurrent()) return false;
+      _tracks = orderedTracks;
+      final items = orderedTracks.map((track) => track.toMediaItem()).toList();
+      queue.add(items);
+      _upcomingMediaItems = items.skip(1).toList(growable: false);
+      mediaItem.add(items.first);
+      _publishUpcomingQueue();
+      _deferredPositions.add(initialPosition);
+      _broadcastState(_player.playbackEvent);
+      return true;
+    }
+    if (_deferredRestore?.id != orderedTracks.first.id) _deferredRestore = null;
     _pendingQueueEpoch = loadEpoch;
     _resetConsumptionConfirmation();
     _completionGate.reset();
@@ -644,6 +700,7 @@ class MestingAudioHandler extends BaseAudioHandler
       }
       _pendingQueueEpoch = null;
       _loadedTrackId = orderedTracks.first.id;
+      _deferredRestore = null;
       _handleDuration(_player.duration);
       _broadcastState(_player.playbackEvent);
       _publishUpcomingQueue();
@@ -1109,7 +1166,9 @@ class MestingAudioHandler extends BaseAudioHandler
               },
         playing: bound && _player.playing,
         errorMessage: _resolutionError,
-        updatePosition: bound ? _player.position : Duration.zero,
+        updatePosition: bound
+            ? _player.position
+            : _deferredPosition ?? Duration.zero,
         bufferedPosition: bound ? _player.bufferedPosition : Duration.zero,
         speed: _player.speed,
         queueIndex: mediaItem.value == null ? null : 0,
@@ -1192,7 +1251,10 @@ class MestingAudioHandler extends BaseAudioHandler
     }
     _consecutiveLoadFailures = 0;
     if (_resolutionError != null || mediaItem.value?.id != _loadedTrackId) {
-      final applied = await _loadQueue(_tracks);
+      final applied = await _loadQueue(
+        _tracks,
+        initialPosition: _deferredPosition ?? Duration.zero,
+      );
       if (!applied || !_togetherCurrent(togetherGuard, togetherRevision)) {
         return;
       }
@@ -1279,6 +1341,13 @@ class MestingAudioHandler extends BaseAudioHandler
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
+    if (_deferredPosition != null && _pendingQueueEpoch == null) {
+      // A lyric/progress selection before Play changes only the resume point.
+      _deferredRestore = (id: mediaItem.value!.id, position: position);
+      _deferredPositions.add(position);
+      _broadcastState(_player.playbackEvent);
+      return;
+    }
     final current = _player.position;
     _completionGate.onSeek(from: current, to: position);
     await _seekPlayer(position);
@@ -2139,6 +2208,9 @@ class MestingAudioHandler extends BaseAudioHandler
       initialIndex: currentIndex,
       initialPosition: position,
       preload: false,
+      deferSource:
+          tracks[currentIndex.clamp(0, tracks.length - 1)].source ==
+          TrackSource.qishui,
       requiredUserCommandEpoch: restoreEpoch,
     );
     if (applied) {
