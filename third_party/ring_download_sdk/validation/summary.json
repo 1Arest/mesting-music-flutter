@@ -1,0 +1,452 @@
+{
+  "sdk": "1.0.3",
+  "sdk_tests": 246,
+  "server_tests": 64,
+  "host_tests": 28,
+  "static_analysis": "passed",
+  "backend_patch": "identical to the previously tested 1.0.2 Java COS patch; no new Java change",
+  "https_first": true,
+  "cos_independent": true,
+  "sharing_policy": "optional foreground unmetered Wi-Fi only",
+  "formal_app_deployed": false,
+  "java_backend_deployed": false,
+  "native": {
+    "scope": "one OPPO Android tablet on LAN Wi-Fi",
+    "final_canonical_example": {
+      "sdk": "1.0.3",
+      "version": "1.0.3+4",
+      "apk_sha256": "7f9d4942af920e43f3e4fafe9c13f44a2e25081625b4998c678b2d3430cfcf8c",
+      "apk_bytes": 27734483,
+      "arm64_only": true,
+      "zipalign16k": true,
+      "package": "asia.csnas.ring_sdk_example",
+      "download_verified": true,
+      "bytes": 131031231,
+      "sha256": "d3ad5f66e9360993e08704abca4dba8dc2694b86af0e936d6064f10ba3b37794",
+      "status": {
+        "sdkVersion": "1.0.3",
+        "appId": "lifering",
+        "platform": "android",
+        "networkType": "wifi_unmetered",
+        "p2pEnabled": true,
+        "sharingOptIn": true
+      },
+      "total_to_receipt_seconds": 29.609,
+      "probe_completed": true,
+      "elapsed_seconds": 37.671
+    },
+    "exploratory_lab_rounds": 16,
+    "exploratory_lab_all_full_sha_verified": true,
+    "lab_version": "1.0.23+24; source hashes supersede the old coreSourceCommit label",
+    "final_core_matches_archive": true
+  },
+  "release_scope": "owned immutable verified payloads only; client polling is the unchanged 1.0.2 algorithm",
+  "excluded_experiment": "200ms client startup signal wait was tested but is not included in this release; variable/slower full downloads prevent promotion",
+  "signal_benchmark": {
+    "scope": "isolated authenticated offer routes, four concurrent node registrations, existing 800ms wait and 250ms fallback; excludes Internet/RTC",
+    "all_offers_delivered_once": true,
+    "summary": {
+      "2": {
+        "count": 32,
+        "median_ms": 93.803,
+        "max_ms": 205.644
+      },
+      "4": {
+        "count": 32,
+        "median_ms": 2.566,
+        "max_ms": 13.719
+      }
+    },
+    "rows": [
+      {
+        "slots": 2,
+        "round": 0,
+        "node_index": 0,
+        "offer_processing_wait_ms": 201.602
+      },
+      {
+        "slots": 2,
+        "round": 0,
+        "node_index": 1,
+        "offer_processing_wait_ms": 195.874
+      },
+      {
+        "slots": 2,
+        "round": 0,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.275
+      },
+      {
+        "slots": 2,
+        "round": 0,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.128
+      },
+      {
+        "slots": 4,
+        "round": 0,
+        "node_index": 0,
+        "offer_processing_wait_ms": 10.282
+      },
+      {
+        "slots": 4,
+        "round": 0,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.712
+      },
+      {
+        "slots": 4,
+        "round": 0,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.399
+      },
+      {
+        "slots": 4,
+        "round": 0,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.152
+      },
+      {
+        "slots": 4,
+        "round": 1,
+        "node_index": 0,
+        "offer_processing_wait_ms": 8.261
+      },
+      {
+        "slots": 4,
+        "round": 1,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.421
+      },
+      {
+        "slots": 4,
+        "round": 1,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.366
+      },
+      {
+        "slots": 4,
+        "round": 1,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.102
+      },
+      {
+        "slots": 2,
+        "round": 1,
+        "node_index": 0,
+        "offer_processing_wait_ms": 200.311
+      },
+      {
+        "slots": 2,
+        "round": 1,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.762
+      },
+      {
+        "slots": 2,
+        "round": 1,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.519
+      },
+      {
+        "slots": 2,
+        "round": 1,
+        "node_index": 3,
+        "offer_processing_wait_ms": 179.361
+      },
+      {
+        "slots": 2,
+        "round": 2,
+        "node_index": 0,
+        "offer_processing_wait_ms": 9.767
+      },
+      {
+        "slots": 2,
+        "round": 2,
+        "node_index": 1,
+        "offer_processing_wait_ms": 189.536
+      },
+      {
+        "slots": 2,
+        "round": 2,
+        "node_index": 2,
+        "offer_processing_wait_ms": 184.925
+      },
+      {
+        "slots": 2,
+        "round": 2,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.085
+      },
+      {
+        "slots": 4,
+        "round": 2,
+        "node_index": 0,
+        "offer_processing_wait_ms": 10.9
+      },
+      {
+        "slots": 4,
+        "round": 2,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.08
+      },
+      {
+        "slots": 4,
+        "round": 2,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.457
+      },
+      {
+        "slots": 4,
+        "round": 2,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.116
+      },
+      {
+        "slots": 4,
+        "round": 3,
+        "node_index": 0,
+        "offer_processing_wait_ms": 9.173
+      },
+      {
+        "slots": 4,
+        "round": 3,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.687
+      },
+      {
+        "slots": 4,
+        "round": 3,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.533
+      },
+      {
+        "slots": 4,
+        "round": 3,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.13
+      },
+      {
+        "slots": 2,
+        "round": 3,
+        "node_index": 0,
+        "offer_processing_wait_ms": 9.691
+      },
+      {
+        "slots": 2,
+        "round": 3,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.673
+      },
+      {
+        "slots": 2,
+        "round": 3,
+        "node_index": 2,
+        "offer_processing_wait_ms": 181.876
+      },
+      {
+        "slots": 2,
+        "round": 3,
+        "node_index": 3,
+        "offer_processing_wait_ms": 178.256
+      },
+      {
+        "slots": 2,
+        "round": 4,
+        "node_index": 0,
+        "offer_processing_wait_ms": 205.644
+      },
+      {
+        "slots": 2,
+        "round": 4,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.974
+      },
+      {
+        "slots": 2,
+        "round": 4,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.494
+      },
+      {
+        "slots": 2,
+        "round": 4,
+        "node_index": 3,
+        "offer_processing_wait_ms": 182.06
+      },
+      {
+        "slots": 4,
+        "round": 4,
+        "node_index": 0,
+        "offer_processing_wait_ms": 10.119
+      },
+      {
+        "slots": 4,
+        "round": 4,
+        "node_index": 1,
+        "offer_processing_wait_ms": 2.882
+      },
+      {
+        "slots": 4,
+        "round": 4,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.121
+      },
+      {
+        "slots": 4,
+        "round": 4,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.083
+      },
+      {
+        "slots": 4,
+        "round": 5,
+        "node_index": 0,
+        "offer_processing_wait_ms": 13.719
+      },
+      {
+        "slots": 4,
+        "round": 5,
+        "node_index": 1,
+        "offer_processing_wait_ms": 2.829
+      },
+      {
+        "slots": 4,
+        "round": 5,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.599
+      },
+      {
+        "slots": 4,
+        "round": 5,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.109
+      },
+      {
+        "slots": 2,
+        "round": 5,
+        "node_index": 0,
+        "offer_processing_wait_ms": 9.055
+      },
+      {
+        "slots": 2,
+        "round": 5,
+        "node_index": 1,
+        "offer_processing_wait_ms": 192.658
+      },
+      {
+        "slots": 2,
+        "round": 5,
+        "node_index": 2,
+        "offer_processing_wait_ms": 183.967
+      },
+      {
+        "slots": 2,
+        "round": 5,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.137
+      },
+      {
+        "slots": 2,
+        "round": 6,
+        "node_index": 0,
+        "offer_processing_wait_ms": 8.785
+      },
+      {
+        "slots": 2,
+        "round": 6,
+        "node_index": 1,
+        "offer_processing_wait_ms": 190.425
+      },
+      {
+        "slots": 2,
+        "round": 6,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.808
+      },
+      {
+        "slots": 2,
+        "round": 6,
+        "node_index": 3,
+        "offer_processing_wait_ms": 180.183
+      },
+      {
+        "slots": 4,
+        "round": 6,
+        "node_index": 0,
+        "offer_processing_wait_ms": 8.379
+      },
+      {
+        "slots": 4,
+        "round": 6,
+        "node_index": 1,
+        "offer_processing_wait_ms": 6.808
+      },
+      {
+        "slots": 4,
+        "round": 6,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.329
+      },
+      {
+        "slots": 4,
+        "round": 6,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.117
+      },
+      {
+        "slots": 4,
+        "round": 7,
+        "node_index": 0,
+        "offer_processing_wait_ms": 10.645
+      },
+      {
+        "slots": 4,
+        "round": 7,
+        "node_index": 1,
+        "offer_processing_wait_ms": 2.53
+      },
+      {
+        "slots": 4,
+        "round": 7,
+        "node_index": 2,
+        "offer_processing_wait_ms": 2.251
+      },
+      {
+        "slots": 4,
+        "round": 7,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.114
+      },
+      {
+        "slots": 2,
+        "round": 7,
+        "node_index": 0,
+        "offer_processing_wait_ms": 199.653
+      },
+      {
+        "slots": 2,
+        "round": 7,
+        "node_index": 1,
+        "offer_processing_wait_ms": 4.308
+      },
+      {
+        "slots": 2,
+        "round": 7,
+        "node_index": 2,
+        "offer_processing_wait_ms": 177.839
+      },
+      {
+        "slots": 2,
+        "round": 7,
+        "node_index": 3,
+        "offer_processing_wait_ms": 2.123
+      }
+    ]
+  },
+  "limitations": [
+    "No all-network/cellular/public-NAT speed or success-rate guarantee.",
+    "Existing Java patch and formal signed APK publication remain with the App developer.",
+    "No production power outage or real COS install was performed."
+  ]
+}

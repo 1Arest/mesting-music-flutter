@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mesting_brand_coral">#D95046</color>
+    <color name="mesting_brand_cream">#F7F8FF</color>
+    <color name="mesting_brand_ink">#17131B</color>
+    <color name="mesting_splash_background">#D95046</color>
+    <color name="mesting_coral_launch_light">#D95046</color>
+    <color name="mesting_coral_launch_dark">#17131B</color>
+    <color name="mesting_morning_background">#FFF7E5</color>
+    <color name="mesting_midnight_background">#081824</color>
+</resources>

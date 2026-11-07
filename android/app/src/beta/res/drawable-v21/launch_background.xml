@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native preview is also used when reattaching the retained audio engine.
+     The neutral theme canvas prevents a warm-start coral flash. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/mesting_splash_background" />
+</layer-list>

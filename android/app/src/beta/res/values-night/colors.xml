@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The warm-start window must not expose the cold-start film's red. -->
+    <color name="mesting_splash_background">#11141B</color>
+    <color name="mesting_coral_launch_light">#FFFFFF</color>
+    <color name="mesting_coral_launch_dark">#11141B</color>
+    <color name="mesting_runtime_background">#11141B</color>
+</resources>

@@ -1,0 +1,26 @@
+{
+  "capability": {"version":1,"channel":"p8p-file-v1","header_bytes":16,"max_frame_bytes":49152,"max_inflight":4,"cancel":true},
+  "piece_count": 3,
+  "controls": [
+    {"name":"hello","valid":true,"value":{"type":"hello","version":1,"generation":7,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+    {"name":"get","valid":true,"value":{"type":"get","version":1,"generation":7,"request_id":11,"index":2}},
+    {"name":"cancel","valid":true,"value":{"type":"cancel","version":1,"generation":7,"request_id":11}},
+    {"name":"future_version","valid":false,"value":{"type":"get","version":2,"generation":7,"request_id":11,"index":0}},
+    {"name":"boolean_version","valid":false,"value":{"type":"get","version":true,"generation":7,"request_id":11,"index":0}},
+    {"name":"fractional_generation","valid":false,"value":{"type":"get","version":1,"generation":7.0,"request_id":11,"index":0}},
+    {"name":"zero_id","valid":false,"value":{"type":"get","version":1,"generation":7,"request_id":0,"index":0}},
+    {"name":"large_id","valid":false,"value":{"type":"get","version":1,"generation":7,"request_id":2147483648,"index":0}},
+    {"name":"negative_index","valid":false,"value":{"type":"get","version":1,"generation":7,"request_id":11,"index":-1}},
+    {"name":"index_outside_manifest","valid":false,"value":{"type":"get","version":1,"generation":7,"request_id":11,"index":3}},
+    {"name":"unknown_type","valid":false,"value":{"type":"reset","version":1,"generation":7}},
+    {"name":"invalid_sha","valid":false,"value":{"type":"hello","version":1,"generation":7,"sha256":"abc"}},
+    {"name":"not_an_object","valid":false,"value":[]}
+  ],
+  "frames": [
+    {"name":"body","valid":true,"hex":"50385031000000070000000b000000300001ff","generation":7,"request_id":11,"offset":48,"body_hex":"0001ff"},
+    {"name":"bad_magic","valid":false,"hex":"50385032000000070000000b000000300001ff"},
+    {"name":"zero_id","valid":false,"hex":"503850310000000700000000000000300001ff"},
+    {"name":"offset_outside_piece","valid":false,"hex":"50385031000000070000000b001000000001ff"},
+    {"name":"empty_body","valid":false,"hex":"50385031000000070000000b00000030"}
+  ]
+}

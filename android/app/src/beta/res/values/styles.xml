@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Also remains behind Flutter during SurfaceView detach/reattach.
+         The native window follows the runtime theme, not cold-start branding. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/mesting_runtime_background</item>
+        <item name="android:colorBackground">@color/mesting_runtime_background</item>
+    </style>
+</resources>

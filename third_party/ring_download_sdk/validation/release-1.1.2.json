@@ -1,0 +1,117 @@
+{
+  "version": "1.1.2",
+  "channel": "stable",
+  "released_at": "2026-10-30",
+  "candidate_version": "1.1.2-dev.7",
+  "candidate_archive_sha256": "629378651892f8769659746d34023233b1b8db960916e24373b266a6b4a8544a",
+  "formal_version_delta": {
+    "passed": true,
+    "version": "1.1.2",
+    "candidate_version": "1.1.2-dev.7",
+    "candidate_archive_sha256": "629378651892f8769659746d34023233b1b8db960916e24373b266a6b4a8544a",
+    "runtime_files": 48,
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "transmission_runtime_changes": []
+  },
+  "regression": {
+    "full_frozen_candidate_tests": 559,
+    "full_frozen_candidate_manifest": "a19e3b51f1b13e6036511d4f41ee6bf34f055d4a19d26bb87506a8b7ce1384d8",
+    "full_log_sha256": "15887ed91776ec54a2520a7ea9cff2320758a68b6433b9bc83666f72fefedb84",
+    "subsequent_changes": [
+      "Post-pacing actual network recheck",
+      "Initial cache lease capability heartbeat",
+      "Paced-phone receiver capacity acknowledgement"
+    ],
+    "final_related_tests": 178,
+    "host_tests": 41,
+    "counts_overlap": true,
+    "static_analysis": "passed"
+  },
+  "formal_contract": {
+    "passed": true,
+    "tests": 50,
+    "log": "validation/release-1.1.2/formal-contract.txt",
+    "sha256": "48230cd55ec5931f25b990e105e78dfb0f2fda870b333d534505d088e00f0428"
+  },
+  "native_acceptance": {
+    "passed": true,
+    "candidate_version": "1.1.2-dev.7",
+    "source_manifest_sha256": "ceec9dae0e5dbcd7f32d5be3b60536bd175feb83fc269b71dccf551ddb7b50c0",
+    "candidate_archive_sha256": "629378651892f8769659746d34023233b1b8db960916e24373b266a6b4a8544a",
+    "private_APK": {
+      "version": "0.0.11+11",
+      "sha256": "bebe631029647793544efdb0ca1568c23b69d62488fb077fc01ed930587a1c56",
+      "arm64_only": true,
+      "release_AOT": true,
+      "same_private_signer": true,
+      "zip_alignment_verified": true
+    },
+    "device": {
+      "model": "OPD2401",
+      "API": 36,
+      "network": "wifi_unmetered",
+      "battery_before": 36,
+      "battery_after": 35,
+      "temperature_after_c": 29.6
+    },
+    "full_file_sha256_verified": true,
+    "body_bytes": 155305939,
+    "sha256": "3e85c2171647dccff7b59b4b68b462717f03426327081b774c77192cff50571a",
+    "pieces": 149,
+    "first_verified_ms": 5640.0,
+    "slowest_piece_ms": 4016.0,
+    "elapsed_body_seconds": 591.515000000014,
+    "payload_budget_verified": true,
+    "payload_bytes_per_second": 262144,
+    "burst_bytes": 262144,
+    "measured_average_payload_bytes_per_second": 262556.21412812243,
+    "original_deadlines_preserved": true,
+    "https_body_bytes": 0,
+    "seed_body_bytes": 0,
+    "one_receiver_enforced": true,
+    "old_P8P_without_capacity_declined_before_body": true,
+    "legacy_v1_verified_pieces": 3,
+    "background_stopped_live_upload": true,
+    "foreground_registered_new_session": true,
+    "consent_off_on_verified": true,
+    "post_resume_verified_bytes": 1048576,
+    "resources_released": true,
+    "native_resource_observing_after": false,
+    "private_App_stopped": true,
+    "ADB_kept": true,
+    "no_global_device_settings_changed": true,
+    "last_process_sample": {
+      "cpu_ms": 135914,
+      "pss_kib": 120514,
+      "private_window_keep_screen_on": false
+    },
+    "procedure_observations": [
+      "Earlier whole-file run was interrupted by collector am-start report lifecycle changes; retained as failure.",
+      "Post-background script expected duplicate explicit restore to return cache_admitted within 10 seconds; that wait failed. Independent coordinator record confirmed foreground automatic session restoration; explicit consent off/on then completed and a new session delivered a verified MiB."
+    ],
+    "scope": "Actual private public-SDK Android owner with readonly installed public APK cache; official host business authorization, signature installation, other networks and absolute battery impact not established."
+  },
+  "mobile_policy": {
+    "foreground": true,
+    "wifi_unmetered": true,
+    "receivers_per_process": 1,
+    "payload_bytes_per_second": 262144,
+    "burst_bytes": 262144,
+    "protocol_and_retransmissions_additional": true,
+    "low_battery_pause_below": 30,
+    "battery_recover_at": 32,
+    "temperature_pause_c": 40,
+    "temperature_recover_c": 38
+  },
+  "host_official_APK_built": false,
+  "production_node_upgraded": false,
+  "production_server_transmission_changed": false,
+  "limitations": [
+    "Private SDK Android owner uses authorized public cache; official LifeRing update/signature/authorization flow remains host-developer acceptance.",
+    "Paced phone P8P sharing requires receiver capacity acknowledgement (1.1.2); old P8P receivers are declined before body and keep ordinary source fallback. Legacy v1 single-piece remains available.",
+    "No claim for every public/cellular/NAT network, long-duration endurance, absolute battery impact or fixed speedup."
+  ],
+  "previous_P2P_baseline": "40420f35e7bd41e8e9fef51eee55093bbed60283"
+}

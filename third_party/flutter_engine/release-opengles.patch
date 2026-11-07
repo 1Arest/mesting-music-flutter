@@ -1,0 +1,22 @@
+diff --git a/engine/src/flutter/shell/platform/android/flutter_main.cc b/engine/src/flutter/shell/platform/android/flutter_main.cc
+--- a/engine/src/flutter/shell/platform/android/flutter_main.cc
++++ b/engine/src/flutter/shell/platform/android/flutter_main.cc
+@@ -278,13 +278,15 @@ AndroidRenderingAPI FlutterMain::SelectedRenderingAPI(
+     return AndroidRenderingAPI::kSoftware;
+   }
+ 
+-  // Debug/Profile only functionality for testing a specific
+-  // backend configuration.
+-#ifndef FLUTTER_RELEASE
++  // Mesting recovery also uses this explicit embedder choice in release.
++  // Keep Impeller and its shader filters on devices with confirmed Vulkan
++  // driver crashes. The default path and all other backends stay unchanged.
+   if (settings.requested_rendering_backend == "opengles" &&
+       settings.enable_impeller) {
+     return AndroidRenderingAPI::kImpellerOpenGLES;
+   }
++  // Forced Vulkan remains a Debug/Profile testing option, as upstream.
++#ifndef FLUTTER_RELEASE
+   if (settings.requested_rendering_backend == "vulkan" &&
+       settings.enable_impeller) {
+     return AndroidRenderingAPI::kImpellerVulkan;

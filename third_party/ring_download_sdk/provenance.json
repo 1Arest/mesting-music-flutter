@@ -1,0 +1,18 @@
+{
+  "source_commit": "40116e97bc37e9a5a67d492dd176e6cc35aeb67b",
+  "source_files": {
+    "lib/models/app_upgrade_models.dart": "59ff06a4ea207d2d7c15b50839d30965ad9aa38b1e6fbcc86ca88a9b85023920",
+    "lib/services/app_upgrade_p2p_diagnostics.dart": "b51c336bf8fe72faefa3b635a337555d8c554337752ad1308de6641b575d4d43",
+    "lib/services/app_upgrade_p2p_identity.dart": "5376972b2031c52e281f2352c088af5700fc08254cadf4cd51de756fdbf66184",
+    "lib/services/app_upgrade_p2p_piece_receiver.dart": "52223626223b03f277d7148cc9d74657dc55bf06ffe43b6c83d27de00fcef746",
+    "lib/services/app_upgrade_p2p_piece_store.dart": "7adc464f0337f96c5bcbf0d9d8f5d559c046cdc66df17fd679fcccccdb5e8afe",
+    "lib/services/app_upgrade_p2p_protocol.dart": "b56837896f1276b2d5654b8b8f845bb553b5a422b9de62a254925e6ae8bbf14d",
+    "lib/services/app_upgrade_p2p_timeouts.dart": "9ac003a391ac4a87871cb2ec3e3968237eaff3443e0946899451d22e6d2a9888",
+    "lib/services/app_upgrade_service_events.dart": "f15c6f9aec3aed3e097f2cfe7549925b8de53c4f048aba0f0ed5f8608e6113cc",
+    "lib/services/app_upgrade_v40_download_client.dart": "2a3f6718003b243623a8f649865b9e36b671d70fe2ef4708fedf52e5a9f48df4",
+    "lib/services/app_upgrade_v40_p2p_client.dart": "ac567881d600e78c55467ae3956a5a0bb0bc4ca3b805bf00f1657ce95e781614",
+    "lib/services/app_upgrade_health_client.dart": "b2b94a0b7e4f3529b5f1510fa10f6e8be9cee9ff7471997a039f8a180eb03aa3",
+    "lib/services/app_upgrade_file_io.dart": "00f670add1b663e06778c86f00db03f181b7fbd63bbbb08efaf773805be6e663"
+  },
+  "extraction": "Original implementation; compatibility exports retain wire behavior. SDK consent fencing changes are tracked separately."
+}

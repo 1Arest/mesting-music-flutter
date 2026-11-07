@@ -1,0 +1,43 @@
+{
+  "upstream": "mytv-android/myMusic",
+  "commit": "5a9a4cbde079d205776117c772c4ee77dd742ae0",
+  "purpose": "On-device Passport web QR authentication; no remote signer",
+  "files": [
+    {
+      "path": "android-assets/qishui-web-auth/bdms.js",
+      "bytes": 238184,
+      "sha256": "dd918a8d2028d68b47407e205eae01d9d674daa51013bc6c5efc0573e4b0a8e0",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/bdms.js"
+    },
+    {
+      "path": "android-assets/qishui-web-auth/sdk-glue.js",
+      "bytes": 94515,
+      "sha256": "42f03c3d8f25c3b4f8c499b456999377b1a9d7c5238a0a95d252d6a64ae91b13",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/sdk-glue.js"
+    },
+    {
+      "path": "android-assets/qishui-web-auth/react.js",
+      "bytes": 11440,
+      "sha256": "229bbf4d0e7488209564152c6723497f1ac3934136ca1684233d2fa88fa4146f",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/react.js"
+    },
+    {
+      "path": "android-assets/qishui-web-auth/react-dom.js",
+      "bytes": 120585,
+      "sha256": "9db33292007ab6c38527b39d5663e976a305564e19b2a5a8713ea2b2c00f505d",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/react-dom.js"
+    },
+    {
+      "path": "android-assets/qishui-web-auth/security_host.html",
+      "bytes": 20459,
+      "sha256": "6ccd76ea5e9a7f65c923015927aecdb7d31715731a1f239962c3f698c022b6cf",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/security_host.html"
+    },
+    {
+      "path": "android-assets/qishui-web-auth/soda_verify.html",
+      "bytes": 13968,
+      "sha256": "5cbd2d637a9024d0504085a08fb9f180fc21d8e98fdd357f79e606f65c78c314",
+      "source": "https://raw.githubusercontent.com/mytv-android/myMusic/5a9a4cbde079d205776117c772c4ee77dd742ae0/app/src/main/assets/soda/security/soda_verify.html"
+    }
+  ]
+}

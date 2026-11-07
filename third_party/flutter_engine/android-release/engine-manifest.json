@@ -1,0 +1,45 @@
+{
+  "flutterVersion": "3.41.9",
+  "frameworkCommit": "00b0c91f06209d9e4a41f71b7a512d6eb3b9c694",
+  "upstreamEngineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+  "runtimeMode": "release",
+  "dartRevision": "c70f78e7d682c158c15ca0c26c729b3ccb932284",
+  "dependencySnapshotSha256": "204c7c2dd50b6d39aefa4f9e2dfd795bfbadfd23f130459f365b5aab00d1cbe9",
+  "compilerOptimization": "release",
+  "linkTimeOptimization": false,
+  "patchSha256": "cd8fa713da0e00363d1d5fa40a21c41ac84f5afa6982ba76c69e744643431e66",
+  "createdAt": "2026-10-30T18:48:18.283417+00:00",
+  "licensesSha256": "1d531df6b9d1142fa3f6abc518cfab21adc6570ae11631c40a7ba366c93d2eaa",
+  "files": [
+    {
+      "abi": "arm64-v8a",
+      "jar": "arm64-v8a-release.jar",
+      "jarSha256": "4d2a41dec39c412a3d947237f32fb260541d60c9d08bbba3e886564f2acd70f9",
+      "nativeSha256": "2c12d9c977f02d64c7a5f3cde4bd24ed15a8968aa41358a24c9dc6e583cddfc3",
+      "nativeBytes": 12805608,
+      "nativeBuildId": "7f9d8a668f14166c413851535d650d072dc0053e",
+      "symbolsStripped": true,
+      "loadSegmentAlignments": [
+        65536,
+        65536,
+        65536
+      ],
+      "gnArgsSha256": "7823581ec4cecfcd8dac6b4556ad6be7292f51633ed916f92274e3767323b85a"
+    },
+    {
+      "abi": "armeabi-v7a",
+      "jar": "armeabi-v7a-release.jar",
+      "jarSha256": "bceb78dc0ba83367111a5abc848b044501f80c85580dfd8de1b264681f5518e9",
+      "nativeSha256": "d514674e1d2c48e9fdee66451e749d3e57bf8fa0deb4a5a7da34bf3fe9f0f767",
+      "nativeBytes": 8646952,
+      "nativeBuildId": "0f533f57422a3749c262e36ed443c583a9cbce11",
+      "symbolsStripped": true,
+      "loadSegmentAlignments": [
+        65536,
+        65536,
+        65536
+      ],
+      "gnArgsSha256": "eab3aff58453427ddfbc39b60f1599ff0902115f4c4638e588cb0574478da1af"
+    }
+  ]
+}

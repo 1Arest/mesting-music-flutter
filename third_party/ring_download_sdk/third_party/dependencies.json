@@ -1,0 +1,450 @@
+[
+  {
+    "name": "args",
+    "version": "2.7.0",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/args.txt"
+  },
+  {
+    "name": "async",
+    "version": "2.13.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/async.txt"
+  },
+  {
+    "name": "boolean_selector",
+    "version": "2.1.2",
+    "languageVersion": "3.1",
+    "licenseFile": "third_party/licenses/boolean_selector.txt"
+  },
+  {
+    "name": "characters",
+    "version": "1.4.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/characters.txt"
+  },
+  {
+    "name": "clock",
+    "version": "1.1.3",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/clock.txt"
+  },
+  {
+    "name": "code_assets",
+    "version": "2.1.0",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/code_assets.txt"
+  },
+  {
+    "name": "collection",
+    "version": "1.19.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/collection.txt"
+  },
+  {
+    "name": "crypto",
+    "version": "3.0.7",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/crypto.txt"
+  },
+  {
+    "name": "dart_webrtc",
+    "version": "1.8.2",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/dart_webrtc.txt"
+  },
+  {
+    "name": "dio",
+    "version": "5.11.1",
+    "languageVersion": "2.18",
+    "licenseFile": "third_party/licenses/dio.txt"
+  },
+  {
+    "name": "dio_web_adapter",
+    "version": "2.2.2",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/dio_web_adapter.txt"
+  },
+  {
+    "name": "fake_async",
+    "version": "1.3.3",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/fake_async.txt"
+  },
+  {
+    "name": "ffi",
+    "version": "2.2.0",
+    "languageVersion": "3.7",
+    "licenseFile": "third_party/licenses/ffi.txt"
+  },
+  {
+    "name": "file",
+    "version": "7.0.1",
+    "languageVersion": "3.0",
+    "licenseFile": "third_party/licenses/file.txt"
+  },
+  {
+    "name": "fixnum",
+    "version": "1.1.1",
+    "languageVersion": "3.1",
+    "licenseFile": "third_party/licenses/fixnum.txt"
+  },
+  {
+    "name": "flutter",
+    "version": "sdk",
+    "languageVersion": "3.11",
+    "licenseFile": "third_party/licenses/flutter.txt"
+  },
+  {
+    "name": "flutter_lints",
+    "version": "6.0.0",
+    "languageVersion": "3.8",
+    "licenseFile": "third_party/licenses/flutter_lints.txt"
+  },
+  {
+    "name": "flutter_test",
+    "version": "sdk",
+    "languageVersion": "3.11"
+  },
+  {
+    "name": "flutter_web_plugins",
+    "version": "sdk",
+    "languageVersion": "3.11"
+  },
+  {
+    "name": "flutter_webrtc",
+    "version": "1.6.2+hotfix.3",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/flutter_webrtc.txt"
+  },
+  {
+    "name": "hooks",
+    "version": "2.2.0",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/hooks.txt"
+  },
+  {
+    "name": "http",
+    "version": "1.6.0",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/http.txt"
+  },
+  {
+    "name": "http_parser",
+    "version": "4.1.2",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/http_parser.txt"
+  },
+  {
+    "name": "jni",
+    "version": "1.1.0",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/jni.txt"
+  },
+  {
+    "name": "jni_flutter",
+    "version": "1.0.4+1",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/jni_flutter.txt"
+  },
+  {
+    "name": "jni_util",
+    "version": "1.0.0",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/jni_util.txt"
+  },
+  {
+    "name": "leak_tracker",
+    "version": "11.0.2",
+    "languageVersion": "3.2",
+    "licenseFile": "third_party/licenses/leak_tracker.txt"
+  },
+  {
+    "name": "leak_tracker_flutter_testing",
+    "version": "3.0.10",
+    "languageVersion": "3.2",
+    "licenseFile": "third_party/licenses/leak_tracker_flutter_testing.txt"
+  },
+  {
+    "name": "leak_tracker_testing",
+    "version": "3.0.2",
+    "languageVersion": "3.2",
+    "licenseFile": "third_party/licenses/leak_tracker_testing.txt"
+  },
+  {
+    "name": "lints",
+    "version": "6.1.0",
+    "languageVersion": "3.8",
+    "licenseFile": "third_party/licenses/lints.txt"
+  },
+  {
+    "name": "logger",
+    "version": "2.8.0",
+    "languageVersion": "2.17",
+    "licenseFile": "third_party/licenses/logger.txt"
+  },
+  {
+    "name": "logging",
+    "version": "1.3.0",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/logging.txt"
+  },
+  {
+    "name": "matcher",
+    "version": "0.12.20",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/matcher.txt"
+  },
+  {
+    "name": "material_color_utilities",
+    "version": "0.13.0",
+    "languageVersion": "3.5",
+    "licenseFile": "third_party/licenses/material_color_utilities.txt"
+  },
+  {
+    "name": "meta",
+    "version": "1.19.0",
+    "languageVersion": "3.5",
+    "licenseFile": "third_party/licenses/meta.txt"
+  },
+  {
+    "name": "mime",
+    "version": "2.1.0",
+    "languageVersion": "3.2",
+    "licenseFile": "third_party/licenses/mime.txt"
+  },
+  {
+    "name": "objective_c",
+    "version": "9.6.2",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/objective_c.txt"
+  },
+  {
+    "name": "package_config",
+    "version": "3.0.0",
+    "languageVersion": "3.11",
+    "licenseFile": "third_party/licenses/package_config.txt"
+  },
+  {
+    "name": "package_info_plus",
+    "version": "8.3.1",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/package_info_plus.txt"
+  },
+  {
+    "name": "package_info_plus_platform_interface",
+    "version": "3.2.1",
+    "languageVersion": "2.18",
+    "licenseFile": "third_party/licenses/package_info_plus_platform_interface.txt"
+  },
+  {
+    "name": "path",
+    "version": "1.9.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/path.txt"
+  },
+  {
+    "name": "path_provider",
+    "version": "2.1.6",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/path_provider.txt"
+  },
+  {
+    "name": "path_provider_android",
+    "version": "2.3.1",
+    "languageVersion": "3.9",
+    "licenseFile": "third_party/licenses/path_provider_android.txt"
+  },
+  {
+    "name": "path_provider_foundation",
+    "version": "2.6.0",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/path_provider_foundation.txt"
+  },
+  {
+    "name": "path_provider_linux",
+    "version": "2.2.2",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/path_provider_linux.txt"
+  },
+  {
+    "name": "path_provider_platform_interface",
+    "version": "2.1.3",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/path_provider_platform_interface.txt"
+  },
+  {
+    "name": "path_provider_windows",
+    "version": "2.3.0",
+    "languageVersion": "3.2",
+    "licenseFile": "third_party/licenses/path_provider_windows.txt"
+  },
+  {
+    "name": "platform",
+    "version": "3.2.0",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/platform.txt"
+  },
+  {
+    "name": "plugin_platform_interface",
+    "version": "2.1.8",
+    "languageVersion": "3.0",
+    "licenseFile": "third_party/licenses/plugin_platform_interface.txt"
+  },
+  {
+    "name": "pub_semver",
+    "version": "2.2.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/pub_semver.txt"
+  },
+  {
+    "name": "record_use",
+    "version": "1.1.1",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/record_use.txt"
+  },
+  {
+    "name": "shared_preferences",
+    "version": "2.5.6",
+    "languageVersion": "3.11",
+    "licenseFile": "third_party/licenses/shared_preferences.txt"
+  },
+  {
+    "name": "shared_preferences_android",
+    "version": "2.4.28",
+    "languageVersion": "3.12",
+    "licenseFile": "third_party/licenses/shared_preferences_android.txt"
+  },
+  {
+    "name": "shared_preferences_foundation",
+    "version": "2.5.7",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/shared_preferences_foundation.txt"
+  },
+  {
+    "name": "shared_preferences_linux",
+    "version": "2.4.1",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/shared_preferences_linux.txt"
+  },
+  {
+    "name": "shared_preferences_platform_interface",
+    "version": "2.4.2",
+    "languageVersion": "3.9",
+    "licenseFile": "third_party/licenses/shared_preferences_platform_interface.txt"
+  },
+  {
+    "name": "shared_preferences_web",
+    "version": "2.4.3",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/shared_preferences_web.txt"
+  },
+  {
+    "name": "shared_preferences_windows",
+    "version": "2.4.1",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/shared_preferences_windows.txt"
+  },
+  {
+    "name": "sky_engine",
+    "version": "sdk",
+    "languageVersion": "3.11",
+    "licenseFile": "third_party/licenses/sky_engine.txt"
+  },
+  {
+    "name": "source_span",
+    "version": "1.10.2",
+    "languageVersion": "3.1",
+    "licenseFile": "third_party/licenses/source_span.txt"
+  },
+  {
+    "name": "stack_trace",
+    "version": "1.12.2",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/stack_trace.txt"
+  },
+  {
+    "name": "stream_channel",
+    "version": "2.1.4",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/stream_channel.txt"
+  },
+  {
+    "name": "string_scanner",
+    "version": "1.4.1",
+    "languageVersion": "3.1",
+    "licenseFile": "third_party/licenses/string_scanner.txt"
+  },
+  {
+    "name": "synchronized",
+    "version": "3.5.0",
+    "languageVersion": "3.12",
+    "licenseFile": "third_party/licenses/synchronized.txt"
+  },
+  {
+    "name": "term_glyph",
+    "version": "1.2.2",
+    "languageVersion": "3.1",
+    "licenseFile": "third_party/licenses/term_glyph.txt"
+  },
+  {
+    "name": "test_api",
+    "version": "0.7.12",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/test_api.txt"
+  },
+  {
+    "name": "typed_data",
+    "version": "1.4.0",
+    "languageVersion": "3.5",
+    "licenseFile": "third_party/licenses/typed_data.txt"
+  },
+  {
+    "name": "uuid",
+    "version": "4.6.0",
+    "languageVersion": "3.0",
+    "licenseFile": "third_party/licenses/uuid.txt"
+  },
+  {
+    "name": "vector_math",
+    "version": "2.4.3",
+    "languageVersion": "3.10",
+    "licenseFile": "third_party/licenses/vector_math.txt"
+  },
+  {
+    "name": "vm_service",
+    "version": "15.4.0",
+    "languageVersion": "3.5",
+    "licenseFile": "third_party/licenses/vm_service.txt"
+  },
+  {
+    "name": "web",
+    "version": "1.1.1",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/web.txt"
+  },
+  {
+    "name": "webrtc_interface",
+    "version": "1.5.1",
+    "languageVersion": "2.12",
+    "licenseFile": "third_party/licenses/webrtc_interface.txt"
+  },
+  {
+    "name": "win32",
+    "version": "5.15.0",
+    "languageVersion": "3.8",
+    "licenseFile": "third_party/licenses/win32.txt"
+  },
+  {
+    "name": "xdg_directories",
+    "version": "1.1.0",
+    "languageVersion": "3.3",
+    "licenseFile": "third_party/licenses/xdg_directories.txt"
+  },
+  {
+    "name": "yaml",
+    "version": "3.1.4",
+    "languageVersion": "3.4",
+    "licenseFile": "third_party/licenses/yaml.txt"
+  }
+]

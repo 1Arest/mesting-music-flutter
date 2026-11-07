@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A genuinely translucent floating window lets Android 12+ blur the
+         wallpaper behind the lyrics. An opaque Activity theme cannot do so. -->
+    <style name="MestingLyricsOverlay" parent="android:style/Theme.Material.Dialog.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:colorAccent">#0A84FF</item>
+    </style>
+</resources>

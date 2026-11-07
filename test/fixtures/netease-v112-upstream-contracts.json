@@ -1,0 +1,1018 @@
+{
+  "source": "@neteaseapireborn/api@4.29.7",
+  "cases": [
+    {
+      "route": "/personalized",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/personalized/playlist",
+        "data": {
+          "limit": 30,
+          "total": true,
+          "n": 1000
+        },
+        "weapi": true
+      },
+      "upstreamModule": "personalized"
+    },
+    {
+      "route": "/playlist/catlist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/playlist/catalogue",
+        "data": {},
+        "weapi": false
+      },
+      "upstreamModule": "playlist_catlist"
+    },
+    {
+      "route": "/album/sublist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/album/sublist",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "album_sublist"
+    },
+    {
+      "route": "/artist/sublist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/artist/sublist",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_sublist"
+    },
+    {
+      "route": "/mv/sublist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/cloudvideo/allvideo/sublist",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "mv_sublist"
+    },
+    {
+      "route": "/dj/recommend",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/recommend/v1",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "dj_recommend"
+    },
+    {
+      "route": "/dj/catelist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/category/get",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "dj_catelist"
+    },
+    {
+      "route": "/dj/category/recommend",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/home/category/recommend",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "dj_category_recommend"
+    },
+    {
+      "route": "/dj/today/perfered",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/home/today/perfered",
+        "data": {
+          "page": 0
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_today_perfered"
+    },
+    {
+      "route": "/dj/personalize/recommend",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/personalize/rcmd",
+        "data": {
+          "limit": 30
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_personalize_recommend"
+    },
+    {
+      "route": "/dj/banner",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/banner/get",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "dj_banner"
+    },
+    {
+      "route": "/dj/sublist",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/get/subed",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_sublist"
+    },
+    {
+      "route": "/record/recent/dj",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/play-record/djradio/list",
+        "data": {
+          "limit": 30
+        },
+        "weapi": true
+      },
+      "upstreamModule": "record_recent_dj"
+    },
+    {
+      "route": "/personalized/djprogram",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/personalized/djprogram",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "personalized_djprogram"
+    },
+    {
+      "route": "/history/recommend/songs",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/recent",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "history_recommend_songs"
+    },
+    {
+      "route": "/search/default",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/search/defaultkeyword/get",
+        "data": {},
+        "weapi": false
+      },
+      "upstreamModule": "search_default"
+    },
+    {
+      "route": "/album/newest",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/discovery/newAlbum",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "album_newest"
+    },
+    {
+      "route": "/top/artists",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/artist/top",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "top_artists"
+    },
+    {
+      "route": "/personalized/mv",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/personalized/mv",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "personalized_mv"
+    },
+    {
+      "route": "/personalized/privatecontent",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/personalized/privatecontent",
+        "data": {},
+        "weapi": true
+      },
+      "upstreamModule": "personalized_privatecontent"
+    },
+    {
+      "route": "/login/refresh",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/login/token/refresh",
+        "data": {},
+        "weapi": false
+      },
+      "upstreamModule": "login_refresh"
+    },
+    {
+      "route": "/logout",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/logout",
+        "data": {},
+        "weapi": false
+      },
+      "upstreamModule": "logout"
+    },
+    {
+      "route": "/daily_signin",
+      "query": {
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/point/dailyTask",
+        "data": {
+          "type": 0
+        },
+        "weapi": false
+      },
+      "upstreamModule": "daily_signin"
+    },
+    {
+      "route": "/album/detail/dynamic",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/album/detail/dynamic",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "album_detail_dynamic"
+    },
+    {
+      "route": "/artist/album",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/artist/albums/7",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_album"
+    },
+    {
+      "route": "/artist/mv",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/artist/mvs",
+        "data": {
+          "artistId": "7",
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_mv"
+    },
+    {
+      "route": "/simi/artist",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/discovery/simiArtist",
+        "data": {
+          "artistid": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "simi_artist"
+    },
+    {
+      "route": "/artist/detail",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/artist/head/info/get",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      },
+      "upstreamModule": "artist_detail"
+    },
+    {
+      "route": "/artist/songs",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/v1/artist/songs",
+        "data": {
+          "id": "7",
+          "private_cloud": "true",
+          "work_type": 1,
+          "order": "hot",
+          "offset": 0,
+          "limit": 30
+        },
+        "weapi": false
+      },
+      "upstreamModule": "artist_songs"
+    },
+    {
+      "route": "/song/music/detail",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/song/music/detail/get",
+        "data": {
+          "songId": "7"
+        },
+        "weapi": false
+      },
+      "upstreamModule": "song_music_detail"
+    },
+    {
+      "route": "/playlist/import/task/status",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/playlist/import/task/status/v2",
+        "data": {
+          "taskIds": "[\"7\"]"
+        },
+        "weapi": false
+      },
+      "upstreamModule": "playlist_import_task_status"
+    },
+    {
+      "route": "/simi/mv",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/discovery/simiMV",
+        "data": {
+          "mvid": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "simi_mv"
+    },
+    {
+      "route": "/top/playlist/highquality",
+      "query": {
+        "cat": "华语",
+        "limit": 30,
+        "before": 100
+      },
+      "expected": {
+        "path": "/api/playlist/highquality/list",
+        "data": {
+          "cat": "华语",
+          "limit": 30,
+          "lasttime": 100,
+          "total": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "top_playlist_highquality"
+    },
+    {
+      "route": "/user/record",
+      "query": {
+        "uid": "7",
+        "type": 1
+      },
+      "expected": {
+        "path": "/api/v1/play/record",
+        "data": {
+          "uid": "7",
+          "type": 1
+        },
+        "weapi": true
+      },
+      "upstreamModule": "user_record"
+    },
+    {
+      "route": "/user/cloud",
+      "query": {
+        "limit": 30,
+        "offset": 30
+      },
+      "expected": {
+        "path": "/api/v1/cloud/get",
+        "data": {
+          "limit": 30,
+          "offset": 30
+        },
+        "weapi": true
+      },
+      "upstreamModule": "user_cloud"
+    },
+    {
+      "route": "/user/cloud/detail",
+      "query": {
+        "ids": [
+          "7",
+          "8"
+        ]
+      },
+      "expected": {
+        "path": "/api/v1/cloud/get/byids",
+        "data": {
+          "songIds": [
+            "7",
+            "8"
+          ]
+        },
+        "weapi": true
+      },
+      "upstreamModule": "user_cloud_detail"
+    },
+    {
+      "route": "/user/cloud/del",
+      "query": {
+        "ids": [
+          "7"
+        ]
+      },
+      "expected": {
+        "path": "/api/cloud/del",
+        "data": {
+          "songIds": [
+            "7"
+          ]
+        },
+        "weapi": true
+      },
+      "upstreamModule": "user_cloud_del"
+    },
+    {
+      "route": "/playmode/intelligence/list",
+      "query": {
+        "id": "7",
+        "pid": "8",
+        "count": 30
+      },
+      "expected": {
+        "path": "/api/playmode/intelligence/list",
+        "data": {
+          "songId": "7",
+          "type": "fromPlayOne",
+          "playlistId": "8",
+          "startMusicId": "7",
+          "count": 30
+        },
+        "weapi": false
+      },
+      "upstreamModule": "playmode_intelligence_list"
+    },
+    {
+      "route": "/dj/recommend/type",
+      "query": {
+        "type": 10001
+      },
+      "expected": {
+        "path": "/api/djradio/recommend",
+        "data": {
+          "cateId": 10001
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_recommend_type"
+    },
+    {
+      "route": "/dj/toplist",
+      "query": {
+        "type": "hot",
+        "limit": 30,
+        "offset": 30
+      },
+      "expected": {
+        "path": "/api/djradio/toplist",
+        "data": {
+          "limit": 30,
+          "offset": 30,
+          "type": 1
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_toplist"
+    },
+    {
+      "route": "/dj/radio/hot",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 30
+      },
+      "expected": {
+        "path": "/api/djradio/hot",
+        "data": {
+          "cateId": "7",
+          "limit": 30,
+          "offset": 30
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_radio_hot"
+    },
+    {
+      "route": "/dj/detail",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/djradio/v2/get",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_detail"
+    },
+    {
+      "route": "/dj/program",
+      "query": {
+        "id": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/dj/program/byradio",
+        "data": {
+          "radioId": "7",
+          "limit": 30,
+          "offset": 0,
+          "asc": false
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_program"
+    },
+    {
+      "route": "/dj/program/detail",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/dj/program/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_program_detail"
+    },
+    {
+      "route": "/history/recommend/songs/detail",
+      "query": {
+        "date": "2026-10-28"
+      },
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/detail",
+        "data": {
+          "date": "2026-10-28"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "history_recommend_songs_detail"
+    },
+    {
+      "route": "/artist/new/song",
+      "query": {
+        "limit": 30,
+        "before": 100
+      },
+      "expected": {
+        "path": "/api/sub/artist/new/works/song/list",
+        "data": {
+          "limit": 30,
+          "startTimestamp": 100
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_new_song"
+    },
+    {
+      "route": "/user/follows",
+      "query": {
+        "uid": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/user/getfollows/7",
+        "data": {
+          "offset": 0,
+          "limit": 30,
+          "order": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "user_follows"
+    },
+    {
+      "route": "/user/followeds",
+      "query": {
+        "uid": "7",
+        "limit": 30,
+        "offset": 0
+      },
+      "expected": {
+        "path": "/api/user/getfolloweds/7",
+        "data": {
+          "userId": "7",
+          "time": "0",
+          "limit": 30,
+          "offset": 0,
+          "getcounts": "true"
+        },
+        "weapi": false
+      },
+      "upstreamModule": "user_followeds"
+    },
+    {
+      "route": "/search/suggest",
+      "query": {
+        "keywords": "测试"
+      },
+      "expected": {
+        "path": "/api/search/suggest/web",
+        "data": {
+          "s": "测试"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "search_suggest"
+    },
+    {
+      "route": "/personalized/newsong",
+      "query": {
+        "limit": 30,
+        "areaId": 0
+      },
+      "expected": {
+        "path": "/api/personalized/newsong",
+        "data": {
+          "type": "recommend",
+          "limit": 30,
+          "areaId": 0
+        },
+        "weapi": true
+      },
+      "upstreamModule": "personalized_newsong"
+    },
+    {
+      "route": "/top/album",
+      "query": {
+        "limit": 30,
+        "offset": 0,
+        "year": 2026,
+        "month": 10
+      },
+      "expected": {
+        "path": "/api/discovery/new/albums/area",
+        "data": {
+          "area": "ALL",
+          "limit": 30,
+          "offset": 0,
+          "type": "new",
+          "year": 2026,
+          "month": 10,
+          "total": false,
+          "rcmd": true
+        },
+        "weapi": true
+      },
+      "upstreamModule": "top_album"
+    },
+    {
+      "route": "/song/download/url/v1",
+      "query": {
+        "id": "7",
+        "level": "lossless"
+      },
+      "expected": {
+        "path": "/api/song/enhance/download/url/v1",
+        "data": {
+          "id": "7",
+          "immerseType": "c51",
+          "level": "lossless"
+        },
+        "weapi": false
+      },
+      "upstreamModule": "song_download_url_v1"
+    },
+    {
+      "route": "/scrobble",
+      "query": {
+        "id": "7",
+        "time": 23,
+        "sourceid": 0
+      },
+      "expected": {
+        "path": "/api/feedback/weblog",
+        "data": {
+          "logs": "[{\"action\":\"play\",\"json\":{\"download\":0,\"end\":\"playend\",\"id\":\"7\",\"sourceId\":0,\"time\":23,\"type\":\"song\",\"wifi\":0,\"source\":\"list\",\"mainsite\":1,\"content\":\"\"}}]"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "scrobble"
+    },
+    {
+      "route": "/record/recent/song",
+      "query": {
+        "limit": 100
+      },
+      "expected": {
+        "path": "/api/play-record/song/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      },
+      "upstreamModule": "record_recent_song"
+    },
+    {
+      "route": "/record/recent/playlist",
+      "query": {
+        "limit": 100
+      },
+      "expected": {
+        "path": "/api/play-record/playlist/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      },
+      "upstreamModule": "record_recent_playlist"
+    },
+    {
+      "route": "/record/recent/album",
+      "query": {
+        "limit": 100
+      },
+      "expected": {
+        "path": "/api/play-record/album/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      },
+      "upstreamModule": "record_recent_album"
+    },
+    {
+      "route": "/album/sub",
+      "query": {
+        "id": "7",
+        "subscribe": true
+      },
+      "expected": {
+        "path": "/api/album/sub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "album_sub"
+    },
+    {
+      "route": "/album/sub",
+      "query": {
+        "id": "7",
+        "subscribe": false
+      },
+      "expected": {
+        "path": "/api/album/unsub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "album_sub"
+    },
+    {
+      "route": "/artist/sub",
+      "query": {
+        "id": "7",
+        "subscribe": true
+      },
+      "expected": {
+        "path": "/api/artist/sub",
+        "data": {
+          "artistId": "7",
+          "artistIds": "[7]"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_sub"
+    },
+    {
+      "route": "/artist/sub",
+      "query": {
+        "id": "7",
+        "subscribe": false
+      },
+      "expected": {
+        "path": "/api/artist/unsub",
+        "data": {
+          "artistId": "7",
+          "artistIds": "[7]"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "artist_sub"
+    },
+    {
+      "route": "/mv/sub",
+      "query": {
+        "id": "7",
+        "subscribe": true
+      },
+      "expected": {
+        "path": "/api/mv/sub",
+        "data": {
+          "mvId": "7",
+          "mvIds": "[\"7\"]"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "mv_sub"
+    },
+    {
+      "route": "/mv/sub",
+      "query": {
+        "id": "7",
+        "subscribe": false
+      },
+      "expected": {
+        "path": "/api/mv/unsub",
+        "data": {
+          "mvId": "7",
+          "mvIds": "[\"7\"]"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "mv_sub"
+    },
+    {
+      "route": "/dj/sub",
+      "query": {
+        "id": "7",
+        "subscribe": true
+      },
+      "expected": {
+        "path": "/api/djradio/sub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_sub"
+    },
+    {
+      "route": "/dj/sub",
+      "query": {
+        "id": "7",
+        "subscribe": false
+      },
+      "expected": {
+        "path": "/api/djradio/unsub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      },
+      "upstreamModule": "dj_sub"
+    }
+  ]
+}

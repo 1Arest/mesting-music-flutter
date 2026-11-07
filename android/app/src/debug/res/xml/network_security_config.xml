@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only override: permits the temporary CVM HTTP endpoint during
+  integration testing. Release builds continue to use the stricter config in
+  src/main and should use an HTTPS domain before distribution.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

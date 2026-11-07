@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "requests": [
+    {"name":"legacy", "enabled":true, "payload":{}, "expected":null},
+    {"name":"disabled", "enabled":false, "payload":{"p8p":{"version":1,"window":99}}, "expected":null},
+    {"name":"unknown-version", "enabled":true, "payload":{"p8p":{"version":2,"window":99}}, "expected":null},
+    {"name":"boolean-version", "enabled":true, "payload":{"p8p":{"version":true,"window":1}}, "expected":null},
+    {"name":"float-version", "enabled":true, "payload":{"p8p":{"version":1.0,"window":1}}, "expected":null},
+    {"name":"string-version", "enabled":true, "payload":{"p8p":{"version":"1","window":1}}, "expected":null},
+    {"name":"non-object", "enabled":true, "payload":{"p8p":[1,4]}, "expected":null},
+    {"name":"window-one", "enabled":true, "payload":{"p8p":{"version":1,"window":1}}, "expected":1},
+    {"name":"window-two", "enabled":true, "payload":{"p8p":{"version":1,"window":2}}, "expected":2},
+    {"name":"window-four", "enabled":true, "payload":{"p8p":{"version":1,"window":4}}, "expected":4},
+    {"name":"zero", "enabled":true, "payload":{"p8p":{"version":1,"window":0}}, "error":true},
+    {"name":"negative", "enabled":true, "payload":{"p8p":{"version":1,"window":-1}}, "error":true},
+    {"name":"too-large", "enabled":true, "payload":{"p8p":{"version":1,"window":5}}, "error":true},
+    {"name":"missing", "enabled":true, "payload":{"p8p":{"version":1}}, "error":true},
+    {"name":"boolean", "enabled":true, "payload":{"p8p":{"version":1,"window":true}}, "error":true},
+    {"name":"float", "enabled":true, "payload":{"p8p":{"version":1,"window":2.0}}, "error":true},
+    {"name":"string", "enabled":true, "payload":{"p8p":{"version":1,"window":"2"}}, "error":true}
+  ],
+  "capabilities": [
+    {"name":"absent", "value":null, "expected":false},
+    {"name":"valid", "value":{"version":1,"max_window":4,"features":["adaptive_window_v1"]}, "expected":true},
+    {"name":"future", "value":{"version":2,"max_window":4,"features":["adaptive_window_v1"]}, "expected":false},
+    {"name":"boolean", "value":{"version":true,"max_window":4,"features":["adaptive_window_v1"]}, "expected":false},
+    {"name":"oversized", "value":{"version":1,"max_window":8,"features":["adaptive_window_v1"]}, "expected":false},
+    {"name":"different-limit", "value":{"version":1,"max_window":2,"features":["adaptive_window_v1"]}, "expected":false},
+    {"name":"missing-feature", "value":{"version":1,"max_window":4,"features":[]}, "expected":false}
+  ]
+}

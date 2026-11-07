@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android's mandatory window can also precede a retained audio engine.
+     Use the runtime theme's neutral canvas; Flutter owns cold-start branding. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/mesting_splash_background" />
+</layer-list>

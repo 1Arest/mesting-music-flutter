@@ -1,0 +1,1102 @@
+{
+  "discover-mix": {
+    "status_info": {
+      "log_id": "2026110521572895ABF61A5B6D7E5964C2",
+      "now": 1793887048,
+      "now_ts_ms": 1793887048953
+    },
+    "has_more": true,
+    "inner_block": [
+      {
+        "type": "discover_playlist",
+        "title": "日式放松：逃离欲望和虚荣充斥的摩登都市",
+        "inner_block_id": "7031088090098698253",
+        "resources": [
+          {
+            "resource_id": "7031088090098698253",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031088090098698253",
+                "title": "日式放松：逃离欲望和虚荣充斥的摩登都市",
+                "url_cover": {
+                  "uri": "ies-music/E74763E8-2244-4BCC-9374-76B8E5025D38_1_201_a.jpeg",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "\n\n大脑充满着压力，身体宣泄着疲惫。\n\n\n",
+                "count_tracks": 9,
+                "stats": {
+                  "count_collected": 59,
+                  "count_visible": 18
+                },
+                "create_time": 1663595420,
+                "update_time": 1793885433,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "b54c4a"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "240f0f"
+                },
+                "resource_cnt": {
+                  "track_cnt": 18
+                },
+                "snack_bar_color": {
+                  "rgb": "b54c4a",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "fce9e9"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "2f1817"
+                },
+                "public_title": "日式放松：逃离欲望和虚荣充斥的摩登都市"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "日式放松：逃离欲望和虚荣充斥的摩登都市",
+              "desc": "\n\n大脑充满着压力，身体宣泄着疲惫。\n\n\n",
+              "link": "luna://luna.com/playlist?playlist_id=7031088090098698253",
+              "cover_url": {
+                "uri": "ies-music/E74763E8-2244-4BCC-9374-76B8E5025D38_1_201_a.jpeg",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "「治愈英文歌」你在的地方，就是我的温柔乡",
+        "inner_block_id": "7031081053599074335",
+        "resources": [
+          {
+            "resource_id": "7031081053599074335",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031081053599074335",
+                "title": "「治愈英文歌」你在的地方，就是我的温柔乡",
+                "url_cover": {
+                  "uri": "ies-music/D56D1F14-6DC1-4584-8D44-2578153DA603_1_201_a.jpeg",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "你在的地方，就是我的温柔乡。",
+                "count_tracks": 1,
+                "stats": {
+                  "count_collected": 206,
+                  "count_visible": 25
+                },
+                "create_time": 1662797699,
+                "update_time": 1793880817,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "a9758c"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "1f1419"
+                },
+                "resource_cnt": {
+                  "track_cnt": 25
+                },
+                "snack_bar_color": {
+                  "rgb": "a9758c",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "f6eef2"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "3e3036"
+                },
+                "public_title": "「治愈英文歌」你在的地方，就是我的温柔乡"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "「治愈英文歌」你在的地方，就是我的温柔乡",
+              "desc": "你在的地方，就是我的温柔乡。",
+              "link": "luna://luna.com/playlist?playlist_id=7031081053599074335",
+              "cover_url": {
+                "uri": "ies-music/D56D1F14-6DC1-4584-8D44-2578153DA603_1_201_a.jpeg",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "♡♡♪♬ 『做个好梦』睡眠歌单♡♡",
+        "inner_block_id": "7031087145604646919",
+        "resources": [
+          {
+            "resource_id": "7031087145604646919",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031087145604646919",
+                "title": "♡♡♪♬ 『做个好梦』睡眠歌单♡♡",
+                "url_cover": {
+                  "uri": "ies-music/6DB4D39B-A12F-4080-A275-34541E3F432D_1_201_a.jpeg",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "首先祝各位晚安，有个好梦哦！\n",
+                "count_tracks": 16,
+                "stats": {
+                  "count_collected": 590,
+                  "count_visible": 38
+                },
+                "create_time": 1662723999,
+                "update_time": 1793879366,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "65679a"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "14151f"
+                },
+                "resource_cnt": {
+                  "track_cnt": 38
+                },
+                "snack_bar_color": {
+                  "rgb": "65679a",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "eeeef7"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "292937"
+                },
+                "public_title": "♡♡♪♬ 『做个好梦』睡眠歌单♡♡"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "♡♡♪♬ 『做个好梦』睡眠歌单♡♡",
+              "desc": "首先祝各位晚安，有个好梦哦！\n",
+              "link": "luna://luna.com/playlist?playlist_id=7031087145604646919",
+              "cover_url": {
+                "uri": "ies-music/6DB4D39B-A12F-4080-A275-34541E3F432D_1_201_a.jpeg",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "「吉他女声」民谣，故事还有梦～",
+        "inner_block_id": "7031079796462733325",
+        "resources": [
+          {
+            "resource_id": "7031079796462733325",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031079796462733325",
+                "title": "「吉他女声」民谣，故事还有梦～",
+                "url_cover": {
+                  "uri": "ies-music/0BD4CB26-F0BB-4C42-BEB4-5F3BE3C3D922_1_201_a.jpeg",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "有些事情，是冥冥中注定的，就算再不情愿，也只能承受。一路上，不要害怕寂静与孤独，唯有它们会与我们长相厮守。",
+                "count_tracks": 14,
+                "stats": {
+                  "count_collected": 81,
+                  "count_visible": 15
+                },
+                "create_time": 1663680894,
+                "update_time": 1793883548,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "ab6578"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "211216"
+                },
+                "resource_cnt": {
+                  "track_cnt": 15
+                },
+                "snack_bar_color": {
+                  "rgb": "ab6578",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "f8ecef"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "412b31"
+                },
+                "public_title": "「吉他女声」民谣，故事还有梦～"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "「吉他女声」民谣，故事还有梦～",
+              "desc": "有些事情，是冥冥中注定的，就算再不情愿，也只能承受。一路上，不要害怕寂静与孤独，唯有它们会与我们长相厮守。",
+              "link": "luna://luna.com/playlist?playlist_id=7031079796462733325",
+              "cover_url": {
+                "uri": "ies-music/0BD4CB26-F0BB-4C42-BEB4-5F3BE3C3D922_1_201_a.jpeg",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "hip-hop人生态度｜够酷，够洒脱～",
+        "inner_block_id": "7031081024517326885",
+        "resources": [
+          {
+            "resource_id": "7031081024517326885",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031081024517326885",
+                "title": "hip-hop人生态度｜够酷，够洒脱～",
+                "url_cover": {
+                  "uri": "ies-music/pgc_cover_ff0894fd4d163b1960921c634a728417",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "来源于生活，真实且亲切，总能感同身受～",
+                "count_tracks": 14,
+                "stats": {
+                  "count_collected": 88,
+                  "count_visible": 24
+                },
+                "create_time": 1660885327,
+                "update_time": 1793883460,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "7263d6"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "0f0b28"
+                },
+                "resource_cnt": {
+                  "track_cnt": 24
+                },
+                "snack_bar_color": {
+                  "rgb": "7263d6",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "e9e5ff"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "292253"
+                },
+                "public_title": "hip-hop人生态度｜够酷，够洒脱～"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "hip-hop人生态度｜够酷，够洒脱～",
+              "desc": "来源于生活，真实且亲切，总能感同身受～",
+              "link": "luna://luna.com/playlist?playlist_id=7031081024517326885",
+              "cover_url": {
+                "uri": "ies-music/pgc_cover_ff0894fd4d163b1960921c634a728417",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "『日语/恋爱』可爱又浪漫的氛围感",
+        "inner_block_id": "7031084003572074533",
+        "resources": [
+          {
+            "resource_id": "7031084003572074533",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031084003572074533",
+                "title": "『日语/恋爱』可爱又浪漫的氛围感",
+                "url_cover": {
+                  "uri": "ies-music/pgc_cover_fe3cd2d803426f7d4bf342f5b51ef0d6",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "感受过彼此拥紧的温暖\n体会过对视的眸子中透露着的爱\n\n",
+                "count_tracks": 9,
+                "stats": {
+                  "count_collected": 403,
+                  "count_visible": 49
+                },
+                "create_time": 1655694897,
+                "update_time": 1793881004,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "cea791"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "231710"
+                },
+                "resource_cnt": {
+                  "track_cnt": 49
+                },
+                "snack_bar_color": {
+                  "rgb": "cea791",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "f8f1ec"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "47382f"
+                },
+                "public_title": "『日语/恋爱』可爱又浪漫的氛围感"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "『日语/恋爱』可爱又浪漫的氛围感",
+              "desc": "感受过彼此拥紧的温暖\n体会过对视的眸子中透露着的爱\n\n",
+              "link": "luna://luna.com/playlist?playlist_id=7031084003572074533",
+              "cover_url": {
+                "uri": "ies-music/pgc_cover_fe3cd2d803426f7d4bf342f5b51ef0d6",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "【摇滚】温暖的房间，温情的音乐",
+        "inner_block_id": "7031074411760289829",
+        "resources": [
+          {
+            "resource_id": "7031074411760289829",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031074411760289829",
+                "title": "【摇滚】温暖的房间，温情的音乐",
+                "url_cover": {
+                  "uri": "ies-music/pgc_cover_cab48b783a58dc524cde89732c3b0df1",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "听着舒缓的摇滚乐，感受静下来的美好~",
+                "count_tracks": 32,
+                "stats": {
+                  "count_collected": 79,
+                  "count_visible": 32
+                },
+                "create_time": 1655861671,
+                "update_time": 1793874515,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "659a80"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "141f1a"
+                },
+                "resource_cnt": {
+                  "track_cnt": 32
+                },
+                "snack_bar_color": {
+                  "rgb": "659a80",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "eff6f2"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "1f2723"
+                },
+                "public_title": "【摇滚】温暖的房间，温情的音乐"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "【摇滚】温暖的房间，温情的音乐",
+              "desc": "听着舒缓的摇滚乐，感受静下来的美好~",
+              "link": "luna://luna.com/playlist?playlist_id=7031074411760289829",
+              "cover_url": {
+                "uri": "ies-music/pgc_cover_cab48b783a58dc524cde89732c3b0df1",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "discover_playlist",
+        "title": "假日野餐 | 在阳光草地与快乐相遇呀~",
+        "inner_block_id": "7031079769492670495",
+        "resources": [
+          {
+            "resource_id": "7031079769492670495",
+            "type": "playlist",
+            "entity": {
+              "playlist": {
+                "id": "7031079769492670495",
+                "title": "假日野餐 | 在阳光草地与快乐相遇呀~",
+                "url_cover": {
+                  "uri": "ies-music/pgc_cover_107a633669ce4f7f922a527559344047",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "desc": "带上可口的食物，约上要好的朋友，换上精致的look，出发啦~！\n 一起去野餐吧，一起去和快乐撞个满怀，去感受大自然的魅力！",
+                "count_tracks": 2,
+                "stats": {
+                  "count_collected": 46,
+                  "count_visible": 44
+                },
+                "create_time": 1655781905,
+                "update_time": 1793878983,
+                "review_status": "Accept",
+                "type": 3,
+                "from_feed": true,
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "87a956"
+                  },
+                  {
+                    "rgb": "121212"
+                  }
+                ],
+                "cover_shadow_color": {
+                  "rgb": "1b2211"
+                },
+                "resource_cnt": {
+                  "track_cnt": 44
+                },
+                "snack_bar_color": {
+                  "rgb": "87a956",
+                  "alpha": "CC"
+                },
+                "all_sort_types": [
+                  1,
+                  4,
+                  5
+                ],
+                "shuffle_play_button_color": {
+                  "rgb": "f4fbea"
+                },
+                "shuffle_play_text_color": {
+                  "rgb": "303b20"
+                },
+                "public_title": "假日野餐 | 在阳光草地与快乐相遇呀~"
+              }
+            },
+            "fallback_type": "fallback_tcc_downgrade",
+            "style": {
+              "title": "假日野餐 | 在阳光草地与快乐相遇呀~",
+              "desc": "带上可口的食物，约上要好的朋友，换上精致的look，出发啦~！\n 一起去野餐吧，一起去和快乐撞个满怀，去感受大自然的魅力！",
+              "link": "luna://luna.com/playlist?playlist_id=7031079769492670495",
+              "cover_url": {
+                "uri": "ies-music/pgc_cover_107a633669ce4f7f922a527559344047",
+                "urls": [
+                  "https://p3-luna.douyinpic.com/img/",
+                  "https://p6-luna.douyinpic.com/img/"
+                ],
+                "template_prefix": "tplv-b829550vbb"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "playlist-detail": {
+    "status_info": {
+      "log_id": "2026110521573352FD6F35A747CE22D3EE",
+      "now": 1793887053,
+      "now_ts_ms": 1793887053303
+    },
+    "has_more": true,
+    "next_cursor": "3",
+    "playlist": {
+      "id": "7031088090098698253",
+      "title": "日式放松：逃离欲望和虚荣充斥的摩登都市",
+      "url_cover": {
+        "uri": "ies-music/E74763E8-2244-4BCC-9374-76B8E5025D38_1_201_a.jpeg",
+        "urls": [
+          "https://p3-luna.douyinpic.com/img/",
+          "https://p6-luna.douyinpic.com/img/"
+        ],
+        "template_prefix": "tplv-b829550vbb"
+      },
+      "desc": "\n\n大脑充满着压力，身体宣泄着疲惫。\n\n\n",
+      "count_tracks": 9,
+      "stats": {
+        "count_collected": 59,
+        "count_shared": 11,
+        "count_visible": 18
+      },
+      "create_time": 1663595420,
+      "update_time": 1793885433,
+      "review_status": "Accept",
+      "type": 3,
+      "from_feed": false,
+      "cover_gradient_effect_color": [
+        {
+          "rgb": "b54c4a"
+        },
+        {
+          "rgb": "121212"
+        }
+      ],
+      "cover_shadow_color": {
+        "rgb": "240f0f"
+      },
+      "resource_cnt": {
+        "track_cnt": 18
+      },
+      "snack_bar_color": {
+        "rgb": "b54c4a",
+        "alpha": "CC"
+      },
+      "current_sort_type": 1,
+      "all_sort_types": [
+        1,
+        4,
+        5
+      ],
+      "shuffle_play_button_color": {
+        "rgb": "fce9e9"
+      },
+      "shuffle_play_text_color": {
+        "rgb": "2f1817"
+      },
+      "public_title": "日式放松：逃离欲望和虚荣充斥的摩登都市"
+    },
+    "media_resources": [
+      {
+        "id": "6841692289832585217",
+        "type": "track",
+        "entity": {
+          "track_wrapper": {
+            "track": {
+              "id": "6841692289832585217",
+              "album": {
+                "id": "6841692288867911682",
+                "name": "I Love Smile Faces",
+                "release_date": 1340150400,
+                "url_cover": {
+                  "uri": "tos-cn-v-2774c002/91215b4bf6f340559e3d5ebdf88703b3",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "url_player_bg": {
+                  "uri": "tos-cn-v-2774c002/91215b4bf6f340559e3d5ebdf88703b3",
+                  "urls": [
+                    "https://p3-luna.douyinpic.com/img/",
+                    "https://p6-luna.douyinpic.com/img/"
+                  ],
+                  "template": "background:${width}:${height}:30:90:0",
+                  "template_prefix": "tplv-b829550vbb"
+                },
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "a2a8b0"
+                  },
+                  {
+                    "rgb": "7b828a"
+                  }
+                ],
+                "playing_wave_color": null,
+                "paused_wave_color": null
+              },
+              "artists": [
+                {
+                  "id": "6578456966601906184",
+                  "name": "Tutomu Ikeda",
+                  "url_avatar": {
+                    "uri": "tos-cn-v-2774c002/91215b4bf6f340559e3d5ebdf88703b3",
+                    "urls": [
+                      "https://p3-luna.douyinpic.com/img/",
+                      "https://p6-luna.douyinpic.com/img/"
+                    ],
+                    "template_prefix": "tplv-b829550vbb"
+                  },
+                  "state": {
+                    "blocked_by_me": false
+                  },
+                  "simple_display_name": "Tutomu Ikeda",
+                  "user_artist_type": 1
+                }
+              ],
+              "duration": 233684,
+              "name": "光と共に (1.00)",
+              "preview": {
+                "duration": 60001,
+                "start": 40704,
+                "vid": "v10ad6g50000d99ga27og65me51kqh40",
+                "bit_rates": [
+                  {
+                    "br": 68405,
+                    "size": 513038,
+                    "quality": "medium"
+                  },
+                  {
+                    "br": 132432,
+                    "size": 993247,
+                    "quality": "higher"
+                  },
+                  {
+                    "br": 260465,
+                    "size": 1953491,
+                    "quality": "highest"
+                  }
+                ]
+              },
+              "state": {},
+              "stats": {
+                "count_collected": 49,
+                "count_comment": 2,
+                "count_shared": 13
+              },
+              "vid": "v07ad63f0000c0mjtp7t9f3ma2a4aecg",
+              "label_info": {
+                "only_vip_download": true,
+                "only_vip_playable": true,
+                "quality_only_vip_can_download": [
+                  "medium",
+                  "higher",
+                  "highest",
+                  "lossless"
+                ],
+                "quality_only_vip_can_play": [
+                  "lossless"
+                ],
+                "quality_map": {
+                  "spatial": {
+                    "play_detail": {
+                      "condition": "benefit_play_spatial",
+                      "need_vip": true,
+                      "need_purchase": false
+                    },
+                    "download_detail": {
+                      "condition": "benefit_download_spatial",
+                      "need_vip": true,
+                      "need_purchase": false
+                    }
+                  },
+                  "hi_res": {
+                    "play_detail": {
+                      "condition": "benefit_play_hi_res",
+                      "need_vip": true,
+                      "need_purchase": false
+                    },
+                    "download_detail": null
+                  },
+                  "medium": {
+                    "play_detail": {
+                      "condition": "benefit_play_medium",
+                      "need_vip": false,
+                      "need_purchase": false
+                    },
+                    "download_detail": {
+                      "condition": "benefit_download_medium",
+                      "need_vip": true,
+                      "need_purchase": false
+                    }
+                  },
+                  "higher": {
+                    "play_detail": {
+                      "condition": "benefit_play_higher",
+                      "need_vip": false,
+                      "need_purchase": false
+                    },
+                    "download_detail": {
+                      "condition": "benefit_download_higher",
+                      "need_vip": true,
+                      "need_purchase": false
+                    }
+                  },
+                  "highest": {
+                    "play_detail": {
+                      "condition": "benefit_play_highest",
+                      "need_vip": false,
+                      "need_purchase": false
+                    },
+                    "download_detail": {
+                      "condition": "benefit_download_highest",
+                      "need_vip": true,
+                      "need_purchase": false
+                    }
+                  },
+                  "lossless": {
+                    "play_detail": {
+                      "condition": "benefit_play_lossless",
+                      "need_vip": true,
+                      "need_purchase": false
+                    },
+                    "download_detail": {
+                      "condition": "benefit_download_lossless",
+                      "need_vip": true,
+                      "need_purchase": false
+                    }
+                  }
+                }
+              },
+              "sim_id": 6842143832998414339,
+              "bit_rates": [
+                {
+                  "br": 68165,
+                  "size": 1991548,
+                  "quality": "medium"
+                },
+                {
+                  "br": 132166,
+                  "size": 3861425,
+                  "quality": "higher"
+                },
+                {
+                  "br": 260168,
+                  "size": 7601178,
+                  "quality": "highest"
+                }
+              ],
+              "audition_info": {
+                "vid": "v10ad6g50000d99ga27og65me51kqh40",
+                "start_time_ms": 40704,
+                "duration_ms": 60001
+              },
+              "song_maker_team": {
+                "composers": [
+                  {
+                    "name": "Tsutomu Ikeda"
+                  }
+                ],
+                "lyricists": [
+                  {
+                    "name": "Tsutomu Ikeda"
+                  }
+                ]
+              },
+              "media_type": "track",
+              "chorus": {
+                "duration": 0,
+                "start": 40704
+              },
+              "colors": {
+                "cover_gradient_effect_color": [
+                  {
+                    "rgb": "a2a8b0"
+                  },
+                  {
+                    "rgb": "7b828a"
+                  }
+                ],
+                "normal_lyric_color": {
+                  "rgb": "c7cdd5"
+                },
+                "playing_lyric_color": {
+                  "rgb": "ebf1f9"
+                },
+                "recommend_reason_background_color": {
+                  "rgb": "676d74",
+                  "alpha": "8c"
+                },
+                "featured_comment_tag_color": {
+                  "rgb": "dbdfe4"
+                },
+                "background_color": {
+                  "rgb": "7b828a"
+                },
+                "playing_wave_color": {
+                  "rgb": "acb2b9"
+                },
+                "paused_wave_color": {
+                  "rgb": "7d7f81",
+                  "alpha": "bf"
+                },
+                "comment_share_additional_color": {
+                  "rgb": "7b828a"
+                },
+                "base_colors": [
+                  {
+                    "rgb": "f0f2f5"
+                  },
+                  {
+                    "rgb": "dbdfe4"
+                  },
+                  {
+                    "rgb": "c8cdd3"
+                  },
+                  {
+                    "rgb": "b5bac2"
+                  },
+                  {
+                    "rgb": "a2a8b0"
+                  },
+                  {
+                    "rgb": "7d848d"
+                  },
+                  {
+                    "rgb": "5b6068"
+                  },
+                  {
+                    "rgb": "393d42"
+                  },
+                  {
+                    "rgb": "17191c"
+                  }
+                ],
+                "non_interactive_anchor_background": {
+                  "rgb": "848990",
+                  "alpha": "8c"
+                }
+              },
+              "limited_free_info": {
+                "queue_types": [],
+                "expire_time": 0,
+                "sign": "",
+                "sign_version": "",
+                "limited_free_type": "",
+                "rewind_prev_intercept_type": "",
+                "intercept_type": ""
+              },
+              "vocal": 1,
+              "lang_codes": [
+                "JA"
+              ],
+              "first_vocal": {
+                "duration": 50880,
+                "start": 40704
+              },
+              "sharable_platforms": [
+                "link",
+                "aweme",
+                "aweme_publish",
+                "wechat_zone",
+                "wechat",
+                "weibo",
+                "qq_zone",
+                "qq"
+              ],
+              "playable_range": {
+                "duration": 50880,
+                "start": 40704
+              },
+              "sim_id_v3": 80423808002,
+              "plug_status": {
+                "can_plug": false,
+                "is_plugged": false
+              },
+              "tags": [
+                {
+                  "category": {
+                    "tag_id": 1,
+                    "tag_name": "Genre"
+                  },
+                  "first_level_tag": {
+                    "tag_id": 6730932201380170498,
+                    "tag_name": "Pop"
+                  },
+                  "second_level_tag": {
+                    "tag_id": 6826172719336261634,
+                    "tag_name": "J-Pop"
+                  }
+                },
+                {
+                  "category": {
+                    "tag_id": 1,
+                    "tag_name": "Genre"
+                  },
+                  "first_level_tag": {
+                    "tag_id": 6730932201380170498,
+                    "tag_name": "Pop"
+                  }
+                }
+              ],
+              "fragments": [
+                {
+                  "type": "mute_head",
+                  "start_time": 0,
+                  "end_time": 2930
+                }
+              ],
+              "nodes": [
+                {
+                  "type": 1,
+                  "start": 40704,
+                  "duration": 50880,
+                  "priority": 1,
+                  "opacity": 0.5
+                },
+                {
+                  "type": 2,
+                  "start": 40704,
+                  "duration": 0,
+                  "priority": 2,
+                  "opacity": 1
+                }
+              ],
+              "is_support_bell": true,
+              "check_context": "{\"req_time\":1793887053}",
+              "karaoke": {
+                "supported": true
+              },
+              "lyric_poster": {
+                "disabled": false
+              }
+            },
+            "limited_free_info": null
+          }
+        },
+        "collect_info": {
+          "source_app_id": 8478
+        },
+        "index": "0"
+      }
+    ],
+    "session_id": "[redacted]"
+  }
+}

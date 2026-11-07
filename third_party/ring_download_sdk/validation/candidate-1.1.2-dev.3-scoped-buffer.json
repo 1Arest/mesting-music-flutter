@@ -1,0 +1,43 @@
+{
+  "version": "1.1.2-dev.3",
+  "status": "verified_candidate_not_published",
+  "SDK_tests_passed": 518,
+  "static_analysis_passed": true,
+  "native_ABIs": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+  ],
+  "native_binary_total_bytes": 42592,
+  "NDK_reproduction_all_match": true,
+  "ordinary_Android_selftest": {
+    "passed": true,
+    "repeat_count": 100,
+    "FDs_before": 145,
+    "FDs_after": 145
+  },
+  "real_WiFi_run": {
+    "input_files": 219,
+    "APK_bytes": 102048657,
+    "receipt_elapsed_ms": 11701,
+    "full_revalidated": true,
+    "seed_verified_bytes": 28311552,
+    "peer_verified_bytes": 56623104,
+    "https_body_bytes": 18164048,
+    "final_verified": true,
+    "observed_drop_increases": 0,
+    "final_UDP_FDs": 0,
+    "adjusted_socket_count": 6,
+    "sampled_sockets": 22,
+    "original_broad_tuner_enabled": false
+  },
+  "limits": [
+    "One tablet and one Wi-Fi path; no fixed speed guarantee",
+    "C to 5.20 IPv4 ICE remains unresolved",
+    "Some RTC candidate lists truncated; no exclusive per-peer drop attribution"
+  ],
+  "formal_website_replaced": false,
+  "LifeRing_branch_replaced": false,
+  "node_upgraded": false
+}

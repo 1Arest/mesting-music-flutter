@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "version": "1.1.1",
+  "candidate_version": "1.1.1-dev.1",
+  "candidate_inputs": 68,
+  "runtime_files": 29,
+  "identical_runtime_files": 28,
+  "version_literal_only": [
+    "lib/src/sdk/models.dart"
+  ],
+  "transmission_runtime_changes": [],
+  "backend_only_docs_and_exact_static_allowlist": true,
+  "HTTP_range_capacity": 2,
+  "global_piece_slots": 4,
+  "comparison": "SHA-256 after CRLF to LF normalization, as recorded in candidate validation; byte line endings can differ"
+}

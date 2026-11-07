@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Active “词” glyph; the heavier stroke keeps the state visible. -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:pathData="M4.2,4.3L6.6,6.1M3.5,9.2H7.3L5.6,18.8L8.1,16.6M9.4,5.2H20V18.4C20,19.5 19.2,20.2 18.1,20.2H15.6M9.6,9.2H16.8M10.2,12.2H16.4V16.6H10.2Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.2" />
+</vector>

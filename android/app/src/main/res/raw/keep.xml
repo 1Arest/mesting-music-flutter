@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification_favorite,@drawable/ic_notification_favorite_border,@drawable/ic_notification_lyrics,@drawable/ic_notification_lyrics_on" />

@@ -1,0 +1,41 @@
+{
+  "upstream": "https://github.com/zzyoxml/md3Music",
+  "commit": "a69503b84e8829f888684f67c163be03c589c014",
+  "license": "AGPL-3.0",
+  "usage": "Beta.7 API, result ordering, FM feedback, discovery cursor and search exploration contracts; Mesting presentation/audio owner retained",
+  "referenceFiles": [
+    {
+      "path": "lib/providers/kugou_provider.dart",
+      "sha256": "22bbcf36357d67d93b47945493f2a167f53ede03350bb8bda59d8c53b6177459"
+    },
+    {
+      "path": "lib/services/kugou_api/kugou_api_client.dart",
+      "sha256": "aa1e3aa6b29a4640335fee6e35360d79c815d0f66b2a055f98b4713101121b3d"
+    },
+    {
+      "path": "lib/services/kugou_api/kugou_models.dart",
+      "sha256": "04e83324aaa934dc89f34a925884b15895425898323414505f402f8875e29851"
+    },
+    {
+      "path": "lib/modules/search/search_page.dart",
+      "sha256": "d01660a296b46eb3eb79b70ae6c20e9749fc9fc8b9c1c82004ce3bfdc04a930a"
+    },
+    {
+      "path": "lib/modules/search/explore_sections.dart",
+      "sha256": "85cc1c667f5e1a04a7fc7c26ed61d708fc471ebbe62147a132033899e1832ea1"
+    },
+    {
+      "path": "lib/modules/personal_fm/personal_fm_core.dart",
+      "sha256": "4da762e3bd1ee66e238634dd177811d576d71a28621d13eb425e15f1d0207ecd"
+    },
+    {
+      "path": "lib/data/repositories/home_discover_progress_store.dart",
+      "sha256": "25f72292f5ea9b6d071a5359b4ea99d39893eb1d25e9c6ab6312e6e3cca026b9"
+    }
+  ],
+  "adapters": [
+    "lib/features/music_platform/data/platform_recommendations.dart",
+    "lib/features/music_platform/data/platform_explore.dart",
+    "lib/features/music_platform/platform_recommendation_providers.dart"
+  ]
+}

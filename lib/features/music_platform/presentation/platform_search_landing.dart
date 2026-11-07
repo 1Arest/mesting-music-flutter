@@ -1,0 +1,613 @@
+import 'platform_collection_play.dart';
+import 'platform_public_playlist_header.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
+import '../../../shared/widgets/music_list_footer.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
+import '../../../shared/widgets/route_settled_content.dart';
+import 'dart:convert';
+import '../../../shared/widgets/music_notice.dart';
+import '../../../shared/widgets/automatic_song_paging.dart';
+import 'package:flutter/material.dart';
+import '../../../shared/widgets/music_activity_indicator.dart';
+import '../../../core/cache/cached_browse_loader.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/models/track.dart';
+import '../../../shared/widgets/artwork_image.dart';
+import '../../experience/presentation/editorial_widgets.dart';
+import '../../search/search_providers.dart';
+import '../data/platform_explore.dart';
+import '../music_platform_providers.dart';
+import '../platform_recommendation_providers.dart';
+import 'platform_design.dart';
+import 'platform_ranking_header.dart';
+import 'apple_hot_search.dart';
+import '../data/music_platform_api.dart';
+import '../data/platform_recommendations.dart';
+import '../platform_explore_providers.dart';
+import '../platform_backend_providers.dart';
+import '../netease/netease_features_page.dart';
+import '../netease/netease_features_repository.dart';
+import '../../downloads/audio_downloads_page.dart';
+export '../platform_explore_providers.dart';
+
+/// Search history, real keyword boards, then upstream music exploration. A
+/// keyword opens search; it is never presented as a directly playable song.
+class PlatformSearchLanding extends ConsumerStatefulWidget {
+  const PlatformSearchLanding({required this.onSearch, super.key});
+  final ValueChanged<String> onSearch;
+  @override
+  ConsumerState<PlatformSearchLanding> createState() =>
+      _PlatformSearchLandingState();
+}
+
+class _PlatformSearchLandingState extends ConsumerState<PlatformSearchLanding> {
+  bool _refreshing = false;
+  String? _refreshStatus;
+
+  Future<void> _refreshHotSearch() async {
+    if (_refreshing) return;
+    final previous = ref.read(platformHotSearchProvider).value;
+    final owner = ref.read(platformAccountProvider).value?.ownerId;
+    setState(() {
+      _refreshing = true;
+      _refreshStatus = null;
+    });
+    try {
+      final fresh = await ref.refresh(platformHotSearchProvider.future);
+      if (!mounted ||
+          ref.read(platformAccountProvider).value?.ownerId != owner) {
+        return;
+      }
+      // Server ranks stay authoritative: identical results are a successful
+      // refresh, not a reason to shuffle songs merely to produce movement.
+      String signature(List<PlatformHotSearchBoard> items) => jsonEncode([
+        for (final board in items) [board.name, board.keywords],
+      ]);
+      setState(
+        () => _refreshStatus =
+            previous != null && signature(previous) == signature(fresh)
+            ? '已是最新热搜'
+            : '热搜已更新',
+      );
+      showMusicNotice(
+        context,
+        icon: Icons.check_rounded,
+        title: _refreshStatus!,
+        message: '',
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _refreshStatus = previous?.isNotEmpty == true
+              ? '刷新失败，已保留原榜单，请重试'
+              : '刷新失败，请重试',
+        );
+        showMusicNotice(
+          context,
+          icon: Icons.error_outline_rounded,
+          title: _refreshStatus!,
+          message: '',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final history = ref.watch(
+      musicSearchControllerProvider.select((s) => s.recentSearches),
+    );
+    final boards = ref.watch(platformHotSearchProvider);
+    return ListView(
+      padding: BetaContentInsets.musicPaddingOf(
+        context,
+        EdgeInsets.fromLTRB(22, 20, 22, 190),
+      ),
+      children: [
+        if (history.isNotEmpty) ...[
+          Row(
+            children: [
+              Text('搜索历史', style: Theme.of(context).textTheme.titleMedium),
+              const Spacer(),
+              TextButton(
+                onPressed: () => ref
+                    .read(musicSearchControllerProvider.notifier)
+                    .clearRecentSearches(),
+                child: const Text('清空'),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final word in history)
+                ActionChip(
+                  label: Text(word),
+                  onPressed: () => widget.onSearch(word),
+                ),
+            ],
+          ),
+          const SizedBox(height: 22),
+        ],
+        Row(
+          children: [
+            Text('热门搜索', style: Theme.of(context).textTheme.titleLarge),
+            const Spacer(),
+            IconButton(
+              tooltip: '刷新热门搜索',
+              onPressed: _refreshing ? null : _refreshHotSearch,
+              icon: _refreshing
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: MusicActivityIndicator(
+                        strokeWidth: 2,
+                        independent: true,
+                      ),
+                    )
+                  : const Icon(Icons.refresh),
+            ),
+          ],
+        ),
+        boards.when(
+          skipError: true,
+          loading: () => const PlatformFeedbackState(loading: true),
+          error: (_, _) => EditorialEmpty(
+            '热搜暂时无法加载',
+            onRetry: () => ref.invalidate(platformHotSearchProvider),
+          ),
+          data: (items) => items.isEmpty
+              ? EditorialEmpty(
+                  '平台暂未返回热搜',
+                  onRetry: () => ref.invalidate(platformHotSearchProvider),
+                )
+              : AppleHotSearchBoards(boards: items, onSearch: widget.onSearch),
+        ),
+        const SizedBox(height: 28),
+        RouteSettledContent(
+          // History/hot keywords stay immediately available. Cold optional
+          // shelves start only after the enclosing search slide has landed.
+          builder: (_) => Column(
+            children: [
+              for (final kind in PlatformExploreKind.values.where(
+                (k) =>
+                    !ref.watch(usesNeteaseProvider) ||
+                    (k != PlatformExploreKind.scene &&
+                        k != PlatformExploreKind.theme),
+              ))
+                _ExploreSection(kind: kind),
+            ],
+          ),
+          placeholder: const SizedBox(height: 182),
+        ),
+      ],
+    );
+  }
+}
+
+class _ExploreSection extends ConsumerWidget {
+  const _ExploreSection({required this.kind});
+  final PlatformExploreKind kind;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(platformExploreProvider(kind))
+      .when(
+        loading: () => const SizedBox.shrink(),
+        error: (error, _) => Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${kind.label}暂时未能加载${error is MusicPlatformException ? '\n${error.message}' : ''}',
+                ),
+              ),
+              TextButton(
+                onPressed: () => ref.invalidate(platformExploreProvider(kind)),
+                child: const Text('重试'),
+              ),
+            ],
+          ),
+        ),
+        data: (items) => items.isEmpty
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      kind.label,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    if (kind == PlatformExploreKind.scene)
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final item in items)
+                            Chip(label: Text(item.title)),
+                        ],
+                      )
+                    else
+                      SizedBox(
+                        height: 182,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: items.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 14),
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return SizedBox(
+                              width: 132,
+                              child: InkWell(
+                                onTap:
+                                    kind == PlatformExploreKind.theme ||
+                                        item.id.isEmpty
+                                    ? null
+                                    : () => Navigator.of(context).push(
+                                        MestingPageRoute<void>(
+                                          builder: (_) =>
+                                              PlatformExploreSongsPage(
+                                                item: item,
+                                              ),
+                                        ),
+                                      ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Stack(
+                                        children: [
+                                          ArtworkImage(
+                                            uri: item.cover,
+                                            width: 132,
+                                            height: 132,
+                                          ),
+                                          if ({
+                                            PlatformExploreKind.rank,
+                                            PlatformExploreKind.playlist,
+                                          }.contains(item.kind))
+                                            Positioned(
+                                              right: 4,
+                                              bottom: 4,
+                                              child:
+                                                  PlatformCollectionPlayButton(
+                                                    item: item,
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 9),
+                                    Text(
+                                      item.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.labelLarge,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+      );
+}
+
+class PlatformExploreSongsPage extends ConsumerStatefulWidget {
+  const PlatformExploreSongsPage({required this.item, super.key});
+  final PlatformExploreItem item;
+  @override
+  ConsumerState<PlatformExploreSongsPage> createState() =>
+      _ExploreSongsPageState();
+}
+
+class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
+  final _browse = CachedBrowseLoader();
+  final _tracks = <Track>[];
+  final _collections = <PlatformExploreItem>[];
+  int _page = 0;
+  bool _busy = false, _more = true;
+  String? _error;
+  String? _owner;
+  String? _token;
+  bool _loaded = false;
+  PlatformExploreItem? _resolvedItem;
+  int _sourceOffset = 0;
+  int? _total;
+  bool _downloadingAll = false;
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(_load);
+  }
+
+  Future<void> _load() async {
+    if (_busy || !_more) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final account = await ref.read(platformAccountProvider.future);
+      if (!mounted) return;
+      final owner = account?.ownerId, token = account?.token;
+      final repository = ref.read(platformExploreRepositoryProvider);
+      final page = _page + 1;
+      final offset = _sourceOffset;
+      final batch = await _browse.load(
+        key: page,
+        request: () async {
+          final resolved = await repository.resolveScene(widget.item);
+          final collectionScene =
+              resolved.kind == PlatformExploreKind.scene &&
+              resolved.sceneContent == PlatformSceneContent.collections;
+          final trackPage = collectionScene
+              ? null
+              : await repository.tracksPage(resolved, offset: offset);
+          return (
+            resolved: resolved,
+            tracks: trackPage?.items ?? <Track>[],
+            nextOffset: trackPage?.nextOffset ?? offset,
+            total: trackPage?.total,
+            more: trackPage?.hasMore ?? false,
+            collections: collectionScene
+                ? await repository.sceneCollections(resolved, page: page)
+                : <PlatformExploreItem>[],
+          );
+        },
+        onUpdate: (previous, current) {
+          if (!mounted ||
+              ref.read(platformAccountProvider).value?.ownerId != owner ||
+              ref.read(platformAccountProvider).value?.token != token) {
+            return;
+          }
+          setState(() {
+            replaceBrowsePage(
+              _tracks,
+              previous.tracks,
+              current.tracks,
+              (track) => track.id,
+              fallbackIndex: (page - 1) * 30,
+            );
+            replaceBrowsePage(
+              _collections,
+              previous.collections,
+              current.collections,
+              (item) => item.id,
+              fallbackIndex: (page - 1) * 30,
+            );
+            _resolvedItem = current.resolved;
+            if (page == _page) {
+              _more =
+                  current.resolved.sceneContent ==
+                      PlatformSceneContent.collections
+                  ? current.collections.length >= 30
+                  : current.more;
+              _sourceOffset = current.nextOffset;
+              _total = current.total;
+            }
+          });
+        },
+      );
+      final resolved = batch.resolved;
+      final isCollectionScene =
+          resolved.kind == PlatformExploreKind.scene &&
+          resolved.sceneContent == PlatformSceneContent.collections;
+      final fresh = batch.tracks;
+      final collections = batch.collections;
+      if (!mounted ||
+          ref.read(platformAccountProvider).value?.ownerId != owner ||
+          ref.read(platformAccountProvider).value?.token != token) {
+        return;
+      }
+      setState(() {
+        final ids = _tracks.map((e) => e.id).toSet();
+        final additions = fresh.where((e) => ids.add(e.id)).toList();
+        _tracks.addAll(additions);
+        final collectionIds = _collections.map((item) => item.id).toSet();
+        final newCollections = collections
+            .where((item) => collectionIds.add(item.id))
+            .toList();
+        _collections.addAll(newCollections);
+        _page++;
+        _more = isCollectionScene
+            ? collections.length >= 30 && newCollections.isNotEmpty
+            : batch.more;
+        _sourceOffset = batch.nextOffset;
+        _total = batch.total;
+        _owner = owner;
+        _token = token;
+        _loaded = true;
+        _resolvedItem = resolved;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = '歌曲加载失败，请重试');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _browse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final account = ref.watch(platformAccountProvider).value;
+    if (_loaded && (account?.ownerId != _owner || account?.token != _token)) {
+      return PlatformPageFrame(
+        title: widget.item.title,
+        child: const EditorialEmpty('账号已变化，请返回后重新打开'),
+      );
+    }
+    final collectionHeader =
+        widget.item.kind == PlatformExploreKind.rank ||
+        widget.item.kind == PlatformExploreKind.playlist;
+    final collectionScene =
+        _resolvedItem?.sceneContent == PlatformSceneContent.collections;
+    final content = AutomaticSongPaging(
+      songListId: 'explore:${widget.item.kind.name}:${widget.item.id}',
+      enabled: _more && !_busy && _error == null,
+      onLoadMore: _load,
+      child: ListView.builder(
+        cacheExtent: MediaQuery.sizeOf(context).height,
+        padding: BetaContentInsets.musicPaddingOf(
+          context,
+          EdgeInsets.only(bottom: 190),
+        ),
+        itemCount: (collectionScene ? _collections.length : _tracks.length) + 2,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            if (widget.item.kind == PlatformExploreKind.rank) {
+              return PlatformRankingHeader(
+                item: widget.item,
+                tracks: _tracks,
+                total: _total,
+              );
+            }
+            if (widget.item.kind == PlatformExploreKind.playlist) {
+              return PlatformPublicPlaylistHeader(
+                item: widget.item,
+                tracks: _tracks,
+                total: _total,
+              );
+            }
+            if (!ref.watch(usesNeteaseProvider)) {
+              return const SizedBox.shrink();
+            }
+            return Column(
+              children: [
+                NeteaseResourceActions(
+                  item: NeteaseItem(
+                    id: widget.item.id,
+                    name: widget.item.title,
+                    kind: widget.item.kind == PlatformExploreKind.album
+                        ? NeteaseEntity.album
+                        : NeteaseEntity.playlist,
+                  ),
+                  showDownload: !collectionScene,
+                  onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
+                      ? null
+                      : () async {
+                          final current = ref
+                              .read(platformAccountProvider)
+                              .value;
+                          if (current?.ownerId != _owner ||
+                              current?.token != _token) {
+                            return;
+                          }
+                          setState(() => _downloadingAll = true);
+                          try {
+                            final all = await ref
+                                .read(neteaseMusicRepositoryProvider)
+                                .exploreTracks(_resolvedItem ?? widget.item);
+                            if (!context.mounted ||
+                                ref
+                                        .read(platformAccountProvider)
+                                        .value
+                                        ?.ownerId !=
+                                    _owner ||
+                                ref
+                                        .read(platformAccountProvider)
+                                        .value
+                                        ?.token !=
+                                    _token) {
+                              return;
+                            }
+                            await enqueueAudioDownloads(context, ref, all);
+                          } catch (failure) {
+                            if (context.mounted) {
+                              showMusicNotice(
+                                context,
+                                icon: Icons.error_outline,
+                                title: '歌曲读取未完成，请重试',
+                                message: '',
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _downloadingAll = false);
+                            }
+                          }
+                        },
+                ),
+              ],
+            );
+          }
+          index--;
+          if (collectionScene && index < _collections.length) {
+            final collection = _collections[index];
+            return ListTile(
+              key: ValueKey('scene-collection-${collection.id}'),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 10,
+              ),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: ArtworkImage(
+                  uri: collection.cover,
+                  width: 58,
+                  height: 58,
+                ),
+              ),
+              title: Text(
+                collection.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: collection.subtitle.isEmpty
+                  ? null
+                  : Text(
+                      collection.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MestingPageRoute<void>(
+                  builder: (_) => PlatformExploreSongsPage(item: collection),
+                ),
+              ),
+            );
+          }
+          if (!collectionScene && index < _tracks.length) {
+            return EditorialTrackRow(
+              track: _tracks[index],
+              contextTracks: _tracks,
+            );
+          }
+          if (_busy) return const PlatformFeedbackState(loading: true);
+          if (_error != null) {
+            return TextButton(onPressed: _load, child: Text(_error!));
+          }
+          if ((collectionScene ? _collections.isEmpty : _tracks.isEmpty) &&
+              !_more) {
+            return EditorialEmpty(collectionScene ? '平台暂未返回歌单' : '平台暂未返回歌曲');
+          }
+          return _more ? const SizedBox(height: 12) : const MusicListEnd();
+        },
+      ),
+    );
+    return PlatformPageFrame(
+      title: widget.item.title,
+      headerInScroll: collectionHeader,
+      child: collectionHeader
+          ? PlatformRankingScrollShell(title: widget.item.title, child: content)
+          : content,
+    );
+  }
+}

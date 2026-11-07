@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/mesting_splash_background</item>
+        <!-- Android 12+ always inserts a system splash before Flutter draws.
+             Keep that mandatory layer visually neutral so the Flutter lockup is
+             the only visible branded launch screen. -->
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+        <item name="android:statusBarColor">@color/mesting_splash_background</item>
+        <item name="android:navigationBarColor">@color/mesting_splash_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+    <style name="LaunchThemeMorning" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowBackground">@color/mesting_morning_background</item>
+        <item name="android:windowSplashScreenBackground">@color/mesting_morning_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+        <item name="android:statusBarColor">@color/mesting_morning_background</item>
+        <item name="android:navigationBarColor">@color/mesting_morning_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+    <style name="LaunchThemeMidnight" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@color/mesting_midnight_background</item>
+        <item name="android:windowSplashScreenBackground">@color/mesting_midnight_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+        <item name="android:statusBarColor">@color/mesting_midnight_background</item>
+        <item name="android:navigationBarColor">@color/mesting_midnight_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

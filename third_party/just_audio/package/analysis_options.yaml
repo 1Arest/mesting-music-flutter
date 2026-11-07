@@ -1,0 +1,15 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # Keep the vendored 0.10.6 constructors byte-for-byte outside the routing
+    # extension instead of reformatting unrelated upstream APIs for app lints.
+    use_super_parameters: false
+    prefer_single_quotes: false
+    unawaited_futures: false

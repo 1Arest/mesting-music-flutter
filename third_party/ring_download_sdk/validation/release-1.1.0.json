@@ -1,0 +1,32 @@
+{
+  "version": "1.1.0",
+  "released_at": "2026-10-25",
+  "channel": "stable",
+  "existing_validation": {
+    "candidate_sdk_tests": 502,
+    "LifeRing_shipped_sdk_tests": 491,
+    "LifeRing_host_update_tests": 44,
+    "Android_lifecycle_cases": 18,
+    "static_analysis": "passed"
+  },
+  "formal_version_delta": {
+    "passed": true,
+    "version": "1.1.0",
+    "runtime_files": 29,
+    "transmission_runtime_changes": [],
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "identical_runtime_files": 28,
+    "SDK_pubspec_and_reported_version_match": true,
+    "extra_functional_tests_started": false
+  },
+  "additional_tests_started": false,
+  "user_decision": "Release after completed checks; omit additional long tests.",
+  "limitations": [
+    "No guarantee of fixed public-network success rate or speedup.",
+    "LifeRing production APK is built and signed by its developer."
+  ],
+  "legacy_sdk_1_0_3_sha256": "1d6af475f98f31abacf7fd87d28e46e34f78ce88b72764d7c8972159c875841c",
+  "previous_P2P_baseline": "40420f35e7bd41e8e9fef51eee55093bbed60283"
+}

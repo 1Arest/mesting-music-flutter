@@ -1,0 +1,211 @@
+diff --git a/backend-java/src/main/java/com/auralink/backend/service/AppUpgradeService.java b/backend-java/src/main/java/com/auralink/backend/service/AppUpgradeService.java
+index aeca669b..6b6582c2 100644
+--- a/backend-java/src/main/java/com/auralink/backend/service/AppUpgradeService.java
++++ b/backend-java/src/main/java/com/auralink/backend/service/AppUpgradeService.java
+@@ -237,6 +237,14 @@ public class AppUpgradeService {
+ 
+         String normalizedUrl = trimToNull(customDownloadUrl);
+         validateCustomDownloadUrl(normalizedUrl);
++        if (!Objects.equals(trimToNull(release.getCustomDownloadUrl()), normalizedUrl)) {
++            // This endpoint edits only a URL, so it cannot attest that a new
++            // source still contains the old artifact. Hosted health refills
++            // these fields below; an external link remains downloadable without
++            // inheriting the previous source's size/hash.
++            release.setApkFileSize(0L);
++            release.setApkSha256("");
++        }
+         release.setCustomDownloadUrl(normalizedUrl);
+         if (cosDownloadUrl != null) {
+             String normalizedCosUrl = trimToNull(cosDownloadUrl);
+diff --git a/backend-java/src/main/java/com/auralink/backend/service/CustomApkDownloadSourceResolver.java b/backend-java/src/main/java/com/auralink/backend/service/CustomApkDownloadSourceResolver.java
+index 40216243..8ed86121 100644
+--- a/backend-java/src/main/java/com/auralink/backend/service/CustomApkDownloadSourceResolver.java
++++ b/backend-java/src/main/java/com/auralink/backend/service/CustomApkDownloadSourceResolver.java
+@@ -17,7 +17,7 @@ import java.time.Duration;
+ import java.util.Locale;
+ import java.util.Set;
+ 
+-/** CUSTOM_URL selects the service; fresh health exclusively identifies its current APK.
++/** Hosted CUSTOM_URL selects the service; external URLs retain their original source.
+  * Account eligibility and build ordering remain separate from artifact metadata. */
+ @Service
+ public class CustomApkDownloadSourceResolver {
+@@ -48,11 +48,19 @@ public class CustomApkDownloadSourceResolver {
+         requestTimeout = Duration.ofMillis(Math.max(250, timeoutMs));
+     }
+ 
+-    /** Every CUSTOM_URL request fetches this exact health endpoint, without caching.
++    /** Only a hosted CUSTOM_URL fetches this exact health endpoint, without caching.
+      * Database size/SHA and the legacy COS argument cannot veto or replace health.
+      * LOCAL and COS never contact health. Keep the argument for caller compatibility. */
+     public Resolution resolve(AppUpgradeRelease release, String unusedBusinessCosFallbackUrl) {
+         if (!"CUSTOM_URL".equalsIgnoreCase(release.getStorageProvider())) return null;
++        // A business COS/CDN URL must remain available even when our service is
++        // offline. Its database metadata may legitimately omit size or SHA.
++        final URI selected;
++        try { selected = URI.create(release.getCustomDownloadUrl()); }
++        catch (IllegalArgumentException | NullPointerException error) { throw unavailable(); }
++        if (selected.getHost() == null ||
++                !allowedHosts.contains(selected.getHost().toLowerCase(Locale.ROOT))) return null;
++        if (safeDownloadUrl(selected.toString()) == null) throw unavailable();
+         try {
+             HttpRequest request = HttpRequest.newBuilder(HEALTH_URI).timeout(requestTimeout)
+                     .header("Accept", "application/json").header("Cache-Control", "no-cache, no-store")
+diff --git a/backend-java/src/test/java/com/auralink/backend/service/CustomApkDownloadSourceResolverTest.java b/backend-java/src/test/java/com/auralink/backend/service/CustomApkDownloadSourceResolverTest.java
+index a9daee20..7a10c286 100644
+--- a/backend-java/src/test/java/com/auralink/backend/service/CustomApkDownloadSourceResolverTest.java
++++ b/backend-java/src/test/java/com/auralink/backend/service/CustomApkDownloadSourceResolverTest.java
+@@ -22,10 +22,10 @@ class CustomApkDownloadSourceResolverTest {
+         verifyNoInteractions(transport);
+     }
+ 
+-    @Test void everyCustomLinkUsesFreshHealthIncludingStaleDatabaseAndBackupHost() throws Exception {
++    @Test void everyHostedLinkUsesFreshHealthIncludingStaleDatabaseAndBackupHost() throws Exception {
+         reply(200, health(127642054, "a"), health(127650000, "b"));
+         var release = release("CUSTOM_URL");
+-        release.setCustomDownloadUrl("https://cdn.example.com/old.apk");
++        release.setCustomDownloadUrl("https://download1.csnas.asia/lifering/download");
+         var first = resolver.resolve(release, "https://business.example.com/old.apk");
+         var second = resolver.resolve(release, null);
+         assertThat(first.fileSize()).isEqualTo(127642054);
+@@ -42,6 +42,34 @@ class CustomApkDownloadSourceResolverTest {
+         }
+     }
+ 
++    @Test void externalCosCustomUrlWithoutHashesNeverRequestsHealth() {
++        var release = release("CUSTOM_URL");
++        release.setCustomDownloadUrl("https://business.cos.example.com/LifeRing.apk?sign=private");
++        release.setApkFileSize(0L);
++        release.setApkSha256("");
++        assertThat(resolver.resolve(release, null)).isNull();
++        verifyNoInteractions(transport);
++    }
++
++    @Test void domainSubstringCannotTurnAnExternalLinkIntoHostedSource() {
++        var release = release("CUSTOM_URL");
++        release.setCustomDownloadUrl("https://download.csnas.asia.external.example.com/app.apk");
++        assertThat(resolver.resolve(release, null)).isNull();
++        verifyNoInteractions(transport);
++    }
++
++    @Test void hostedWrongAppOrUnsafeAuthorityStillFailsBeforeHealth() {
++        for (var url : new String[]{"https://download.csnas.asia/wedo/download",
++                "http://download.csnas.asia/lifering/download",
++                "https://user:pass@download.csnas.asia/lifering/download"}) {
++            var release = release("CUSTOM_URL");
++            release.setCustomDownloadUrl(url);
++            assertThatThrownBy(() -> resolver.resolve(release, null))
++                    .hasMessage("app_upgrade_download_source_unavailable");
++        }
++        verifyNoInteractions(transport);
++    }
++
+     @Test void unavailableHealthCannotReturnHistoricalDatabaseOrCosFallback() throws Exception {
+         reply(503, "{}");
+         assertThatThrownBy(() -> resolver.resolve(release("CUSTOM_URL"), "https://business.example.com/old.apk"))
+diff --git a/backend-java/src/test/java/com/auralink/backend/service/ExternalCosUpgradeContractTest.java b/backend-java/src/test/java/com/auralink/backend/service/ExternalCosUpgradeContractTest.java
+new file mode 100644
+--- /dev/null
++++ b/backend-java/src/test/java/com/auralink/backend/service/ExternalCosUpgradeContractTest.java
+@@ -0,0 +1,101 @@
++package com.auralink.backend.service;
++
++import com.auralink.backend.entity.AppUpgradeRelease;
++import com.auralink.backend.dto.admin.CreateAppUpgradeDto;
++import com.auralink.backend.repository.AppUpgradeEventRepository;
++import com.auralink.backend.repository.AppUpgradeReleaseRepository;
++import com.auralink.backend.repository.AppUpgradeWhitelistRepository;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import org.junit.jupiter.api.Test;
++import java.net.http.HttpClient;
++import java.util.List;
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.mockito.Mockito.*;
++
++/** Public check payload remains usable with no hosted service or stored digest. */
++class ExternalCosUpgradeContractTest {
++    @Test void administratorCanCreateExternalCustomReleaseWithNoHealthOrHashes() {
++        var releases = mock(AppUpgradeReleaseRepository.class);
++        var whitelist = mock(AppUpgradeWhitelistRepository.class);
++        var offline = mock(HttpClient.class);
++        var resolver = new CustomApkDownloadSourceResolver(new ObjectMapper(),
++                "download.csnas.asia,download1.csnas.asia", 250, offline);
++        when(releases.findByPlatformOrderByVersionCodeDesc("ANDROID")).thenReturn(List.of());
++        when(releases.save(any(AppUpgradeRelease.class))).thenAnswer(i -> i.getArgument(0));
++        when(whitelist.findByReleaseId(any())).thenReturn(List.of());
++        var service = new AppUpgradeService(releases, whitelist,
++                mock(AppUpgradeEventRepository.class), null, null, resolver, null);
++        var dto = new CreateAppUpgradeDto();
++        dto.setPlatform("ANDROID"); dto.setVersionName("1.6.6"); dto.setVersionCode(8907);
++        dto.setReleaseNotes("Update"); dto.setStorageProvider("CUSTOM_URL");
++        dto.setCustomDownloadUrl("https://business.cos.example.com/LifeRing.apk");
++        dto.setRolloutMode("FULL");
++        var result = service.createRelease("admin", dto);
++        assertThat(result.get("apkFileSize")).isEqualTo(0L);
++        assertThat(result.get("apkSha256")).isEqualTo("");
++        assertThat(result.get("effectiveDownloadUrl")).isEqualTo(dto.getCustomDownloadUrl());
++        verifyNoInteractions(offline);
++    }
++
++    @Test void switchingHostedUrlToCosClearsStaleArtifactMetadataWithoutHealth() {
++        var releases = mock(AppUpgradeReleaseRepository.class);
++        var offline = mock(HttpClient.class);
++        var resolver = new CustomApkDownloadSourceResolver(new ObjectMapper(),
++                "download.csnas.asia,download1.csnas.asia", 250, offline);
++        var release = AppUpgradeRelease.builder().id("switch-release")
++                .platform("ANDROID").versionName("1.6.6").versionCode(8907)
++                .storageProvider("CUSTOM_URL")
++                .customDownloadUrl("https://download.csnas.asia/lifering/download")
++                .apkFileSize(131031231L).apkSha256("a".repeat(64))
++                .publishStatus("PUBLISHED").forceUpdate(false).rolloutMode("FULL").build();
++        when(releases.findById(release.getId())).thenReturn(java.util.Optional.of(release));
++        when(releases.save(release)).thenReturn(release);
++        when(releases.findByPlatformAndPublishStatusOrderByVersionCodeDesc("ANDROID", "PUBLISHED"))
++                .thenReturn(List.of(release));
++        var service = new AppUpgradeService(releases, mock(AppUpgradeWhitelistRepository.class),
++                mock(AppUpgradeEventRepository.class), null, null, resolver, null);
++        var url = "https://business.cos.example.com/LifeRing.apk?sign=private";
++        service.updateCustomDownloadUrl(release.getId(), url);
++        var result = service.checkUpgrade("ANDROID", 8906, "1.6.5", null, null);
++        assertThat(result.get("downloadUrl")).isEqualTo(url);
++        assertThat(result.get("fileSize")).isEqualTo(0L);
++        assertThat(result.get("sha256")).isEqualTo("");
++        assertThat(release.getPublishStatus()).isEqualTo("PUBLISHED");
++        assertThat(release.getVersionCode()).isEqualTo(8907);
++        verifyNoInteractions(offline);
++    }
++
++    @Test void customCosLinkWithoutMetadataPassesThroughTheActualCheckApiService() {
++        assertExternalCheck("CUSTOM_URL",
++                "https://release-123.cos.ap-guangzhou.myqcloud.com/LifeRing.apk?sign=private");
++    }
++
++    @Test void configuredCosCdnWithoutMetadataPassesThroughTheActualCheckApiService() {
++        assertExternalCheck("COS", "https://cdn.business.example.com/LifeRing.apk");
++    }
++
++    private void assertExternalCheck(String provider, String url) {
++        var releases = mock(AppUpgradeReleaseRepository.class);
++        var whitelist = mock(AppUpgradeWhitelistRepository.class);
++        var events = mock(AppUpgradeEventRepository.class);
++        var offline = mock(HttpClient.class);
++        var resolver = new CustomApkDownloadSourceResolver(new ObjectMapper(),
++                "download.csnas.asia,download1.csnas.asia", 250, offline);
++        var release = AppUpgradeRelease.builder().id("cos-release")
++                .platform("ANDROID").versionName("1.6.6").versionCode(8907)
++                .storageProvider(provider).customDownloadUrl(url).publicDownloadUrl(url)
++                .apkFileSize(0L).apkSha256("").publishStatus("PUBLISHED")
++                .forceUpdate(false).rolloutMode("FULL").build();
++        when(releases.findByPlatformAndPublishStatusOrderByVersionCodeDesc("ANDROID", "PUBLISHED"))
++                .thenReturn(List.of(release));
++        var service = new AppUpgradeService(releases, whitelist, events,
++                null, null, resolver, null);
++        var result = service.checkUpgrade("ANDROID", 8906, "1.6.5", null, null);
++        assertThat(result.get("hasUpdate")).isEqualTo(true);
++        assertThat(result.get("downloadUrl")).isEqualTo(url);
++        assertThat(result.get("fileSize")).isEqualTo(0L);
++        assertThat(result.get("sha256")).isEqualTo("");
++        assertThat(result).doesNotContainKeys("downloadProtocol", "downloadBackupUrl");
++        verifyNoInteractions(offline);
++    }
++}

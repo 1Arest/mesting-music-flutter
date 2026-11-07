@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A retained audio engine can reattach to a fresh Android window.
+         Keep the native preview neutral; Flutter owns the one-time coral film. -->
+    <color name="mesting_splash_background">#FFFFFF</color>
+    <color name="mesting_coral_launch_light">#FFFFFF</color>
+    <color name="mesting_coral_launch_dark">#11141B</color>
+    <color name="mesting_runtime_background">#FFFFFF</color>
+</resources>

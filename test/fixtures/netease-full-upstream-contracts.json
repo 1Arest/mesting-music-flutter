@@ -1,0 +1,7623 @@
+{
+  "source": "@neteaseapireborn/api@4.29.7",
+  "cases": [
+    {
+      "route": "/captcha/sent",
+      "variant": "filled",
+      "query": {
+        "ctcode": "86",
+        "phone": "13800000000"
+      },
+      "expected": {
+        "path": "/api/sms/captcha/sent",
+        "data": {
+          "ctcode": "86",
+          "secrete": "music_middleuser_pclogin",
+          "cellphone": "13800000000"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/captcha/sent",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/sms/captcha/sent",
+        "data": {
+          "ctcode": "86",
+          "secrete": "music_middleuser_pclogin"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/captcha/verify",
+      "variant": "filled",
+      "query": {
+        "ctcode": "86",
+        "phone": "13800000000",
+        "captcha": "123456"
+      },
+      "expected": {
+        "path": "/api/sms/captcha/verify",
+        "data": {
+          "ctcode": "86",
+          "cellphone": "13800000000",
+          "captcha": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/captcha/verify",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/sms/captcha/verify",
+        "data": {
+          "ctcode": "86"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/register/cellphone",
+      "variant": "filled",
+      "query": {
+        "captcha": "123456",
+        "phone": "13800000000",
+        "password": "synthetic-not-a-password",
+        "nickname": "7",
+        "countrycode": "86"
+      },
+      "expected": {
+        "path": "/api/w/register/cellphone",
+        "data": {
+          "captcha": "123456",
+          "phone": "13800000000",
+          "password": "3f752e64b09dfe37c2c9e6446d480a2e",
+          "nickname": "7",
+          "countrycode": "86",
+          "force": "false"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/register/cellphone",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/w/register/cellphone",
+        "data": {
+          "password": "5e543256c480ac577d30f76f9120eb74",
+          "countrycode": "86",
+          "force": "false"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/cellphone/existence/check",
+      "variant": "filled",
+      "query": {
+        "phone": "13800000000",
+        "countrycode": "86"
+      },
+      "expected": {
+        "path": "/api/cellphone/existence/check",
+        "data": {
+          "cellphone": "13800000000",
+          "countrycode": "86"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/cellphone/existence/check",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cellphone/existence/check",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/activate/init/profile",
+      "variant": "filled",
+      "query": {
+        "nickname": "7"
+      },
+      "expected": {
+        "path": "/api/activate/initProfile",
+        "data": {
+          "nickname": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/activate/init/profile",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/activate/initProfile",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/nickname/check",
+      "variant": "filled",
+      "query": {
+        "nickname": "7"
+      },
+      "expected": {
+        "path": "/api/nickname/duplicated",
+        "data": {
+          "nickname": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/nickname/check",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/nickname/duplicated",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/rebind",
+      "variant": "filled",
+      "query": {
+        "captcha": "123456",
+        "phone": "13800000000",
+        "oldcaptcha": "7",
+        "ctcode": "86"
+      },
+      "expected": {
+        "path": "/api/user/replaceCellphone",
+        "data": {
+          "captcha": "123456",
+          "phone": "13800000000",
+          "oldcaptcha": "7",
+          "ctcode": "86"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/rebind",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/replaceCellphone",
+        "data": {
+          "ctcode": "86"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/logout",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/logout",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/logout",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/logout",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/account",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/nuser/account/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/account",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/nuser/account/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/subcount",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/subcount",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/subcount",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/subcount",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/level",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/user/level",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/level",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/level",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/binding",
+      "variant": "filled",
+      "query": {
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/v1/user/bindings/7",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/binding",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/user/bindings/undefined",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/replacephone",
+      "variant": "filled",
+      "query": {
+        "phone": "13800000000",
+        "captcha": "123456",
+        "oldcaptcha": "7",
+        "countrycode": "86"
+      },
+      "expected": {
+        "path": "/api/user/replaceCellphone",
+        "data": {
+          "phone": "13800000000",
+          "captcha": "123456",
+          "oldcaptcha": "7",
+          "countrycode": "86"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/replacephone",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/replaceCellphone",
+        "data": {
+          "countrycode": "86"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/update",
+      "variant": "filled",
+      "query": {
+        "birthday": "7",
+        "city": "7",
+        "gender": "7",
+        "nickname": "7",
+        "province": "7",
+        "signature": "7"
+      },
+      "expected": {
+        "path": "/api/user/profile/update",
+        "data": {
+          "birthday": "7",
+          "city": "7",
+          "gender": "7",
+          "nickname": "7",
+          "province": "7",
+          "signature": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/profile/update",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/pl/count",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/pl/count",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/pl/count",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/pl/count",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/countries/code/list",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/lbs/countries/v1",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/countries/code/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/lbs/countries/v1",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/playlist",
+      "variant": "filled",
+      "query": {
+        "uid": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/user/playlist",
+        "data": {
+          "uid": "7",
+          "limit": "30",
+          "offset": "0",
+          "includeVideo": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/playlist",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "includeVideo": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/update",
+      "variant": "filled",
+      "query": {
+        "desc": "7",
+        "tags": "7",
+        "id": "7",
+        "name": "7"
+      },
+      "expected": {
+        "path": "/api/batch",
+        "data": {
+          "/api/playlist/desc/update": "{\"id\":7,\"desc\":\"7\"}",
+          "/api/playlist/tags/update": "{\"id\":7,\"tags\":\"7\"}",
+          "/api/playlist/update/name": "{\"id\":7,\"name\":\"7\"}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/batch",
+        "data": {
+          "/api/playlist/desc/update": "{\"id\":undefined,\"desc\":\"\"}",
+          "/api/playlist/tags/update": "{\"id\":undefined,\"tags\":\"\"}",
+          "/api/playlist/update/name": "{\"id\":undefined,\"name\":\"undefined\"}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/desc/update",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "desc": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/desc/update",
+        "data": {
+          "id": "7",
+          "desc": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/desc/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/desc/update",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/name/update",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "name": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/update/name",
+        "data": {
+          "id": "7",
+          "name": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/name/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/update/name",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/tags/update",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "tags": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/tags/update",
+        "data": {
+          "id": "7",
+          "tags": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/tags/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/tags/update",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/order/update",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8"
+      },
+      "expected": {
+        "path": "/api/playlist/order/update",
+        "data": {
+          "ids": "7,8"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/order/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/order/update",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/song/order/update",
+      "variant": "filled",
+      "query": {
+        "pid": "7",
+        "ids": "7,8"
+      },
+      "expected": {
+        "path": "/api/playlist/manipulate/tracks",
+        "data": {
+          "pid": "7",
+          "trackIds": "7,8",
+          "op": "update"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/order/update",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/manipulate/tracks",
+        "data": {
+          "op": "update"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/comment/history",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "uid": "7",
+        "time": "7"
+      },
+      "expected": {
+        "path": "/api/comment/user/comment/history",
+        "data": {
+          "compose_reminder": "true",
+          "compose_hot_comment": "true",
+          "limit": "30",
+          "user_id": "7",
+          "time": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/comment/history",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/comment/user/comment/history",
+        "data": {
+          "compose_reminder": "true",
+          "compose_hot_comment": "true",
+          "limit": 10,
+          "time": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/dj",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/dj/program/7",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/dj",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/program/undefined",
+        "data": {
+          "limit": 30,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/follows",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30",
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/user/getfollows/7",
+        "data": {
+          "offset": "0",
+          "limit": "30",
+          "order": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/follows",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/getfollows/undefined",
+        "data": {
+          "offset": 0,
+          "limit": 30,
+          "order": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/followeds",
+      "variant": "filled",
+      "query": {
+        "uid": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/user/getfolloweds/7",
+        "data": {
+          "userId": "7",
+          "time": "0",
+          "limit": "30",
+          "offset": "0",
+          "getcounts": "true"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/followeds",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/getfolloweds/undefined",
+        "data": {
+          "time": "0",
+          "limit": 30,
+          "offset": 0,
+          "getcounts": "true"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/event",
+      "variant": "filled",
+      "query": {
+        "lasttime": "123456",
+        "limit": "30",
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/event/get/7",
+        "data": {
+          "getcounts": true,
+          "time": "123456",
+          "limit": "30",
+          "total": false
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/user/event",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/event/get/undefined",
+        "data": {
+          "getcounts": true,
+          "time": -1,
+          "limit": 30,
+          "total": false
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/event/forward",
+      "variant": "filled",
+      "query": {
+        "forwards": "7",
+        "evId": "7",
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/event/forward",
+        "data": {
+          "forwards": "7",
+          "id": "7",
+          "eventUserId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/event/forward",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/event/forward",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/event/del",
+      "variant": "filled",
+      "query": {
+        "evId": "7"
+      },
+      "expected": {
+        "path": "/api/event/delete",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/event/del",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/event/delete",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/share/resource",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "msg": "7",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/share/friends/resource",
+        "data": {
+          "type": "0",
+          "msg": "7",
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/share/resource",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/share/friends/resource",
+        "data": {
+          "type": "song",
+          "msg": "",
+          "id": ""
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/comment/event",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "before": "123456",
+        "threadId": "7"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/7",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/event",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/follow",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/user/follow/7",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/follow",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/delfollow/undefined",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/record",
+      "variant": "filled",
+      "query": {
+        "uid": "7",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/v1/play/record",
+        "data": {
+          "uid": "7",
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/record",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/play/record",
+        "data": {
+          "type": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/hot/topic",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/act/hot",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/hot/topic",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/act/hot",
+        "data": {
+          "limit": 20,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/detail",
+      "variant": "filled",
+      "query": {
+        "actid": "7"
+      },
+      "expected": {
+        "path": "/api/act/detail",
+        "data": {
+          "actid": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/act/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/detail/event/hot",
+      "variant": "filled",
+      "query": {
+        "actid": "7"
+      },
+      "expected": {
+        "path": "/api/act/event/hot",
+        "data": {
+          "actid": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/detail/event/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/act/event/hot",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playmode/intelligence/list",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "pid": "7",
+        "sid": "7",
+        "count": "7"
+      },
+      "expected": {
+        "path": "/api/playmode/intelligence/list",
+        "data": {
+          "songId": "7",
+          "type": "fromPlayOne",
+          "playlistId": "7",
+          "startMusicId": "7",
+          "count": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playmode/intelligence/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playmode/intelligence/list",
+        "data": {
+          "type": "fromPlayOne",
+          "count": 1
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/event",
+      "variant": "filled",
+      "query": {
+        "pagesize": "7",
+        "lasttime": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/event/get",
+        "data": {
+          "pagesize": "7",
+          "lasttime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/event",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/event/get",
+        "data": {
+          "pagesize": 20,
+          "lasttime": -1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/list",
+      "variant": "filled",
+      "query": {
+        "initial": "a",
+        "offset": "0",
+        "limit": "30",
+        "type": "0",
+        "area": "7"
+      },
+      "expected": {
+        "path": "/api/v1/artist/list",
+        "data": {
+          "initial": 65,
+          "offset": "0",
+          "limit": "30",
+          "total": true,
+          "type": "0",
+          "area": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/artist/list",
+        "data": {
+          "offset": 0,
+          "limit": 30,
+          "total": true,
+          "type": "1"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/sub",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/sub",
+        "data": {
+          "artistId": "7",
+          "artistIds": "[7]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/sub",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/unsub",
+        "data": {
+          "artistIds": "[undefined]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/top/song",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/top/song",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/top/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/top/song",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/songs",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "order": "hot",
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/v1/artist/songs",
+        "data": {
+          "id": "7",
+          "private_cloud": "true",
+          "work_type": 1,
+          "order": "hot",
+          "offset": "0",
+          "limit": "30"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/artist/songs",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/artist/songs",
+        "data": {
+          "private_cloud": "true",
+          "work_type": 1,
+          "order": "hot",
+          "offset": 0,
+          "limit": 100
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/artist/sublist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/artist/sublist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/sublist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/sublist",
+        "data": {
+          "limit": 25,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/sublist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/topic/sublist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/topic/sublist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/topic/sublist",
+        "data": {
+          "limit": 50,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/sub",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/video/sub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/sub",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/video/unsub",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/sub",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "mvid": "7"
+      },
+      "expected": {
+        "path": "/api/mv/sub",
+        "data": {
+          "mvId": "7",
+          "mvIds": "[\"7\"]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/sub",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mv/unsub",
+        "data": {
+          "mvIds": "[\"undefined\"]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/sublist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/allvideo/sublist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/sublist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/allvideo/sublist",
+        "data": {
+          "limit": 25,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/catlist",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/catalogue",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/catlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/catalogue",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/hot",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/hottags",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/hottags",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/highquality/tags",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/highquality/tags",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/highquality/tags",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/highquality/tags",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/playlist/highquality",
+      "variant": "filled",
+      "query": {
+        "cat": "7",
+        "limit": "30",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/playlist/highquality/list",
+        "data": {
+          "cat": "7",
+          "limit": "30",
+          "lasttime": "123456",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/playlist/highquality",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/highquality/list",
+        "data": {
+          "cat": "全部",
+          "limit": 50,
+          "lasttime": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "s": "7"
+      },
+      "expected": {
+        "path": "/api/v6/playlist/detail",
+        "data": {
+          "id": "7",
+          "n": 100000,
+          "s": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v6/playlist/detail",
+        "data": {
+          "n": 100000,
+          "s": 8
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/detail/dynamic",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "s": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/detail/dynamic",
+        "data": {
+          "id": "7",
+          "n": 100000,
+          "s": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/detail/dynamic",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/detail/dynamic",
+        "data": {
+          "n": 100000,
+          "s": 8
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/update/playcount",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/update/playcount",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/update/playcount",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/update/playcount",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "keywords": "合约样本",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/search/get",
+        "data": {
+          "s": "合约样本",
+          "type": "0",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/get",
+        "data": {
+          "type": 1,
+          "limit": 30,
+          "offset": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/cloudsearch",
+      "variant": "filled",
+      "query": {
+        "keywords": "合约样本",
+        "type": "0",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/cloudsearch/pc",
+        "data": {
+          "s": "合约样本",
+          "type": "0",
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/cloudsearch",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudsearch/pc",
+        "data": {
+          "type": 1,
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/default",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/search/defaultkeyword/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/default",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/defaultkeyword/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/hot",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/search/hot",
+        "data": {
+          "type": 1111
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/hot",
+        "data": {
+          "type": 1111
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/hot/detail",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/hotsearchlist/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/search/hot/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/hotsearchlist/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/search/suggest",
+      "variant": "filled",
+      "query": {
+        "keywords": "合约样本",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/search/suggest/web",
+        "data": {
+          "s": "合约样本"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/search/suggest",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/suggest/web",
+        "data": {
+          "s": ""
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/search/multimatch",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "keywords": "合约样本"
+      },
+      "expected": {
+        "path": "/api/search/suggest/multimatch",
+        "data": {
+          "type": "0",
+          "s": "合约样本"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/search/multimatch",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/suggest/multimatch",
+        "data": {
+          "type": 1,
+          "s": ""
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/create",
+      "variant": "filled",
+      "query": {
+        "name": "7",
+        "privacy": "0",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/playlist/create",
+        "data": {
+          "name": "7",
+          "privacy": "0",
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/create",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/create",
+        "data": {
+          "privacy": "0",
+          "type": "NORMAL"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/delete",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/remove",
+        "data": {
+          "ids": "[7]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/delete",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/remove",
+        "data": {
+          "ids": "[undefined]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/subscribe",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/subscribe",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/subscribe",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/unsubscribe",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/subscribers",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/playlist/subscribers",
+        "data": {
+          "id": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/subscribers",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/subscribers",
+        "data": {
+          "limit": 20,
+          "offset": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/track/add",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8",
+        "pid": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/track/add",
+        "data": {
+          "id": "7",
+          "tracks": "[{\"type\":3,\"id\":\"7\"},{\"type\":3,\"id\":\"8\"}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/track/add",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/track/add",
+        "data": {
+          "tracks": "[{\"type\":3,\"id\":\"\"}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/track/delete",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/track/delete",
+        "data": {
+          "id": "7",
+          "tracks": "[{\"type\":3,\"id\":\"7\"},{\"type\":3,\"id\":\"8\"}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/track/delete",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/track/delete",
+        "data": {
+          "tracks": "[{\"type\":3,\"id\":\"\"}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/video/recent",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/video/recent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/video/recent",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/video/recent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/lyric",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/song/lyric",
+        "data": {
+          "id": "7",
+          "tv": -1,
+          "lv": -1,
+          "rv": -1,
+          "kv": -1,
+          "_nmclfl": 1
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/lyric",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/lyric",
+        "data": {
+          "tv": -1,
+          "lv": -1,
+          "rv": -1,
+          "kv": -1,
+          "_nmclfl": 1
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/lyric/new",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/song/lyric/v1",
+        "data": {
+          "id": "7",
+          "cp": false,
+          "tv": 0,
+          "lv": 0,
+          "rv": 0,
+          "kv": 0,
+          "yv": 0,
+          "ytv": 0,
+          "yrv": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/lyric/new",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/lyric/v1",
+        "data": {
+          "cp": false,
+          "tv": 0,
+          "lv": 0,
+          "rv": 0,
+          "kv": 0,
+          "yv": 0,
+          "ytv": 0,
+          "yrv": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/top/song",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/v1/discovery/new/songs",
+        "data": {
+          "areaId": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/discovery/new/songs",
+        "data": {
+          "areaId": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/homepage/block/page",
+      "variant": "filled",
+      "query": {
+        "refresh": "7",
+        "cursor": "7"
+      },
+      "expected": {
+        "path": "/api/homepage/block/page",
+        "data": {
+          "refresh": "7",
+          "cursor": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/homepage/block/page",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/homepage/block/page",
+        "data": {
+          "refresh": false
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/homepage/dragon/ball",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/homepage/dragon/ball/static",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/homepage/dragon/ball",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/homepage/dragon/ball/static",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/comment/music",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/R_SO_4_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/music",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/R_SO_4_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/floor",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "parentCommentId": "7",
+        "id": "7",
+        "time": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/resource/comment/floor/get",
+        "data": {
+          "parentCommentId": "7",
+          "threadId": "R_SO_4_7",
+          "time": "7",
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/floor",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/resource/comment/floor/get",
+        "data": {
+          "threadId": null,
+          "time": -1,
+          "limit": 20
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/album",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/R_AL_3_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/R_AL_3_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/playlist",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/A_PL_0_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/A_PL_0_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/mv",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/R_MV_5_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/R_MV_5_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/dj",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/A_DJ_1_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/dj",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/A_DJ_1_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/video",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/comments/R_VI_62_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/video",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/comments/R_VI_62_undefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/hot",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "id": "7",
+        "limit": "30",
+        "offset": "0",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/v1/resource/hotcomments/R_SO_4_7",
+        "data": {
+          "rid": "7",
+          "limit": "30",
+          "offset": "0",
+          "beforeTime": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/resource/hotcomments/undefinedundefined",
+        "data": {
+          "limit": 20,
+          "offset": 0,
+          "beforeTime": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/like",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "type": "0",
+        "id": "7",
+        "cid": "7",
+        "threadId": "7"
+      },
+      "expected": {
+        "path": "/api/v1/comment/like",
+        "data": {
+          "threadId": "R_SO_4_7",
+          "commentId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment/like",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/comment/unlike",
+        "data": {
+          "threadId": null
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/hug/comment",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "sid": "7",
+        "uid": "7",
+        "cid": "7"
+      },
+      "expected": {
+        "path": "/api/v2/resource/comments/hug/listener",
+        "data": {
+          "targetUserId": "7",
+          "commentId": "7",
+          "threadId": "R_SO_4_7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/hug/comment",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v2/resource/comments/hug/listener",
+        "data": {
+          "threadId": "R_SO_4_undefined"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/comment/hug/list",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "sid": "7",
+        "uid": "7",
+        "cid": "7",
+        "cursor": "7",
+        "page": "7",
+        "idCursor": "7",
+        "pageSize": "30"
+      },
+      "expected": {
+        "path": "/api/v2/resource/comments/hug/list",
+        "data": {
+          "targetUserId": "7",
+          "commentId": "7",
+          "cursor": "7",
+          "threadId": "R_SO_4_7",
+          "pageNo": "7",
+          "idCursor": "7",
+          "pageSize": "30"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/comment/hug/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v2/resource/comments/hug/list",
+        "data": {
+          "cursor": "-1",
+          "threadId": "R_SO_4_undefined",
+          "pageNo": 1,
+          "idCursor": -1,
+          "pageSize": 100
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/comment",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "type": "0",
+        "id": "7",
+        "threadId": "7",
+        "content": "7",
+        "commentId": "7"
+      },
+      "expected": {
+        "path": "/api/resource/comments/add",
+        "data": {
+          "threadId": "R_SO_4_7",
+          "content": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/comment",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/resource/comments/undefined",
+        "data": {
+          "threadId": null
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/banner",
+      "variant": "filled",
+      "query": {
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/v2/banner/get",
+        "data": {
+          "clientType": "pc"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/banner",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v2/banner/get",
+        "data": {
+          "clientType": "pc"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/resource/like",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "type": "0",
+        "id": "7",
+        "threadId": "7"
+      },
+      "expected": {
+        "path": "/api/resource/like",
+        "data": {
+          "threadId": "R_SO_4_7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/resource/like",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/resource/unlike",
+        "data": {
+          "threadId": null
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/mylike",
+      "variant": "filled",
+      "query": {
+        "time": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/mlog/playlist/mylike/bytime/get",
+        "data": {
+          "time": "7",
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/playlist/mylike",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mlog/playlist/mylike/bytime/get",
+        "data": {
+          "time": "-1",
+          "limit": "12"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/song/detail",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8"
+      },
+      "expected": {
+        "path": "/api/v3/song/detail",
+        "data": {
+          "c": "[{\"id\":7},{\"id\":8}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/v1/album/7",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/album/undefined",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/detail/dynamic",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/album/detail/dynamic",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/detail/dynamic",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/album/detail/dynamic",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/sub",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/album/sub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/sub",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/album/unsub",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/sublist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/album/sublist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/sublist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/album/sublist",
+        "data": {
+          "limit": 25,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artists",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/v1/artist/7",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artists",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/artist/undefined",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/mv",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/artist/mvs",
+        "data": {
+          "artistId": "7",
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/mvs",
+        "data": {
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/album",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/albums/7",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/albums/undefined",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/desc",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/introduction",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/desc",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/introduction",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/head/info/get",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/artist/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/head/info/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/simi/artist",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/discovery/simiArtist",
+        "data": {
+          "artistid": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/artist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/simiArtist",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/playlist",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/discovery/simiPlaylist",
+        "data": {
+          "songid": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/simiPlaylist",
+        "data": {
+          "limit": 50,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/mv",
+      "variant": "filled",
+      "query": {
+        "mvid": "7"
+      },
+      "expected": {
+        "path": "/api/discovery/simiMV",
+        "data": {
+          "mvid": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/simiMV",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/song",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/v1/discovery/simiSong",
+        "data": {
+          "songid": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/discovery/simiSong",
+        "data": {
+          "limit": 50,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/user",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/discovery/simiUser",
+        "data": {
+          "songid": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/simi/user",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/simiUser",
+        "data": {
+          "limit": 50,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/resource",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/discovery/recommend/resource",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/resource",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/discovery/recommend/resource",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/songs",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/v3/discovery/recommend/songs",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/songs",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v3/discovery/recommend/songs",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/songs/dislike",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/v2/discovery/recommend/dislike",
+        "data": {
+          "resId": "7",
+          "resType": 4,
+          "sceneType": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/recommend/songs/dislike",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v2/discovery/recommend/dislike",
+        "data": {
+          "resType": 4,
+          "sceneType": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/history/recommend/songs",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/recent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/history/recommend/songs",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/recent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/history/recommend/songs/detail",
+      "variant": "filled",
+      "query": {
+        "date": "2026-10-29"
+      },
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/detail",
+        "data": {
+          "date": "2026-10-29"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/history/recommend/songs/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/recommend/songs/history/detail",
+        "data": {
+          "date": ""
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personal_fm",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/radio/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personal_fm",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/radio/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/daily_signin",
+      "variant": "filled",
+      "query": {
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/point/dailyTask",
+        "data": {
+          "type": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/daily_signin",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/point/dailyTask",
+        "data": {
+          "type": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/sign/happy/info",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/sign/happy/info",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/sign/happy/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/sign/happy/info",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/like",
+      "variant": "filled",
+      "query": {
+        "like": "1",
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/radio/like",
+        "data": {
+          "alg": "itembased",
+          "trackId": "7",
+          "like": true,
+          "time": "3"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/like",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/radio/like",
+        "data": {
+          "alg": "itembased",
+          "like": true,
+          "time": "3"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/likelist",
+      "variant": "filled",
+      "query": {
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/song/like/get",
+        "data": {
+          "uid": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/likelist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/like/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/fm_trash",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "time": "7"
+      },
+      "expected": {
+        "path": "/api/radio/trash/add",
+        "data": {
+          "songId": "7",
+          "alg": "RT",
+          "time": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/fm_trash",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/radio/trash/add",
+        "data": {
+          "alg": "RT",
+          "time": 25
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/album",
+      "variant": "filled",
+      "query": {
+        "area": "7",
+        "limit": "30",
+        "offset": "0",
+        "type": "0",
+        "year": "2026",
+        "month": "10"
+      },
+      "expected": {
+        "path": "/api/discovery/new/albums/area",
+        "data": {
+          "area": "7",
+          "limit": "30",
+          "offset": "0",
+          "type": "0",
+          "year": "2026",
+          "month": "10",
+          "total": false,
+          "rcmd": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/new/albums/area",
+        "data": {
+          "area": "ALL",
+          "limit": 50,
+          "offset": 0,
+          "type": "new",
+          "year": 2026,
+          "month": 10,
+          "total": false,
+          "rcmd": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/new",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "area": "7"
+      },
+      "expected": {
+        "path": "/api/album/new",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true,
+          "area": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/new",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/album/new",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true,
+          "area": "ALL"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/newest",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/newAlbum",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/newest",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/discovery/newAlbum",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/scrobble",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "sourceid": "7",
+        "time": "7"
+      },
+      "expected": {
+        "path": "/api/feedback/weblog",
+        "data": {
+          "logs": "[{\"action\":\"play\",\"json\":{\"download\":0,\"end\":\"playend\",\"id\":\"7\",\"sourceId\":\"7\",\"time\":\"7\",\"type\":\"song\",\"wifi\":0,\"source\":\"list\",\"mainsite\":1,\"content\":\"\"}}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/scrobble",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/feedback/weblog",
+        "data": {
+          "logs": "[{\"action\":\"play\",\"json\":{\"download\":0,\"end\":\"playend\",\"type\":\"song\",\"wifi\":0,\"source\":\"list\",\"mainsite\":1,\"content\":\"\"}}]"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/artists",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/artist/top",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/artists",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/top",
+        "data": {
+          "limit": 50,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/all",
+      "variant": "filled",
+      "query": {
+        "area": "7",
+        "type": "0",
+        "order": "hot",
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/mv/all",
+        "data": {
+          "tags": "{\"地区\":\"7\",\"类型\":\"0\",\"排序\":\"hot\"}",
+          "offset": "0",
+          "total": "true",
+          "limit": "30"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mv/all",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mv/all",
+        "data": {
+          "tags": "{\"地区\":\"全部\",\"类型\":\"全部\",\"排序\":\"上升最快\"}",
+          "offset": 0,
+          "total": "true",
+          "limit": 30
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mv/first",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "area": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/mv/first",
+        "data": {
+          "area": "7",
+          "limit": "30",
+          "total": true
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mv/first",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mv/first",
+        "data": {
+          "area": "",
+          "limit": 30,
+          "total": true
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mv/exclusive/rcmd",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/mv/exclusive/rcmd",
+        "data": {
+          "offset": "0",
+          "limit": "30"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mv/exclusive/rcmd",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mv/exclusive/rcmd",
+        "data": {
+          "offset": 0,
+          "limit": 30
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/personalized/mv",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/mv",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/mv",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/personalized/playlist",
+        "data": {
+          "limit": "30",
+          "total": true,
+          "n": 1000
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/playlist",
+        "data": {
+          "limit": 30,
+          "total": true,
+          "n": 1000
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/newsong",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "areaId": "7"
+      },
+      "expected": {
+        "path": "/api/personalized/newsong",
+        "data": {
+          "type": "recommend",
+          "limit": "30",
+          "areaId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/newsong",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/newsong",
+        "data": {
+          "type": "recommend",
+          "limit": 10,
+          "areaId": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/djprogram",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/djprogram",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/djprogram",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/djprogram",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/program/recommend",
+      "variant": "filled",
+      "query": {
+        "type": "0",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/program/recommend/v1",
+        "data": {
+          "cateId": "0",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/program/recommend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/program/recommend/v1",
+        "data": {
+          "limit": 10,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/privatecontent",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/privatecontent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/privatecontent",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/personalized/privatecontent",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/privatecontent/list",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/v2/privatecontent/list",
+        "data": {
+          "offset": "0",
+          "total": "true",
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/personalized/privatecontent/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v2/privatecontent/list",
+        "data": {
+          "offset": 0,
+          "total": "true",
+          "limit": 60
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/mv",
+      "variant": "filled",
+      "query": {
+        "area": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/mv/toplist",
+        "data": {
+          "area": "7",
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/top/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mv/toplist",
+        "data": {
+          "area": "",
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/detail",
+      "variant": "filled",
+      "query": {
+        "mvid": "7"
+      },
+      "expected": {
+        "path": "/api/v1/mv/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/mv/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/detail/info",
+      "variant": "filled",
+      "query": {
+        "mvid": "7"
+      },
+      "expected": {
+        "path": "/api/comment/commentthread/info",
+        "data": {
+          "threadid": "R_MV_5_7",
+          "composeliked": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/detail/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/comment/commentthread/info",
+        "data": {
+          "threadid": "R_MV_5_undefined",
+          "composeliked": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/url",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "r": "7"
+      },
+      "expected": {
+        "path": "/api/song/enhance/play/mv/url",
+        "data": {
+          "id": "7",
+          "r": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mv/url",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/enhance/play/mv/url",
+        "data": {
+          "r": 1080
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/group/list",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/group/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/group/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/group/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/category/list",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/category/list",
+        "data": {
+          "offset": "0",
+          "total": "true",
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/category/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/category/list",
+        "data": {
+          "offset": 0,
+          "total": "true",
+          "limit": 99
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/group",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/videotimeline/videogroup/otherclient/get",
+        "data": {
+          "groupId": "7",
+          "offset": "0",
+          "need_preview_url": "true",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/group",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/videotimeline/videogroup/otherclient/get",
+        "data": {
+          "offset": 0,
+          "need_preview_url": "true",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/timeline/all",
+      "variant": "filled",
+      "query": {
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/videotimeline/otherclient/get",
+        "data": {
+          "groupId": 0,
+          "offset": "0",
+          "need_preview_url": "true",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/timeline/all",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/videotimeline/otherclient/get",
+        "data": {
+          "groupId": 0,
+          "offset": 0,
+          "need_preview_url": "true",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/timeline/recommend",
+      "variant": "filled",
+      "query": {
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/videotimeline/get",
+        "data": {
+          "offset": "0",
+          "filterLives": "[]",
+          "withProgramInfo": "true",
+          "needUrl": "1",
+          "resolution": "480"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/timeline/recommend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/videotimeline/get",
+        "data": {
+          "offset": 0,
+          "filterLives": "[]",
+          "withProgramInfo": "true",
+          "needUrl": "1",
+          "resolution": "480"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/related/allvideo",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/v1/allvideo/rcmd",
+        "data": {
+          "id": "7",
+          "type": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/related/allvideo",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/v1/allvideo/rcmd",
+        "data": {
+          "type": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/v1/video/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/v1/video/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/detail/info",
+      "variant": "filled",
+      "query": {
+        "vid": "7"
+      },
+      "expected": {
+        "path": "/api/comment/commentthread/info",
+        "data": {
+          "threadid": "R_VI_62_7",
+          "composeliked": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/detail/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/comment/commentthread/info",
+        "data": {
+          "threadid": "R_VI_62_undefined",
+          "composeliked": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/url",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "res": "7"
+      },
+      "expected": {
+        "path": "/api/cloudvideo/playurl",
+        "data": {
+          "ids": "[\"7\"]",
+          "resolution": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/video/url",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudvideo/playurl",
+        "data": {
+          "ids": "[\"undefined\"]",
+          "resolution": 1080
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/toplist",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/toplist",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/toplist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/toplist",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/toplist/detail",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/toplist/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/toplist/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/toplist/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/toplist/artist",
+      "variant": "filled",
+      "query": {
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/toplist/artist",
+        "data": {
+          "type": "0",
+          "limit": 100,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/toplist/artist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/toplist/artist",
+        "data": {
+          "type": 1,
+          "limit": 100,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/cloud",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/v1/cloud/get",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/cloud",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/cloud/get",
+        "data": {
+          "limit": 30,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/cloud/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/v1/cloud/get/byids",
+        "data": {
+          "songIds": [
+            "7"
+          ]
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/cloud/del",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/cloud/del",
+        "data": {
+          "songIds": [
+            "7"
+          ]
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/cloud/del",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloud/del",
+        "data": {
+          "songIds": [
+            null
+          ]
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/cloud/match",
+      "variant": "filled",
+      "query": {
+        "uid": "7",
+        "sid": "7",
+        "asid": "7"
+      },
+      "expected": {
+        "path": "/api/cloud/user/song/match",
+        "data": {
+          "userId": "7",
+          "songId": "7",
+          "adjustSongId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/cloud/match",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloud/user/song/match",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/banner",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/banner/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/banner",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/banner/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/personalize/recommend",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/djradio/personalize/rcmd",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/personalize/recommend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/personalize/rcmd",
+        "data": {
+          "limit": 6
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/subscriber",
+      "variant": "filled",
+      "query": {
+        "time": "7",
+        "id": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/djradio/subscriber",
+        "data": {
+          "time": "7",
+          "id": "7",
+          "limit": "30",
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/subscriber",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/subscriber",
+        "data": {
+          "time": "-1",
+          "limit": "20",
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/audio",
+      "variant": "filled",
+      "query": {
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/djradio/get/byuser",
+        "data": {
+          "userId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/user/audio",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/get/byuser",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/hot",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/hot/v1",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/hot/v1",
+        "data": {
+          "limit": 30,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/toplist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/program/toplist/v1",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/toplist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/program/toplist/v1",
+        "data": {
+          "limit": 100,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/pay",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/djradio/toplist/pay",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/pay",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/toplist/pay",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/toplist/hours",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/djprogram/toplist/hours",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/toplist/hours",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djprogram/toplist/hours",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/hours",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/dj/toplist/hours",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/hours",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/toplist/hours",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/newcomer",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/dj/toplist/newcomer",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/newcomer",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/toplist/newcomer",
+        "data": {
+          "limit": 100,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/popular",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/dj/toplist/popular",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist/popular",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/toplist/popular",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/toplist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/toplist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/toplist",
+        "data": {
+          "limit": 100,
+          "offset": 0,
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/radio/hot",
+      "variant": "filled",
+      "query": {
+        "cateId": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/hot",
+        "data": {
+          "cateId": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/radio/hot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/hot",
+        "data": {
+          "limit": 30,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/recommend",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/recommend/v1",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/recommend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/recommend/v1",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/catelist",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/category/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/catelist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/category/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/recommend/type",
+      "variant": "filled",
+      "query": {
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/recommend",
+        "data": {
+          "cateId": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/recommend/type",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/recommend",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/sub",
+      "variant": "filled",
+      "query": {
+        "t": "1",
+        "rid": "7"
+      },
+      "expected": {
+        "path": "/api/djradio/sub",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/sub",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/unsub",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/sublist",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/get/subed",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/sublist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/get/subed",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/paygift",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/djradio/home/paygift/list",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "_nmclfl": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/paygift",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/home/paygift/list",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "_nmclfl": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/category/excludehot",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/category/excludehot",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/category/excludehot",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/category/excludehot",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/category/recommend",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/home/category/recommend",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/category/recommend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/home/category/recommend",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/today/perfered",
+      "variant": "filled",
+      "query": {
+        "page": "7"
+      },
+      "expected": {
+        "path": "/api/djradio/home/today/perfered",
+        "data": {
+          "page": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/today/perfered",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/home/today/perfered",
+        "data": {
+          "page": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/detail",
+      "variant": "filled",
+      "query": {
+        "rid": "7"
+      },
+      "expected": {
+        "path": "/api/djradio/v2/get",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/djradio/v2/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program",
+      "variant": "filled",
+      "query": {
+        "rid": "7",
+        "limit": "30",
+        "offset": "0",
+        "asc": "7"
+      },
+      "expected": {
+        "path": "/api/dj/program/byradio",
+        "data": {
+          "radioId": "7",
+          "limit": "30",
+          "offset": "0",
+          "asc": false
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/program/byradio",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "asc": false
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/dj/program/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/dj/program/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/dj/program/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/private",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/msg/private/users",
+        "data": {
+          "offset": "0",
+          "limit": "30",
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/private",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/users",
+        "data": {
+          "offset": 0,
+          "limit": 30,
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/send/text",
+      "variant": "filled",
+      "query": {
+        "msg": "7",
+        "user_ids": "7"
+      },
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "type": "text",
+          "msg": "7",
+          "userIds": "[7]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/text",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "type": "text",
+          "userIds": "[undefined]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/song",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "msg": "7",
+        "user_ids": "7"
+      },
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "id": "7",
+          "msg": "7",
+          "type": "song",
+          "userIds": "[7]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "msg": "",
+          "type": "song",
+          "userIds": "[undefined]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/album",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "msg": "7",
+        "user_ids": "7"
+      },
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "id": "7",
+          "msg": "7",
+          "type": "album",
+          "userIds": "[7]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "msg": "",
+          "type": "album",
+          "userIds": "[undefined]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/playlist",
+      "variant": "filled",
+      "query": {
+        "playlist": "7",
+        "msg": "7",
+        "user_ids": "7"
+      },
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "id": "7",
+          "type": "playlist",
+          "msg": "7",
+          "userIds": "[7]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/send/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/send",
+        "data": {
+          "type": "playlist",
+          "userIds": "[undefined]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/msg/recentcontact",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/recentcontact/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/recentcontact",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/recentcontact/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/private/history",
+      "variant": "filled",
+      "query": {
+        "uid": "7",
+        "limit": "30",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/msg/private/history",
+        "data": {
+          "userId": "7",
+          "limit": "30",
+          "time": "123456",
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/private/history",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/private/history",
+        "data": {
+          "limit": 30,
+          "time": 0,
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/comments",
+      "variant": "filled",
+      "query": {
+        "before": "123456",
+        "limit": "30",
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/v1/user/comments/7",
+        "data": {
+          "beforeTime": "123456",
+          "limit": "30",
+          "total": "true",
+          "uid": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/comments",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/user/comments/undefined",
+        "data": {
+          "beforeTime": "-1",
+          "limit": 30,
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/forwards",
+      "variant": "filled",
+      "query": {
+        "offset": "0",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/forwards/get",
+        "data": {
+          "offset": "0",
+          "limit": "30",
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/forwards",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/forwards/get",
+        "data": {
+          "offset": 0,
+          "limit": 30,
+          "total": "true"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/notices",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "lasttime": "123456"
+      },
+      "expected": {
+        "path": "/api/msg/notices",
+        "data": {
+          "limit": "30",
+          "time": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/msg/notices",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/msg/notices",
+        "data": {
+          "limit": 30,
+          "time": -1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/setting",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/user/setting",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/setting",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/setting",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/list",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "area": "7",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/vipmall/albumproduct/list",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true,
+          "area": "7",
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmall/albumproduct/list",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true,
+          "area": "ALL"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album_songsaleboard",
+      "variant": "filled",
+      "query": {
+        "albumType": "7",
+        "type": "0",
+        "year": "2026"
+      },
+      "expected": {
+        "path": "/api/feealbum/songsaleboard/0/type",
+        "data": {
+          "albumType": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album_songsaleboard",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/feealbum/songsaleboard/daily/type",
+        "data": {
+          "albumType": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/list/style",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "area": "7"
+      },
+      "expected": {
+        "path": "/api/vipmall/appalbum/album/style",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true,
+          "area": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/list/style",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmall/appalbum/album/style",
+        "data": {
+          "limit": 10,
+          "offset": 0,
+          "total": true,
+          "area": "Z_H"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/vipmall/albumproduct/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/album/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmall/albumproduct/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/purchased",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/digitalAlbum/purchased",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/purchased",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/digitalAlbum/purchased",
+        "data": {
+          "limit": 30,
+          "offset": 0,
+          "total": true
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/ordering",
+      "variant": "filled",
+      "query": {
+        "payment": "7",
+        "id": "7",
+        "quantity": "7"
+      },
+      "expected": {
+        "path": "/api/ordering/web/digital",
+        "data": {
+          "business": "Album",
+          "paymentMethod": "7",
+          "digitalResources": "[{\"business\":\"Album\",\"resourceID\":\"7\",\"quantity\":\"7\"}]",
+          "from": "web"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/ordering",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/ordering/web/digital",
+        "data": {
+          "business": "Album",
+          "digitalResources": "[{\"business\":\"Album\"}]",
+          "from": "web"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/calendar",
+      "variant": "filled",
+      "query": {
+        "startTime": "7",
+        "endTime": "7"
+      },
+      "expected": {
+        "path": "/api/mcalendar/detail",
+        "data": {
+          "startTime": "7",
+          "endTime": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/calendar",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mcalendar/detail",
+        "data": {
+          "startTime": 1793232000000,
+          "endTime": 1793232000000
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/point/signed/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/point/signed/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/today",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/point/today/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/today",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/point/today/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/sign",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/pointmall/user/sign",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/sign",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/pointmall/user/sign",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/info",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/user/info",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/v1/user/info",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/tasks",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/usertool/task/list/all",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/tasks",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/usertool/task/list/all",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/tasks/todo",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/usertool/task/todo/query",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/tasks/todo",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/usertool/task/todo/query",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/task/finish",
+      "variant": "filled",
+      "query": {
+        "userTaskId": "7",
+        "depositCode": "7"
+      },
+      "expected": {
+        "path": "/api/usertool/task/point/receive",
+        "data": {
+          "userTaskId": "7",
+          "depositCode": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/task/finish",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/usertool/task/point/receive",
+        "data": {
+          "depositCode": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/tasks/receipt",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/point/receipt",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/yunbei/tasks/receipt",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/point/receipt",
+        "data": {
+          "limit": 10,
+          "offset": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/yunbei/tasks/expense",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/point/expense",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/yunbei/tasks/expense",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/point/expense",
+        "data": {
+          "limit": 10,
+          "offset": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/artist/new/song",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/sub/artist/new/works/song/list",
+        "data": {
+          "limit": "30",
+          "startTimestamp": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/new/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/sub/artist/new/works/song/list",
+        "data": {
+          "limit": 20,
+          "startTimestamp": 1793232000000
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/new/mv",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "before": "123456"
+      },
+      "expected": {
+        "path": "/api/sub/artist/new/works/mv/list",
+        "data": {
+          "limit": "30",
+          "startTimestamp": "123456"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/new/mv",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/sub/artist/new/works/mv/list",
+        "data": {
+          "limit": 20,
+          "startTimestamp": 1793232000000
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/rcmd/song",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "reason": "7",
+        "yunbeiNum": "7"
+      },
+      "expected": {
+        "path": "/api/yunbei/rcmd/song/submit",
+        "data": {
+          "songId": "7",
+          "reason": "7",
+          "scene": "",
+          "fromUserId": -1,
+          "yunbeiNum": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/rcmd/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/yunbei/rcmd/song/submit",
+        "data": {
+          "reason": "好歌献给你",
+          "scene": "",
+          "fromUserId": -1,
+          "yunbeiNum": 10
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/rcmd/song/history",
+      "variant": "filled",
+      "query": {
+        "size": "7",
+        "cursor": "7"
+      },
+      "expected": {
+        "path": "/api/yunbei/rcmd/song/history/list",
+        "data": {
+          "page": "{\"size\":\"7\",\"cursor\":\"7\"}"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/yunbei/rcmd/song/history",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/yunbei/rcmd/song/history/list",
+        "data": {
+          "page": "{\"size\":20,\"cursor\":\"\"}"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/song/purchased",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/single/mybought/song/list",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/song/purchased",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/single/mybought/song/list",
+        "data": {
+          "limit": 20,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mlog/url",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "res": "7"
+      },
+      "expected": {
+        "path": "/api/mlog/detail/v1",
+        "data": {
+          "id": "7",
+          "resolution": "7",
+          "type": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mlog/url",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mlog/detail/v1",
+        "data": {
+          "resolution": 1080,
+          "type": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mlog/to/video",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/mlog/video/convert/id",
+        "data": {
+          "mlogId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mlog/to/video",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mlog/video/convert/id",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/growhpoint/basic",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/growhpoint/basic",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint/details",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/growth/details",
+        "data": {
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint/details",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/growth/details",
+        "data": {
+          "limit": 20,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/tasks",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/task/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/tasks",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/task/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint/get",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8"
+      },
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/task/reward/get",
+        "data": {
+          "taskIds": "7,8"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/growthpoint/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipnewcenter/app/level/task/reward/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/fans",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "limit": "30",
+        "offset": "0"
+      },
+      "expected": {
+        "path": "/api/artist/fans/get",
+        "data": {
+          "id": "7",
+          "limit": "30",
+          "offset": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/fans",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/fans/get",
+        "data": {
+          "limit": 20,
+          "offset": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/follow/count",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/artist/follow/count/get",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/follow/count",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/artist/follow/count/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/vipmall/albumproduct/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmall/albumproduct/detail",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/sales",
+      "variant": "filled",
+      "query": {
+        "ids": "7,8"
+      },
+      "expected": {
+        "path": "/api/vipmall/albumproduct/album/query/sales",
+        "data": {
+          "albumIds": "7,8"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/digitalAlbum/sales",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmall/albumproduct/album/query/sales",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/data/overview",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/creator/musician/statistic/data/overview/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/data/overview",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/creator/musician/statistic/data/overview/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/play/trend",
+      "variant": "filled",
+      "query": {
+        "startTime": "7",
+        "endTime": "7"
+      },
+      "expected": {
+        "path": "/api/creator/musician/play/count/statistic/data/trend/get",
+        "data": {
+          "startTime": "7",
+          "endTime": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/play/trend",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/creator/musician/play/count/statistic/data/trend/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/tasks",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/cycle/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/tasks",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/cycle/list",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/tasks/new",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/stage/list ",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/tasks/new",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/stage/list ",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/cloudbean",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudbean/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/cloudbean",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/cloudbean/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/cloudbean/obtain",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "period": "7"
+      },
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/reward/obtain/new",
+        "data": {
+          "userMissionId": "7",
+          "period": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/cloudbean/obtain",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/nmusician/workbench/mission/reward/obtain/new",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/info",
+      "variant": "filled",
+      "query": {
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/music-vip-membership/front/vip/info",
+        "data": {
+          "userId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/music-vip-membership/front/vip/info",
+        "data": {
+          "userId": ""
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/info/v2",
+      "variant": "filled",
+      "query": {
+        "uid": "7"
+      },
+      "expected": {
+        "path": "/api/music-vip-membership/client/vip/info",
+        "data": {
+          "userId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/info/v2",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/music-vip-membership/client/vip/info",
+        "data": {
+          "userId": ""
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/sign",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/creator/user/access",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/musician/sign",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/creator/user/access",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/mlog/music/rcmd",
+      "variant": "filled",
+      "query": {
+        "mvid": "7",
+        "limit": "30",
+        "songid": "7"
+      },
+      "expected": {
+        "path": "/api/mlog/rcmd/feed/list",
+        "data": {
+          "id": "7",
+          "type": 2,
+          "rcmdType": 20,
+          "limit": "30",
+          "extInfo": "{\"songId\":\"7\"}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/mlog/music/rcmd",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mlog/rcmd/feed/list",
+        "data": {
+          "id": 0,
+          "type": 2,
+          "rcmdType": 20,
+          "limit": 10,
+          "extInfo": "{}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/privacy",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/playlist/update/privacy",
+        "data": {
+          "id": "7",
+          "privacy": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/playlist/privacy",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/playlist/update/privacy",
+        "data": {
+          "privacy": 0
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/download/url",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "br": "7"
+      },
+      "expected": {
+        "path": "/api/song/enhance/download/url",
+        "data": {
+          "id": "7",
+          "br": 7
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/download/url",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/enhance/download/url",
+        "data": {
+          "br": 999000
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/artist/video",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "size": "7",
+        "cursor": "7",
+        "order": "hot"
+      },
+      "expected": {
+        "path": "/api/mlog/artist/video",
+        "data": {
+          "artistId": "7",
+          "page": "{\"size\":\"7\",\"cursor\":\"7\"}",
+          "tab": 0,
+          "order": "hot"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/artist/video",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/mlog/artist/video",
+        "data": {
+          "page": "{\"size\":10,\"cursor\":0}",
+          "tab": 0,
+          "order": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/song",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/song/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/song/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/video",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/newvideo/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/video",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/newvideo/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/voice",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/voice/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/voice",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/voice/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/playlist",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/playlist/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/playlist/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/album",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/album/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/album/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/dj",
+      "variant": "filled",
+      "query": {
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/play-record/djradio/list",
+        "data": {
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/record/recent/dj",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/play-record/djradio/list",
+        "data": {
+          "limit": 100
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/signin/progress",
+      "variant": "filled",
+      "query": {
+        "moduleId": "7"
+      },
+      "expected": {
+        "path": "/api/act/modules/signin/v2/progress",
+        "data": {
+          "moduleId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/signin/progress",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/act/modules/signin/v2/progress",
+        "data": {
+          "moduleId": "1207signin-1207signin"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/timemachine",
+      "variant": "filled",
+      "query": {
+        "startTime": "7",
+        "endTime": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/vipmusic/newrecord/weekflow",
+        "data": {
+          "startTime": "7",
+          "endTime": "7",
+          "type": 1,
+          "limit": "30"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/vip/timemachine",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/vipmusic/newrecord/weekflow",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/song/wiki/summary",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/song/play/about/block/page",
+        "data": {
+          "songId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/wiki/summary",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/play/about/block/page",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/sheet/list",
+      "variant": "filled",
+      "query": {
+        "id": "7",
+        "ab": "7"
+      },
+      "expected": {
+        "path": "/api/music/sheet/list/v1",
+        "data": {
+          "id": "7",
+          "abTest": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/sheet/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/music/sheet/list/v1",
+        "data": {
+          "abTest": "b"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/sheet/preview",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/music/sheet/preview/info",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/sheet/preview",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/music/sheet/preview/info",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/style/list",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/tag/list/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/tag/list/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/preference",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/tag/my/preference/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/preference",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/tag/my/preference/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/detail",
+      "variant": "filled",
+      "query": {
+        "tagId": "7"
+      },
+      "expected": {
+        "path": "/api/style-tag/home/head",
+        "data": {
+          "tagId": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/style-tag/home/head",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/song",
+      "variant": "filled",
+      "query": {
+        "cursor": "7",
+        "size": "7",
+        "tagId": "7",
+        "sort": "7"
+      },
+      "expected": {
+        "path": "/api/style-tag/home/song",
+        "data": {
+          "cursor": "7",
+          "size": "7",
+          "tagId": "7",
+          "sort": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/song",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/style-tag/home/song",
+        "data": {
+          "cursor": 0,
+          "size": 20,
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/album",
+      "variant": "filled",
+      "query": {
+        "cursor": "7",
+        "size": "7",
+        "tagId": "7",
+        "sort": "7"
+      },
+      "expected": {
+        "path": "/api/style-tag/home/album",
+        "data": {
+          "cursor": "7",
+          "size": "7",
+          "tagId": "7",
+          "sort": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/album",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/style-tag/home/album",
+        "data": {
+          "cursor": 0,
+          "size": 20,
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/playlist",
+      "variant": "filled",
+      "query": {
+        "cursor": "7",
+        "size": "7",
+        "tagId": "7"
+      },
+      "expected": {
+        "path": "/api/style-tag/home/playlist",
+        "data": {
+          "cursor": "7",
+          "size": "7",
+          "tagId": "7",
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/playlist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/style-tag/home/playlist",
+        "data": {
+          "cursor": 0,
+          "size": 20,
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/artist",
+      "variant": "filled",
+      "query": {
+        "cursor": "7",
+        "size": "7",
+        "tagId": "7"
+      },
+      "expected": {
+        "path": "/api/style-tag/home/artist",
+        "data": {
+          "cursor": "7",
+          "size": "7",
+          "tagId": "7",
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/style/artist",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/style-tag/home/artist",
+        "data": {
+          "cursor": 0,
+          "size": 20,
+          "sort": 0
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/starpick/comments/summary",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/homepage/block/page",
+        "data": {
+          "cursor": "{\"offset\":0,\"blockCodeOrderList\":[\"HOMEPAGE_BLOCK_NEW_HOT_COMMENT\"],\"refresh\":true}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/starpick/comments/summary",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/homepage/block/page",
+        "data": {
+          "cursor": "{\"offset\":0,\"blockCodeOrderList\":[\"HOMEPAGE_BLOCK_NEW_HOT_COMMENT\"],\"refresh\":true}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/aidj/content/rcmd",
+      "variant": "filled",
+      "query": {
+        "latitude": "7",
+        "longitude": "7"
+      },
+      "expected": {
+        "path": "/api/aidj/content/rcmd/info",
+        "data": {
+          "extInfo": "{\"lbsInfoList\":[{\"lat\":\"7\",\"lon\":\"7\",\"time\":1793232000}],\"noAidjToAidj\":false,\"lastRequestTimestamp\":1793232000000,\"listenedTs\":false}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/aidj/content/rcmd",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/aidj/content/rcmd/info",
+        "data": {
+          "extInfo": "{\"noAidjToAidj\":false,\"lastRequestTimestamp\":1793232000000,\"listenedTs\":false}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/music/first/listen/info",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/content/activity/music/first/listen/info",
+        "data": {
+          "songId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/music/first/listen/info",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/content/activity/music/first/listen/info",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/search",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "podcastName": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/voicelist/search",
+        "data": {
+          "fee": "-1",
+          "limit": "30",
+          "offset": "0",
+          "podcastName": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/search",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/voicelist/search",
+        "data": {
+          "fee": "-1",
+          "limit": "200",
+          "offset": "0",
+          "podcastName": ""
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/list",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "voiceListId": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/voices/by/voicelist",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "voiceListId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/list",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/voices/by/voicelist",
+        "data": {
+          "limit": "200",
+          "offset": "0"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/list/search",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "name": "7",
+        "displayStatus": "7",
+        "type": "0",
+        "voiceFeeType": "7",
+        "voiceListId": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/voice/list",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "name": "7",
+          "displayStatus": "7",
+          "type": "0",
+          "voiceFeeType": "7",
+          "radioId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/list/search",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/voice/list",
+        "data": {
+          "limit": "200",
+          "offset": "0",
+          "name": null,
+          "displayStatus": null,
+          "type": null,
+          "voiceFeeType": null
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voice/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/voice/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voice/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/voice/detail",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/trans",
+      "variant": "filled",
+      "query": {
+        "limit": "30",
+        "offset": "0",
+        "radioId": "7",
+        "programId": "7",
+        "position": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/radio/program/trans",
+        "data": {
+          "limit": "30",
+          "offset": "0",
+          "radioId": "7",
+          "programId": "7",
+          "position": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/trans",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/radio/program/trans",
+        "data": {
+          "limit": "200",
+          "offset": "0",
+          "radioId": null,
+          "programId": "0",
+          "position": "1"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/detail",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/voice/workbench/voicelist/detail",
+        "data": {
+          "id": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/voicelist/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/voice/workbench/voicelist/detail",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/get/userids",
+      "variant": "filled",
+      "query": {
+        "nicknames": "7"
+      },
+      "expected": {
+        "path": "/api/user/getUserIds",
+        "data": {
+          "nicknames": "7"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/get/userids",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/user/getUserIds",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/ugc/album/get",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/album/get",
+        "data": {
+          "albumId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/album/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/album/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/song/get",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/song/get",
+        "data": {
+          "songId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/song/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/song/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/artist/get",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/artist/get",
+        "data": {
+          "artistId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/artist/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/artist/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/mv/get",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/mv/get",
+        "data": {
+          "mvId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/mv/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/mv/get",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/artist/search",
+      "variant": "filled",
+      "query": {
+        "keyword": "7",
+        "limit": "30"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/artist/search",
+        "data": {
+          "keyword": "7",
+          "limit": "30"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/artist/search",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/artist/search",
+        "data": {
+          "limit": 40
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/detail",
+      "variant": "filled",
+      "query": {
+        "auditStatus": "7",
+        "limit": "30",
+        "offset": "0",
+        "order": "hot",
+        "sortBy": "7",
+        "type": "0"
+      },
+      "expected": {
+        "path": "/api/rep/ugc/detail",
+        "data": {
+          "auditStatus": "7",
+          "limit": "30",
+          "offset": "0",
+          "order": "hot",
+          "sortBy": "7",
+          "type": "0"
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/ugc/detail",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/detail",
+        "data": {
+          "auditStatus": "",
+          "limit": 10,
+          "offset": 0,
+          "order": "desc",
+          "sortBy": "createTime",
+          "type": 1
+        },
+        "weapi": true
+      }
+    },
+    {
+      "route": "/ugc/user/devote",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/user/devote",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/ugc/user/devote",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/rep/ugc/user/devote",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/summary/annual",
+      "variant": "filled",
+      "query": {
+        "year": "2026"
+      },
+      "expected": {
+        "path": "/api/activity/summary/annual/2026/data",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/summary/annual",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/activity/summary/annual/undefined/data",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/match",
+      "variant": "filled",
+      "query": {
+        "title": "7",
+        "album": "7",
+        "artist": "7",
+        "duration": "7",
+        "md5": "7"
+      },
+      "expected": {
+        "path": "/api/search/match/new",
+        "data": {
+          "songs": "[{\"title\":\"7\",\"album\":\"7\",\"artist\":\"7\",\"duration\":\"7\",\"persistId\":\"7\"}]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/search/match",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/search/match/new",
+        "data": {
+          "songs": "[{\"title\":\"\",\"album\":\"\",\"artist\":\"\",\"duration\":0}]"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/red/count",
+      "variant": "filled",
+      "query": {
+        "id": "7"
+      },
+      "expected": {
+        "path": "/api/song/red/count",
+        "data": {
+          "songId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/song/red/count",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/song/red/count",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/room/create",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/room/create",
+        "data": {
+          "refer": "songplay_more"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/room/create",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/room/create",
+        "data": {
+          "refer": "songplay_more"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/room/check",
+      "variant": "filled",
+      "query": {
+        "roomId": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/room/check",
+        "data": {
+          "roomId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/room/check",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/room/check",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/accept",
+      "variant": "filled",
+      "query": {
+        "roomId": "7",
+        "inviterId": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/play/invitation/accept",
+        "data": {
+          "refer": "inbox_invite",
+          "roomId": "7",
+          "inviterId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/accept",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/play/invitation/accept",
+        "data": {
+          "refer": "inbox_invite"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/end",
+      "variant": "filled",
+      "query": {
+        "roomId": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/end/v2",
+        "data": {
+          "roomId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/end",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/end/v2",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/status",
+      "variant": "filled",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/status/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/listentogether/status",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/status/get",
+        "data": {},
+        "weapi": true
+      }
+    },
+    {
+      "route": "/listentogether/heatbeat",
+      "variant": "filled",
+      "query": {
+        "roomId": "7",
+        "songId": "7",
+        "playStatus": "7",
+        "progress": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/heartbeat",
+        "data": {
+          "roomId": "7",
+          "songId": "7",
+          "playStatus": "7",
+          "progress": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/heatbeat",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/heartbeat",
+        "data": {},
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/play/command",
+      "variant": "filled",
+      "query": {
+        "roomId": "7",
+        "commandType": "7",
+        "progress": "7",
+        "playStatus": "7",
+        "formerSongId": "7",
+        "targetSongId": "7",
+        "clientSeq": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/play/command/report",
+        "data": {
+          "roomId": "7",
+          "commandInfo": "{\"commandType\":\"7\",\"progress\":\"7\",\"playStatus\":\"7\",\"formerSongId\":\"7\",\"targetSongId\":\"7\",\"clientSeq\":\"7\"}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/play/command",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/play/command/report",
+        "data": {
+          "commandInfo": "{\"progress\":0}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/sync/list/command",
+      "variant": "filled",
+      "query": {
+        "roomId": "7",
+        "commandType": "7",
+        "userId": "7",
+        "version": "7",
+        "randomList": "7,8",
+        "displayList": "7,8"
+      },
+      "expected": {
+        "path": "/api/listen/together/sync/list/command/report",
+        "data": {
+          "roomId": "7",
+          "playlistParam": "{\"commandType\":\"7\",\"version\":[{\"userId\":\"7\",\"version\":\"7\"}],\"anchorSongId\":\"\",\"anchorPosition\":-1,\"randomList\":[\"7\",\"8\"],\"displayList\":[\"7\",\"8\"]}"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/sync/playlist/get",
+      "variant": "filled",
+      "query": {
+        "roomId": "7"
+      },
+      "expected": {
+        "path": "/api/listen/together/sync/playlist/get",
+        "data": {
+          "roomId": "7"
+        },
+        "weapi": false
+      }
+    },
+    {
+      "route": "/listentogether/sync/playlist/get",
+      "variant": "defaults",
+      "query": {},
+      "expected": {
+        "path": "/api/listen/together/sync/playlist/get",
+        "data": {},
+        "weapi": false
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "route": "/song/detail",
+      "variant": "defaults",
+      "reason": "TypeError: Cannot read properties of undefined (reading 'split')"
+    },
+    {
+      "route": "/user/cloud/detail",
+      "variant": "defaults",
+      "reason": "TypeError: Cannot read properties of undefined (reading 'replace')"
+    },
+    {
+      "route": "/listentogether/sync/list/command",
+      "variant": "defaults",
+      "reason": "TypeError: Cannot read properties of undefined (reading 'split')"
+    }
+  ]
+}

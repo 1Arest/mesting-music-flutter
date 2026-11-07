@@ -1,0 +1,8 @@
+{
+  "RING_APP_ID": "your-app",
+  "RING_DOWNLOAD_URL": "https://download.csnas.asia/your-app/download",
+  "RING_RELEASE_ID": "release-id-from-business-backend",
+  "RING_RELEASE_VERSION": "1.0.0",
+  "RING_FILE_SIZE": "REPLACE_WITH_EXACT_BYTES",
+  "RING_SHA256": "REPLACE_WITH_EXACT_SHA256"
+}

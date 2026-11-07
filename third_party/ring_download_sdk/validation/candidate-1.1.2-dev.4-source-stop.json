@@ -1,0 +1,16 @@
+{
+  "version": "1.1.2-dev.4",
+  "status": "verified_local_candidate_not_deployed",
+  "SDK_tests_passed": 521,
+  "static_analysis_passed": true,
+  "targeted_tests_passed": 9,
+  "evidence": "p8p/validation/source-stop-diagnostics-20261029/summary.json",
+  "evidence_sha256": "a36f85dd04f19c0030e28c6eb4af981718c7349a7a808f918cd6fd6328451e7e",
+  "baseline_exit": 1,
+  "first_fix_compile_exit": 1,
+  "APK_rebuilt": false,
+  "formal_website_replaced": false,
+  "LifeRing_branch_replaced": false,
+  "node_upgraded": false,
+  "natural_network_root_cause_confirmed": false
+}

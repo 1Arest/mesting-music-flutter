@@ -1,0 +1,20 @@
+name: ring_sdk_example
+description: Standalone SDK integration probe without LifeRing source imports.
+publish_to: none
+version: 1.0.3+4
+environment:
+  sdk: '>=3.10.8 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  ring_download_sdk:
+    path: ../
+  # Used only by the private native UDP observer qualification entry point.
+  flutter_webrtc: 1.6.2+hotfix.3
+  # The private lifecycle probe instantiates the real SDK clients with transport
+  # observation seams; this is the already-locked transitive Dio version.
+  dio: 5.11.1
+dev_dependencies:
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
