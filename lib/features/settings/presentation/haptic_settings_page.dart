@@ -5,6 +5,7 @@ import '../../../core/haptics/app_haptics.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
 import '../../../shared/widgets/music_notice.dart';
+import '../../themes/music_typography.dart';
 
 /// A small grouped settings surface. It edits preferences; the platform bridge
 /// owns capability checks, system opt-outs and tactile rendering separately.
@@ -39,8 +40,8 @@ class HapticSettingsPage extends ConsumerWidget {
                     child: Text(
                       '应用触感',
                       style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ),
@@ -66,7 +67,7 @@ class HapticSettingsPage extends ConsumerWidget {
               padding: EdgeInsets.only(left: 8, bottom: 12),
               child: Text(
                 '反馈强度',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(fontWeight: MusicTypography.titleWeight),
               ),
             ),
             IgnorePointer(

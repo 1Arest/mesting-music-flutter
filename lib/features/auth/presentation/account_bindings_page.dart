@@ -13,6 +13,7 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../themes/music_theme_background.dart';
 import '../auth_providers.dart';
 import '../domain/auth_models.dart';
+import '../../themes/music_typography.dart';
 
 class AccountBindingsPage extends ConsumerStatefulWidget {
   const AccountBindingsPage({super.key});
@@ -75,14 +76,17 @@ class _AccountBindingsPageState extends ConsumerState<AccountBindingsPage> {
             const SizedBox(height: 22),
             const Text(
               '登录方式',
-              style: TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.titleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 7),
             Text(
               '绑定信息直接读取自云端账号。更换联系方式前，需要先验证当前身份。',
               style: TextStyle(
                 height: 1.5,
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -137,14 +141,16 @@ class _AccountBindingsPageState extends ConsumerState<AccountBindingsPage> {
                           children: [
                             const Text(
                               '至少保留一种登录方式',
-                              style: TextStyle(fontWeight: FontWeight.w900),
+                              style: TextStyle(
+                                fontWeight: MusicTypography.titleWeight,
+                              ),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               '这里仅支持安全绑定与换绑，不提供移除最后一种登录方式的入口。验证令牌只保存在当前页面内存中。',
                               style: TextStyle(
                                 height: 1.5,
-                                fontSize: 11,
+                                fontSize: MusicTypography.smallCaptionSize,
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onSurfaceVariant,
@@ -257,8 +263,8 @@ class _BindingFlowSheetState extends ConsumerState<_BindingFlowSheet> {
                       ? '先确认是你本人'
                       : '${existing ? '更换' : '绑定'}${widget.method.label}',
                   style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.sectionTitleSize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -268,7 +274,7 @@ class _BindingFlowSheetState extends ConsumerState<_BindingFlowSheet> {
                       : '新${widget.method.label}验证成功后会立即成为可用登录方式。',
                   style: TextStyle(
                     height: 1.5,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -567,13 +573,15 @@ class _BindingCard extends StatelessWidget {
                   children: [
                     Text(
                       method.label,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontWeight: MusicTypography.titleWeight,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       bound ? maskedValue! : '尚未绑定',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         color: bound
                             ? Theme.of(context).colorScheme.onSurfaceVariant
                             : const Color(0xFFC24A34),
@@ -586,8 +594,8 @@ class _BindingCard extends StatelessWidget {
                 bound ? '更换' : '绑定',
                 style: TextStyle(
                   color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               const SizedBox(width: 4),
@@ -690,8 +698,8 @@ class _StepDot extends StatelessWidget {
             label,
             style: TextStyle(
               color: active ? palette.onPrimary : palette.primary,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -700,7 +708,7 @@ class _StepDot extends StatelessWidget {
           title,
           style: TextStyle(
             color: active ? scheme.onSurface : scheme.onSurfaceVariant,
-            fontSize: 10,
+            fontSize: MusicTypography.smallCaptionSize,
           ),
         ),
       ],
@@ -768,7 +776,10 @@ class _PrimaryAction extends StatelessWidget {
                   strokeWidth: 2.3,
                 ),
               )
-            : Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+            : Text(
+                label,
+                style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+              ),
       ),
     );
   }
@@ -824,7 +835,14 @@ class _InlineNotice extends StatelessWidget {
             size: 18,
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(message, style: const TextStyle(fontSize: 11))),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
+            ),
+          ),
           if (actionLabel != null)
             TextButton(onPressed: onAction, child: Text(actionLabel!)),
         ],

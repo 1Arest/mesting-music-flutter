@@ -16,6 +16,7 @@ import 'netease_features_page.dart';
 import 'netease_features_repository.dart';
 import 'netease_user_providers.dart';
 import 'netease_user_repository.dart';
+import '../../themes/music_typography.dart';
 
 void openNeteaseUser(BuildContext context, PlatformSearchUser user) =>
     Navigator.of(context).push(
@@ -49,17 +50,26 @@ class NeteaseFollowButton extends ConsumerWidget {
           context: context,
           builder: (context) => cupertino
               ? CupertinoAlertDialog(
-                  title: const Text('取消关注？'),
+                  title: const Text(
+                    '取消关注？',
+                    style: MusicTypography.titleEmphasis,
+                  ),
                   content: Text('将不再关注${user.nickname}。'),
                   actions: [
                     CupertinoDialogAction(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('保留关注'),
+                      child: const Text(
+                        '保留关注',
+                        style: MusicTypography.regularText,
+                      ),
                     ),
                     CupertinoDialogAction(
                       isDestructiveAction: true,
                       onPressed: () => Navigator.pop(context, true),
-                      child: const Text('取消关注'),
+                      child: const Text(
+                        '取消关注',
+                        style: MusicTypography.regularText,
+                      ),
                     ),
                   ],
                 )
@@ -118,8 +128,8 @@ class NeteaseFollowButton extends ConsumerWidget {
               : Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.footnoteSize,
+                    fontWeight: MusicTypography.bodyWeight,
                     color: followed ? colors.onSurface : colors.onPrimary,
                   ),
                 ),
@@ -167,8 +177,8 @@ class NeteaseSearchUserRow extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.calloutSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                         if (user.signature.isNotEmpty) ...[
@@ -178,7 +188,7 @@ class NeteaseSearchUserRow extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: MusicTypography.footnoteSize,
                               color: Theme.of(
                                 context,
                               ).colorScheme.onSurfaceVariant,
@@ -316,8 +326,8 @@ class _NeteaseUserProfilePageState
                     Text(
                       user.nickname,
                       style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -400,7 +410,10 @@ class _NeteaseUserProfilePageState
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
               title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: MusicTypography.headingSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
           ),
           for (final value in values)

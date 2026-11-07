@@ -23,6 +23,7 @@ import 'platform_design.dart';
 import '../../experience/presentation/music_library_page.dart';
 import '../../playlists/presentation/playlist_editor_dialog.dart';
 import '../../experience/presentation/editorial_widgets.dart';
+import '../../themes/music_typography.dart';
 
 Future<void> createPlatformPlaylist(BuildContext context, WidgetRef ref) async {
   await createEditorialPlaylist(context, ref);
@@ -270,17 +271,17 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
         final confirmed = await showCupertinoDialog<bool>(
           context: context,
           builder: (dialogContext) => CupertinoAlertDialog(
-            title: const Text('删除云端歌单？'),
+            title: const Text('删除云端歌单？', style: MusicTypography.titleEmphasis),
             content: Text('将从当前平台账号中删除「${playlist.name}」。此操作会同步到云端。'),
             actions: [
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('取消'),
+                child: const Text('取消', style: MusicTypography.regularText),
               ),
               CupertinoDialogAction(
                 isDestructiveAction: true,
                 onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('删除'),
+                child: const Text('删除', style: MusicTypography.regularText),
               ),
             ],
           ),

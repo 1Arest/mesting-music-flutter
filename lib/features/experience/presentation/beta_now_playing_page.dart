@@ -42,6 +42,7 @@ import '../../auth/presentation/beta_welcome_page.dart';
 import 'player_chrome_reveal.dart';
 import 'player_content_transition.dart';
 import 'player_artwork_transition.dart';
+import '../../themes/music_typography.dart';
 
 /// THESIS: Artwork and lyrics lead; shared Apple transport recedes below them.
 /// PALETTE: Cover-derived blur, a dark readability veil, white transport, red
@@ -730,9 +731,11 @@ class _Identity extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.white,
-              fontSize: small ? 18 : 26,
+              fontSize: small
+                  ? MusicTypography.bodySize
+                  : MusicTypography.titleSize,
               height: 1.16,
-              fontWeight: FontWeight.w700,
+              fontWeight: MusicTypography.titleWeight,
               letterSpacing: -.4,
             ),
           ),
@@ -741,7 +744,12 @@ class _Identity extends StatelessWidget {
             artist,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: Colors.white, fontSize: small ? 14 : 17),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: small
+                  ? MusicTypography.subheadlineSize
+                  : MusicTypography.bodySize,
+            ),
           ),
         ],
       ),

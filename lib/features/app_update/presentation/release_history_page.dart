@@ -5,6 +5,7 @@ import '../../../shared/widgets/beta_content_insets.dart';
 import '../app_update_providers.dart';
 import '../domain/release_history.dart';
 import 'release_notes_sheet.dart';
+import '../../themes/music_typography.dart';
 
 /// Opening history never checks the update service. Package metadata only
 /// labels the installed version; history remains usable if that read fails.
@@ -43,8 +44,8 @@ class MusicReleaseHistoryPage extends ConsumerWidget {
               title: Text(
                 'v${entry.key}',
                 style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w700,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               subtitle: current ? const Text('当前安装版本') : null,

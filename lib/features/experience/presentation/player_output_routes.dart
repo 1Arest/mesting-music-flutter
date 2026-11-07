@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/audio_output_controller.dart';
 import 'apple_audio_glyphs.dart';
+import '../../themes/music_typography.dart';
 
 /// This is content inside the existing glass output card, not a second dialog.
 /// Active selection stays native-confirmed; paused preferences are labelled
@@ -90,8 +91,8 @@ class _PlayerOutputRoutesState extends ConsumerState<PlayerOutputRoutes> {
                             route.name,
                             style: TextStyle(
                               color: colors.onSurface,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.bodySize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                           Text(
@@ -104,7 +105,7 @@ class _PlayerOutputRoutesState extends ConsumerState<PlayerOutputRoutes> {
                                 : '点按切换',
                             style: TextStyle(
                               color: colors.onSurfaceVariant,
-                              fontSize: 12,
+                              fontSize: MusicTypography.captionSize,
                             ),
                           ),
                         ],
@@ -123,7 +124,7 @@ class _PlayerOutputRoutesState extends ConsumerState<PlayerOutputRoutes> {
               '暂未读取到可用输出，请检查设备连接后重试。',
               style: TextStyle(
                 color: colors.onSurfaceVariant,
-                fontSize: 13,
+                fontSize: MusicTypography.footnoteSize,
                 height: 1.5,
               ),
             ),

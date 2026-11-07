@@ -11,12 +11,15 @@ import '../../../core/haptics/app_haptics.dart';
 import '../../../shared/widgets/track_artwork.dart';
 import '../../../shared/models/track.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
+import '../../music_platform/qishui/qishui_providers.dart';
+import '../../music_platform/qishui/qishui_player_navigation.dart';
 import '../../player/presentation/persistent_mini_player.dart'
     show MiniPlayerSwipeRegion, miniPlayerSwipeDistanceThreshold;
 import 'beta_bottom_bar.dart';
 import 'playback_pill_menu.dart';
 import 'playback_pill_track_motion.dart';
 import 'playback_pill_artwork.dart';
+import '../../themes/music_typography.dart';
 
 /// Official Apple Music example's GlassButton.custom play pill (MIT), with live
 /// Mesting media/actions. The package owns press/spring/refraction, while the
@@ -134,7 +137,11 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
             key: const ValueKey('beta6-official-play-pill'),
             onTap: () {
               appHaptic(context, AppHapticEvent.impact);
-              context.push('/player');
+              if (ref.read(qishuiNavigationProvider)) {
+                openQishuiMusicTab(context, ref);
+              } else {
+                context.push('/player');
+              }
             },
             quality: GlassQuality.premium,
             useOwnLayer: true,
@@ -204,8 +211,8 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: foreground,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
+                                    fontWeight: MusicTypography.bodyWeight,
+                                    fontSize: MusicTypography.subheadlineSize,
                                   ),
                                 ),
                                 if (!compact ||
@@ -219,7 +226,7 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: foreground.withValues(alpha: .7),
-                                      fontSize: 12,
+                                      fontSize: MusicTypography.captionSize,
                                     ),
                                   ),
                               ],

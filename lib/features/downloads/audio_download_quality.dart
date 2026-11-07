@@ -10,6 +10,7 @@ import '../music_platform/domain/platform_audio_quality.dart';
 import '../music_platform/music_platform_providers.dart';
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/netease/netease_fallback.dart';
+import '../themes/music_typography.dart';
 
 /// Unlike playback's local-SVIP attempt list, download choices come only from
 /// this recording's actual resource metadata. Entitlement/address resolution is
@@ -122,7 +123,10 @@ class _DownloadQualitySheetState extends ConsumerState<_DownloadQualitySheet> {
           children: [
             const Text(
               '选择下载音质',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -184,7 +188,7 @@ class _DownloadQualitySheetState extends ConsumerState<_DownloadQualitySheet> {
                       ),
                     const Text(
                       '优先下载官方完整版；官方不可用时可手动选择其他下载音源。实际格式与音质将再次核验。',
-                      style: TextStyle(fontSize: 12),
+                      style: TextStyle(fontSize: MusicTypography.captionSize),
                     ),
                   ],
                 );

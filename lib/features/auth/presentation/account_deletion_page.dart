@@ -14,6 +14,7 @@ import '../../themes/music_theme_background.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../auth_providers.dart';
 import '../domain/auth_models.dart';
+import '../../themes/music_typography.dart';
 
 class AccountDeletionPage extends ConsumerStatefulWidget {
   const AccountDeletionPage({super.key});
@@ -101,7 +102,10 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
               const Text(
                 '注销账号',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: MusicTypography.titleSize,
+                  fontWeight: MusicTypography.titleWeight,
+                ),
               ),
               const SizedBox(height: 9),
               Text(
@@ -109,7 +113,7 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   height: 1.55,
-                  fontSize: 13,
+                  fontSize: MusicTypography.footnoteSize,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -154,7 +158,7 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
                               : '验证码将发送到已绑定的${method.label} $_maskedTarget。',
                           style: TextStyle(
                             height: 1.5,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                             color: Theme.of(
                               context,
                             ).colorScheme.onSurfaceVariant,
@@ -216,14 +220,16 @@ class _AccountDeletionPageState extends ConsumerState<AccountDeletionPage> {
                       children: [
                         const Text(
                           '输入“注销”以确认永久删除',
-                          style: TextStyle(fontWeight: FontWeight.w900),
+                          style: TextStyle(
+                            fontWeight: MusicTypography.titleWeight,
+                          ),
                         ),
                         const SizedBox(height: 7),
                         Text(
                           '账号身份、资料、收藏与歌单、播放记录、关系链、私信和一起听记录都将删除。',
                           style: TextStyle(
                             height: 1.5,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                             color: Theme.of(
                               context,
                             ).colorScheme.onSurfaceVariant,
@@ -390,8 +396,8 @@ class _Header extends StatelessWidget {
           '账号安全',
           style: TextStyle(
             color: tokens.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
+            fontSize: MusicTypography.captionSize,
+            fontWeight: MusicTypography.bodyWeight,
             letterSpacing: 1.1,
           ),
         ),
@@ -417,7 +423,10 @@ class _DeletionScopeCard extends StatelessWidget {
               children: [
                 Icon(Icons.info_outline_rounded, color: Color(0xFFC24A34)),
                 SizedBox(width: 9),
-                Text('将被永久删除', style: TextStyle(fontWeight: FontWeight.w900)),
+                Text(
+                  '将被永久删除',
+                  style: TextStyle(fontWeight: MusicTypography.titleWeight),
+                ),
               ],
             ),
             const SizedBox(height: 11),
@@ -425,7 +434,7 @@ class _DeletionScopeCard extends StatelessWidget {
               '账号身份、个人资料与已关联头像/主页背景、收藏和歌单、播放记录、关注与拉黑关系、私信会话、一起听会话和记录。',
               style: TextStyle(
                 height: 1.55,
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -489,13 +498,16 @@ class _StepLabel extends StatelessWidget {
             number,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
         const SizedBox(width: 9),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+        ),
       ],
     );
   }
@@ -554,7 +566,10 @@ class _VerifiedBadge extends StatelessWidget {
         children: [
           Icon(Icons.verified_rounded, color: Color(0xFF54A17B)),
           SizedBox(width: 9),
-          Text('身份验证完成', style: TextStyle(fontWeight: FontWeight.w900)),
+          Text(
+            '身份验证完成',
+            style: TextStyle(fontWeight: MusicTypography.titleWeight),
+          ),
         ],
       ),
     );
@@ -618,7 +633,10 @@ class _ErrorNotice extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: const TextStyle(color: Color(0xFFC24A34), fontSize: 12),
+        style: const TextStyle(
+          color: Color(0xFFC24A34),
+          fontSize: MusicTypography.captionSize,
+        ),
       ),
     );
   }

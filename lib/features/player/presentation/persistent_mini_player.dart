@@ -11,6 +11,7 @@ import '../../themes/music_theme_tokens.dart';
 import 'now_playing_transition.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../experience/presentation/floating_playback_pill.dart';
+import '../../themes/music_typography.dart';
 
 const double miniPlayerHeight = 64;
 const double miniPlayerVinylDiameter = 64;
@@ -294,8 +295,8 @@ class _PersistentMiniPlayerState extends ConsumerState<PersistentMiniPlayer> {
                                     animate: playing,
                                     style: TextStyle(
                                       color: tokens.textPrimary,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
+                                      fontWeight: MusicTypography.bodyWeight,
+                                      fontSize: MusicTypography.subheadlineSize,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -305,7 +306,7 @@ class _PersistentMiniPlayerState extends ConsumerState<PersistentMiniPlayer> {
                                     animate: playing,
                                     style: TextStyle(
                                       color: tokens.textSecondary,
-                                      fontSize: 12,
+                                      fontSize: MusicTypography.captionSize,
                                     ),
                                   ),
                                 ],

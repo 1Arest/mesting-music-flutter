@@ -13,6 +13,7 @@ import 'apple_audio_glyphs.dart';
 import 'apple_output_volume_slider.dart';
 import 'player_output_routes.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
+import '../../themes/music_typography.dart';
 
 /// The app owns this presentation; Android owns the real device transfer.
 /// Do not list paired devices as available routes or pretend a transfer worked.
@@ -78,8 +79,8 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                             child: Text(
                               _devices ? '播放设备' : '音频输出',
                               style: TextStyle(
-                                fontSize: 23,
-                                fontWeight: FontWeight.w700,
+                                fontSize: MusicTypography.sectionTitleSize,
+                                fontWeight: MusicTypography.titleWeight,
                                 color: ink,
                               ),
                             ),
@@ -117,8 +118,8 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: ink,
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: MusicTypography.bodySize,
+                                    fontWeight: MusicTypography.titleWeight,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -128,7 +129,7 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: ink.withValues(alpha: .7),
-                                    fontSize: 14,
+                                    fontSize: MusicTypography.subheadlineSize,
                                   ),
                                 ),
                               ],
@@ -163,8 +164,8 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                                     ),
                                     style: TextStyle(
                                       color: ink,
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: MusicTypography.headingSize,
+                                      fontWeight: MusicTypography.titleWeight,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -172,7 +173,7 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                                     output.available ? '当前播放设备' : '设备状态暂不可用',
                                     style: TextStyle(
                                       color: ink.withValues(alpha: .7),
-                                      fontSize: 13,
+                                      fontSize: MusicTypography.footnoteSize,
                                     ),
                                   ),
                                 ],
@@ -193,7 +194,7 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                             '音量',
                             style: TextStyle(
                               color: ink.withValues(alpha: .7),
-                              fontSize: 13,
+                              fontSize: MusicTypography.footnoteSize,
                             ),
                           ),
                           const Spacer(),
@@ -203,7 +204,7 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                                 : '暂不可调',
                             style: TextStyle(
                               color: ink.withValues(alpha: .7),
-                              fontSize: 13,
+                              fontSize: MusicTypography.footnoteSize,
                             ),
                           ),
                         ],
@@ -277,7 +278,7 @@ class _PlayerOutputDialogState extends ConsumerState<PlayerOutputDialog> {
                         _devices ? '完成' : '切换设备',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),

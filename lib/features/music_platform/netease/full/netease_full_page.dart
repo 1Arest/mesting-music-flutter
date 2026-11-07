@@ -44,6 +44,7 @@ import '../messages/netease_messages_page.dart';
 import '../messages/netease_unread.dart';
 import 'netease_workflow_policy.dart';
 import 'netease_comment_entry_page.dart';
+import '../../../themes/music_typography.dart';
 
 final neteaseFullRepositoryProvider = Provider<NeteaseFullRepository>(
   (ref) => NeteaseFullRepository(ref.watch(neteaseMusicRepositoryProvider)),
@@ -128,8 +129,8 @@ class NeteaseFullNavigation extends ConsumerWidget {
                   style: grouped
                       ? null
                       : const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                          fontSize: MusicTypography.bodySize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                 ),
                 trailing: Row(
@@ -598,7 +599,10 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
       final confirmed = await showCupertinoDialog<bool>(
         context: context,
         builder: (c) => CupertinoAlertDialog(
-          title: Text('确认${neteaseTaskTitle(e)}？'),
+          title: Text(
+            '确认${neteaseTaskTitle(e)}？',
+            style: MusicTypography.titleEmphasis,
+          ),
           content: Text(
             '${e.route.startsWith('/send/')
                 ? '这会向所选收件人发送消息。'
@@ -609,12 +613,12 @@ class _NeteaseFullTaskPageState extends ConsumerState<NeteaseFullTaskPage> {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(c, false),
-              child: const Text('取消'),
+              child: const Text('取消', style: MusicTypography.regularText),
             ),
             CupertinoDialogAction(
               isDestructiveAction: e.title.contains('删除'),
               onPressed: () => Navigator.pop(c, true),
-              child: const Text('确认'),
+              child: const Text('确认', style: MusicTypography.regularText),
             ),
           ],
         ),

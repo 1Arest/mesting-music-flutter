@@ -6,6 +6,7 @@ import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../domain/social_models.dart';
+import '../../themes/music_typography.dart';
 
 class SocialPageHeader extends StatelessWidget {
   const SocialPageHeader({
@@ -38,8 +39,8 @@ class SocialPageHeader extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.sectionTitleSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               if (subtitle != null) ...[
@@ -49,7 +50,7 @@ class SocialPageHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: MusicTypography.smallCaptionSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -151,9 +152,9 @@ class _HeaderButton extends StatelessWidget {
                         unreadCount > 99 ? '99+' : '$unreadCount',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 8,
+                          fontSize: MusicTypography.smallCaptionSize,
                           height: 1,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -223,7 +224,13 @@ class SocialStatusBadge extends StatelessWidget {
         if (empty)
           Icon(Icons.add_rounded, size: 16, color: accent)
         else
-          Text(status.emoji, style: const TextStyle(fontSize: 15, height: 1)),
+          Text(
+            status.emoji,
+            style: const TextStyle(
+              fontSize: MusicTypography.subheadlineSize,
+              height: 1,
+            ),
+          ),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
@@ -232,8 +239,8 @@ class SocialStatusBadge extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: empty ? accent : null,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -350,7 +357,10 @@ class SocialEmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+              style: const TextStyle(
+                fontSize: MusicTypography.bodySize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 7),
             Text(
@@ -358,7 +368,7 @@ class SocialEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 height: 1.5,
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),

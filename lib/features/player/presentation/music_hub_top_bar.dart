@@ -17,6 +17,7 @@ import '../../social/social_attention.dart';
 import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'music_page_transition.dart';
+import '../../themes/music_typography.dart';
 
 class MusicHubTopBar extends StatelessWidget {
   const MusicHubTopBar({
@@ -70,8 +71,8 @@ class MusicHubTopBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],
@@ -111,9 +112,9 @@ class _TopBarTitle extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
         color: context.musicThemeTokens.textPrimary,
-        fontSize: 20,
+        fontSize: MusicTypography.headingSize,
         height: 1.12,
-        fontWeight: FontWeight.w900,
+        fontWeight: MusicTypography.titleWeight,
       ),
     );
     if (!animate) return text;
@@ -321,8 +322,8 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                           'MESTING SPACE',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             letterSpacing: 1.8,
                           ),
                         ),
@@ -443,7 +444,7 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                                 : '主题、账号绑定与登录安全已统一放在“设置”，收藏和歌单仍在“我的”页面。',
                             style: TextStyle(
                               color: tokens.textMuted,
-                              fontSize: 10,
+                              fontSize: MusicTypography.smallCaptionSize,
                               height: 1.55,
                             ),
                           ),
@@ -567,8 +568,8 @@ class _AccountCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: tokens.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -576,7 +577,10 @@ class _AccountCard extends StatelessWidget {
                     caption,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: tokens.textSecondary, fontSize: 10),
+                    style: TextStyle(
+                      color: tokens.textSecondary,
+                      fontSize: MusicTypography.smallCaptionSize,
+                    ),
                   ),
                 ],
               ),
@@ -601,8 +605,8 @@ class _PanelLabel extends StatelessWidget {
         text,
         style: TextStyle(
           color: context.musicThemeTokens.textMuted,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
+          fontSize: MusicTypography.smallCaptionSize,
+          fontWeight: MusicTypography.bodyWeight,
           letterSpacing: .8,
         ),
       ),
@@ -682,14 +686,17 @@ class _PanelTile extends StatelessWidget {
                     title,
                     style: TextStyle(
                       color: highlighted ? accent : tokens.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.footnoteSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(color: tokens.textMuted, fontSize: 9),
+                    style: TextStyle(
+                      color: tokens.textMuted,
+                      fontSize: MusicTypography.smallCaptionSize,
+                    ),
                   ),
                 ],
               ),
@@ -739,8 +746,8 @@ class _UnreadMessagesBadge extends StatelessWidget {
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
             height: 1,
           ),
         ),

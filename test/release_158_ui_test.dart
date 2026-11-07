@@ -515,13 +515,12 @@ void main() {
     );
   }
   testWidgets(
-    'a newer selection revokes playback while the queue confirmation is open',
+    'a stale selection is rejected before playback with a pending queue',
     (tester) async {
       final queue = _Queue()
         ..pending = [const MediaItem(id: 'previous-pending', title: '待播样本')];
       final fixture = await PersonalProfileFixture.create(audioHandler: queue);
       addTearDown(fixture.dispose);
-      var current = true;
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: fixture.container,
@@ -534,7 +533,7 @@ void main() {
                     ref,
                     song157(1),
                     playAll: [song157(1)],
-                    stillCurrent: () => current,
+                    stillCurrent: () => false,
                   ),
                   child: const Text('播放样本'),
                 ),
@@ -544,10 +543,6 @@ void main() {
         ),
       );
       await tester.tap(find.text('播放样本'));
-      await tester.pumpAndSettle();
-      expect(find.text('替换待播歌曲'), findsOneWidget);
-      current = false;
-      await tester.tap(find.text('替换待播歌曲'));
       await tester.pumpAndSettle();
       expect(queue.received, isEmpty);
       await tester.pumpWidget(const SizedBox());

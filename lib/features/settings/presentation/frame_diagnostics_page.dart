@@ -17,6 +17,7 @@ import '../../auth/beta_account_choice.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import 'production_diagnostic_driver.dart';
+import '../../themes/music_typography.dart';
 
 /// This provider survives real route changes. Reading a crash checkpoint alone
 /// must not activate the process-local automatic-sign-in suppression latch.
@@ -254,7 +255,7 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                             Text(
                               '${row['label']} · ${_phaseLabel(row['phase'])}',
                               style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: MusicTypography.titleWeight,
                               ),
                             ),
                             Text(

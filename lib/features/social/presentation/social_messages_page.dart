@@ -11,6 +11,7 @@ import '../social_providers.dart';
 import '../../auth/auth_providers.dart';
 import '../../player/presentation/music_page_transition.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 class SocialMessagesPage extends ConsumerWidget {
   const SocialMessagesPage({super.key});
@@ -124,8 +125,8 @@ class _ConversationRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -134,7 +135,7 @@ class _ConversationRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -155,7 +156,7 @@ class _ConversationRow extends StatelessWidget {
                       ),
                       maxLines: 1,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: MusicTypography.smallCaptionSize,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -178,11 +179,9 @@ class _ConversationRow extends StatelessWidget {
                               ),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: conversation.unreadCount > 99
-                                    ? 8
-                                    : 10,
+                                fontSize: MusicTypography.smallCaptionSize,
                                 height: 1,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: MusicTypography.bodyWeight,
                               ),
                             ),
                           ),

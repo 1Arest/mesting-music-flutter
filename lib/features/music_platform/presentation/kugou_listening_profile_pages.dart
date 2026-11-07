@@ -16,6 +16,7 @@ import '../kugou_listening_profile_providers.dart';
 import '../listening_sync/listening_sync_providers.dart';
 import 'kugou_medals_page.dart';
 import 'platform_avatar.dart';
+import '../../themes/music_typography.dart';
 
 typedef KugouOfficialPageOpener = Future<void> Function(Uri uri);
 
@@ -146,8 +147,8 @@ class _KugouPersonalStatisticsState
                               maxLines: 2,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
+                                fontSize: MusicTypography.bodySize,
+                                fontWeight: MusicTypography.titleWeight,
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
@@ -156,7 +157,7 @@ class _KugouPersonalStatisticsState
                               entry.label,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: MusicTypography.captionSize,
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onSurfaceVariant,
@@ -335,8 +336,8 @@ class _KugouListeningStatisticsPageState
                             _periodDate(_period, _date),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.headingSize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                         ),
@@ -373,8 +374,8 @@ class _KugouListeningStatisticsPageState
                               ? '官方暂未返回时长'
                               : kugouDuration(stats.seconds),
                           style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w700,
+                            fontSize: MusicTypography.largeTitleSize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -511,7 +512,7 @@ class _KugouListeningGradePageState
                           grade.level == null ? '等级暂未返回' : 'Lv.${grade.level}',
                           style: const TextStyle(
                             fontSize: 54,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                         if (grade.points != null &&
@@ -519,7 +520,9 @@ class _KugouListeningGradePageState
                           const SizedBox(height: 12),
                           Text(
                             '${grade.points} / ${grade.nextPoints} 听歌值',
-                            style: const TextStyle(fontSize: 17),
+                            style: const TextStyle(
+                              fontSize: MusicTypography.bodySize,
+                            ),
                           ),
                         ],
                         if (grade.progress != null) ...[
@@ -764,16 +767,16 @@ class _KugouGradeRanksState extends State<_KugouGradeRanks> {
       final confirmed = await showCupertinoDialog<bool>(
         context: context,
         builder: (dialog) => CupertinoAlertDialog(
-          title: const Text('确认榜单地区'),
+          title: const Text('确认榜单地区', style: MusicTypography.titleEmphasis),
           content: Text('设为$label？酷狗规定90天内只可修改一次地区。'),
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialog, false),
-              child: const Text('返回修改'),
+              child: const Text('返回修改', style: MusicTypography.regularText),
             ),
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialog, true),
-              child: const Text('确认提交'),
+              child: const Text('确认提交', style: MusicTypography.regularText),
             ),
           ],
         ),
@@ -847,7 +850,9 @@ class _KugouGradeRanksState extends State<_KugouGradeRanks> {
                       : mine
                       ? '—'
                       : '$fallback',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
               ),
               PlatformAvatar(
@@ -861,16 +866,22 @@ class _KugouGradeRanksState extends State<_KugouGradeRanks> {
                   children: [
                     Text(
                       '${row['nickname'] ?? '酷狗用户'}${mine ? ' · 我' : ''}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontWeight: MusicTypography.titleWeight,
+                      ),
                     ),
                     Text(
                       points == null ? '听歌值暂未返回' : '听歌值 $points',
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(
+                        fontSize: MusicTypography.footnoteSize,
+                      ),
                     ),
                     if (mine && (rank == null || rank == 0))
                       Text(
                         distance == null ? '未上榜' : '还差$distance上榜',
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(
+                          fontSize: MusicTypography.captionSize,
+                        ),
                       ),
                   ],
                 ),
@@ -969,8 +980,8 @@ class _KugouGradeRanksState extends State<_KugouGradeRanks> {
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 if (snapshot.periodEndTime != null)
@@ -1070,8 +1081,8 @@ class _RankingCityPickerState extends State<_RankingCityPicker> {
                       child: Text(
                         '选择榜单地区',
                         style: TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -1128,7 +1139,10 @@ class _OfficialDailyReadback extends ConsumerWidget {
           children: [
             const Text(
               '官方今日收听核对',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: MusicTypography.bodySize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 10),
             Text('官方今日时长 ${kugouDuration(value.seconds)}'),
@@ -1188,8 +1202,8 @@ class _KugouMusicAgePageState extends _KugouProfileState<KugouMusicAgePage> {
                     Text(
                       reader.grade.value?.musicAge ?? '官方暂未返回乐龄资料',
                       style: const TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.largeTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -1245,9 +1259,9 @@ class _KugouProfileFrame extends StatelessWidget {
                       style: TextStyle(
                         fontSize:
                             MediaQuery.textScalerOf(context).scale(14) > 21
-                            ? 20
-                            : 25,
-                        fontWeight: FontWeight.w700,
+                            ? MusicTypography.headingSize
+                            : MusicTypography.titleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ),
@@ -1293,8 +1307,8 @@ class _KugouProfileFrame extends StatelessWidget {
                                         ? '酷狗用户'
                                         : session.nickname,
                                     style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: MusicTypography.headingSize,
+                                      fontWeight: MusicTypography.titleWeight,
                                     ),
                                   ),
                                 ),
@@ -1344,7 +1358,7 @@ Widget _eyebrow(BuildContext context, String label) => Text(
   label,
   style: TextStyle(
     color: Theme.of(context).colorScheme.onSurfaceVariant,
-    fontSize: 14,
+    fontSize: MusicTypography.subheadlineSize,
   ),
 );
 
@@ -1356,7 +1370,10 @@ class _SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.only(top: 25, bottom: 12),
     child: Text(
       text,
-      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+      style: const TextStyle(
+        fontSize: MusicTypography.sectionTitleSize,
+        fontWeight: MusicTypography.titleWeight,
+      ),
     ),
   );
 }
@@ -1384,7 +1401,7 @@ class _ReadTime extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     '官方资料 · ${time.month}月${time.day}日 ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}读取',
     style: TextStyle(
-      fontSize: 12,
+      fontSize: MusicTypography.captionSize,
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     ),
   );
@@ -1469,12 +1486,12 @@ Future<void> _openOfficial(
     await showCupertinoDialog<void>(
       context: context,
       builder: (dialog) => CupertinoAlertDialog(
-        title: const Text('官方页面未能打开'),
+        title: const Text('官方页面未能打开', style: MusicTypography.titleEmphasis),
         content: const Text('请检查网络并重试；如提示授权失效，请重新验证酷狗登录。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialog),
-            child: const Text('知道了'),
+            child: const Text('知道了', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -1500,7 +1517,7 @@ class _RankSong extends StatelessWidget {
             width: 25,
             child: Text(
               '$rank',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontWeight: MusicTypography.titleWeight),
             ),
           ),
           if (cover.isNotEmpty)
@@ -1517,13 +1534,15 @@ class _RankSong extends StatelessWidget {
               children: [
                 Text(
                   '${song['name'] ?? '歌曲名称暂未返回'}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 if ('${song['singer_name'] ?? ''}'.isNotEmpty)
                   Text(
                     '${song['singer_name']}',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: MusicTypography.footnoteSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -1531,7 +1550,7 @@ class _RankSong extends StatelessWidget {
                   Text(
                     '收听$count次',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: MusicTypography.captionSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -1604,13 +1623,16 @@ class _StatisticsChart extends StatelessWidget {
               statistics.period == KugouListenPeriod.month
                   ? '每月收听趋势'
                   : '收听时长分布',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: MusicTypography.bodySize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               '最高 ${kugouDuration(maximum)}',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -1633,12 +1655,16 @@ class _StatisticsChart extends StatelessWidget {
               children: [
                 Text(
                   label(rows.first, 0),
-                  style: const TextStyle(fontSize: 11),
+                  style: const TextStyle(
+                    fontSize: MusicTypography.smallCaptionSize,
+                  ),
                 ),
                 const Spacer(),
                 Text(
                   label(rows.last, rows.length - 1),
-                  style: const TextStyle(fontSize: 11),
+                  style: const TextStyle(
+                    fontSize: MusicTypography.smallCaptionSize,
+                  ),
                 ),
               ],
             ),

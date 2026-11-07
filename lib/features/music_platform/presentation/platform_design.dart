@@ -8,6 +8,7 @@ import '../../../shared/widgets/overflow_marquee.dart';
 import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 /// Shared visual adapter for all imported platform surfaces. Business widgets
 /// keep their own repositories; the adapter only reuses Mesting theme tokens.
@@ -54,8 +55,8 @@ class PlatformStyle extends StatelessWidget {
             minimumSize: const Size(48, 48),
             shape: shape,
             textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontSize: MusicTypography.subheadlineSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -73,7 +74,7 @@ class PlatformStyle extends StatelessWidget {
             minimumSize: const Size(44, 44),
             shape: shape,
             textStyle: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -86,7 +87,7 @@ class PlatformStyle extends StatelessWidget {
           shape: const StadiumBorder(),
           labelStyle: theme.textTheme.labelLarge?.copyWith(
             color: tokens.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
         popupMenuTheme: theme.popupMenuTheme.copyWith(
@@ -133,8 +134,8 @@ class PlatformPageFrame extends StatelessWidget {
     this.actions = const [],
     this.pageKey,
     this.centerTitle = false,
-    this.titleWeight = FontWeight.w700,
-    this.titleFontSize = 18,
+    this.titleWeight = MusicTypography.titleWeight,
+    this.titleFontSize = MusicTypography.bodySize,
     this.musicChrome = true,
     this.headerInScroll = false,
     super.key,
@@ -223,7 +224,8 @@ class PlatformPageFrame extends StatelessWidget {
                                       OverflowMarquee(
                                         title,
                                         style: TextStyle(
-                                          fontSize: 21,
+                                          fontSize:
+                                              MusicTypography.sectionTitleSize,
                                           fontWeight: titleWeight,
                                           height: 1.2,
                                           color: context
@@ -240,7 +242,8 @@ class PlatformPageFrame extends StatelessWidget {
                                           child: Text(
                                             subtitle,
                                             style: TextStyle(
-                                              fontSize: 12,
+                                              fontSize:
+                                                  MusicTypography.captionSize,
                                               color: context
                                                   .musicThemeTokens
                                                   .textSecondary,
@@ -325,8 +328,8 @@ class PlatformSectionTitle extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.sectionTitleSize,
+            fontWeight: MusicTypography.titleWeight,
             color: context.musicThemeTokens.textPrimary,
             letterSpacing: -.4,
           ),
@@ -338,7 +341,7 @@ class PlatformSectionTitle extends StatelessWidget {
               subtitle!,
               style: TextStyle(
                 color: context.musicThemeTokens.textSecondary,
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
               ),
             ),
           ),

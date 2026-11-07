@@ -10,6 +10,7 @@ import 'qishui_repository.dart';
 import 'qishui_session.dart';
 import 'qishui_models.dart';
 import 'qishui_request_signer.dart';
+import 'qishui_signer_settings.dart';
 import 'qishui_write_journal.dart';
 
 final qishuiSessionStoreProvider = Provider<QishuiSessionStore>(
@@ -19,10 +20,17 @@ final qishuiApiProvider = Provider<QishuiApi>((ref) {
   final client = MusicHttpClient();
   final api = QishuiApi(
     client,
-    signer: SodaMRequestSigner(client),
+    signer: ConfiguredQishuiRequestSigner(
+      client,
+      () => ref.read(qishuiSignerSettingsProvider.future),
+    ),
     persistRefresh: (expected, updated) => ref
         .read(platformAccountProvider.notifier)
         .persistQishuiRefresh(expected, updated),
+  );
+  ref.listen(
+    qishuiSignerRevisionProvider,
+    (previous, next) => api.invalidateSigner(),
   );
   ref.onDispose(() {
     api.dispose();

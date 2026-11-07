@@ -10,6 +10,7 @@ import '../../../shared/widgets/music_feature_page.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
 import '../../music_platform/presentation/music_effects_page.dart';
 import '../../music_platform/platform_backend_providers.dart';
+import '../../themes/music_typography.dart';
 
 class MusicEqualizerPage extends ConsumerStatefulWidget {
   const MusicEqualizerPage({super.key});
@@ -66,8 +67,8 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                           const Text(
                             '音乐均衡',
                             style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.bodySize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -81,7 +82,7 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                                 : '已开启 · 等待音乐播放',
                             style: TextStyle(
                               color: scheme.onSurfaceVariant,
-                              fontSize: 13,
+                              fontSize: MusicTypography.footnoteSize,
                             ),
                           ),
                         ],
@@ -105,8 +106,8 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                     child: Text(
                       '频段增益',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ),
@@ -137,8 +138,8 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
               Text(
                 '预设',
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.subheadlineSize,
+                  fontWeight: MusicTypography.bodyWeight,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -168,8 +169,8 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                         child: Text(
                           _frequency(state.frequencies[i]),
                           style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.footnoteSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ),
@@ -228,7 +229,7 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                           '${state.levels[i] > 0 ? '+' : ''}${state.levels[i].toStringAsFixed(1)} dB',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -264,7 +265,9 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                       Expanded(
                         child: Text(
                           state.effectName ?? '浏览音效',
-                          style: const TextStyle(fontSize: 16),
+                          style: const TextStyle(
+                            fontSize: MusicTypography.calloutSize,
+                          ),
                         ),
                       ),
                       const Icon(CupertinoIcons.chevron_forward, size: 17),
@@ -275,7 +278,7 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                 '设置会自动保存。频段范围由设备提供；音效仅作用于 Mesting Music 的音乐播放。',
                 style: TextStyle(
                   color: scheme.onSurfaceVariant,
-                  fontSize: 13,
+                  fontSize: MusicTypography.footnoteSize,
                   height: 1.6,
                 ),
               ),

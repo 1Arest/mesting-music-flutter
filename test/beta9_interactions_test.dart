@@ -68,12 +68,14 @@ class SelectionHandler implements MestingAudioHandler {
 }
 
 void main() {
-  for (final keep in [true, false]) {
+  for (final hasPending in [false, true]) {
     testWidgets(
-      'single selection ${keep ? 'keeps' : 'replaces'} the queue after an explicit choice',
+      'single selection starts immediately with pending=$hasPending',
       (tester) async {
         final handler = SelectionHandler(
-          pending: [song('B').toMediaItem(), song('C').toMediaItem()],
+          pending: hasPending
+              ? [song('B').toMediaItem(), song('C').toMediaItem()]
+              : [],
         );
         addTearDown(handler.debugDispose);
 
@@ -98,61 +100,63 @@ void main() {
         );
         await tester.tap(find.text('点播'));
         await tester.pumpAndSettle();
-        expect(handler.selected, null);
-        await tester.tap(find.text(keep ? '保留待播歌曲' : '替换待播歌曲'));
-        await tester.pumpAndSettle();
         expect(handler.selected, 'D');
-        expect(handler.replace, !keep);
+        expect(handler.replace, isFalse);
         await tester.pumpWidget(const SizedBox());
       },
     );
   }
-  testWidgets('Play All adds the whole collection; single tap does not', (
-    tester,
-  ) async {
-    final handler = SelectionHandler();
-    addTearDown(handler.debugDispose);
-    final container = ProviderContainer(
-      overrides: [audioHandlerProvider.overrideWithValue(handler)],
-    );
-    addTearDown(container.dispose);
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          home: Consumer(
-            builder: (context, ref, _) => Scaffold(
-              body: Column(
-                children: [
-                  TextButton(
-                    onPressed: () => playBetaSelection(context, ref, song('A')),
-                    child: const Text('单首'),
-                  ),
-                  TextButton(
-                    onPressed: () => playBetaSelection(
-                      context,
-                      ref,
-                      song('A'),
-                      playAll: [song('A'), song('B'), song('C')],
+  testWidgets(
+    'Play All replaces the pending queue after an immediate single tap',
+    (tester) async {
+      final handler = SelectionHandler(pending: [song('old').toMediaItem()]);
+      final collection = [song('A'), song('B'), song('C')];
+      addTearDown(handler.debugDispose);
+      final container = ProviderContainer(
+        overrides: [audioHandlerProvider.overrideWithValue(handler)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Consumer(
+              builder: (context, ref, _) => Scaffold(
+                body: Column(
+                  children: [
+                    TextButton(
+                      onPressed: () =>
+                          playBetaSelection(context, ref, song('A')),
+                      child: const Text('单首'),
                     ),
-                    child: const Text('播放全部'),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () => playBetaSelection(
+                        context,
+                        ref,
+                        song('A'),
+                        playAll: collection,
+                      ),
+                      child: const Text('播放全部'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.tap(find.text('单首'));
-    await tester.pumpAndSettle();
-    expect(handler.manuallyQueuedItems, isEmpty);
-    await tester.tap(find.text('播放全部'));
-    await tester.pumpAndSettle();
-    expect(handler.selected, 'A');
-    expect(handler.all!.map((track) => track.id), ['A', 'B', 'C']);
-    await tester.pumpWidget(const SizedBox());
-  });
+      );
+      await tester.tap(find.text('单首'));
+      await tester.pumpAndSettle();
+      expect(handler.manuallyQueuedItems.map((item) => item.id), ['old']);
+      expect(handler.replace, isFalse);
+      await tester.tap(find.text('播放全部'));
+      collection.clear();
+      await tester.pumpAndSettle();
+      expect(handler.selected, 'A');
+      expect(handler.all!.map((track) => track.id), ['A', 'B', 'C']);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   testWidgets(
     'automatic paging fills a short viewport and coalesces scroll requests',
     (tester) async {

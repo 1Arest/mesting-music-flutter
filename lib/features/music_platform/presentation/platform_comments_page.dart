@@ -27,6 +27,7 @@ import 'platform_feedback.dart';
 import 'platform_design.dart';
 import 'platform_comment_composer.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 Future<void> openPlatformSongComments(
   BuildContext context,
@@ -371,17 +372,20 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (dialogContext) => CupertinoAlertDialog(
-        title: Text('删除这条${widget.repository.identity.platformLabel}评论？'),
+        title: Text(
+          '删除这条${widget.repository.identity.platformLabel}评论？',
+          style: MusicTypography.titleEmphasis,
+        ),
         content: Text('将删除你在${widget.repository.identity.platformLabel}发布的评论。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: const Text('删除', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -586,7 +590,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                                 ? '排序与筛选作用于已加载评论，可继续向下加载'
                                 : '按平台最热评论排序'),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: MusicTypography.smallCaptionSize,
                           color: context.musicThemeTokens.textSecondary,
                         ),
                       ),
@@ -613,7 +617,8 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                                       Text(
                                         widget.thread!.nickname,
                                         style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
+                                          fontWeight:
+                                              MusicTypography.titleWeight,
                                         ),
                                       ),
                                       const SizedBox(height: 8),

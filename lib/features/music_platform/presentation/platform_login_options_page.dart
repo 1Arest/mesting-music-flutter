@@ -13,6 +13,7 @@ import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
 import '../netease/netease_login.dart';
 import 'platform_account_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Platform selection owns navigation only. Forms, glass controls and page
 /// movement are the same components used by the existing Kugou login.
@@ -158,7 +159,10 @@ class _MusicPlatformSwitchPageState
               text: TextSpan(
                 text: caption,
                 style: DefaultTextStyle.of(context).style.merge(
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                  const TextStyle(
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
+                  ),
                 ),
               ),
               textScaler: MediaQuery.textScalerOf(context),
@@ -236,8 +240,8 @@ class _AccountChoiceFrame extends StatelessWidget {
                         child: Text(
                           title,
                           style: const TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w700,
+                            fontSize: MusicTypography.titleSize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                       ),

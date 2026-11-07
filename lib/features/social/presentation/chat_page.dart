@@ -38,6 +38,7 @@ import '../social_providers.dart';
 import '../social_attention.dart';
 import 'social_widgets.dart';
 import 'friend_profile_actions_sheet.dart';
+import '../../themes/music_typography.dart';
 
 @visibleForTesting
 TextEditingValue insertChatEmoji(TextEditingValue current, String emoji) {
@@ -981,7 +982,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               children: [
                 const Text(
                   '设置备注名',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1090,8 +1094,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 9),
@@ -1719,8 +1723,8 @@ class _QuoteDraftPreview extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: scheme.onSurface,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),
@@ -1762,8 +1766,8 @@ class _MessageSelectionHeader extends StatelessWidget {
             '已选 $selectedCount 项',
             style: TextStyle(
               color: scheme.onSurface,
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.headingSize,
+              fontWeight: MusicTypography.titleWeight,
             ),
           ),
         ],
@@ -1850,8 +1854,8 @@ class _MessageSelectionAction extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: effectiveColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],
@@ -2089,7 +2093,7 @@ class _HoldToRecordButton extends StatelessWidget {
                   color: recording || preparing
                       ? activeColor
                       : scheme.onSurface,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
             ],
@@ -2247,8 +2251,8 @@ class _MessageTimestamp extends StatelessWidget {
             color: Theme.of(
               context,
             ).colorScheme.onSurfaceVariant.withValues(alpha: .62),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: MusicTypography.captionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       ),
@@ -2341,8 +2345,8 @@ class _MessageBubble extends ConsumerWidget {
             key: ValueKey('chat-message-recalled-${message.id}'),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: MusicTypography.captionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -2609,7 +2613,7 @@ class _QuotedTextMessage extends StatelessWidget {
               textAlign: mine ? TextAlign.right : TextAlign.left,
               style: TextStyle(
                 color: scheme.onSurfaceVariant.withValues(alpha: .78),
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 height: 1.3,
               ),
             ),
@@ -2766,8 +2770,8 @@ class _ChatMessageActionButton extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -2911,8 +2915,8 @@ class _ListenTogetherInviteMessageState
                       '好友一起听',
                       style: TextStyle(
                         color: widget.mine ? Colors.white : scheme.onSurface,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -2924,8 +2928,8 @@ class _ListenTogetherInviteMessageState
                         color: widget.mine
                             ? Colors.white.withValues(alpha: .82)
                             : scheme.onSurfaceVariant,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.smallCaptionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -2940,8 +2944,8 @@ class _ListenTogetherInviteMessageState
               color: widget.mine
                   ? Colors.white.withValues(alpha: .84)
                   : scheme.onSurfaceVariant,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
           if (active) ...[
@@ -3110,9 +3114,9 @@ class SocialSharedTrackMessage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: mine ? Colors.white : scheme.onSurface,
-                    fontSize: 13,
+                    fontSize: MusicTypography.footnoteSize,
                     height: 1.2,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -3124,8 +3128,8 @@ class SocialSharedTrackMessage extends StatelessWidget {
                     color: mine
                         ? Colors.white.withValues(alpha: .72)
                         : scheme.onSurfaceVariant,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -3563,8 +3567,8 @@ class _SocialVoiceMessageState extends ConsumerState<SocialVoiceMessage> {
                 ),
                 style: TextStyle(
                   color: foreground,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -3755,9 +3759,7 @@ class _SocialVideoMessageState extends State<SocialVideoMessage> {
       }
       if (!mounted) return;
       await Navigator.of(context).push(
-        MestingPageRoute<void>(
-          builder: (context) => _VideoViewer(url: source),
-        ),
+        MestingPageRoute<void>(builder: (context) => _VideoViewer(url: source)),
       );
     } on Object catch (error) {
       if (mounted) {
@@ -3871,8 +3873,8 @@ class _SocialVideoMessageState extends State<SocialVideoMessage> {
                     '点按打开视频',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -3915,9 +3917,9 @@ class _VideoTimePill extends StatelessWidget {
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 11,
+            fontSize: MusicTypography.smallCaptionSize,
             height: 1,
-            fontWeight: FontWeight.w800,
+            fontWeight: MusicTypography.bodyWeight,
             fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
@@ -4052,8 +4054,8 @@ class _VideoControlBar extends StatelessWidget {
                         key: const ValueKey('chat-video-position'),
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.smallCaptionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -4062,8 +4064,8 @@ class _VideoControlBar extends StatelessWidget {
                         key: const ValueKey('chat-video-total-duration'),
                         style: const TextStyle(
                           color: Colors.white70,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.smallCaptionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -4220,7 +4222,7 @@ class _InlineEmojiPanelState extends State<_InlineEmojiPanel> {
               'emoji · ${category.label}',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),
@@ -4242,7 +4244,12 @@ class _InlineEmojiPanelState extends State<_InlineEmojiPanel> {
                   onTap: () => widget.onSelected(emoji),
                   borderRadius: BorderRadius.circular(14),
                   child: Center(
-                    child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                    child: Text(
+                      emoji,
+                      style: const TextStyle(
+                        fontSize: MusicTypography.titleSize,
+                      ),
+                    ),
                   ),
                 );
               },

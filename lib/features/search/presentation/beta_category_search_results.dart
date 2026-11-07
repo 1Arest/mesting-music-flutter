@@ -21,6 +21,7 @@ import '../search_providers.dart';
 import 'apple_search_results.dart';
 import '../../music_platform/platform_backend_providers.dart';
 import '../../music_platform/netease/netease_user_page.dart';
+import '../../themes/music_typography.dart';
 
 /// One compact category rail above a lazy result pane. Queries and paging live
 /// outside widgets; a pane owns its own scroll controller even during a rapid
@@ -82,10 +83,8 @@ class _BetaCategorySearchResultsState
                                 child: Text(
                                   kind.label,
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: selected == kind
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                     color: selected == kind
                                         ? accent
                                         : ink.withValues(alpha: .8),
@@ -304,7 +303,10 @@ class _ResultTile extends StatelessWidget {
           hit.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: MusicTypography.subheadlineSize,
+            fontWeight: MusicTypography.bodyWeight,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -354,8 +356,8 @@ class _ResultRow extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.calloutSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 4),

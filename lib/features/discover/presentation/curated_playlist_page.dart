@@ -22,6 +22,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../data/curated_playlists.dart';
 import '../discover_providers.dart';
 import '../domain/curated_playlist.dart';
+import '../../themes/music_typography.dart';
 
 class CuratedPlaylistPage extends ConsumerWidget {
   const CuratedPlaylistPage({required this.playlistId, super.key});
@@ -72,7 +73,7 @@ class CuratedPlaylistPage extends ConsumerWidget {
                       : '策划歌单 · Audius',
                   style: TextStyle(
                     color: tokens.textSecondary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
               ],
@@ -388,7 +389,7 @@ class _CuratedTrackList extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontWeight: FontWeight.w900,
+                  fontWeight: MusicTypography.titleWeight,
                   color: active ? favoriteAccent : null,
                 ),
               ),
@@ -480,14 +481,17 @@ class _OfflineNotice extends StatelessWidget {
                   '离线音乐模式',
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
+                    fontWeight: MusicTypography.bodyWeight,
+                    fontSize: MusicTypography.footnoteSize,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   message,
-                  style: TextStyle(color: tokens.textSecondary, fontSize: 11),
+                  style: TextStyle(
+                    color: tokens.textSecondary,
+                    fontSize: MusicTypography.smallCaptionSize,
+                  ),
                 ),
               ],
             ),

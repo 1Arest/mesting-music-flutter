@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../social/domain/social_models.dart';
 import '../../social/presentation/social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 const socialStatusPresets = <SocialStatus>[
   SocialStatus(emoji: '🎧', text: '找人一起听'),
@@ -91,8 +92,8 @@ class _SocialStatusPickerState extends State<_SocialStatusPicker> {
                       child: Text(
                         '选择状态',
                         style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -109,7 +110,9 @@ class _SocialStatusPickerState extends State<_SocialStatusPicker> {
                           : () => Navigator.pop(context, _selected),
                       child: const Text(
                         '完成',
-                        style: TextStyle(fontWeight: FontWeight.w900),
+                        style: TextStyle(
+                          fontWeight: MusicTypography.titleWeight,
+                        ),
                       ),
                     ),
                   ],
@@ -140,8 +143,8 @@ class _SocialStatusPickerState extends State<_SocialStatusPicker> {
                   '推荐状态',
                   style: TextStyle(
                     color: colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -232,7 +235,7 @@ class _CustomStatusTile extends StatelessWidget {
                 ),
                 child: Text(
                   selected ? status.emoji : '✨',
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: MusicTypography.headingSize),
                 ),
               ),
               const SizedBox(width: 12),
@@ -245,12 +248,17 @@ class _CustomStatusTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text('写下此刻的心情或正在做的事', style: TextStyle(fontSize: 10)),
+                    const Text(
+                      '写下此刻的心情或正在做的事',
+                      style: TextStyle(
+                        fontSize: MusicTypography.smallCaptionSize,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -299,7 +307,10 @@ class _PresetStatusTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text(status.emoji, style: const TextStyle(fontSize: 19)),
+              Text(
+                status.emoji,
+                style: const TextStyle(fontSize: MusicTypography.headingSize),
+              ),
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
@@ -307,8 +318,8 @@ class _PresetStatusTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.footnoteSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -370,13 +381,16 @@ class _CustomStatusEditorState extends State<_CustomStatusEditor> {
               children: [
                 const Text(
                   '自定义状态',
-                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    fontSize: MusicTypography.sectionTitleSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   '好友会在你的主页看到这条状态。',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: MusicTypography.smallCaptionSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -468,7 +482,10 @@ class _EmojiChoice extends StatelessWidget {
                   : Colors.transparent,
             ),
           ),
-          child: Text(emoji, style: const TextStyle(fontSize: 20)),
+          child: Text(
+            emoji,
+            style: const TextStyle(fontSize: MusicTypography.headingSize),
+          ),
         ),
       ),
     );

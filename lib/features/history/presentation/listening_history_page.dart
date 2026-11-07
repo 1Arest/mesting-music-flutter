@@ -18,6 +18,7 @@ import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../listening_history_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
+import '../../themes/music_typography.dart';
 
 const double listeningHistoryPrimaryShadowBlurRadius = 10;
 const double listeningHistoryAccentShadowBlurRadius = 14;
@@ -136,12 +137,18 @@ class _HistoryHeader extends StatelessWidget {
             children: [
               Text(
                 '听歌足迹',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: MusicTypography.sectionTitleSize,
+                  fontWeight: MusicTypography.titleWeight,
+                ),
               ),
               SizedBox(height: 2),
               Text(
                 '完整听完才会计入次数',
-                style: TextStyle(fontSize: 11, color: Color(0xFF8D858F)),
+                style: TextStyle(
+                  fontSize: MusicTypography.smallCaptionSize,
+                  color: Color(0xFF8D858F),
+                ),
               ),
             ],
           ),
@@ -328,8 +335,8 @@ class _HistoryTrackRow extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -352,8 +359,8 @@ class _HistoryTrackRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -363,7 +370,7 @@ class _HistoryTrackRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Color(0xFF8D858F),
-                      fontSize: 11,
+                      fontSize: MusicTypography.smallCaptionSize,
                     ),
                   ),
                 ],
@@ -392,8 +399,8 @@ class _HistoryTrackRow extends StatelessWidget {
                           '${item.completedPlayCount}次',
                           style: TextStyle(
                             color: accent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ],
@@ -404,8 +411,8 @@ class _HistoryTrackRow extends StatelessWidget {
                     _recentLabel(item.lastPlayedAt),
                     style: const TextStyle(
                       color: Color(0xFF8D858F),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 const SizedBox(height: 7),
@@ -524,8 +531,8 @@ class _HistoryMessage extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.bodySize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -534,7 +541,7 @@ class _HistoryMessage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Color(0xFF8D858F),
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                   ),
                 ),
               ],

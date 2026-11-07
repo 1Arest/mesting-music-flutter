@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../themes/music_typography.dart';
 
 Future<void> showMusicReleaseNotes(
   BuildContext context, {
@@ -38,7 +39,10 @@ Future<void> showMusicReleaseNotes(
                 const Expanded(
                   child: Text(
                     '此次更新',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                 ),
                 BetaGlassAction(
@@ -54,14 +58,17 @@ Future<void> showMusicReleaseNotes(
               'Mesting Music $version',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 15,
+                fontSize: MusicTypography.subheadlineSize,
               ),
             ),
             const SizedBox(height: 24),
             if (notes.isEmpty)
               const Text(
                 '此版本暂未提供更新说明。',
-                style: TextStyle(fontSize: 16, height: 1.6),
+                style: TextStyle(
+                  fontSize: MusicTypography.calloutSize,
+                  height: 1.6,
+                ),
               ),
             MusicReleaseNotesList(notes: notes),
           ],
@@ -94,7 +101,10 @@ class MusicReleaseNotesList extends StatelessWidget {
               Expanded(
                 child: Text(
                   note,
-                  style: const TextStyle(fontSize: 16, height: 1.55),
+                  style: const TextStyle(
+                    fontSize: MusicTypography.calloutSize,
+                    height: 1.55,
+                  ),
                 ),
               ),
             ],

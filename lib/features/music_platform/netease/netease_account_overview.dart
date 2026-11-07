@@ -12,6 +12,7 @@ import '../presentation/platform_avatar.dart';
 import '../data/music_platform_api.dart';
 import 'netease_music_repository.dart';
 import 'full/netease_manual_routes.dart';
+import '../../themes/music_typography.dart';
 
 /// Official account level is independent of membership and the local SVIP
 /// switch. Missing fields remain unknown, including progress requirements.
@@ -151,8 +152,8 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
                     key: const ValueKey('netease-account-level'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -162,13 +163,10 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
                       for (var i = 0; i <= 10; i++)
                         Text(
                           '$i',
-                          style: TextStyle(
+                          style: MusicTypography.caption.copyWith(
                             color: i == level.level
                                 ? scheme.primary
                                 : scheme.onSurfaceVariant,
-                            fontWeight: i == level.level
-                                ? FontWeight.w700
-                                : FontWeight.w400,
                           ),
                         ),
                     ],
@@ -184,8 +182,8 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
                     const Text(
                       '当前等级权益',
                       style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -195,7 +193,9 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
                   if (level.level < 10) ...[
                     Text(
                       '距离下一级：Lv.${level.level + 1}',
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(
+                        fontSize: MusicTypography.bodySize,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -216,7 +216,10 @@ class NeteaseAccountOverviewPage extends ConsumerWidget {
                 const SizedBox(height: 28),
                 const Text(
                   '收藏概览',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 for (final entry in countLabels.entries)
                   if (value.counts[entry.key] is num)

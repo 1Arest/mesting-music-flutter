@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../themes/beta_appearance.dart';
 import 'official_footprint.dart';
+import '../../../themes/music_typography.dart';
 
 /// A null value is an unavailable official bucket. It is deliberately different
 /// from the valid zero-duration baseline, both visually and in accessibility.
@@ -51,7 +52,10 @@ class FootprintDurationChart extends StatelessWidget {
           alignment: Alignment.centerRight,
           child: Text(
             '最高 ${officialDuration(maximum)}',
-            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: MusicTypography.smallCaptionSize,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -153,10 +157,8 @@ class FootprintDurationChart extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.clip,
                       style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: selected == bar.id
-                            ? FontWeight.w700
-                            : FontWeight.w400,
+                        fontSize: MusicTypography.smallCaptionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                         color: selected == bar.id
                             ? scheme.onSurface
                             : scheme.onSurfaceVariant,

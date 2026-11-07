@@ -13,6 +13,7 @@ import '../auth_providers.dart';
 import '../domain/auth_models.dart';
 import '../domain/password_policy.dart';
 import 'password_visibility_button.dart';
+import '../../themes/music_typography.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
   const ForgotPasswordPage({required this.redirect, super.key});
@@ -81,8 +82,8 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         _step == 2 ? '密码已经更新' : '安全找回密码',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.titleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -91,7 +92,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           height: 1.5,
-                          fontSize: 12,
+                          fontSize: MusicTypography.captionSize,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -288,7 +289,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
         const Text(
           '旧密码和旧会话均已失效。为保护账号，本应用没有替你保留新密码或重置 token。',
           textAlign: TextAlign.center,
-          style: TextStyle(height: 1.6, fontSize: 12),
+          style: TextStyle(height: 1.6, fontSize: MusicTypography.captionSize),
         ),
         const SizedBox(height: 20),
         _RecoveryAction(label: '返回登录', busy: false, onPressed: _returnToLogin),
@@ -476,11 +477,7 @@ class _RecoveryMethodSwitcher extends StatelessWidget {
                     child: Text(
                       value.label,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: method == value
-                            ? FontWeight.w900
-                            : FontWeight.w600,
-                      ),
+                      style: TextStyle(fontWeight: MusicTypography.titleWeight),
                     ),
                   ),
                 ),
@@ -505,7 +502,10 @@ class _PasswordRules extends StatelessWidget {
       ),
       child: const Text(
         '8–64 位 · 可使用纯字母，也可以不含数字或符号',
-        style: TextStyle(fontSize: 10, height: 1.5),
+        style: TextStyle(
+          fontSize: MusicTypography.smallCaptionSize,
+          height: 1.5,
+        ),
       ),
     );
   }
@@ -548,7 +548,10 @@ class _RecoveryAction extends StatelessWidget {
                   strokeWidth: 2.3,
                 ),
               )
-            : Text(label, style: const TextStyle(fontWeight: FontWeight.w900)),
+            : Text(
+                label,
+                style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+              ),
       ),
     );
   }
@@ -578,7 +581,14 @@ class _RecoveryNotice extends StatelessWidget {
             size: 18,
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text(message, style: const TextStyle(fontSize: 11))),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
+            ),
+          ),
         ],
       ),
     );

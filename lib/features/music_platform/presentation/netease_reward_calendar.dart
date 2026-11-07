@@ -15,6 +15,7 @@ import '../netease/netease_rewards.dart';
 import '../netease/netease_rewards_provider.dart';
 import '../retained_kugou_scope.dart';
 import 'platform_reward_day.dart';
+import '../../themes/music_typography.dart';
 
 /// Calendar and free-listening welfare share one account-owned controller.
 /// The calendar displays only authoritative days or previously confirmed local
@@ -112,8 +113,8 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                           child: Text(
                             '${day.year} 年 ${day.month} 月',
                             style: const TextStyle(
-                              fontSize: 29,
-                              fontWeight: FontWeight.w700,
+                              fontSize: MusicTypography.titleSize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                         ),
@@ -165,7 +166,7 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                     Text(
                       '自动签到异常时，可在这里手动核对与重试',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -178,7 +179,7 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                           state.message!,
                           style: TextStyle(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 13,
+                            fontSize: MusicTypography.footnoteSize,
                           ),
                         ),
                       ),
@@ -192,7 +193,7 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                               child: Text(
                                 label,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: MusicTypography.footnoteSize,
                                   color: scheme.onSurfaceVariant,
                                 ),
                               ),
@@ -236,8 +237,8 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                     Text(
                       '本月已确认 ${signed.length} 天',
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.headingSize,
+                        fontWeight: MusicTypography.titleWeight,
                         color: BetaAppearance.success(scheme.brightness),
                       ),
                     ),
@@ -245,7 +246,7 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                     Text(
                       '日历显示本机已确认的日期与平台今日签到状态；其他日期不代表平台未签到。',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
@@ -260,8 +261,8 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                                 child: Text(
                                   '自动签到',
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: MusicTypography.calloutSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                               ),
@@ -292,7 +293,7 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                           Text(
                             '使用已保存的网易云账号，每天自动尝试一次。',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: MusicTypography.captionSize,
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
@@ -362,13 +363,19 @@ class _FreeListenCard extends StatelessWidget {
         children: [
           Text(
             '免费听时长剩余',
-            style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: MusicTypography.subheadlineSize,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             duration(),
             key: const ValueKey('netease-free-listen-balance'),
-            style: const TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontSize: MusicTypography.titleSize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(height: 18),
           Wrap(
@@ -414,13 +421,19 @@ class _FreeListenCard extends StatelessWidget {
                 : count != null && target != null && target > 0
                 ? '今日领取进度 $count/$target'
                 : '今日领取进度暂未获取',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: MusicTypography.subheadlineSize,
+              fontWeight: MusicTypography.bodyWeight,
+            ),
           ),
           if (free?.progressSubtitle != null) ...[
             const SizedBox(height: 8),
             Text(
               free!.progressSubtitle!,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.captionSize,
+              ),
             ),
           ],
           if (free?.milestones.isNotEmpty == true) ...[
@@ -453,7 +466,7 @@ class _FreeListenCard extends StatelessWidget {
                         '${task.label}${task.count == null ? '' : ' · 已确认 ${task.count} 次'}',
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: MusicTypography.footnoteSize,
                         ),
                       ),
                     ),
@@ -473,7 +486,10 @@ class _FreeListenCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '平台今日最多领取 ${free!.adLimit} 次',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.captionSize,
+              ),
             ),
           ],
           if (running || state.confirmedAds > 0) ...[
@@ -486,7 +502,10 @@ class _FreeListenCard extends StatelessWidget {
                     : running
                     ? '，正在领取'
                     : ''}',
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+                style: TextStyle(
+                  color: scheme.onSurfaceVariant,
+                  fontSize: MusicTypography.footnoteSize,
+                ),
               ),
             ),
           ],
@@ -494,21 +513,30 @@ class _FreeListenCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               free == null ? '免费听信息暂未获取，下拉可重试。' : '当前显示上次读取的时长，尚未更新。',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.captionSize,
+              ),
             ),
           ],
           if (free?.message != null) ...[
             const SizedBox(height: 10),
             Text(
               free!.message!,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.captionSize,
+              ),
             ),
           ],
           if (!running && state.message != null) ...[
             const SizedBox(height: 12),
             Text(
               state.message!,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.footnoteSize,
+              ),
             ),
           ],
         ],

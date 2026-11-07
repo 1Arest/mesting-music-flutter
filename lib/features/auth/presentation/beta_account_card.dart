@@ -12,6 +12,7 @@ import '../auth_providers.dart';
 import 'beta_login_navigation.dart';
 import 'beta_welcome_page.dart';
 import '../../music_platform/netease/netease_membership_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Shared account presentation; never creates a second credential store or
 /// advertises unavailable Mesting registration/social capabilities.
@@ -69,8 +70,8 @@ class BetaAccountCard extends ConsumerWidget {
                           ? (name.isEmpty ? '当前账号' : name)
                           : '登录 Mesting Music',
                       style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                         color: scheme.onSurface,
                       ),
                     ),
@@ -83,7 +84,7 @@ class BetaAccountCard extends ConsumerWidget {
                                 : 'Mesting 账号 · 已登录')
                           : '登录后同步喜欢的音乐与歌单',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: MusicTypography.footnoteSize,
                         color: scheme.onSurfaceVariant,
                       ),
                     ),

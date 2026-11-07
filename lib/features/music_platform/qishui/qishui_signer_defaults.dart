@@ -3,4 +3,5 @@
 /// This upstream shared access token is not a music-account credential.
 /// Never print it or attach it to first-party/CDN requests.
 const qishuiReferenceSignerUrl = "http://103.236.75.83:8899/sign";
-const qishuiReferenceSignerToken = "b356ad402bc31ee9e5a99cfdbf41eaa39961a562251c3359";
+const qishuiReferenceSignerToken =
+    "b356ad402bc31ee9e5a99cfdbf41eaa39961a562251c3359";

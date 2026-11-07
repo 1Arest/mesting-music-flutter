@@ -14,6 +14,7 @@ import '../../queue/presentation/queue_page.dart';
 import '../player_visual_style.dart';
 import 'ip_progress_decoration.dart';
 import 'shinchan_progress_walker.dart';
+import '../../themes/music_typography.dart';
 
 bool usesClassicProgressThumb(MusicThemeIp ip) => ip == MusicThemeIp.classic;
 
@@ -273,7 +274,7 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
                       key: const ValueKey('playback-buffering-label'),
                       style: _metaStyle.copyWith(
                         color: styleAccent.withValues(alpha: .9),
-                        fontWeight: FontWeight.w800,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   )
@@ -285,7 +286,7 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
                       key: const ValueKey('playback-source-unavailable-label'),
                       style: _metaStyle.copyWith(
                         color: styleAccent.withValues(alpha: .9),
-                        fontWeight: FontWeight.w800,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   )
@@ -393,8 +394,8 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
 
 const _metaStyle = TextStyle(
   color: Color(0xAFFFFFFF),
-  fontSize: 10.8,
-  fontWeight: FontWeight.w600,
+  fontSize: MusicTypography.smallCaptionSize,
+  fontWeight: MusicTypography.bodyWeight,
 );
 
 /// 声波脉冲列表示“音频数据正在抵达”，不把没有确定百分比的缓冲误导成

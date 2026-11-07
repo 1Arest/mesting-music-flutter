@@ -13,6 +13,7 @@ import '../media/persistent_network_image_cache.dart';
 import '../media/artwork_network_image.dart';
 import '../../core/diagnostics/local_music_diagnostics.dart';
 import '../../core/platform/distribution_channel.dart';
+import '../../features/themes/music_typography.dart';
 
 const _legacyArtworkAssetAliases = <String, String>{
   'assets/branding/dress-midnight-launch.png':
@@ -204,7 +205,7 @@ class _ArtworkImageState extends State<ArtworkImage> {
               child: Text(
                 empty ? '无封面' : '重试',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: MusicTypography.smallCaptionSize,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),

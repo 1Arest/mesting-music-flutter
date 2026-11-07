@@ -19,6 +19,7 @@ import '../../music_platform/presentation/platform_feedback.dart';
 import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../queue/presentation/queue_page.dart';
 import '../../downloads/audio_downloads_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Presentation returns an intent only. Existing repositories/audio owner still
 /// perform every action after the menu has finished closing.
@@ -63,7 +64,9 @@ Future<void> showPlaybackPillMenu(
                       Text(
                         title,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(
+                          fontSize: MusicTypography.captionSize,
+                        ),
                       ),
                     ],
                   )
@@ -74,7 +77,9 @@ Future<void> showPlaybackPillMenu(
                       Expanded(
                         child: Text(
                           title,
-                          style: const TextStyle(fontSize: 15),
+                          style: const TextStyle(
+                            fontSize: MusicTypography.subheadlineSize,
+                          ),
                         ),
                       ),
                     ],

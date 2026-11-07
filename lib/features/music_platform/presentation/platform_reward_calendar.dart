@@ -16,6 +16,7 @@ import 'platform_reward_verification.dart';
 import 'platform_reward_day.dart';
 import '../../themes/beta_appearance.dart';
 import 'unified_reward_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Findable on My immediately below the unified account presentation.
 class PlatformRewardEntry extends ConsumerWidget {
@@ -35,7 +36,7 @@ class PlatformRewardEntry extends ConsumerWidget {
         leading: Icon(CupertinoIcons.calendar, color: scheme.primary, size: 28),
         title: const Text(
           '签到与会员',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: MusicTypography.titleWeight),
         ),
         subtitle: Text(
           netease
@@ -118,7 +119,7 @@ class PlatformRewardCalendar extends ConsumerWidget {
       onPressed: () => _act(context, operation),
       interactionEnabled: enabled,
       height: 48,
-      fontSize: 14,
+      fontSize: MusicTypography.subheadlineSize,
       horizontalPadding: 12,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -148,7 +149,10 @@ class PlatformRewardCalendar extends ConsumerWidget {
           : AppBar(
               title: const Text(
                 '签到日历',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: MusicTypography.bodySize,
+                  fontWeight: MusicTypography.titleWeight,
+                ),
               ),
               centerTitle: true,
               backgroundColor: scheme.surface,
@@ -187,8 +191,8 @@ class PlatformRewardCalendar extends ConsumerWidget {
                                 child: Text(
                                   '${day.year} 年 ${day.month} 月',
                                   style: TextStyle(
-                                    fontSize: 29,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: MusicTypography.titleSize,
+                                    fontWeight: MusicTypography.titleWeight,
                                     color: ink,
                                   ),
                                 ),
@@ -241,7 +245,10 @@ class PlatformRewardCalendar extends ConsumerWidget {
                           const SizedBox(height: 12),
                           Text(
                             '自动签到异常时，可在这里手动重试',
-                            style: TextStyle(fontSize: 12, color: muted),
+                            style: TextStyle(
+                              fontSize: MusicTypography.captionSize,
+                              color: muted,
+                            ),
                           ),
                           if (state.action == RewardAction.ad)
                             Padding(
@@ -253,7 +260,7 @@ class PlatformRewardCalendar extends ConsumerWidget {
                                       '已确认 ${state.adCount}/8 次${state.adWaiting ? '，等待下一次领取' : ''}',
                                       style: TextStyle(
                                         color: muted,
-                                        fontSize: 13,
+                                        fontSize: MusicTypography.footnoteSize,
                                       ),
                                     ),
                                   ),
@@ -271,7 +278,10 @@ class PlatformRewardCalendar extends ConsumerWidget {
                                 liveRegion: true,
                                 child: Text(
                                   state.message!,
-                                  style: TextStyle(color: muted, fontSize: 13),
+                                  style: TextStyle(
+                                    color: muted,
+                                    fontSize: MusicTypography.footnoteSize,
+                                  ),
                                 ),
                               ),
                             ),
@@ -283,7 +293,7 @@ class PlatformRewardCalendar extends ConsumerWidget {
                                 '平台签到记录暂未加载，已保留本机确认的记录。下拉可重试。',
                                 style: TextStyle(
                                   color: scheme.error,
-                                  fontSize: 13,
+                                  fontSize: MusicTypography.footnoteSize,
                                 ),
                               ),
                             ),
@@ -305,7 +315,7 @@ class PlatformRewardCalendar extends ConsumerWidget {
                                       label,
                                       style: TextStyle(
                                         color: muted,
-                                        fontSize: 13,
+                                        fontSize: MusicTypography.footnoteSize,
                                       ),
                                     ),
                                   ),
@@ -353,22 +363,28 @@ class PlatformRewardCalendar extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   '本月已签到',
-                                  style: TextStyle(color: muted, fontSize: 14),
+                                  style: TextStyle(
+                                    color: muted,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                  ),
                                 ),
                               ),
                               Text(
                                 '${signed.length}',
                                 style: TextStyle(
                                   color: completedInk,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 29,
+                                  fontWeight: MusicTypography.titleWeight,
+                                  fontSize: MusicTypography.titleSize,
                                 ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Text(
                                   ' / $days 天',
-                                  style: TextStyle(color: muted, fontSize: 14),
+                                  style: TextStyle(
+                                    color: muted,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                  ),
                                 ),
                               ),
                             ],
@@ -388,13 +404,15 @@ class PlatformRewardCalendar extends ConsumerWidget {
                               title: const Text(
                                 '自动签到',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: MusicTypography.calloutSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                 ),
                               ),
                               subtitle: const Text(
                                 '登录后自动领取每日会员',
-                                style: TextStyle(fontSize: 12),
+                                style: TextStyle(
+                                  fontSize: MusicTypography.captionSize,
+                                ),
                               ),
                               trailing: CupertinoSwitch(
                                 key: const ValueKey('reward-auto-sign-in'),
@@ -422,8 +440,8 @@ class PlatformRewardCalendar extends ConsumerWidget {
                             '会员到期时间',
                             style: TextStyle(
                               color: muted,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.subheadlineSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -490,14 +508,17 @@ class _MembershipRow extends StatelessWidget {
         label,
         style: TextStyle(
           color: scheme.onSurface,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontSize: MusicTypography.subheadlineSize,
+          fontWeight: MusicTypography.bodyWeight,
         ),
       );
       final expiry = Text(
         value,
         textAlign: stacked ? TextAlign.start : TextAlign.end,
-        style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+        style: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontSize: MusicTypography.footnoteSize,
+        ),
       );
       return stacked
           ? Column(

@@ -13,6 +13,7 @@ import 'beta_playback_queue.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 const double playbackQueueSheetHeightFactor = .74;
 const double minimumPopulatedQueueSheetHeightFactor = .30;
@@ -183,8 +184,8 @@ class QueuePage extends ConsumerWidget {
                             child: Text(
                               '自动推荐',
                               style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                fontSize: MusicTypography.subheadlineSize,
+                                fontWeight: MusicTypography.bodyWeight,
                                 color: tokens.textSecondary,
                               ),
                             ),
@@ -291,9 +292,9 @@ class _QueueHeader extends StatelessWidget {
                   '播放列表',
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 23,
+                    fontSize: MusicTypography.sectionTitleSize,
                     height: 1.05,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -301,8 +302,8 @@ class _QueueHeader extends StatelessWidget {
                   '$count 首待播放歌曲',
                   style: TextStyle(
                     color: tokens.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -361,8 +362,8 @@ class _PlaybackModeControl extends StatelessWidget {
                   mode.label,
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -461,8 +462,8 @@ class _QueueSongRow extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: tokens.textMuted,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -483,8 +484,8 @@ class _QueueSongRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.subheadlineSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -494,8 +495,8 @@ class _QueueSongRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: tokens.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: MusicTypography.smallCaptionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ],
@@ -507,8 +508,8 @@ class _QueueSongRow extends StatelessWidget {
                   mediaDuration: duration,
                   style: TextStyle(
                     color: tokens.textMuted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -581,8 +582,8 @@ class PlaybackQueueEmptyState extends StatelessWidget {
             '播放列表还是空的',
             style: TextStyle(
               color: tokens.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.calloutSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ],

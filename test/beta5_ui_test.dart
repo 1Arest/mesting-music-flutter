@@ -1671,6 +1671,40 @@ void main() {
     skip: !DistributionChannel.isBeta,
   );
 
+  for (final dark in [false, true]) {
+    testWidgets(
+      'search captions fit the shared type scale dark=$dark',
+      (tester) async {
+        viewport(tester);
+        await prepare(richHome: true);
+        await pump(
+          tester,
+          PlatformSearchLanding(onSearch: (_) {}),
+          dark: dark,
+          scale: 1.5,
+        );
+        final caption = find.text('此刻，慢下来');
+        await tester.ensureVisible(caption);
+        await tester.pump(const Duration(milliseconds: 500));
+        final text = tester.widget<Text>(caption);
+        expect(text.style!.fontSize, 15);
+        expect(text.style!.fontWeight, FontWeight.w400);
+        final card = find
+            .ancestor(
+              of: caption,
+              matching: find.byWidgetPredicate(
+                (widget) => widget is SizedBox && widget.width == 132,
+              ),
+            )
+            .first;
+        expect(tester.getSize(card).height, greaterThanOrEqualTo(201));
+        expect(tester.takeException(), isNull);
+        await disposeFixture(tester);
+      },
+      skip: !DistributionChannel.isBeta,
+    );
+  }
+
   testWidgets(
     'beta15 hot refresh keeps ranking and reports pending, unchanged, failure and recovery',
     (tester) async {

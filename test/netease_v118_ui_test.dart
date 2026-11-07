@@ -433,7 +433,7 @@ void main() {
       expect(find.text('下载与存储'), findsNothing);
       expect(find.text('Lv.9'), findsOneWidget);
       final nickname = tester.widget<Text>(find.text('林间听雨'));
-      expect(nickname.style!.fontWeight, FontWeight.w600);
+      expect(nickname.style!.fontWeight, FontWeight.w500);
       await capture(tester, 'personal');
       await tester.scrollUntilVisible(find.text('收藏的歌单 · 1'), 160);
       expect(find.byType(ArtworkImage), findsWidgets);

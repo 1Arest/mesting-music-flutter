@@ -12,6 +12,7 @@ import '../domain/social_models.dart';
 import '../listen_together_providers.dart';
 import '../social_providers.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 enum ListenTogetherSheetAction { leave, invite }
 
@@ -85,8 +86,8 @@ class _ListenTogetherInviteSheet extends ConsumerWidget {
                       Text(
                         '好友一起听',
                         style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                       SizedBox(height: 3),
@@ -133,8 +134,8 @@ class _ListenTogetherInviteSheet extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.subheadlineSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -155,7 +156,10 @@ class _ListenTogetherInviteSheet extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Text(
               '可邀请好友',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
             ),
           ),
           Expanded(
@@ -214,8 +218,8 @@ class _ListenTogetherInviteSheet extends ConsumerWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
+                                  fontSize: MusicTypography.subheadlineSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                 ),
                               ),
                             ),
@@ -296,7 +300,10 @@ class _ListenTogetherStatusSheetState
                 const Expanded(
                   child: Text(
                     '一起听空间',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                    style: TextStyle(
+                      fontSize: MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -314,7 +321,10 @@ class _ListenTogetherStatusSheetState
               alignment: Alignment.centerLeft,
               child: Text(
                 '一起听音乐记录',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  fontSize: MusicTypography.subheadlineSize,
+                  fontWeight: MusicTypography.bodyWeight,
+                ),
               ),
             ),
           ),
@@ -368,7 +378,9 @@ class _ListenTogetherStatusSheetState
                         record.track.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
+                        style: const TextStyle(
+                          fontWeight: MusicTypography.titleWeight,
+                        ),
                       ),
                       subtitle: Text(
                         record.track.artist,
@@ -377,7 +389,9 @@ class _ListenTogetherStatusSheetState
                       ),
                       trailing: Text(
                         '听了 ${record.playCount} 次',
-                        style: const TextStyle(fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                          fontWeight: MusicTypography.titleWeight,
+                        ),
                       ),
                     );
                   },
@@ -478,8 +492,8 @@ class _TogetherPairSummary extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 5),

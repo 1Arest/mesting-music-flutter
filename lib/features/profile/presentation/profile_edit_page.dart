@@ -18,6 +18,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../profile_background_controller.dart';
 import 'avatar_preview_page.dart';
 import 'profile_background_visual.dart';
+import '../../themes/music_typography.dart';
 
 const liquidGlassProfileEditSurfaceKey = ValueKey<String>(
   'liquid-glass-profile-edit-surface',
@@ -109,8 +110,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     const Text(
                       '编辑个人资料',
                       style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ],
@@ -120,7 +121,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   '完善公开资料，让朋友更了解你',
                   style: TextStyle(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                   ),
                 ),
                 const SizedBox(height: 22),
@@ -213,8 +214,8 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                         '点击预览头像',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.captionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ],
@@ -252,14 +253,16 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                                   Text(
                                     '个人主页背景',
                                     style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
+                                      fontSize: MusicTypography.subheadlineSize,
+                                      fontWeight: MusicTypography.bodyWeight,
                                     ),
                                   ),
                                   SizedBox(height: 4),
                                   Text(
                                     '预览、更换背景图片或选择背景风格',
-                                    style: TextStyle(fontSize: 11.5),
+                                    style: TextStyle(
+                                      fontSize: MusicTypography.captionSize,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -362,7 +365,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                     ),
                     style: const TextStyle(
                       color: Color(0xFFC24A34),
-                      fontSize: 12,
+                      fontSize: MusicTypography.captionSize,
                     ),
                   ),
                 ],
@@ -388,7 +391,9 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                           )
                         : const Text(
                             '保存资料',
-                            style: TextStyle(fontWeight: FontWeight.w900),
+                            style: TextStyle(
+                              fontWeight: MusicTypography.titleWeight,
+                            ),
                           ),
                   ),
                 ),
@@ -593,14 +598,20 @@ class _EditSectionTitle extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              fontSize: MusicTypography.bodySize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(width: 9),
           Expanded(
             child: Text(
               subtitle,
               textAlign: TextAlign.right,
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 10),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
           ),
         ],
@@ -638,8 +649,8 @@ class _ProfileValueRow extends StatelessWidget {
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.subheadlineSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),
@@ -649,8 +660,8 @@ class _ProfileValueRow extends StatelessWidget {
                 color: value == '未设置'
                     ? scheme.onSurfaceVariant.withValues(alpha: .72)
                     : scheme.onSurface,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: MusicTypography.footnoteSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
             const SizedBox(width: 5),
@@ -703,12 +714,18 @@ class _AgePickerSheetState extends State<_AgePickerSheet> {
           children: [
             const Text(
               '设置年龄',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 5),
             Text(
               '设置后会展示在好友主页，也可以随时清除',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
             const SizedBox(height: 22),
             Row(
@@ -728,8 +745,8 @@ class _AgePickerSheetState extends State<_AgePickerSheet> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: scheme.primary,
-                      fontSize: 31,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.largeTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
                     ),
                   ),
                 ),
@@ -799,12 +816,18 @@ class _ZodiacPickerSheet extends StatelessWidget {
           children: [
             const Text(
               '选择星座',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 5),
             Text(
               '选择后会展示在好友主页',
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11),
+              style: TextStyle(
+                color: scheme.onSurfaceVariant,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
             const SizedBox(height: 18),
             GridView.builder(
@@ -843,9 +866,7 @@ class _ZodiacPickerSheet extends StatelessWidget {
                         zodiac,
                         style: TextStyle(
                           color: active ? scheme.primary : scheme.onSurface,
-                          fontWeight: active
-                              ? FontWeight.w900
-                              : FontWeight.w700,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),

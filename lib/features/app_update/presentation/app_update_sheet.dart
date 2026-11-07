@@ -10,6 +10,7 @@ import '../app_update_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_glass_popover.dart';
 import 'beta_app_update_sheet.dart';
+import '../../themes/music_typography.dart';
 
 const appUpdateSheetContentKey = ValueKey<String>('app-update-sheet-content');
 bool _updateSheetOpen = false;
@@ -164,8 +165,8 @@ class AppUpdateSheet extends ConsumerWidget {
                                   manifest.title,
                                   style: TextStyle(
                                     color: tokens.textPrimary,
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: MusicTypography.sectionTitleSize,
+                                    fontWeight: MusicTypography.titleWeight,
                                     letterSpacing: -.5,
                                   ),
                                 ),
@@ -181,8 +182,8 @@ class AppUpdateSheet extends ConsumerWidget {
                             'v${manifest.versionName} · ${manifest.sizeLabel}',
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                              fontSize: MusicTypography.smallCaptionSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                         ],
@@ -215,8 +216,8 @@ class AppUpdateSheet extends ConsumerWidget {
                         '本次更新',
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.captionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                       const SizedBox(height: 9),
@@ -241,9 +242,9 @@ class AppUpdateSheet extends ConsumerWidget {
                                   note,
                                   style: TextStyle(
                                     color: tokens.textSecondary,
-                                    fontSize: 11,
+                                    fontSize: MusicTypography.smallCaptionSize,
                                     height: 1.45,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                               ),
@@ -289,7 +290,9 @@ class AppUpdateSheet extends ConsumerWidget {
                     icon: _primaryIcon(state),
                     label: Text(
                       _primaryLabel(state),
-                      style: const TextStyle(fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontWeight: MusicTypography.titleWeight,
+                      ),
                     ),
                   ),
                 ),
@@ -311,7 +314,7 @@ class AppUpdateSheet extends ConsumerWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: tokens.textMuted,
-                    fontSize: 9,
+                    fontSize: MusicTypography.smallCaptionSize,
                     height: 1.4,
                   ),
                 ),
@@ -407,8 +410,8 @@ class _MandatoryBadge extends StatelessWidget {
         '必须更新',
         style: TextStyle(
           color: Color(0xFFC24A34),
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
+          fontSize: MusicTypography.smallCaptionSize,
+          fontWeight: MusicTypography.bodyWeight,
         ),
       ),
     );
@@ -443,15 +446,18 @@ class _DownloadProgress extends StatelessWidget {
           children: [
             Text(
               '${received.toStringAsFixed(1)} / ${total.toStringAsFixed(1)} MB',
-              style: TextStyle(color: tokens.textMuted, fontSize: 9),
+              style: TextStyle(
+                color: tokens.textMuted,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
             const Spacer(),
             Text(
               '${((state.progress ?? 0) * 100).round()}%',
               style: TextStyle(
                 color: tokens.textSecondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w800,
+                fontSize: MusicTypography.smallCaptionSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ],
@@ -463,8 +469,8 @@ class _DownloadProgress extends StatelessWidget {
               : '下载进度会保存在本机，关闭应用后可继续',
           style: TextStyle(
             color: tokens.textMuted,
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       ],
@@ -505,9 +511,9 @@ class _InlineMessage extends StatelessWidget {
               text,
               style: TextStyle(
                 color: tokens.textSecondary,
-                fontSize: 10,
+                fontSize: MusicTypography.smallCaptionSize,
                 height: 1.45,
-                fontWeight: FontWeight.w600,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),

@@ -12,6 +12,7 @@ import '../domain/platform_audio_quality.dart';
 import '../platform_quality_providers.dart';
 import 'platform_feedback.dart';
 import '../data/playback_quality_catalog.dart';
+import '../../themes/music_typography.dart';
 
 class _QualitySelection {
   const _QualitySelection(this.trackId, this.tier, this.catalog);
@@ -108,8 +109,8 @@ class _QualityDialog extends ConsumerWidget {
                   '音质选择',
                   style: TextStyle(
                     color: ink,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
+                    fontSize: MusicTypography.sectionTitleSize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -118,7 +119,10 @@ class _QualityDialog extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
                       '${origin.adapter} · 仅显示当前歌曲与账号已确认可用的音质',
-                      style: TextStyle(color: ink, fontSize: 12),
+                      style: TextStyle(
+                        color: ink,
+                        fontSize: MusicTypography.captionSize,
+                      ),
                     ),
                   ),
                 if (qualities != null)
@@ -172,10 +176,10 @@ class _QualityDialog extends ConsumerWidget {
                                           : quality.label,
                                       style: TextStyle(
                                         color: actual == quality ? accent : ink,
-                                        fontSize: 17,
+                                        fontSize: MusicTypography.bodySize,
                                         fontWeight: actual == quality
-                                            ? FontWeight.w600
-                                            : FontWeight.w400,
+                                            ? MusicTypography.titleWeight
+                                            : MusicTypography.bodyWeight,
                                       ),
                                     ),
                                     trailing: actual == quality
@@ -225,7 +229,7 @@ class _QualityDialog extends ConsumerWidget {
                     '当前音源不支持在线音质切换',
                     style: TextStyle(
                       color: ink.withValues(alpha: .65),
-                      fontSize: 12,
+                      fontSize: MusicTypography.captionSize,
                     ),
                   ),
                 ],
@@ -284,7 +288,10 @@ class PlatformQualityButton extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: MusicTypography.subheadlineSize,
+                  ),
                 ),
               ],
             ),

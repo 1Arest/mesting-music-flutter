@@ -12,6 +12,7 @@ import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import 'queue_track_duration.dart';
+import '../../themes/music_typography.dart';
 
 /// Shared sheet/player presentation. Never regroup rows into an order different
 /// from the handler's authoritative queue, including automatic recommendations.
@@ -115,8 +116,8 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                     immersive ? '待播列表' : '播放列表',
                     style: TextStyle(
                       color: ink,
-                      fontSize: 25,
-                      fontWeight: FontWeight.w700,
+                      fontSize: MusicTypography.titleSize,
+                      fontWeight: MusicTypography.titleWeight,
                     ),
                   ),
                 ),
@@ -139,7 +140,10 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                 Expanded(
                   child: Text(
                     '${items.length} 首待播放',
-                    style: TextStyle(color: muted, fontSize: 13),
+                    style: TextStyle(
+                      color: muted,
+                      fontSize: MusicTypography.footnoteSize,
+                    ),
                   ),
                 ),
                 modeButton(
@@ -338,8 +342,10 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             color: ink,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize:
+                                                MusicTypography.calloutSize,
+                                            fontWeight:
+                                                MusicTypography.bodyWeight,
                                           ),
                                         ),
                                         const SizedBox(height: 3),
@@ -349,7 +355,8 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             color: muted,
-                                            fontSize: 12,
+                                            fontSize:
+                                                MusicTypography.captionSize,
                                           ),
                                         ),
                                       ],
@@ -361,7 +368,8 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                                     mediaDuration: item.duration,
                                     style: TextStyle(
                                       color: muted,
-                                      fontSize: 11,
+                                      fontSize:
+                                          MusicTypography.smallCaptionSize,
                                     ),
                                   ),
                                   if (track != null)

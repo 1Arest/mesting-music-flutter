@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../themes/music_theme_tokens.dart';
 import '../domain/legal_documents.dart';
+import '../../themes/music_typography.dart';
 
 class LegalDocumentsPage extends StatelessWidget {
   const LegalDocumentsPage({super.key});
@@ -35,7 +36,7 @@ class LegalDocumentsPage extends StatelessWidget {
                 '你有权知道自己的信息如何被处理，也可以随时回到这里查看最新版本。',
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 14,
+                  fontSize: MusicTypography.subheadlineSize,
                   height: 1.65,
                 ),
               ),
@@ -56,8 +57,8 @@ class LegalDocumentsPage extends StatelessWidget {
                 '协议更新',
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.bodySize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 8),
@@ -65,7 +66,7 @@ class LegalDocumentsPage extends StatelessWidget {
                 '若协议或数据处理方式发生重要变化，应用会在需要时提示你重新确认。',
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 12,
+                  fontSize: MusicTypography.captionSize,
                   height: 1.6,
                 ),
               ),
@@ -109,7 +110,7 @@ class LegalDocumentPage extends StatelessWidget {
                 document.summary,
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 14,
+                  fontSize: MusicTypography.subheadlineSize,
                   height: 1.65,
                 ),
               ),
@@ -139,9 +140,9 @@ class LegalDocumentContent extends StatelessWidget {
             section.title,
             style: TextStyle(
               color: tokens.textPrimary,
-              fontSize: 17,
+              fontSize: MusicTypography.bodySize,
               height: 1.35,
-              fontWeight: FontWeight.w900,
+              fontWeight: MusicTypography.titleWeight,
             ),
           ),
           const SizedBox(height: 8),
@@ -149,7 +150,7 @@ class LegalDocumentContent extends StatelessWidget {
             section.body,
             style: TextStyle(
               color: tokens.textSecondary,
-              fontSize: 13,
+              fontSize: MusicTypography.footnoteSize,
               height: 1.72,
             ),
           ),
@@ -208,9 +209,9 @@ class _LegalPageHeader extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 27,
+                  fontSize: MusicTypography.titleSize,
                   height: 1.05,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: MusicTypography.titleWeight,
                   letterSpacing: -.7,
                 ),
               ),
@@ -219,8 +220,8 @@ class _LegalPageHeader extends StatelessWidget {
                 subtitle,
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],
@@ -266,8 +267,8 @@ class _LegalDocumentLink extends StatelessWidget {
                       document.title,
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.calloutSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -277,7 +278,7 @@ class _LegalDocumentLink extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 11,
+                        fontSize: MusicTypography.smallCaptionSize,
                         height: 1.45,
                       ),
                     ),

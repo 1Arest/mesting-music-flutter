@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../domain/shinchan_progress_weather.dart';
+import '../../themes/music_typography.dart';
 export '../domain/shinchan_progress_weather.dart';
 
 ShinchanProgressWeather shinchanWeatherForPreset(String presetId) =>
@@ -345,8 +346,8 @@ class _WeatherPainter extends CustomPainter {
         text: '♪',
         style: TextStyle(
           color: Color(0xFFD18B22),
-          fontSize: 19,
-          fontWeight: FontWeight.w800,
+          fontSize: MusicTypography.headingSize,
+          fontWeight: MusicTypography.titleWeight,
         ),
       ),
       textDirection: TextDirection.ltr,

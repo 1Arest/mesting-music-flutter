@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../features/themes/app_brand_style.dart';
+import '../features/themes/music_typography.dart';
 
 const mestingBrandCoral = Color(0xFFD95046);
 const mestingBrandPaper = Color(0xFFF7F8FF);
@@ -193,7 +194,7 @@ class MestingBrandedLaunchScreen extends StatelessWidget {
                             '启动失败，点击重试',
                             style: TextStyle(
                               color: actionColor,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                         ),

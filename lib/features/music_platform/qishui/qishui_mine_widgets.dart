@@ -1,3 +1,4 @@
+import '../../themes/music_typography.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -113,7 +114,9 @@ class QishuiMineHeader extends StatelessWidget {
                                 Text(
                                   nickname.isEmpty ? '汽水账号' : nickname,
                                   style: theme.textTheme.headlineSmall
-                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                      ?.copyWith(
+                                        fontWeight: MusicTypography.titleWeight,
+                                      ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -331,7 +334,7 @@ class QishuiMineTabs extends StatelessWidget {
                       tab.label,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: tab == selected
-                            ? FontWeight.w800
+                            ? MusicTypography.titleWeight
                             : FontWeight.w500,
                         color: tab == selected
                             ? Theme.of(context).colorScheme.onSurface
@@ -398,9 +401,9 @@ class QishuiMinePlaylistList extends StatelessWidget {
         ),
         title: Text(
           list.name,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: MusicTypography.titleWeight,
+          ),
         ),
         subtitle: Text('${list.count} 首'),
         onTap: () => open(list),

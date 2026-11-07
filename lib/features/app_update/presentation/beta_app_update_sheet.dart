@@ -8,6 +8,7 @@ import '../app_update_providers.dart';
 import '../domain/release_history.dart';
 import 'apple_download_progress.dart';
 import 'release_notes_sheet.dart';
+import '../../themes/music_typography.dart';
 
 /// Presentation only: one controller owns checking, download, pause and install.
 /// A missing release is a visible checking/current/error state, never an empty
@@ -174,8 +175,8 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                       child: Text(
                         '版本更新',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.headingSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -210,8 +211,8 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                   child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 27,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.titleSize,
+                      fontWeight: MusicTypography.titleWeight,
                       height: 1.18,
                       letterSpacing: -.5,
                     ),
@@ -233,7 +234,7 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                       ? '下载已完成，正在确认文件完整性。'
                       : '下载完成并校验后，由系统确认覆盖升级。',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: MusicTypography.subheadlineSize,
                     height: 1.5,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -256,8 +257,8 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                     const Text(
                       '本次更新',
                       style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -267,7 +268,7 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                         child: Text(
                           note,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: MusicTypography.subheadlineSize,
                             height: 1.45,
                             color: scheme.onSurfaceVariant,
                           ),
@@ -325,7 +326,10 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                     },
                     child: Text(
                       '稍后提醒我',
-                      style: TextStyle(fontSize: 15, color: blue),
+                      style: TextStyle(
+                        fontSize: MusicTypography.subheadlineSize,
+                        color: blue,
+                      ),
                     ),
                   ),
                 ],
@@ -349,13 +353,16 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
         Text(
           label,
           style: TextStyle(
-            fontSize: 15,
+            fontSize: MusicTypography.subheadlineSize,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         Text(
           value,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: MusicTypography.subheadlineSize,
+            fontWeight: MusicTypography.bodyWeight,
+          ),
         ),
       ],
     ),

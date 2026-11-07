@@ -25,6 +25,7 @@ import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'playlist_editor_dialog.dart';
 import '../../player/presentation/beta_playback_actions.dart';
+import '../../themes/music_typography.dart';
 
 bool _canPopPlaylistRoute(BuildContext context) =>
     Navigator.maybeOf(context)?.canPop() ?? false;
@@ -398,9 +399,9 @@ class _PlaylistTopBar extends StatelessWidget {
                 'PERSONAL PLAYLIST',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 9,
+                  fontSize: MusicTypography.smallCaptionSize,
                   letterSpacing: 2.2,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               const SizedBox(height: 3),
@@ -408,8 +409,8 @@ class _PlaylistTopBar extends StatelessWidget {
                 '歌单详情',
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.bodySize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
             ],
@@ -500,9 +501,9 @@ class _PlaylistHero extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: tokens.textPrimary,
-                              fontSize: 27,
+                              fontSize: MusicTypography.titleSize,
                               height: 1.05,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -514,9 +515,9 @@ class _PlaylistHero extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 12,
+                              fontSize: MusicTypography.captionSize,
                               height: 1.4,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -631,8 +632,8 @@ class _PlaylistMetaPill extends StatelessWidget {
         key: const ValueKey('playlist-hero-track-count'),
         style: TextStyle(
           color: tokens.textSecondary,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
+          fontSize: MusicTypography.smallCaptionSize,
+          fontWeight: MusicTypography.bodyWeight,
         ),
       ),
     );
@@ -711,8 +712,8 @@ class _PlaylistHeroAction extends StatelessWidget {
                                 ? Theme.of(context).colorScheme.onPrimary
                                 : Colors.white)
                           : tokens.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.footnoteSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ],
@@ -744,14 +745,17 @@ class _PlaylistSectionHeading extends StatelessWidget {
                 '歌曲列表',
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 count > 1 ? '长按歌曲可调整播放顺序' : '把喜欢的音乐收进这里',
-                style: TextStyle(color: tokens.textMuted, fontSize: 10),
+                style: TextStyle(
+                  color: tokens.textMuted,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
             ],
           ),
@@ -761,8 +765,8 @@ class _PlaylistSectionHeading extends StatelessWidget {
           key: const ValueKey('playlist-section-track-count'),
           style: TextStyle(
             color: tokens.textSecondary,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       ],
@@ -806,15 +810,18 @@ class _PlaylistEmptyState extends StatelessWidget {
               '这张歌单还没有声音',
               style: TextStyle(
                 color: tokens.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
+                fontSize: MusicTypography.calloutSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
             const SizedBox(height: 5),
             Text(
               '添加几首喜欢的歌曲，慢慢整理成自己的音乐空间',
               textAlign: TextAlign.center,
-              style: TextStyle(color: tokens.textSecondary, fontSize: 11),
+              style: TextStyle(
+                color: tokens.textSecondary,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -863,8 +870,8 @@ class _PlaylistMessageState extends StatelessWidget {
             title,
             style: TextStyle(
               color: tokens.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.subheadlineSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
           const SizedBox(height: 5),
@@ -1019,8 +1026,8 @@ class _PlaylistTrackRow extends StatelessWidget {
                                   '${index + 1}'.padLeft(2, '0'),
                                   style: TextStyle(
                                     color: tokens.textSecondary,
-                                    fontSize: 7.5,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: MusicTypography.smallCaptionSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                               ),
@@ -1039,8 +1046,8 @@ class _PlaylistTrackRow extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: tokens.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
+                                fontSize: MusicTypography.subheadlineSize,
+                                fontWeight: MusicTypography.bodyWeight,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1050,8 +1057,8 @@ class _PlaylistTrackRow extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: tokens.textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: MusicTypography.captionSize,
+                                fontWeight: MusicTypography.bodyWeight,
                               ),
                             ),
                           ],
@@ -1178,8 +1185,8 @@ class _PlaylistActionSheet extends StatelessWidget {
                       '管理歌单',
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1272,8 +1279,8 @@ class _ActionSheetTile extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: destructive ? accent : tokens.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1281,7 +1288,7 @@ class _ActionSheetTile extends StatelessWidget {
                       caption,
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                       ),
                     ),
                   ],
@@ -1329,8 +1336,8 @@ class _DeletePlaylistSheet extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 7),
@@ -1431,8 +1438,8 @@ class _TrackPickerSheet extends StatelessWidget {
                               '从我的喜欢添加',
                               style: TextStyle(
                                 color: tokens.textPrimary,
-                                fontSize: 21,
-                                fontWeight: FontWeight.w900,
+                                fontSize: MusicTypography.sectionTitleSize,
+                                fontWeight: MusicTypography.titleWeight,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -1440,7 +1447,7 @@ class _TrackPickerSheet extends StatelessWidget {
                               '仅显示已收藏歌曲 · 歌单内 ${selectedIds.length} 首',
                               style: TextStyle(
                                 color: tokens.textSecondary,
-                                fontSize: 12,
+                                fontSize: MusicTypography.captionSize,
                               ),
                             ),
                           ],
@@ -1482,8 +1489,8 @@ class _TrackPickerSheet extends StatelessWidget {
                                 '还没有收藏歌曲',
                                 style: TextStyle(
                                   color: tokens.textPrimary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
+                                  fontSize: MusicTypography.bodySize,
+                                  fontWeight: MusicTypography.titleWeight,
                                 ),
                               ),
                               const SizedBox(height: 7),
@@ -1493,7 +1500,7 @@ class _TrackPickerSheet extends StatelessWidget {
                                 style: TextStyle(
                                   color: tokens.textSecondary,
                                   height: 1.6,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: MusicTypography.titleWeight,
                                 ),
                               ),
                               const SizedBox(height: 18),
@@ -1582,8 +1589,8 @@ class _TrackPickerRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1591,8 +1598,8 @@ class _TrackPickerRow extends StatelessWidget {
                   '${track.artist}  ·  ${formatDuration(track.duration)}',
                   style: TextStyle(
                     color: tokens.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -1677,8 +1684,8 @@ class _SheetButton extends StatelessWidget {
               label,
               style: TextStyle(
                 color: filled ? Colors.white : tokens.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
+                fontSize: MusicTypography.subheadlineSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),

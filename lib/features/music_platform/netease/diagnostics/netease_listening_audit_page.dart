@@ -10,6 +10,7 @@ import '../../platform_backend_providers.dart';
 import '../../presentation/platform_design.dart';
 import 'netease_listening_audit.dart';
 import 'netease_listening_audit_provider.dart';
+import '../../../themes/music_typography.dart';
 
 String _duration(Object? value) {
   final seconds = (value as int? ?? 0) ~/ 1000;
@@ -60,7 +61,7 @@ class _AuditPageState extends ConsumerState<NeteaseListeningAuditPage> {
                   text.length > 16000
                       ? '${text.substring(0, 16000)}\n…预览已截短，复制包含全部导出内容。'
                       : text,
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: MusicTypography.captionSize),
                 ),
               ],
             ),

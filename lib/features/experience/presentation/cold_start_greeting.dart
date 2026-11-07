@@ -5,6 +5,7 @@ import '../../../core/persistence/app_preferences.dart';
 import '../../auth/beta_entry_flow.dart';
 import '../../auth/auth_providers.dart';
 import '../../music_platform/music_platform_providers.dart';
+import '../../themes/music_typography.dart';
 
 /// Not auto-disposed: route changes and background/foreground must not replay
 /// a cold-process greeting. A new ProviderScope on cold start gets a fresh flag.
@@ -111,8 +112,8 @@ class _ColdStartGreetingState extends ConsumerState<ColdStartGreeting> {
                         overflow: TextOverflow.fade,
                         style: TextStyle(
                           color: ink.withValues(alpha: .65),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                          fontSize: MusicTypography.smallCaptionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                           height: 1.25,
                         ),
                       ),
@@ -123,9 +124,9 @@ class _ColdStartGreetingState extends ConsumerState<ColdStartGreeting> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: MusicTypography.footnoteSize,
                             color: ink,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: MusicTypography.bodyWeight,
                             height: 1.25,
                           ),
                         ),

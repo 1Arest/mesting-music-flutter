@@ -19,6 +19,7 @@ import '../data/platform_effects_repository.dart';
 import '../platform_effects_providers.dart';
 import '../platform_backend_providers.dart';
 import '../../settings/presentation/music_equalizer_page.dart';
+import '../../themes/music_typography.dart';
 
 class MusicEffectsPage extends ConsumerStatefulWidget {
   const MusicEffectsPage({super.key});
@@ -218,7 +219,10 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
                   padding: EdgeInsets.only(bottom: 18),
                   child: Text(
                     '耳机品牌',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                 ),
                 ListTile(
@@ -319,8 +323,8 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
                         ? '当前音效 · ${equalizer.state.effectName}'
                         : '已保存音效 · ${equalizer.state.effectName}',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.calloutSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -328,7 +332,7 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
                     '均衡预设：${equalizer.state.preset}${equalizer.state.bound && equalizer.state.enabled ? ' · 已生效' : ' · 等待开启或播放'}',
                     style: TextStyle(
                       color: scheme.onSurfaceVariant,
-                      fontSize: 13,
+                      fontSize: MusicTypography.footnoteSize,
                     ),
                   ),
                   TextButton(
@@ -343,7 +347,7 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
             '沿用原版的免费音效目录与预设映射。应用时会开启均衡器，并保存对应的本机均衡预设。',
             style: TextStyle(
               color: scheme.onSurfaceVariant,
-              fontSize: 13,
+              fontSize: MusicTypography.footnoteSize,
               height: 1.6,
             ),
           ),
@@ -387,8 +391,8 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.calloutSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -401,14 +405,14 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                           ),
                         ),
                         Text(
                           '预设：${effect.preset}',
                           style: TextStyle(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                           ),
                         ),
                       ],

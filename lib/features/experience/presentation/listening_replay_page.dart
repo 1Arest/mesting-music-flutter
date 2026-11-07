@@ -8,6 +8,7 @@ import '../../music_platform/presentation/platform_design.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'editorial_widgets.dart';
 import '../../../shared/widgets/artwork_image.dart';
+import '../../themes/music_typography.dart';
 
 class ListeningReplayPage extends ConsumerStatefulWidget {
   const ListeningReplayPage({super.key});
@@ -90,8 +91,8 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                     Text(
                       '$_year',
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const Icon(Icons.keyboard_arrow_down_rounded),
@@ -166,9 +167,9 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                           ],
                         ),
                         style: const TextStyle(
-                          fontSize: 34,
+                          fontSize: MusicTypography.largeTitleSize,
                           height: 1.4,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: MusicTypography.titleWeight,
                           letterSpacing: -.8,
                         ),
                       ),
@@ -220,7 +221,7 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                         '根据当前账号在本机保存的每日记录统计。未记录的过去时段不会补算。',
                         style: TextStyle(
                           color: context.musicThemeTokens.textSecondary,
-                          fontSize: 12,
+                          fontSize: MusicTypography.captionSize,
                           height: 1.7,
                         ),
                       ),

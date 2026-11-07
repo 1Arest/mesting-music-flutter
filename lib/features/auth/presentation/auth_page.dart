@@ -27,6 +27,7 @@ import 'password_visibility_button.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import 'beta_welcome_page.dart';
 import '../beta_entry_flow.dart';
+import '../../themes/music_typography.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({
@@ -342,7 +343,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
               Expanded(
                 child: Text(
                   '正在识别当前上网卡，可拒绝权限并手动输入',
-                  style: TextStyle(color: palette.secondary, fontSize: 12),
+                  style: TextStyle(
+                    color: palette.secondary,
+                    fontSize: MusicTypography.captionSize,
+                  ),
                 ),
               ),
             ],
@@ -367,7 +371,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                   widthFactor: 1,
                   child: Text(
                     '+86',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                    style: TextStyle(fontWeight: MusicTypography.titleWeight),
                   ),
                 ),
               ),
@@ -491,8 +495,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                           _phoneCodeVisible ? '验证并登录' : '一键登录',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.calloutSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                 )),
@@ -677,8 +681,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                           _emailRegistering ? '注册并登录' : '登录',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.calloutSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                 )),
@@ -1085,9 +1089,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
   }
 
   Future<void> _openMusicPlatform() async {
-    final success = await Navigator.of(context).push<bool>(
-      MestingPageRoute(builder: (_) => const PlatformAccountPage()),
-    );
+    final success = await Navigator.of(
+      context,
+    ).push<bool>(MestingPageRoute(builder: (_) => const PlatformAccountPage()));
     // Completing onboarding does not fabricate a Mesting account/session.
     if (success == true && mounted) _experienceNow();
   }
@@ -1105,7 +1109,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
               const ListTile(
                 title: Text(
                   '登录遇到问题',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: MusicTypography.titleWeight),
                 ),
                 subtitle: Text('手机号登录无需密码，只使用短信验证码'),
               ),
@@ -1211,7 +1215,7 @@ class _TopActions extends StatelessWidget {
           onPressed: onExperience,
           child: Text(
             DistributionChannel.isBeta ? '暂不登录，先体验' : '立即体验',
-            style: const TextStyle(fontWeight: FontWeight.w900),
+            style: const TextStyle(fontWeight: MusicTypography.titleWeight),
           ),
         ),
       ],
@@ -1255,8 +1259,8 @@ class _AuthBrand extends StatelessWidget {
         const Text(
           'Mesting Music',
           style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.titleSize,
+            fontWeight: MusicTypography.titleWeight,
             letterSpacing: -.7,
           ),
         ),
@@ -1265,7 +1269,7 @@ class _AuthBrand extends StatelessWidget {
           '让喜欢的音乐，跟着账号去往每一台设备',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 12,
+            fontSize: MusicTypography.captionSize,
           ),
         ),
       ],
@@ -1309,7 +1313,7 @@ class _RememberedAccountCard extends StatelessWidget {
               user.nickname.trim().isEmpty
                   ? 'M'
                   : user.nickname.trim().characters.first,
-              style: const TextStyle(fontWeight: FontWeight.w900),
+              style: const TextStyle(fontWeight: MusicTypography.titleWeight),
             ),
           ),
           const SizedBox(width: 12),
@@ -1321,14 +1325,16 @@ class _RememberedAccountCard extends StatelessWidget {
                   user.nickname,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   account,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                   ),
                 ),
               ],
@@ -1402,15 +1408,18 @@ class _DisclaimerAgreement extends StatelessWidget {
           child: Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Text('我已阅读并同意 ', style: TextStyle(fontSize: 12)),
+              const Text(
+                '我已阅读并同意 ',
+                style: TextStyle(fontSize: MusicTypography.captionSize),
+              ),
               GestureDetector(
                 onTap: onRead,
                 child: Text(
                   read ? '《用户协议》《隐私政策》' : '《用户协议》《隐私政策》（需阅读 5 秒）',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -1535,7 +1544,7 @@ class _EmailModeButton extends StatelessWidget {
                 color: selected
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w900,
+                fontWeight: MusicTypography.titleWeight,
               ),
               child: Text(label),
             ),
@@ -1578,8 +1587,8 @@ class _MessageBanner extends StatelessWidget {
               message,
               style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: MusicTypography.captionSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),

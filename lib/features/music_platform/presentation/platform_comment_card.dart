@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/platform_comments_repository.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'platform_avatar.dart';
+import '../../themes/music_typography.dart';
 
 /// Comment content has its own presentation component; thread identity and
 /// writes remain owned by the page/repository instead of the visual card.
@@ -48,8 +49,8 @@ class PlatformCommentCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontSize: MusicTypography.footnoteSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -60,7 +61,7 @@ class PlatformCommentCard extends StatelessWidget {
                           '歌手',
                           style: TextStyle(
                             color: tokens.textSecondary,
-                            fontSize: 11,
+                            fontSize: MusicTypography.smallCaptionSize,
                           ),
                         ),
                       ),
@@ -71,7 +72,7 @@ class PlatformCommentCard extends StatelessWidget {
                           date,
                           style: TextStyle(
                             color: tokens.textSecondary,
-                            fontSize: 11,
+                            fontSize: MusicTypography.smallCaptionSize,
                           ),
                         ),
                       ),
@@ -82,7 +83,7 @@ class PlatformCommentCard extends StatelessWidget {
                   comment.content,
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 15,
+                    fontSize: MusicTypography.subheadlineSize,
                     height: 1.55,
                   ),
                 ),
@@ -107,7 +108,7 @@ class PlatformCommentCard extends StatelessWidget {
                               '${comment.likes}',
                               style: TextStyle(
                                 color: tokens.textSecondary,
-                                fontSize: 12,
+                                fontSize: MusicTypography.captionSize,
                               ),
                             ),
                           ],

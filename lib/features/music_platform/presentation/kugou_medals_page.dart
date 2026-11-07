@@ -13,6 +13,7 @@ import '../domain/platform_session.dart';
 import '../kugou_listening_profile_providers.dart';
 import '../music_platform_providers.dart';
 import 'kugou_official_page.dart';
+import '../../themes/music_typography.dart';
 
 final kugouMedalRepositoryProvider = Provider<KugouMedalRepository>(
   (ref) => KugouMedalRepository(
@@ -172,8 +173,8 @@ class _KugouMedalGalleryState extends _OwnerState<KugouMedalGalleryPage> {
                                       ? '我的徽章'
                                       : owner.nickname,
                                   style: const TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: MusicTypography.titleSize,
+                                    fontWeight: MusicTypography.titleWeight,
                                   ),
                                 ),
                               ),
@@ -182,8 +183,8 @@ class _KugouMedalGalleryState extends _OwnerState<KugouMedalGalleryPage> {
                                     ? '— 枚'
                                     : '${_summary!.total} 枚',
                                 style: const TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: MusicTypography.sectionTitleSize,
+                                  fontWeight: MusicTypography.titleWeight,
                                 ),
                               ),
                             ],
@@ -425,8 +426,8 @@ class _MedalDetailState extends _OwnerState<KugouMedalDetailPage> {
                           Text(
                             item.name,
                             style: const TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w700,
+                              fontSize: MusicTypography.sectionTitleSize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                           if (item.level.isNotEmpty) Text('等级 ${item.level}'),
@@ -462,7 +463,10 @@ class _MedalDetailState extends _OwnerState<KugouMedalDetailPage> {
                 const SizedBox(height: 18),
                 const Text(
                   '获得条件',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 for (final line in _detail?.conditions ?? const <String>[])
@@ -732,9 +736,9 @@ class _MedalScaffold extends StatelessWidget {
                       style: TextStyle(
                         fontSize:
                             MediaQuery.textScalerOf(context).scale(14) > 21
-                            ? 20
-                            : 24,
-                        fontWeight: FontWeight.w700,
+                            ? MusicTypography.headingSize
+                            : MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ),
@@ -817,7 +821,7 @@ class _MedalTile extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(fontWeight: MusicTypography.titleWeight),
             ),
             const SizedBox(height: 4),
             Text(

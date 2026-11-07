@@ -34,6 +34,7 @@ import 'kugou_official_page.dart';
 import 'kugou_standard_authorization_page.dart';
 import 'platform_profile_edit_page.dart';
 import 'unified_reward_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Personal library composition is independent of the account card used by
 /// Settings. Only real library/profile data is shown; reference statistics are
@@ -184,8 +185,8 @@ class _PersonalHeading extends StatelessWidget {
             Text(
               '我的',
               style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.w700,
+                fontSize: MusicTypography.largeTitleSize,
+                fontWeight: MusicTypography.titleWeight,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
@@ -249,8 +250,8 @@ class _PersonalIdentity extends ConsumerWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.titleSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               if (session.platform == MusicPlatform.netease)
@@ -417,7 +418,10 @@ class _PersonalQuickLink extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: MusicTypography.captionSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
             ),
           ],
         ),
@@ -435,7 +439,7 @@ class _PersonalMusicHeading extends ConsumerWidget {
       const SizedBox(height: 10),
       EditorialSection(
         '我的音乐',
-        fontWeight: FontWeight.w700,
+        fontWeight: MusicTypography.titleWeight,
         actionLabel: '新建歌单',
         onTap: signedIn ? () => createPlatformPlaylist(context, ref) : null,
       ),
@@ -475,7 +479,7 @@ class _PersonalLikedPlaylist extends ConsumerWidget {
       ),
       title: const Text(
         '我喜欢的音乐',
-        style: TextStyle(fontWeight: FontWeight.w700),
+        style: TextStyle(fontWeight: MusicTypography.titleWeight),
       ),
       subtitle: Text('${favorites.count} 首歌曲'),
       trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
@@ -512,7 +516,7 @@ class _PersonalPlaylists extends ConsumerWidget {
         _ProfilePart(
           child: EditorialSection(
             '$title · ${items.length}',
-            fontWeight: FontWeight.w700,
+            fontWeight: MusicTypography.titleWeight,
           ),
         ),
         if (items.isEmpty)
@@ -549,7 +553,7 @@ class _PersonalPlaylists extends ConsumerWidget {
                 item.name,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(fontWeight: MusicTypography.titleWeight),
               ),
               subtitle: Text(title == '创建的歌单' ? '我的歌单' : '收藏的歌单'),
               trailing: const Icon(CupertinoIcons.chevron_right, size: 16),

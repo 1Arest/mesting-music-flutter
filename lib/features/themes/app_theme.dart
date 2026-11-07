@@ -7,6 +7,7 @@ import 'beta_appearance.dart';
 import 'mesting_palette.dart';
 import 'music_theme_preset.dart';
 import 'music_theme_tokens.dart';
+import 'music_typography.dart';
 
 ThemeData buildMestingTheme(MusicThemePreset preset) {
   final seed = DistributionChannel.isBeta ? BetaAppearance.blue : preset.accent;
@@ -81,6 +82,20 @@ ThemeData buildMestingTheme(MusicThemePreset preset) {
             primaryColor: preset.dark
                 ? const Color(0xFF0A84FF)
                 : const Color(0xFF007AFF),
+            textTheme: CupertinoTextThemeData(
+              textStyle: MusicTypography.body.copyWith(
+                color: tokens.textPrimary,
+              ),
+              actionTextStyle: MusicTypography.body.copyWith(
+                color: scheme.primary,
+              ),
+              navTitleTextStyle: MusicTypography.headline.copyWith(
+                color: tokens.textPrimary,
+              ),
+              navLargeTitleTextStyle: MusicTypography.largeTitle.copyWith(
+                color: tokens.textPrimary,
+              ),
+            ),
             selectionHandleColor: preset.dark
                 ? const Color(0xFF0A84FF)
                 : const Color(0xFF007AFF),
@@ -89,29 +104,9 @@ ThemeData buildMestingTheme(MusicThemePreset preset) {
     extensions: [tokens],
     scaffoldBackgroundColor: Colors.transparent,
     fontFamilyFallback: const ['Noto Sans SC', 'Microsoft YaHei', 'sans-serif'],
-    textTheme: TextTheme(
-      displaySmall: TextStyle(
-        color: tokens.textPrimary,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -1.4,
-        height: 1.08,
-      ),
-      headlineMedium: TextStyle(
-        color: tokens.textPrimary,
-        fontWeight: FontWeight.w900,
-      ),
-      titleLarge: TextStyle(
-        color: tokens.textPrimary,
-        fontWeight: FontWeight.w800,
-      ),
-      titleMedium: TextStyle(
-        color: tokens.textPrimary,
-        fontWeight: FontWeight.w800,
-      ),
-      bodyLarge: TextStyle(color: tokens.textPrimary, height: 1.55),
-      bodyMedium: TextStyle(color: tokens.textPrimary),
-      bodySmall: TextStyle(color: tokens.textSecondary),
-      labelLarge: TextStyle(color: tokens.textPrimary),
+    textTheme: MusicTypography.textTheme(
+      primary: tokens.textPrimary,
+      secondary: tokens.textSecondary,
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
@@ -139,7 +134,12 @@ ThemeData buildMestingTheme(MusicThemePreset preset) {
     listTileTheme: ListTileThemeData(
       textColor: tokens.textPrimary,
       iconColor: tokens.textSecondary,
-      subtitleTextStyle: TextStyle(color: tokens.textSecondary),
+      titleTextStyle: MusicTypography.headline.copyWith(
+        color: tokens.textPrimary,
+      ),
+      subtitleTextStyle: MusicTypography.subheadline.copyWith(
+        color: tokens.textSecondary,
+      ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: tokens.glassSubtle,

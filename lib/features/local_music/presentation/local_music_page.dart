@@ -20,6 +20,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../data/local_music_repository.dart';
 import '../domain/local_music.dart';
 import '../local_music_providers.dart';
+import '../../themes/music_typography.dart';
 
 /// One device library, outside the account/cloud library. Opening the page only
 /// loads its index; storage permission and scans require an explicit action.
@@ -115,17 +116,17 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('移除这首音乐？'),
+        title: const Text('移除这首音乐？', style: MusicTypography.titleEmphasis),
         content: const Text('手机中的原文件会保留，之后可以重新扫描或导入。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('移除'),
+            child: const Text('移除', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -343,8 +344,10 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                                           child: Text(
                                             selectedFolder?.name ?? '文件夹',
                                             style: const TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.w700,
+                                              fontSize:
+                                                  MusicTypography.headingSize,
+                                              fontWeight:
+                                                  MusicTypography.titleWeight,
                                             ),
                                           ),
                                         ),
@@ -469,8 +472,8 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: MusicTypography.subheadlineSize,
+                                      fontWeight: MusicTypography.bodyWeight,
                                       color: entry.available
                                           ? tokens.textPrimary
                                           : tokens.textSecondary,
@@ -483,7 +486,7 @@ class _LocalMusicPageState extends ConsumerState<LocalMusicPage> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: MusicTypography.captionSize,
                                       color: tokens.textSecondary,
                                     ),
                                   ),
@@ -609,14 +612,17 @@ class _EmptyLibrary extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            fontSize: MusicTypography.sectionTitleSize,
+            fontWeight: MusicTypography.titleWeight,
+          ),
         ),
         const SizedBox(height: 10),
         Text(
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: MusicTypography.subheadlineSize,
             height: 1.6,
             color: context.musicThemeTokens.textSecondary,
           ),

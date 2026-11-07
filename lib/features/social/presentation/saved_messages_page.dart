@@ -19,6 +19,7 @@ import '../domain/track_share.dart';
 import '../social_providers.dart';
 import 'chat_page.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 typedef SavedMessageMediaResolver =
     Future<String?> Function(String value, {bool forceRefresh});
@@ -300,8 +301,8 @@ class SavedMessageDetailPage extends ConsumerWidget {
                               Text(
                                 _savedMessageKindLabel(message.kind),
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: MusicTypography.smallCaptionSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onSurfaceVariant,
@@ -367,8 +368,8 @@ class _SavedMessageRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -377,7 +378,7 @@ class _SavedMessageRow extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         height: 1.35,
                         color: scheme.onSurfaceVariant,
                       ),
@@ -392,7 +393,7 @@ class _SavedMessageRow extends StatelessWidget {
                   Text(
                     _savedMessageTime(message.sentAt),
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: MusicTypography.smallCaptionSize,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -439,14 +440,17 @@ class _SavedMessageActionsSheet extends StatelessWidget {
           ),
           const Text(
             '收藏操作',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              fontSize: MusicTypography.bodySize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
             '只会移除这条收藏，不会删除好友会话里的原消息或媒体文件。',
             style: TextStyle(
               color: scheme.onSurfaceVariant,
-              fontSize: 12,
+              fontSize: MusicTypography.captionSize,
               height: 1.45,
             ),
           ),
@@ -483,8 +487,8 @@ class _SavedMessageActionsSheet extends StatelessWidget {
                             '删除收藏',
                             style: TextStyle(
                               color: scheme.error,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
+                              fontSize: MusicTypography.subheadlineSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -494,7 +498,7 @@ class _SavedMessageActionsSheet extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: scheme.onSurfaceVariant,
-                              fontSize: 11,
+                              fontSize: MusicTypography.smallCaptionSize,
                             ),
                           ),
                         ],
@@ -544,14 +548,17 @@ class _SavedMessageDetailMeta extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.calloutSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 '收藏于 ${_savedMessageDateTime(message.sentAt)}',
-                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                style: TextStyle(
+                  fontSize: MusicTypography.smallCaptionSize,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -592,13 +599,19 @@ class _SavedMessageDetailContent extends ConsumerWidget {
               '回复 ${quote.excerpt}',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: MusicTypography.captionSize,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 10),
           ],
           SelectableText(
             content.isEmpty ? '文字消息' : content,
-            style: const TextStyle(fontSize: 16, height: 1.55),
+            style: const TextStyle(
+              fontSize: MusicTypography.calloutSize,
+              height: 1.55,
+            ),
           ),
         ],
       );
@@ -737,7 +750,10 @@ class _SavedMessageAttachmentPreview extends StatelessWidget {
         children: [
           Icon(icon, color: scheme.primary),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+          ),
         ],
       ),
     );

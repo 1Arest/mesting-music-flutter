@@ -17,6 +17,7 @@ import '../../player/player_visual_style.dart';
 import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../queue/presentation/queue_page.dart';
 import 'immersive_lyrics.dart';
+import '../../themes/music_typography.dart';
 
 /// A presentation-only player. The existing audio service owns playback,
 /// scrubbing, media notifications, the queue, and current account favorites.
@@ -190,9 +191,11 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                                         TextOverflow.ellipsis,
                                                     style: const TextStyle(
                                                       color: Colors.white,
-                                                      fontSize: 19,
+                                                      fontSize: MusicTypography
+                                                          .headingSize,
                                                       fontWeight:
-                                                          FontWeight.w800,
+                                                          MusicTypography
+                                                              .titleWeight,
                                                     ),
                                                   ),
                                                   Text(
@@ -202,7 +205,8 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                                         TextOverflow.ellipsis,
                                                     style: const TextStyle(
                                                       color: Colors.white70,
-                                                      fontSize: 14,
+                                                      fontSize: MusicTypography
+                                                          .subheadlineSize,
                                                     ),
                                                   ),
                                                 ],
@@ -266,8 +270,9 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.w800,
+                                          fontSize: MusicTypography.titleSize,
+                                          fontWeight:
+                                              MusicTypography.titleWeight,
                                           letterSpacing: -.5,
                                         ),
                                       ),
@@ -278,7 +283,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           color: Colors.white70,
-                                          fontSize: 18,
+                                          fontSize: MusicTypography.bodySize,
                                         ),
                                       ),
                                     ],
@@ -343,14 +348,14 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       ),
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 12,
+                                        fontSize: MusicTypography.captionSize,
                                       ),
                                     ),
                                     Text(
                                       '-${formatDuration(Duration(milliseconds: (max - value).round()))}',
                                       style: const TextStyle(
                                         color: Colors.white70,
-                                        fontSize: 12,
+                                        fontSize: MusicTypography.captionSize,
                                       ),
                                     ),
                                   ],

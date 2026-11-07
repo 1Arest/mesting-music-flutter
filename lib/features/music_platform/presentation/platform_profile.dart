@@ -19,6 +19,7 @@ import 'platform_reward_calendar.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../platform_backend_providers.dart';
 import '../netease/netease_features_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Shared current-account entry for profile and settings. It never offers a
 /// second login while the platform credential is active.
@@ -36,9 +37,9 @@ class PlatformAccountTile extends ConsumerWidget {
           horizontal: 20,
           vertical: 16,
         ),
-        titleTextStyle: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(fontSize: 19),
+        titleTextStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontSize: MusicTypography.headingSize,
+        ),
         subtitleTextStyle: Theme.of(context).textTheme.bodySmall,
         leading: PlatformAvatar(
           url: profile?.avatarUrl ?? session?.avatarUrl ?? '',
@@ -196,8 +197,8 @@ class _ProfileLink extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                        fontSize: MusicTypography.calloutSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     if (subtitle != null)
@@ -207,7 +208,7 @@ class _ProfileLink extends StatelessWidget {
                           subtitle!,
                           style: TextStyle(
                             color: tokens.textSecondary,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                           ),
                         ),
                       ),

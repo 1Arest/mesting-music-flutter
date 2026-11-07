@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../../themes/music_typography.dart';
 
 /// Small, explicitly interactive operation previews. They describe the current
 /// UI without starting playback, calling a platform service or writing accounts.
@@ -29,15 +30,15 @@ class _BetaGuidePreviewState extends State<BetaGuidePreview> {
                   title,
                   style: TextStyle(
                     color: colors.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.calloutSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: TextStyle(
                     color: colors.onSurfaceVariant,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                     height: 1.4,
                   ),
                 ),
@@ -120,8 +121,8 @@ class _BetaGuidePreviewState extends State<BetaGuidePreview> {
                 '点按预览操作',
                 style: TextStyle(
                   color: colors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],

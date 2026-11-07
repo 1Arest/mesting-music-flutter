@@ -8,6 +8,7 @@ import '../presentation/platform_design.dart';
 import '../presentation/platform_feedback.dart';
 import 'netease_fallback.dart';
 import 'netease_playback_options.dart';
+import '../../themes/music_typography.dart';
 
 class NeteaseLocalSvipBadge extends ConsumerWidget {
   const NeteaseLocalSvipBadge({this.inline = false, super.key});
@@ -29,8 +30,8 @@ class NeteaseLocalSvipBadge extends ConsumerWidget {
           '本地 SVIP',
           style: TextStyle(
             color: scheme.onPrimaryContainer,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontSize: MusicTypography.captionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       ),
@@ -150,7 +151,10 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
           const SizedBox(height: 16),
           const Text(
             '本地功能',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: MusicTypography.bodySize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const ListTile(
             contentPadding: EdgeInsets.zero,

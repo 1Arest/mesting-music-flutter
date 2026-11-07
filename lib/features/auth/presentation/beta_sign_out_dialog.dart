@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../themes/music_typography.dart';
 
 /// Keep the action visible while the credential mutation is pending. The
 /// controller publishes welcome only on success; failures stay recoverable.
@@ -46,12 +47,18 @@ class _BetaSignOutDialogState extends State<BetaSignOutDialog> {
           children: [
             const Text(
               '退出登录？',
-              style: TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(
               '云端数据会保留。退出后回到欢迎页，可选择其他登录方式或游客体验。',
-              style: TextStyle(fontSize: 14, height: 1.6),
+              style: TextStyle(
+                fontSize: MusicTypography.subheadlineSize,
+                height: 1.6,
+              ),
             ),
             if (_error != null)
               Padding(

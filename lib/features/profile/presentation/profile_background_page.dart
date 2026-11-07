@@ -8,6 +8,7 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../profile_background_controller.dart';
 import 'profile_background_visual.dart';
+import '../../themes/music_typography.dart';
 
 class ProfileBackgroundPage extends ConsumerStatefulWidget {
   const ProfileBackgroundPage({super.key});
@@ -54,8 +55,8 @@ class _ProfileBackgroundPageState extends ConsumerState<ProfileBackgroundPage> {
                     '个人主页背景',
                     style: TextStyle(
                       color: Color(0xB8FFFFFF),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.captionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                       letterSpacing: 1.1,
                     ),
                   ),
@@ -152,8 +153,8 @@ class _ProfileBackgroundPageState extends ConsumerState<ProfileBackgroundPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Color(0xFF777277),
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ],
@@ -304,8 +305,8 @@ class _BackgroundActionButton extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -351,8 +352,8 @@ class _BackgroundStyleSheet extends StatelessWidget {
               '风格创作',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
               ),
             ),
             const SizedBox(height: 4),
@@ -360,8 +361,8 @@ class _BackgroundStyleSheet extends StatelessWidget {
               '选择一套本地生成的主页背景，不会上传任何照片。',
               style: TextStyle(
                 color: Color(0xFF999399),
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: MusicTypography.captionSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
             const SizedBox(height: 18),
@@ -409,8 +410,8 @@ class _BackgroundStyleSheet extends StatelessWidget {
                                 preset.name,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
+                                  fontSize: MusicTypography.subheadlineSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                 ),
                               ),
                               Text(
@@ -419,8 +420,8 @@ class _BackgroundStyleSheet extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: Color(0xC7FFFFFF),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: MusicTypography.smallCaptionSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                 ),
                               ),
                             ],

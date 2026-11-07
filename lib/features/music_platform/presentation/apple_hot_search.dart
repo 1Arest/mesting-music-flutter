@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../data/platform_recommendations.dart';
+import '../../themes/music_typography.dart';
 
 /// Ranked keywords remain search actions. A compact editorial grid provides
 /// scanable ranks without turning words into fabricated playable songs.
@@ -54,10 +55,8 @@ class _AppleHotSearchBoardsState extends State<AppleHotSearchBoards> {
                       child: Text(
                         widget.boards[i].name,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: index == i
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontSize: MusicTypography.subheadlineSize,
+                          fontWeight: MusicTypography.bodyWeight,
                           color: index == i
                               ? theme.colorScheme.primary
                               : theme.colorScheme.onSurface,
@@ -98,8 +97,8 @@ class _AppleHotSearchBoardsState extends State<AppleHotSearchBoards> {
                                 child: Text(
                                   '${i + 1}',
                                   style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
+                                    fontSize: MusicTypography.bodySize,
+                                    fontWeight: MusicTypography.titleWeight,
                                     color: i < 3
                                         ? theme.colorScheme.primary
                                         : theme.colorScheme.onSurfaceVariant,
@@ -112,9 +111,9 @@ class _AppleHotSearchBoardsState extends State<AppleHotSearchBoards> {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 15,
+                                    fontSize: MusicTypography.subheadlineSize,
                                     height: 1.3,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: MusicTypography.bodyWeight,
                                     color: theme.colorScheme.onSurface,
                                   ),
                                 ),

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/track_artwork.dart';
 import '../presentation/platform_feedback.dart';
+import '../../queue/presentation/queue_page.dart';
+import 'qishui_player_navigation.dart';
 
 /// The music root reflects the one existing player rather than constructing a
 /// second preview player. Offscreen list work stays outside this subscription.
@@ -47,7 +48,17 @@ class QishuiNowPlaying extends ConsumerWidget {
               aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(22),
-                child: TrackArtwork(track: track, fit: BoxFit.cover),
+                child: Semantics(
+                  button: true,
+                  label: '查看歌词',
+                  child: InkWell(
+                    key: const ValueKey('qishui-music-cover'),
+                    onTap: () => ref
+                        .read(qishuiMusicLyricsProvider.notifier)
+                        .showLyrics(),
+                    child: TrackArtwork(track: track, fit: BoxFit.cover),
+                  ),
+                ),
               ),
             ),
           ),
@@ -85,8 +96,14 @@ class QishuiNowPlaying extends ConsumerWidget {
                 child: const Icon(Icons.skip_next),
               ),
               BetaGlassButton(
-                onPressed: () => context.push('/player'),
-                child: const Text('歌词与队列'),
+                onPressed: () =>
+                    ref.read(qishuiMusicLyricsProvider.notifier).showLyrics(),
+                child: const Text('歌词'),
+              ),
+              BetaGlassButton(
+                onPressed: () => showPlaybackQueueSheet(context),
+                label: '待播列表',
+                child: const Icon(Icons.queue_music_rounded),
               ),
             ],
           ),

@@ -33,6 +33,7 @@ import '../../auth/account_capabilities.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../music_platform/presentation/platform_search_landing.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
+import '../../themes/music_typography.dart';
 
 List<Track> selectedSearchPlaybackQueue(Track selectedTrack) =>
     List<Track>.unmodifiable([selectedTrack]);
@@ -494,8 +495,8 @@ class _SearchLandingState extends ConsumerState<_SearchLanding> {
                 '猜你喜欢',
                 style: TextStyle(
                   color: tokens.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontSize: MusicTypography.footnoteSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               const Spacer(),
@@ -506,8 +507,8 @@ class _SearchLandingState extends ConsumerState<_SearchLanding> {
                   key: ValueKey(artistSuggestions.source),
                   style: TextStyle(
                     color: tokens.textMuted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -535,7 +536,7 @@ class _SearchLandingState extends ConsumerState<_SearchLanding> {
                   side: BorderSide.none,
                   labelStyle: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                   ),
                   visualDensity: const VisualDensity(vertical: -3),
                 ),
@@ -654,10 +655,8 @@ class _RankingTabs extends StatelessWidget {
                       maxLines: 1,
                       style: TextStyle(
                         color: selected == type ? accent : tokens.textSecondary,
-                        fontSize: 11,
-                        fontWeight: selected == type
-                            ? FontWeight.w900
-                            : FontWeight.w700,
+                        fontSize: MusicTypography.smallCaptionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                   ),
@@ -738,15 +737,18 @@ class _RankingCard extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.calloutSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(width: 7),
                     if (badge.isNotEmpty)
                       Text(
                         badge,
-                        style: TextStyle(color: tokens.textMuted, fontSize: 10),
+                        style: TextStyle(
+                          color: tokens.textMuted,
+                          fontSize: MusicTypography.smallCaptionSize,
+                        ),
                       ),
                     const Spacer(),
                     if (onRefresh != null) ...[
@@ -774,8 +776,8 @@ class _RankingCard extends StatelessWidget {
                         ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         textStyle: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.smallCaptionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -810,7 +812,8 @@ class _RankingCard extends StatelessWidget {
                                             color: index < 3
                                                 ? const Color(0xFF4F65D1)
                                                 : tokens.textMuted,
-                                            fontSize: 12,
+                                            fontSize:
+                                                MusicTypography.captionSize,
                                           ),
                                         ),
                                       ),
@@ -821,8 +824,10 @@ class _RankingCard extends StatelessWidget {
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize:
+                                                MusicTypography.footnoteSize,
+                                            fontWeight:
+                                                MusicTypography.bodyWeight,
                                           ),
                                         ),
                                       ),
@@ -845,8 +850,10 @@ class _RankingCard extends StatelessWidget {
                                             leaderBadge!,
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.w900,
+                                              fontSize: MusicTypography
+                                                  .smallCaptionSize,
+                                              fontWeight:
+                                                  MusicTypography.bodyWeight,
                                             ),
                                           ),
                                         ),
@@ -996,7 +1003,10 @@ class _RankingLoadingRows extends StatelessWidget {
                 child: Text(
                   '${index + 1}',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: tokens.textMuted, fontSize: 12),
+                  style: TextStyle(
+                    color: tokens.textMuted,
+                    fontSize: MusicTypography.captionSize,
+                  ),
                 ),
               ),
               const SizedBox(width: 7),
@@ -1053,9 +1063,9 @@ class _RankingEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: tokens.textSecondary,
-                fontSize: 12,
+                fontSize: MusicTypography.captionSize,
                 height: 1.5,
-                fontWeight: FontWeight.w700,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ],
@@ -1375,13 +1385,13 @@ class _NeteaseArtistResult extends StatelessWidget {
                       query: query,
                       baseStyle: TextStyle(
                         color: accent,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                       highlightStyle: TextStyle(
                         color: accent,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.bodySize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1391,8 +1401,8 @@ class _NeteaseArtistResult extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.captionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -1456,13 +1466,13 @@ class _NeteaseTrackResult extends ConsumerWidget {
                     query: query,
                     baseStyle: TextStyle(
                       color: titleColor,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                     highlightStyle: TextStyle(
                       color: accent,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -1479,8 +1489,8 @@ class _NeteaseTrackResult extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: favorite ? accent : tokens.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.captionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ),
@@ -1562,13 +1572,13 @@ class _NeteaseSuggestionRow extends StatelessWidget {
                     query: query,
                     baseStyle: TextStyle(
                       color: tokens.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                     highlightStyle: TextStyle(
                       color: accent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -1730,10 +1740,8 @@ class _SearchResultTabs extends StatelessWidget {
                           color: selected == category
                               ? accent
                               : tokens.textSecondary,
-                          fontSize: 14,
-                          fontWeight: selected == category
-                              ? FontWeight.w900
-                              : FontWeight.w700,
+                          fontSize: MusicTypography.subheadlineSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                       if (selected == category)
@@ -1826,7 +1834,7 @@ class _SearchUserRowState extends ConsumerState<_SearchUserRow> {
         user.displayName,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w900),
+        style: const TextStyle(fontWeight: MusicTypography.titleWeight),
       ),
       subtitle: Text(
         user.bio.trim().isEmpty ? '${user.followerCount} 粉丝' : user.bio,
@@ -1937,7 +1945,7 @@ class _TrackResults extends ConsumerWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontWeight: FontWeight.w900,
+                fontWeight: MusicTypography.titleWeight,
                 color: active ? favoriteAccent : null,
               ),
             ),
@@ -2023,9 +2031,9 @@ class _SearchQueueButton extends StatelessWidget {
               '+',
               style: TextStyle(
                 color: accent,
-                fontSize: 27,
+                fontSize: MusicTypography.titleSize,
                 height: 1,
-                fontWeight: FontWeight.w400,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),
@@ -2056,12 +2064,18 @@ class _SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+              fontSize: MusicTypography.bodySize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
         ),
         Text(
           suffix == null ? '$count $unit' : '$count $unit · $suffix',
-          style: TextStyle(color: tokens.textSecondary, fontSize: 11),
+          style: TextStyle(
+            color: tokens.textSecondary,
+            fontSize: MusicTypography.smallCaptionSize,
+          ),
         ),
       ],
     );

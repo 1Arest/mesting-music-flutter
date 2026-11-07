@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../player/player_visual_style.dart';
+import '../../themes/music_typography.dart';
 
 /// Five bounded live drawings use one local repaint clock. They preview the
 /// real stage vocabulary without five audio owners or full-screen shaders.
@@ -88,10 +89,10 @@ class _BetaPlayerStylePreviewsState
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: MusicTypography.smallCaptionSize,
                             height: 1.25,
                             color: ink,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                         const SizedBox(height: 5),

@@ -1,3 +1,4 @@
+import '../../themes/music_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -169,8 +170,8 @@ class _QishuiPlaylistBatchPageState
                         const Text(
                           '批量管理',
                           style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                            fontSize: MusicTypography.sectionTitleSize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                         Row(children: [selectAll, const Spacer(), done]),
@@ -184,8 +185,8 @@ class _QishuiPlaylistBatchPageState
                             '批量管理',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
+                              fontSize: MusicTypography.sectionTitleSize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                         ),

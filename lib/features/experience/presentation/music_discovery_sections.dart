@@ -19,6 +19,7 @@ import '../../music_platform/presentation/platform_search_landing.dart'
 import '../../music_platform/presentation/retained_platform_snapshot.dart';
 import 'editorial_widgets.dart';
 import 'music_home_catalogues.dart';
+import '../../themes/music_typography.dart';
 
 /// The first shelf groups actual listening modes, rather than substituting a
 /// local favorites list for a platform recommendation. Each card subscribes to
@@ -208,15 +209,18 @@ class _ModeFallback extends StatelessWidget {
                   const Spacer(),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: MusicTypography.footnoteSize,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     title,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 23,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
                     ),
                   ),
                 ],

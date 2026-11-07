@@ -8,6 +8,7 @@ import 'music_page_transition.dart';
 import '../../experience/presentation/beta_bottom_bar.dart';
 import '../../../core/platform/distribution_channel.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import '../../themes/music_typography.dart';
 
 const double musicBottomNavigationContentHeight = 64;
 const double betaMusicBottomNavigationContentHeight = 84;
@@ -392,8 +393,8 @@ class _RailNavItem extends StatelessWidget {
                   label,
                   style: TextStyle(
                     color: color,
-                    fontSize: 10,
-                    fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -450,8 +451,8 @@ class _BottomNavItem extends StatelessWidget {
                 duration: const Duration(milliseconds: 260),
                 style: TextStyle(
                   color: color,
-                  fontSize: 10,
-                  fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
                 child: Text(label),
               ),

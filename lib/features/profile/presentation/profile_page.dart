@@ -37,6 +37,7 @@ import '../../../shared/widgets/music_notice.dart';
 import '../profile_background_controller.dart';
 import 'profile_background_visual.dart';
 import 'social_status_sheet.dart';
+import '../../themes/music_typography.dart';
 
 void openMyPlaylistsFromProfile(BuildContext context) {
   context.push(
@@ -542,8 +543,8 @@ class _ProfileCreateSheet extends StatelessWidget {
                             '快速创建',
                             style: TextStyle(
                               color: tokens.textPrimary,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
+                              fontSize: MusicTypography.sectionTitleSize,
+                              fontWeight: MusicTypography.titleWeight,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -551,8 +552,8 @@ class _ProfileCreateSheet extends StatelessWidget {
                             '把喜欢的声音整理成自己的音乐空间',
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.smallCaptionSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                         ],
@@ -608,8 +609,8 @@ class _ProfileCreateSheet extends StatelessWidget {
                                   '创建音乐歌单',
                                   style: TextStyle(
                                     color: tokens.textPrimary,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -617,8 +618,8 @@ class _ProfileCreateSheet extends StatelessWidget {
                                   '自定义名称、描述和封面',
                                   style: TextStyle(
                                     color: tokens.textSecondary,
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: MusicTypography.smallCaptionSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                               ],
@@ -719,8 +720,8 @@ class _GuestProfile extends StatelessWidget {
                           'MESTING ACCOUNT',
                           style: TextStyle(
                             color: tokens.textSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             letterSpacing: 1.45,
                           ),
                         ),
@@ -739,8 +740,8 @@ class _GuestProfile extends StatelessWidget {
                             '访客模式',
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
+                              fontSize: MusicTypography.smallCaptionSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                         ),
@@ -820,8 +821,8 @@ class _GuestProfile extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                         letterSpacing: -.35,
                       ),
                     ),
@@ -832,8 +833,8 @@ class _GuestProfile extends StatelessWidget {
                       style: TextStyle(
                         color: tokens.textSecondary,
                         height: 1.55,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontSize: MusicTypography.captionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -856,8 +857,8 @@ class _GuestProfile extends StatelessWidget {
                         label: const Text(
                           '登录或创建账号',
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.subheadlineSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ),
@@ -878,8 +879,8 @@ class _GuestProfile extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: tokens.textMuted,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.smallCaptionSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                         ),
@@ -898,8 +899,8 @@ class _GuestProfile extends StatelessWidget {
             '登录后解锁',
             style: TextStyle(
               color: tokens.textPrimary,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
+              fontSize: MusicTypography.captionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -937,8 +938,8 @@ class _GuestProfile extends StatelessWidget {
             '暂不登录也可以继续发现和播放音乐',
             style: TextStyle(
               color: tokens.textMuted,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
             ),
           ),
         ),
@@ -999,8 +1000,8 @@ class _GuestBenefitTile extends StatelessWidget {
         title,
         style: TextStyle(
           color: tokens.textPrimary,
-          fontSize: 13.5,
-          fontWeight: FontWeight.w800,
+          fontSize: MusicTypography.footnoteSize,
+          fontWeight: MusicTypography.bodyWeight,
         ),
       ),
       subtitle: Text(
@@ -1009,7 +1010,7 @@ class _GuestBenefitTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: tokens.textSecondary,
-          fontSize: 10,
+          fontSize: MusicTypography.smallCaptionSize,
           height: 1.35,
         ),
       ),
@@ -1122,8 +1123,9 @@ class _SignedInHero extends StatelessWidget {
                                       'PERSONAL SOUNDSPACE',
                                       style: TextStyle(
                                         color: Color(0xC7FFFFFF),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w900,
+                                        fontSize:
+                                            MusicTypography.smallCaptionSize,
+                                        fontWeight: MusicTypography.bodyWeight,
                                         letterSpacing: 1.65,
                                       ),
                                     ),
@@ -1134,8 +1136,8 @@ class _SignedInHero extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         color: foreground,
-                                        fontSize: 27,
-                                        fontWeight: FontWeight.w900,
+                                        fontSize: MusicTypography.titleSize,
+                                        fontWeight: MusicTypography.titleWeight,
                                         letterSpacing: -.55,
                                         shadows: [
                                           Shadow(
@@ -1152,7 +1154,7 @@ class _SignedInHero extends StatelessWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
                                         color: secondary,
-                                        fontSize: 11.5,
+                                        fontSize: MusicTypography.captionSize,
                                         height: 1.38,
                                       ),
                                     ),
@@ -1230,8 +1232,8 @@ class _ProfileDashboard extends StatelessWidget {
                       'YOUR MUSIC SPACE',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.smallCaptionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -1240,8 +1242,8 @@ class _ProfileDashboard extends StatelessWidget {
                       '我的音乐空间',
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                         letterSpacing: -.35,
                       ),
                     ),
@@ -1252,8 +1254,8 @@ class _ProfileDashboard extends StatelessWidget {
                 '把收藏、足迹与关系放在一起',
                 style: TextStyle(
                   color: tokens.textMuted,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],
@@ -1404,8 +1406,8 @@ class _ProfileDashboardCard extends StatelessWidget {
                           item.eyebrow,
                           style: TextStyle(
                             color: item.color,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             letterSpacing: 1.15,
                           ),
                         ),
@@ -1416,8 +1418,8 @@ class _ProfileDashboardCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: tokens.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.subheadlineSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -1428,9 +1430,9 @@ class _ProfileDashboardCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 9.5,
+                              fontSize: MusicTypography.smallCaptionSize,
                               height: 1.3,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                         ),
@@ -1475,8 +1477,8 @@ class _ProfileUnreadBadge extends StatelessWidget {
         socialAttentionUnreadLabel(count),
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
+          fontSize: MusicTypography.smallCaptionSize,
+          fontWeight: MusicTypography.bodyWeight,
           height: 1,
         ),
       ),

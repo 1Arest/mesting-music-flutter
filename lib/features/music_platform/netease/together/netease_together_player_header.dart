@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../messages/netease_messages_page.dart';
 import '../messages/netease_messages_repository.dart';
 import 'netease_together_controller.dart';
+import '../../../themes/music_typography.dart';
 
 Future<void> requestTogetherLocation(
   BuildContext context,
@@ -13,18 +14,18 @@ Future<void> requestTogetherLocation(
   final accepted = await showCupertinoDialog<bool>(
     context: context,
     builder: (c) => CupertinoAlertDialog(
-      title: const Text('开启位置查看距离'),
+      title: const Text('开启位置查看距离', style: MusicTypography.titleEmphasis),
       content: const Text(
         '本次位置会发送给网易云，用于计算你与房间好友的距离。只在你主动操作时获取，不在后台持续定位。双方开启后才能显示距离，可随时在房间面板关闭共享。',
       ),
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(c, false),
-          child: const Text('暂不开启'),
+          child: const Text('暂不开启', style: MusicTypography.regularText),
         ),
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(c, true),
-          child: const Text('开启位置'),
+          child: const Text('开启位置', style: MusicTypography.regularText),
         ),
       ],
     ),
@@ -113,13 +114,19 @@ class _TogetherHeaderState extends ConsumerState<NeteaseTogetherPlayerHeader> {
               if (peer == null)
                 Text(
                   '等待朋友加入',
-                  style: TextStyle(color: widget.foreground, fontSize: 14),
+                  style: TextStyle(
+                    color: widget.foreground,
+                    fontSize: MusicTypography.subheadlineSize,
+                  ),
                 )
               else if (controller.error != null)
                 Text(
                   '连接暂时中断，正在重连',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: widget.foreground, fontSize: 13),
+                  style: TextStyle(
+                    color: widget.foreground,
+                    fontSize: MusicTypography.footnoteSize,
+                  ),
                 )
               else
                 _TogetherElapsed(
@@ -148,14 +155,19 @@ class _TogetherHeaderState extends ConsumerState<NeteaseTogetherPlayerHeader> {
                       ? controller.distance.label
                       : '开启位置查看距离',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(
+                    fontSize: MusicTypography.footnoteSize,
+                  ),
                 ),
               ),
               if (controller.presenceNotice != null)
                 Text(
                   controller.presenceNotice!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: widget.foreground, fontSize: 12),
+                  style: TextStyle(
+                    color: widget.foreground,
+                    fontSize: MusicTypography.captionSize,
+                  ),
                 ),
             ],
           ),
@@ -217,7 +229,10 @@ class _TogetherElapsedState extends State<_TogetherElapsed> {
     return Text(
       widget.controller.togetherDurationLabel,
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 14, color: widget.foreground),
+      style: TextStyle(
+        fontSize: MusicTypography.subheadlineSize,
+        color: widget.foreground,
+      ),
     );
   }
 }

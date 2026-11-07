@@ -14,6 +14,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../domain/legal_documents.dart';
 import 'legal_documents_page.dart';
 import '../../player/presentation/music_page_transition.dart';
+import '../../themes/music_typography.dart';
 
 const disclaimerAcceptedPreferenceKey = 'mesting_disclaimer_accepted_v1';
 const disclaimerReadPreferenceKey = 'mesting_disclaimer_read_v1';
@@ -216,8 +217,8 @@ class _TimedDisclaimerSheetState extends State<_TimedDisclaimerSheet> {
                           '用户协议与隐私政策',
                           style: TextStyle(
                             color: tokens.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.sectionTitleSize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -225,7 +226,7 @@ class _TimedDisclaimerSheetState extends State<_TimedDisclaimerSheet> {
                           '请了解服务规则与数据处理方式',
                           style: TextStyle(
                             color: tokens.textSecondary,
-                            fontSize: 12,
+                            fontSize: MusicTypography.captionSize,
                           ),
                         ),
                       ],
@@ -252,7 +253,7 @@ class _TimedDisclaimerSheetState extends State<_TimedDisclaimerSheet> {
                       '继续前，请分别查看以下文件。阅读后返回本页确认即可；不同意时可关闭并停止登录或注册。',
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                         height: 1.6,
                       ),
                     ),
@@ -466,15 +467,18 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
                       '使用前请先了解',
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
                         letterSpacing: -.4,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '请分别阅读并确认两份法律文件',
-                      style: TextStyle(color: tokens.textMuted, fontSize: 11),
+                      style: TextStyle(
+                        color: tokens.textMuted,
+                        fontSize: MusicTypography.smallCaptionSize,
+                      ),
                     ),
                   ],
                 ),
@@ -497,7 +501,7 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
                   '为提供账号、音乐同步与社交服务，我们需要按《隐私政策》处理必要的信息；使用服务还应遵守《用户协议》。不同意时，你可以退出应用。',
                   style: TextStyle(
                     color: tokens.textSecondary,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                     height: 1.6,
                   ),
                 ),
@@ -542,7 +546,10 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
               Text(
                 '之后可在“设置 > 隐私与协议”中再次查看',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: tokens.textMuted, fontSize: 9),
+                style: TextStyle(
+                  color: tokens.textMuted,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
             ],
           ),
@@ -575,14 +582,17 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
                       document.title,
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.headingSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       document.effectiveDate,
-                      style: TextStyle(color: tokens.textMuted, fontSize: 10),
+                      style: TextStyle(
+                        color: tokens.textMuted,
+                        fontSize: MusicTypography.smallCaptionSize,
+                      ),
                     ),
                   ],
                 ),
@@ -633,8 +643,8 @@ class _TimedLegalDocumentLink extends StatelessWidget {
                       '查看《${document.title}》',
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.footnoteSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -642,7 +652,7 @@ class _TimedLegalDocumentLink extends StatelessWidget {
                       document.summary,
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 10,
+                        fontSize: MusicTypography.smallCaptionSize,
                         height: 1.45,
                       ),
                     ),
@@ -707,8 +717,8 @@ class _LegalConsentChoice extends StatelessWidget {
                         '我已阅读并同意《${document.title}》',
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontSize: MusicTypography.footnoteSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -716,7 +726,7 @@ class _LegalConsentChoice extends StatelessWidget {
                         document.summary,
                         style: TextStyle(
                           color: tokens.textSecondary,
-                          fontSize: 10,
+                          fontSize: MusicTypography.smallCaptionSize,
                           height: 1.45,
                         ),
                       ),
@@ -805,8 +815,8 @@ class _DisclaimerCard extends StatelessWidget {
                             requiredAcceptance ? '使用前请先了解' : '免责声明',
                             style: TextStyle(
                               color: tokens.textPrimary,
-                              fontSize: 21,
-                              fontWeight: FontWeight.w900,
+                              fontSize: MusicTypography.sectionTitleSize,
+                              fontWeight: MusicTypography.titleWeight,
                               letterSpacing: -.4,
                             ),
                           ),
@@ -815,7 +825,7 @@ class _DisclaimerCard extends StatelessWidget {
                             '关于在线音乐、版权与账号数据',
                             style: TextStyle(
                               color: tokens.textMuted,
-                              fontSize: 11,
+                              fontSize: MusicTypography.smallCaptionSize,
                             ),
                           ),
                         ],
@@ -882,7 +892,10 @@ class _DisclaimerCard extends StatelessWidget {
                       Text(
                         '之后可在左上角菜单的“免责声明”中再次查看',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: tokens.textMuted, fontSize: 9),
+                        style: TextStyle(
+                          color: tokens.textMuted,
+                          fontSize: MusicTypography.smallCaptionSize,
+                        ),
                       ),
                     ],
                   ],
@@ -917,9 +930,9 @@ class _DisclaimerIntro extends StatelessWidget {
         '继续使用即表示你已了解以下内容，并同意仅在合法、个人体验的范围内使用本应用。',
         style: TextStyle(
           color: tokens.textSecondary,
-          fontSize: 11,
+          fontSize: MusicTypography.smallCaptionSize,
           height: 1.55,
-          fontWeight: FontWeight.w700,
+          fontWeight: MusicTypography.bodyWeight,
         ),
       ),
     );
@@ -960,8 +973,8 @@ class _DisclaimerItem extends StatelessWidget {
               number,
               style: TextStyle(
                 color: marker,
-                fontSize: 9,
-                fontWeight: FontWeight.w900,
+                fontSize: MusicTypography.smallCaptionSize,
+                fontWeight: MusicTypography.bodyWeight,
                 letterSpacing: .5,
               ),
             ),
@@ -975,8 +988,8 @@ class _DisclaimerItem extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -984,7 +997,7 @@ class _DisclaimerItem extends StatelessWidget {
                   content,
                   style: TextStyle(
                     color: tokens.textSecondary,
-                    fontSize: 10,
+                    fontSize: MusicTypography.smallCaptionSize,
                     height: 1.55,
                   ),
                 ),
@@ -1144,8 +1157,8 @@ class _DisclaimerActionContent extends StatelessWidget {
           label,
           style: TextStyle(
             color: color,
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.footnoteSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
         if (icon case final icon?) ...[

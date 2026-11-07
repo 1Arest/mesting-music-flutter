@@ -22,6 +22,7 @@ import 'netease_features_repository.dart';
 import 'netease_user_page.dart';
 import 'netease_user_providers.dart';
 import 'netease_user_repository.dart';
+import '../../themes/music_typography.dart';
 
 /// Entry point from the My-page official counters. Pass the qualified owner ID
 /// (`netease:<userId>`), never a token or an entire session in route arguments.
@@ -212,8 +213,8 @@ class _NeteasePersonalConnectionsPageState
       count == null ? title : '$title $count',
       style: TextStyle(
         color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 16,
-        fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        fontSize: MusicTypography.calloutSize,
+        fontWeight: MusicTypography.bodyWeight,
       ),
     ),
   );
@@ -245,7 +246,7 @@ class _NeteasePersonalConnectionsPageState
                                 NeteaseConnectionFilter.users => '用户',
                               },
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: MusicTypography.footnoteSize,
                                 color: scheme.onSurface,
                               ),
                             ),
@@ -280,7 +281,7 @@ class _NeteasePersonalConnectionsPageState
                       _sortLabel(controller.sort),
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 13,
+                        fontSize: MusicTypography.footnoteSize,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -320,7 +321,7 @@ class _NeteasePersonalConnectionsPageState
                           : '已加载 ${controller.items.length} 个条目，${controller.busy ? '正在补齐完整列表' : '列表尚未完整'}',
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
-                        fontSize: 12,
+                        fontSize: MusicTypography.captionSize,
                       ),
                     ),
                   ),
@@ -400,7 +401,7 @@ class _NeteasePersonalConnectionsPageState
       context: context,
       requestFocus: false,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('列表排序'),
+        title: const Text('列表排序', style: MusicTypography.titleEmphasis),
         message: Text(
           controller.canSortByTime
               ? '关注时间按最新在前排列'
@@ -411,12 +412,15 @@ class _NeteasePersonalConnectionsPageState
             CupertinoActionSheetAction(
               isDefaultAction: value == controller.sort,
               onPressed: () => Navigator.pop(context, value),
-              child: Text(_sortLabel(value)),
+              child: Text(
+                _sortLabel(value),
+                style: MusicTypography.regularText,
+              ),
             ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: const Text('取消', style: MusicTypography.regularText),
         ),
       ),
     );
@@ -495,8 +499,8 @@ class _ConnectionRow extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: MusicTypography.calloutSize,
+                              fontWeight: MusicTypography.bodyWeight,
                             ),
                           ),
                           if (connection.description.isNotEmpty) ...[
@@ -507,7 +511,7 @@ class _ConnectionRow extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: scheme.onSurfaceVariant,
-                                fontSize: 12,
+                                fontSize: MusicTypography.captionSize,
                               ),
                             ),
                           ],
@@ -553,17 +557,26 @@ class _ArtistRelationButton extends ConsumerWidget {
                 final confirmed = await showCupertinoDialog<bool>(
                   context: context,
                   builder: (context) => CupertinoAlertDialog(
-                    title: const Text('取消关注歌手？'),
+                    title: const Text(
+                      '取消关注歌手？',
+                      style: MusicTypography.titleEmphasis,
+                    ),
                     content: Text('将不再关注${connection.name}。'),
                     actions: [
                       CupertinoDialogAction(
                         onPressed: () => Navigator.pop(context, false),
-                        child: const Text('保留关注'),
+                        child: const Text(
+                          '保留关注',
+                          style: MusicTypography.regularText,
+                        ),
                       ),
                       CupertinoDialogAction(
                         isDestructiveAction: true,
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('取消关注'),
+                        child: const Text(
+                          '取消关注',
+                          style: MusicTypography.regularText,
+                        ),
                       ),
                     ],
                   ),
@@ -596,8 +609,8 @@ class _ArtistRelationButton extends ConsumerWidget {
           : Text(
               subscribed ? '已关注' : '关注',
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: MusicTypography.footnoteSize,
+                fontWeight: MusicTypography.bodyWeight,
                 color: subscribed ? scheme.onSurface : scheme.onPrimary,
               ),
             ),

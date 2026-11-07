@@ -24,6 +24,7 @@ import 'theme_follow_icons.dart';
 import 'theme_controller.dart';
 import 'music_theme_tokens.dart';
 import 'startup_style_picker.dart';
+import 'music_typography.dart';
 
 // This shared gallery keeps the formal channel's original control tint.
 Color _galleryActionTint(BuildContext context) => DistributionChannel.isBeta
@@ -424,7 +425,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: tokens.textMuted,
-                          fontSize: 11,
+                          fontSize: MusicTypography.smallCaptionSize,
                           height: 1.5,
                         ),
                       ),
@@ -508,9 +509,9 @@ class _PanelHeader extends StatelessWidget {
             '装扮',
             style: TextStyle(
               color: tokens.textPrimary,
-              fontSize: 25,
+              fontSize: MusicTypography.titleSize,
               height: 1.1,
-              fontWeight: FontWeight.w900,
+              fontWeight: MusicTypography.titleWeight,
               letterSpacing: -.7,
             ),
           ),
@@ -521,7 +522,7 @@ class _PanelHeader extends StatelessWidget {
                 : '选择播放器、背景与进度角色，装扮你的音乐空间。',
             style: TextStyle(
               color: tokens.textSecondary,
-              fontSize: 12,
+              fontSize: MusicTypography.captionSize,
               height: 1.45,
             ),
           ),
@@ -613,8 +614,8 @@ class _ThemePreview extends StatelessWidget {
                       color: preset.ip == MusicThemeIp.classic
                           ? (effectivePreset.dark ? Colors.white : Colors.black)
                           : Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.bodySize,
+                      fontWeight: MusicTypography.titleWeight,
                       shadows: [Shadow(color: Colors.black38, blurRadius: 8)],
                     ),
                   ),
@@ -629,7 +630,7 @@ class _ThemePreview extends StatelessWidget {
                                 ? Colors.white70
                                 : Colors.black54)
                           : Colors.white70,
-                      fontSize: 11,
+                      fontSize: MusicTypography.smallCaptionSize,
                     ),
                   ),
                 ],
@@ -661,8 +662,8 @@ class _ThemePreview extends StatelessWidget {
                       color: effectivePreset.dark
                           ? Colors.white
                           : Colors.black87,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -729,8 +730,8 @@ class _ClassicThemePreview extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: foreground,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.calloutSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -738,7 +739,10 @@ class _ClassicThemePreview extends StatelessWidget {
                     preset.caption,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: supporting, fontSize: 11),
+                    style: TextStyle(
+                      color: supporting,
+                      fontSize: MusicTypography.smallCaptionSize,
+                    ),
                   ),
                 ],
               ),
@@ -755,8 +759,8 @@ class _ClassicThemePreview extends StatelessWidget {
                 status,
                 style: TextStyle(
                   color: foreground,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),
@@ -783,8 +787,8 @@ class _SettingsHeading extends StatelessWidget {
           title,
           style: TextStyle(
             color: tokens.textPrimary,
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.bodySize,
+            fontWeight: MusicTypography.titleWeight,
           ),
         ),
         const SizedBox(height: 3),
@@ -792,7 +796,7 @@ class _SettingsHeading extends StatelessWidget {
           description,
           style: TextStyle(
             color: tokens.textSecondary,
-            fontSize: 11,
+            fontSize: MusicTypography.smallCaptionSize,
             height: 1.4,
           ),
         ),
@@ -896,8 +900,8 @@ class _BrandStyleCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.captionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -1050,8 +1054,8 @@ class _PlayerStyleCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.captionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -1064,7 +1068,10 @@ class _PlayerStyleCard extends StatelessWidget {
                   style.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: tokens.textMuted, fontSize: 9.5),
+                  style: TextStyle(
+                    color: tokens.textMuted,
+                    fontSize: MusicTypography.smallCaptionSize,
+                  ),
                 ),
               ],
             ),
@@ -1240,8 +1247,8 @@ class _IpCategoryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1251,9 +1258,9 @@ class _IpCategoryCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: tokens.textMuted,
-                        fontSize: 8.5,
+                        fontSize: MusicTypography.smallCaptionSize,
                         height: 1.12,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: MusicTypography.bodyWeight,
                         letterSpacing: .8,
                       ),
                     ),
@@ -1356,7 +1363,10 @@ class _PresetGroup extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+              style: const TextStyle(
+                fontSize: MusicTypography.subheadlineSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -1364,12 +1374,18 @@ class _PresetGroup extends StatelessWidget {
                 description,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: tokens.textMuted, fontSize: 10),
+                style: TextStyle(
+                  color: tokens.textMuted,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
             ),
             Text(
               '${presets.length} 套',
-              style: TextStyle(color: tokens.textMuted, fontSize: 11),
+              style: TextStyle(
+                color: tokens.textMuted,
+                fontSize: MusicTypography.smallCaptionSize,
+              ),
             ),
           ],
         ),
@@ -1549,8 +1565,8 @@ class _ThemeModePresetCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: foreground,
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -1562,8 +1578,8 @@ class _ThemeModePresetCard extends StatelessWidget {
                   },
                   style: TextStyle(
                     color: foreground.withValues(alpha: .62),
-                    fontSize: 8.5,
-                    fontWeight: FontWeight.w700,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -1634,8 +1650,8 @@ class _IllustratedPresetCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -1728,13 +1744,16 @@ class _ShinchanWeatherPicker extends ConsumerWidget {
     children: [
       const Text(
         '小新天气',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          fontSize: MusicTypography.calloutSize,
+          fontWeight: MusicTypography.bodyWeight,
+        ),
       ),
       const SizedBox(height: 5),
       Text(
         '手动选择，重启后保留。',
         style: TextStyle(
-          fontSize: 13,
+          fontSize: MusicTypography.footnoteSize,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
@@ -1852,8 +1871,8 @@ class _DecorationChoice extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: tokens.textPrimary,
-                    fontSize: 12,
-                    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -1971,8 +1990,8 @@ class _SettingsAction extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.footnoteSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ],
@@ -2013,8 +2032,8 @@ class _VisualControls extends StatelessWidget {
                   '${(visual.backgroundStrength * 100).round()}%',
                   style: const TextStyle(
                     color: Color(0xFF6C80EA),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.footnoteSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -2077,14 +2096,18 @@ class _SettingLabel extends StatelessWidget {
           title,
           style: TextStyle(
             color: tokens.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.subheadlineSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           description,
-          style: TextStyle(color: tokens.textMuted, fontSize: 10, height: 1.35),
+          style: TextStyle(
+            color: tokens.textMuted,
+            fontSize: MusicTypography.smallCaptionSize,
+            height: 1.35,
+          ),
         ),
       ],
     );
@@ -2209,8 +2232,9 @@ class _PerformancePicker extends StatelessWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: tokens.textPrimary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize:
+                                          MusicTypography.smallCaptionSize,
+                                      fontWeight: MusicTypography.bodyWeight,
                                     ),
                                   ),
                                 ),

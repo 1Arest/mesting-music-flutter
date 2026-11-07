@@ -19,6 +19,7 @@ import 'audiobook_models.dart';
 import 'audiobook_playback.dart';
 import 'audiobook_repository.dart';
 import 'audiobook_resume.dart';
+import '../themes/music_typography.dart';
 
 class AudiobooksPage extends ConsumerStatefulWidget {
   const AudiobooksPage({super.key});
@@ -226,7 +227,8 @@ class _AudiobooksPageState extends ConsumerState<AudiobooksPage> {
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
+                                                fontWeight:
+                                                    MusicTypography.titleWeight,
                                               ),
                                             ),
                                             const SizedBox(height: 5),
@@ -355,7 +357,7 @@ class _AudiobooksPageState extends ConsumerState<AudiobooksPage> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                fontWeight: FontWeight.w700,
+                                fontWeight: MusicTypography.titleWeight,
                                 height: 1.3,
                               ),
                             ),
@@ -606,7 +608,7 @@ class _AudiobookAlbumPageState extends ConsumerState<AudiobookAlbumPage> {
                               _album.name,
                               style: Theme.of(context).textTheme.titleLarge
                                   ?.copyWith(
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: MusicTypography.titleWeight,
                                     height: 1.3,
                                   ),
                             ),
@@ -718,9 +720,7 @@ class _AudiobookAlbumPageState extends ConsumerState<AudiobookAlbumPage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontWeight: selected
-                            ? FontWeight.w800
-                            : FontWeight.w600,
+                        fontWeight: MusicTypography.titleWeight,
                         color: selected
                             ? Theme.of(context).colorScheme.primary
                             : null,

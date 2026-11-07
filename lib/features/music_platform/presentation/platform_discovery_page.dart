@@ -26,6 +26,7 @@ import '../platform_catalog_providers.dart';
 import 'platform_design.dart';
 import 'retained_platform_snapshot.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 /// The incumbent Mesting shell with live upstream content. Each section owns
 /// its loading/error state; a failed playlist request cannot hide valid songs.
@@ -171,12 +172,12 @@ class _TrackList extends ConsumerWidget {
         contentPadding: const EdgeInsets.symmetric(vertical: 6),
         titleTextStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
           color: context.musicThemeTokens.textPrimary,
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
+          fontSize: MusicTypography.subheadlineSize,
+          fontWeight: MusicTypography.bodyWeight,
         ),
         subtitleTextStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: context.musicThemeTokens.textSecondary,
-          fontSize: 12,
+          fontSize: MusicTypography.captionSize,
           height: 1.6,
         ),
         leading: ClipRRect(

@@ -40,6 +40,7 @@ import 'now_playing_transition.dart';
 import 'vinyl_disc.dart';
 import '../../experience/presentation/cover_player_page.dart';
 import '../../experience/presentation/beta_now_playing_page.dart';
+import '../../themes/music_typography.dart';
 
 const nowPlayingTonearmAsset = 'assets/images/player/netease-style-tonearm.png';
 const nowPlayingTonearmPlayingTurns = 0.0;
@@ -484,18 +485,17 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                                                               .ellipsis,
                                                           textAlign:
                                                               TextAlign.center,
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Colors
-                                                                    .white,
-                                                                fontSize: 26,
-                                                                height: 1.15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w900,
-                                                                letterSpacing:
-                                                                    -.8,
-                                                              ),
+                                                          style: const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize:
+                                                                MusicTypography
+                                                                    .titleSize,
+                                                            height: 1.15,
+                                                            fontWeight:
+                                                                MusicTypography
+                                                                    .titleWeight,
+                                                            letterSpacing: -.8,
+                                                          ),
                                                         ),
                                                         const SizedBox(
                                                           height: 7,
@@ -507,16 +507,17 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                                                               .ellipsis,
                                                           textAlign:
                                                               TextAlign.center,
-                                                          style:
-                                                              const TextStyle(
-                                                                color: Color(
-                                                                  0xBFFFFFFF,
-                                                                ),
-                                                                fontSize: 13,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                              ),
+                                                          style: const TextStyle(
+                                                            color: Color(
+                                                              0xBFFFFFFF,
+                                                            ),
+                                                            fontSize:
+                                                                MusicTypography
+                                                                    .footnoteSize,
+                                                            fontWeight:
+                                                                MusicTypography
+                                                                    .bodyWeight,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
@@ -667,8 +668,8 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.calloutSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             shadows: [
                               Shadow(
                                 color: Color(0x8A000000),
@@ -686,8 +687,8 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Color(0xBFFFFFFF),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             shadows: [
                               Shadow(color: Color(0x80000000), blurRadius: 8),
                             ],
@@ -902,8 +903,8 @@ class _ListenTogetherPlayerChipState extends State<_ListenTogetherPlayerChip> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.smallCaptionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),

@@ -7,6 +7,7 @@ import '../../music_platform/music_platform_providers.dart';
 import 'mesting_music_companions.dart';
 import 'beta_player_style_previews.dart';
 import 'beta_guide_preview.dart';
+import '../../themes/music_typography.dart';
 
 /// Content is deliberately grounded in the Beta's current capabilities.
 /// Demonstrations never write to cloud accounts or start a second player.
@@ -168,8 +169,8 @@ class BetaOnboardingPageState extends ConsumerState<BetaOnboardingPage>
                             child: Text(
                               'Mesting Music',
                               style: TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w800,
+                                fontSize: MusicTypography.headingSize,
+                                fontWeight: MusicTypography.titleWeight,
                                 color: Color(0xFFDE5757),
                               ),
                             ),
@@ -339,9 +340,9 @@ class _GuideContent extends ConsumerWidget {
                 index == 3 && platform == null ? '账号与收藏' : page.title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 25,
+                  fontSize: MusicTypography.titleSize,
                   height: 1.2,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 16),
@@ -349,7 +350,7 @@ class _GuideContent extends ConsumerWidget {
                 body,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: MusicTypography.subheadlineSize,
                   height: 1.65,
                   color: Theme.of(
                     context,
@@ -392,9 +393,8 @@ class _GuideContent extends ConsumerWidget {
                       Chip(
                         label: Text(
                           tag,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.labelSmall?.copyWith(fontSize: 12),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(fontSize: MusicTypography.captionSize),
                         ),
                         side: BorderSide.none,
                         backgroundColor: const Color(

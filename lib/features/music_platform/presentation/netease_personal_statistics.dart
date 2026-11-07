@@ -11,6 +11,7 @@ import '../netease/footprint/official_footprint.dart';
 import '../netease/footprint/official_footprint_providers.dart';
 import '../netease/footprint/official_footprint_reader.dart';
 import '../netease/footprint/listening_footprint_page.dart';
+import '../../themes/music_typography.dart';
 
 /// Small independent subscription boundary: changes to relation totals or a
 /// duration read never rebuild the long personal library or its glass layers.
@@ -138,17 +139,21 @@ class _NeteasePersonalStatisticsState
                 children: [
                   TextSpan(
                     text: value,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                   if (unit.isNotEmpty)
                     TextSpan(
                       text: ' $unit',
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(
+                        fontSize: MusicTypography.footnoteSize,
+                      ),
                     ),
                 ],
               ),
               style: TextStyle(
-                fontSize: 17,
+                fontSize: MusicTypography.bodySize,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
               maxLines: 1,

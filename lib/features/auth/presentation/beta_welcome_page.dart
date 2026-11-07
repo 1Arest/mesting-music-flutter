@@ -14,6 +14,7 @@ import '../beta_account_choice.dart';
 import '../beta_entry_flow.dart';
 import 'mesting_music_companions.dart';
 import 'beta_consent_row.dart';
+import '../../themes/music_typography.dart';
 
 /// Every entry/form uses a painted page with reversible spatial movement.
 Route<T> betaEntryRoute<T>(Widget page) => betaContentRoute<T>(page);
@@ -110,8 +111,8 @@ class _BetaWelcomePageState extends ConsumerState<BetaWelcomePage> {
                                 'Mesting Music',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 33,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: MusicTypography.largeTitleSize,
+                                  fontWeight: MusicTypography.titleWeight,
                                   letterSpacing: -1,
                                 ),
                               ),
@@ -120,7 +121,7 @@ class _BetaWelcomePageState extends ConsumerState<BetaWelcomePage> {
                                 '让喜欢的音乐，陪你多一会儿。',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: MusicTypography.subheadlineSize,
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onSurface.withValues(alpha: .7),

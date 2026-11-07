@@ -7,6 +7,7 @@ import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../lyrics_providers.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 class LyricsPanel extends ConsumerStatefulWidget {
   const LyricsPanel({this.immersive = false, super.key});
@@ -120,8 +121,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                         : completed
                         ? const Color(0x8FFFFFFF)
                         : const Color(0xA8FFFFFF),
-                    fontSize: active ? 20 : 14,
-                    fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                    fontSize: active
+                        ? MusicTypography.headingSize
+                        : MusicTypography.subheadlineSize,
+                    fontWeight: active
+                        ? MusicTypography.titleWeight
+                        : MusicTypography.bodyWeight,
                     height: 1.3,
                     shadows: [
                       Shadow(color: immersiveHalo, blurRadius: active ? 12 : 8),
@@ -156,15 +161,15 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                   const SizedBox(width: 8),
                   const Text(
                     '同步歌词',
-                    style: TextStyle(fontWeight: FontWeight.w900),
+                    style: TextStyle(fontWeight: MusicTypography.titleWeight),
                   ),
                   const Spacer(),
                   Text(
                     document.isSynced ? '逐句同步' : '普通文本',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
+                      fontSize: MusicTypography.captionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ],
@@ -189,12 +194,18 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                         : null,
                     child: AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 220),
-                      style: TextStyle(
+                      // Preserve the shared typography's font/fallback family
+                      // when changing active-line emphasis.
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: active
                             ? const Color(0xFF4B63D0)
                             : tokens.textMuted,
-                        fontSize: active ? 20 : 15,
-                        fontWeight: active ? FontWeight.w900 : FontWeight.w600,
+                        fontSize: active
+                            ? MusicTypography.headingSize
+                            : MusicTypography.subheadlineSize,
+                        fontWeight: active
+                            ? MusicTypography.titleWeight
+                            : MusicTypography.bodyWeight,
                         height: 1.3,
                       ),
                       child: Align(

@@ -16,6 +16,7 @@ import '../music_platform/presentation/platform_design.dart';
 import '../music_platform/presentation/platform_feedback.dart';
 import 'together_controller.dart';
 import 'together_models.dart';
+import '../themes/music_typography.dart';
 
 class TogetherPage extends ConsumerStatefulWidget {
   const TogetherPage({super.key});
@@ -197,9 +198,9 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
             const SizedBox(height: 16),
             Text(
               '同一首歌，同一个此刻。',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 10),
             const Text('创建私密房间，分享房间号邀请朋友；也可以直接加入已有房间。'),
@@ -251,7 +252,7 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
                     child: Text(
                       controller.owner ? '你是房主' : '正在跟随房主',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                   ),
@@ -335,9 +336,9 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
           const SizedBox(height: 18),
           Text(
             '房间成员',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -449,7 +450,7 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -495,7 +496,7 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+        fontWeight: MusicTypography.titleWeight,
         color: selected ? Theme.of(context).colorScheme.primary : null,
       ),
     ),
@@ -532,17 +533,20 @@ class _TogetherPageState extends ConsumerState<TogetherPage> {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (dialog) => CupertinoAlertDialog(
-        title: Text(controller.owner ? '结束一起听？' : '离开一起听？'),
+        title: Text(
+          controller.owner ? '结束一起听？' : '离开一起听？',
+          style: MusicTypography.titleEmphasis,
+        ),
         content: Text(controller.owner ? '房间将结束，其他成员也会离开。' : '将停止跟随这个房间。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('确认'),
+            child: const Text('确认', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -643,7 +647,10 @@ class _RoomInputDialogState extends State<_RoomInputDialog> {
 
   @override
   Widget build(BuildContext context) => CupertinoAlertDialog(
-    title: Text(widget.create ? '创建私密房间' : '加入一起听'),
+    title: Text(
+      widget.create ? '创建私密房间' : '加入一起听',
+      style: MusicTypography.titleEmphasis,
+    ),
     content: Padding(
       padding: const EdgeInsets.only(top: 16),
       child: CupertinoTextField(
@@ -659,13 +666,16 @@ class _RoomInputDialogState extends State<_RoomInputDialog> {
     actions: [
       CupertinoDialogAction(
         onPressed: () => Navigator.pop(context),
-        child: const Text('取消'),
+        child: const Text('取消', style: MusicTypography.regularText),
       ),
       CupertinoDialogAction(
         onPressed: () {
           if (input.text.trim().isNotEmpty) Navigator.pop(context, input.text);
         },
-        child: Text(widget.create ? '创建' : '加入'),
+        child: Text(
+          widget.create ? '创建' : '加入',
+          style: MusicTypography.regularText,
+        ),
       ),
     ],
   );

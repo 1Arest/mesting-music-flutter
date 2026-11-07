@@ -5,6 +5,7 @@ import '../../core/platform/distribution_channel.dart';
 import '../../features/themes/beta_appearance.dart';
 import '../../core/haptics/app_haptics.dart';
 import 'beta_success_feedback.dart';
+import '../../features/themes/music_typography.dart';
 
 OverlayEntry? _activeMusicNotice;
 // Kept for callers compiled against older releases; HUDs now use the top inset.
@@ -185,10 +186,10 @@ class _MusicNoticeOverlayState extends State<_MusicNoticeOverlay>
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: foreground,
-                                    fontSize: 14,
+                                    fontSize: MusicTypography.subheadlineSize,
                                     height: 1.25,
                                     decoration: TextDecoration.none,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: MusicTypography.bodyWeight,
                                   ),
                                 ),
                               ),

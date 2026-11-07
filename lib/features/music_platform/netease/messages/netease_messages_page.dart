@@ -32,6 +32,7 @@ import 'netease_message_card_view.dart';
 import 'netease_message_diagnostic_action.dart';
 import 'netease_unread.dart';
 import '../../../../shared/widgets/beta_popup_menu_button.dart';
+import '../../../themes/music_typography.dart';
 
 /// A conversation stays on the same stack as its message inbox. Pushing it on
 /// the application root split a two-step Back sequence across the root and tab
@@ -198,7 +199,10 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
       backgroundColor: color,
       child: Icon(icon, color: Colors.white),
     ),
-    title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+    title: Text(
+      title,
+      style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+    ),
     subtitle: Text(subtitle),
     trailing: count > 0
         ? _UnreadBadge(count)
@@ -328,7 +332,9 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
                   conversation.peer.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 subtitle: Text(
                   conversation.last.image.isEmpty
@@ -394,7 +400,7 @@ class _UnreadBadge extends StatelessWidget {
       count > 99 ? '99+' : '$count',
       style: const TextStyle(
         color: NeteaseUnreadColors.foreground,
-        fontSize: 12,
+        fontSize: MusicTypography.captionSize,
       ),
     ),
   );
@@ -800,7 +806,7 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
         musicChrome: false,
         title: widget.peer.name,
         centerTitle: true,
-        titleWeight: FontWeight.w500,
+        titleWeight: MusicTypography.titleWeight,
         titleFontSize: MediaQuery.sizeOf(context).width < 360 ? 16 : 18,
         actions: [
           Tooltip(
@@ -820,8 +826,8 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                   : const Text(
                       '一起听',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontSize: MusicTypography.footnoteSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
             ),
@@ -974,7 +980,7 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                                       SelectableText(
                                         displayNeteaseEmojis(message.text),
                                         style: const TextStyle(
-                                          fontSize: 16,
+                                          fontSize: MusicTypography.calloutSize,
                                           height: 1.45,
                                           fontFamilyFallback: [
                                             'Noto Color Emoji',
@@ -1178,7 +1184,7 @@ class _NeteaseChatPageState extends _MessageState<NeteaseChatPage> {
                             child: Text(
                               emoji,
                               style: const TextStyle(
-                                fontSize: 23,
+                                fontSize: MusicTypography.sectionTitleSize,
                                 fontFamilyFallback: [
                                   'Noto Color Emoji',
                                   'Apple Color Emoji',
@@ -1428,7 +1434,10 @@ class _NeteaseNoticeListState extends _MessageState<_NeteaseNoticeList> {
           children: [
             Text(neteaseMessageTime(row.time)),
             const SizedBox(height: 18),
-            SelectableText(row.text, style: const TextStyle(fontSize: 17)),
+            SelectableText(
+              row.text,
+              style: const TextStyle(fontSize: MusicTypography.bodySize),
+            ),
             if (row.person.id.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 24),

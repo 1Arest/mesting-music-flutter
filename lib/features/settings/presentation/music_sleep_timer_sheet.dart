@@ -6,6 +6,7 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../themes/music_typography.dart';
 
 Future<void> showMusicSleepTimer(BuildContext context, WidgetRef ref) {
   final handler = ref.read(audioHandlerProvider);
@@ -56,7 +57,10 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                   child: Text(
                     '自定义时长',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: MusicTypography.bodySize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                 ),
                 CupertinoButton(
@@ -113,8 +117,8 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                       child: Text(
                         '定时关闭',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -135,8 +139,10 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                       : '让音乐陪你到入睡',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: timer.mode == MusicSleepMode.countdown ? 42 : 21,
-                    fontWeight: FontWeight.w600,
+                    fontSize: timer.mode == MusicSleepMode.countdown
+                        ? 42
+                        : MusicTypography.sectionTitleSize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -160,7 +166,7 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                       child: Text(
                         '自定义时长',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: MusicTypography.subheadlineSize,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
@@ -170,7 +176,9 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                       onPressed: _customDuration,
                       child: Text(
                         '$_minutes 分钟  ›',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontWeight: MusicTypography.titleWeight,
+                        ),
                       ),
                     ),
                   ],
@@ -202,7 +210,7 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                 Text(
                   '到时只停止音乐播放，保留应用和账号。定时不会在重启应用后自动恢复。',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: MusicTypography.footnoteSize,
                     height: 1.6,
                     color: scheme.onSurfaceVariant,
                   ),

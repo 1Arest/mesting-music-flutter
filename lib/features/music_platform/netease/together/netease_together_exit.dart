@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../../shared/widgets/music_notice.dart';
 import 'netease_together_controller.dart';
+import '../../../themes/music_typography.dart';
 
 /// One confirmation flow is shared by the player menu and the room panel.
 /// It only ends the room: transport, current song and queue stay with the player.
@@ -16,17 +17,17 @@ Future<bool> confirmNeteaseTogetherExit(
   final confirmed = await showCupertinoDialog<bool>(
     context: context,
     builder: (dialogContext) => CupertinoAlertDialog(
-      title: const Text('退出一起听？'),
+      title: const Text('退出一起听？', style: MusicTypography.titleEmphasis),
       content: const Text('退出后停止与朋友同步，当前音乐继续在本机播放。'),
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(dialogContext, false),
-          child: const Text('取消'),
+          child: const Text('取消', style: MusicTypography.regularText),
         ),
         CupertinoDialogAction(
           isDestructiveAction: true,
           onPressed: () => Navigator.pop(dialogContext, true),
-          child: const Text('退出一起听'),
+          child: const Text('退出一起听', style: MusicTypography.regularText),
         ),
       ],
     ),

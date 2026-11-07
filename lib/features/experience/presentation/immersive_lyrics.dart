@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
+import '../../themes/music_typography.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -74,8 +75,10 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
                     .copyWith(
-                      fontSize: widget.referenceDesign ? 30 : 24,
-                      fontWeight: FontWeight.w700,
+                      fontSize: widget.referenceDesign
+                          ? MusicTypography.largeTitleSize
+                          : MusicTypography.sectionTitleSize,
+                      fontWeight: MusicTypography.titleWeight,
                       height: widget.referenceDesign ? 1.3 : 1.4,
                       letterSpacing: -.5,
                     );

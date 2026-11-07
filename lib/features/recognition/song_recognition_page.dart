@@ -15,6 +15,7 @@ import '../library/presentation/favorite_toggle_button.dart';
 import '../music_platform/music_platform_providers.dart';
 import '../music_platform/presentation/platform_design.dart';
 import 'recognition_repository.dart';
+import '../themes/music_typography.dart';
 
 class SongRecognitionPage extends ConsumerStatefulWidget {
   const SongRecognitionPage({super.key});
@@ -198,7 +199,10 @@ class _SongRecognitionPageState extends ConsumerState<SongRecognitionPage>
           const Text(
             '让音乐告诉你答案',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: MusicTypography.titleSize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -247,7 +251,10 @@ class _SongRecognitionPageState extends ConsumerState<SongRecognitionPage>
               padding: EdgeInsets.only(top: 38, bottom: 12),
               child: Text(
                 '识别结果',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: MusicTypography.sectionTitleSize,
+                  fontWeight: MusicTypography.titleWeight,
+                ),
               ),
             ),
             for (final track in _results)

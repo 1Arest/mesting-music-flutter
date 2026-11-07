@@ -9,6 +9,7 @@ import '../../shared/widgets/beta_glass_controls.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/beta_press_surface.dart';
 import 'startup_style.dart';
+import 'music_typography.dart';
 
 /// Static posters keep scrolling cheap and silent. Each explicit preview owns
 /// one video controller and releases it when the preview route is dismissed.
@@ -150,8 +151,8 @@ class _StartupStylePickerState extends ConsumerState<StartupStylePicker> {
                                     ? '${style.label}（默认）'
                                     : style.label,
                                 style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: MusicTypography.subheadlineSize,
+                                  fontWeight: MusicTypography.bodyWeight,
                                 ),
                               ),
                             ),

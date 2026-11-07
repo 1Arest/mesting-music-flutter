@@ -26,6 +26,7 @@ import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../library/presentation/library_access.dart';
+import '../../themes/music_typography.dart';
 
 /// One collection shell for Kugou, Mesting and guest. Ownership is supplied by
 /// libraryRepositoryProvider, and no UI branch copies data between accounts.
@@ -337,8 +338,8 @@ class _LibraryLink extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: context.musicThemeTokens.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.bodySize,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -346,7 +347,7 @@ class _LibraryLink extends StatelessWidget {
                   subtitle,
                   style: TextStyle(
                     color: context.musicThemeTokens.textSecondary,
-                    fontSize: 13,
+                    fontSize: MusicTypography.footnoteSize,
                   ),
                 ),
               ],
@@ -403,7 +404,7 @@ class _CollectionTracks extends ConsumerWidget {
                           '${favoriteCollection ? ref.watch(favoriteCollectionCountProvider) : total ?? tracks.length} 首歌曲',
                           style: TextStyle(
                             color: context.musicThemeTokens.textSecondary,
-                            fontSize: 15,
+                            fontSize: MusicTypography.subheadlineSize,
                           ),
                         ),
                         const SizedBox(height: 12),

@@ -15,6 +15,7 @@ import '../domain/social_models.dart';
 import '../social_providers.dart';
 import 'friend_profile_actions_sheet.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 class PublicProfilePage extends ConsumerStatefulWidget {
   const PublicProfilePage({required this.uid, super.key});
@@ -124,8 +125,8 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
                         const Text(
                           '音乐名片',
                           style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.bodySize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                         const SizedBox(height: 13),
@@ -210,7 +211,10 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
               children: [
                 const Text(
                   '设置备注名',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -319,8 +323,8 @@ class _PublicProfilePageState extends ConsumerState<PublicProfilePage> {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 9),
@@ -413,14 +417,17 @@ class _ProfileHero extends StatelessWidget {
             Text(
               user.displayName,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w900),
+              style: const TextStyle(
+                fontSize: MusicTypography.titleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             if (user.remark.isNotEmpty) ...[
               const SizedBox(height: 3),
               Text(
                 '昵称：${user.nickname}',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: MusicTypography.smallCaptionSize,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -455,7 +462,10 @@ class _ProfileHero extends StatelessWidget {
             Text(
               user.bio.trim().isEmpty ? '这个人很安静，还没有留下简介。' : user.bio,
               textAlign: TextAlign.center,
-              style: const TextStyle(height: 1.5, fontSize: 12),
+              style: const TextStyle(
+                height: 1.5,
+                fontSize: MusicTypography.captionSize,
+              ),
             ),
             const SizedBox(height: 21),
             Row(
@@ -505,7 +515,10 @@ class _ProfileDetailChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontSize: MusicTypography.smallCaptionSize,
+              fontWeight: MusicTypography.bodyWeight,
+            ),
           ),
         ],
       ),
@@ -524,9 +537,15 @@ class _Count extends StatelessWidget {
     children: [
       Text(
         '$value',
-        style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900),
+        style: const TextStyle(
+          fontSize: MusicTypography.headingSize,
+          fontWeight: MusicTypography.titleWeight,
+        ),
       ),
-      Text(label, style: const TextStyle(fontSize: 11)),
+      Text(
+        label,
+        style: const TextStyle(fontSize: MusicTypography.smallCaptionSize),
+      ),
     ],
   );
 }
@@ -585,11 +604,14 @@ class _InfoLine extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+            ),
             Text(
               value,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: MusicTypography.smallCaptionSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),

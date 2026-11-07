@@ -126,7 +126,7 @@ class _Fixture {
             child: ColoredBox(color: marker),
           ),
         ),
-        const Text('Secret row title'),
+        const Expanded(child: Text('Secret row title')),
       ],
     );
   }

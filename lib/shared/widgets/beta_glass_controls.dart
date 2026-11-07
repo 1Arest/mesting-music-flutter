@@ -6,6 +6,7 @@ import '../../features/themes/beta_appearance.dart';
 import 'beta_glass_action.dart';
 import '../../core/haptics/app_haptics.dart';
 import 'music_activity_indicator.dart';
+import '../../features/themes/music_typography.dart';
 
 /// Floating controls share the navigation's optical material. Each surface
 /// owns its layer: nesting glass would disable the child's refraction.
@@ -22,7 +23,7 @@ class BetaGlassButton extends StatelessWidget {
     this.accent = false,
     this.blue = false,
     this.red = false,
-    this.fontSize = 15,
+    this.fontSize = MusicTypography.subheadlineSize,
     this.horizontalPadding = 18,
     this.embeddedInPill = false,
     super.key,
@@ -135,7 +136,7 @@ class BetaGlassButton extends StatelessWidget {
                         child: DefaultTextStyle.merge(
                           style: TextStyle(
                             fontSize: fontSize,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: MusicTypography.bodyWeight,
                             color: foreground,
                           ),
                           child: child,

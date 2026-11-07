@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../themes/music_typography.dart';
 
 /// Compact visual circle, generous semantic target, and inline links share a
 /// baseline. Wrap keeps enlarged text reachable without shrinking the type.
@@ -17,7 +18,7 @@ class BetaConsentRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ink = Theme.of(context).colorScheme.onSurface;
     final style = TextStyle(
-      fontSize: 12,
+      fontSize: MusicTypography.captionSize,
       height: 1.5,
       color: ink.withValues(alpha: .78),
     );
@@ -30,7 +31,10 @@ class BetaConsentRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
           child: Text(
             label,
-            style: style.copyWith(color: ink, fontWeight: FontWeight.w600),
+            style: style.copyWith(
+              color: ink,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
         ),
       ),

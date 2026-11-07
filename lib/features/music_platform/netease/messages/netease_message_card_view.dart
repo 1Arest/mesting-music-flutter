@@ -13,6 +13,7 @@ import 'netease_message_card.dart';
 import 'netease_messages_repository.dart';
 import '../together/together_record.dart';
 import '../together/together_records_page.dart';
+import '../../../themes/music_typography.dart';
 
 /// Presentation only: reading a history card cannot end/create a room, rejoin
 /// an old invitation, send a private message, or invent missing statistics.
@@ -75,7 +76,10 @@ class NeteaseMessageCardView extends StatelessWidget {
                     children: [
                       const Text(
                         '我们一起听了',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: MusicTypography.footnoteSize,
+                        ),
                       ),
                       const SizedBox(height: 7),
                       Text(
@@ -86,8 +90,8 @@ class NeteaseMessageCardView extends StatelessWidget {
                             : '查看一起听记录 ›',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.bodySize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ],
@@ -138,8 +142,8 @@ class NeteaseMessageCardView extends StatelessWidget {
               child: Text(
                 card.title,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.calloutSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),
@@ -268,7 +272,10 @@ class _MessageCardDetailState
             const SizedBox(height: 20),
             SelectableText(
               card.subtitle,
-              style: const TextStyle(fontSize: 16, height: 1.6),
+              style: const TextStyle(
+                fontSize: MusicTypography.calloutSize,
+                height: 1.6,
+              ),
             ),
           ],
           if (card.duration != null) ...[

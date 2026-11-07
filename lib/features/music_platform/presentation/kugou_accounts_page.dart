@@ -11,6 +11,7 @@ import '../music_platform_providers.dart';
 import 'platform_avatar.dart';
 import 'platform_login_options_page.dart';
 import 'kugou_standard_authorization_page.dart';
+import '../../themes/music_typography.dart';
 
 /// 登录管理页不持有凭据；切换、播放快照和持久化均交给现有账号协调层。
 class KugouAccountsPage extends ConsumerStatefulWidget {
@@ -60,17 +61,18 @@ class _KugouAccountsPageState extends ConsumerState<KugouAccountsPage> {
       builder: (dialog) => CupertinoAlertDialog(
         title: Text(
           '移除${account.nickname.isEmpty ? '这个账号' : '“${account.nickname}”'}的本机登录？',
+          style: MusicTypography.titleEmphasis,
         ),
         content: const Text('音乐库、队列、进度、历史和置顶记录会保留。以后登录同一账号可以恢复。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('移除登录'),
+            child: const Text('移除登录', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -109,9 +111,9 @@ class _KugouAccountsPageState extends ConsumerState<KugouAccountsPage> {
                         style: TextStyle(
                           fontSize:
                               MediaQuery.textScalerOf(context).scale(14) > 21
-                              ? 20
-                              : 25,
-                          fontWeight: FontWeight.w700,
+                              ? MusicTypography.headingSize
+                              : MusicTypography.titleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),

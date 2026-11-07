@@ -7,6 +7,7 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../domain/social_models.dart';
 import '../social_providers.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 Future<SocialUser?> showTrackShareSheet({
   required BuildContext context,
@@ -52,12 +53,17 @@ class _TrackShareSheet extends ConsumerWidget {
                       Text(
                         '分享给好友',
                         style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                       SizedBox(height: 3),
-                      Text('选择一位互相关注的好友', style: TextStyle(fontSize: 11)),
+                      Text(
+                        '选择一位互相关注的好友',
+                        style: TextStyle(
+                          fontSize: MusicTypography.smallCaptionSize,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -78,7 +84,10 @@ class _TrackShareSheet extends ConsumerWidget {
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               '好友',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -168,8 +177,8 @@ class _SharedTrackPreview extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -178,7 +187,7 @@ class _SharedTrackPreview extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: MusicTypography.smallCaptionSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -222,8 +231,8 @@ class _FriendShareRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     if (friend.status.isNotEmpty) ...[
@@ -233,7 +242,7 @@ class _FriendShareRow extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: MusicTypography.smallCaptionSize,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../platform_backend_providers.dart';
 import 'netease_messages_repository.dart';
+import '../../../themes/music_typography.dart';
 
 /// One account-scoped read per poll, shared by every entry badge. Disposing the
 /// consumer or backgrounding the app stops requests; failures retain the last
@@ -116,8 +117,8 @@ class NeteaseUnreadBadge extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: NeteaseUnreadColors.foreground,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: MusicTypography.captionSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),

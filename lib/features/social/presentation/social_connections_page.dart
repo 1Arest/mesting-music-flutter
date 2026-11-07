@@ -15,6 +15,7 @@ import '../domain/social_models.dart';
 import '../social_providers.dart';
 import '../social_attention.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 class SocialConnectionsPage extends ConsumerStatefulWidget {
   const SocialConnectionsPage({super.key, this.initialTab = 0});
@@ -149,8 +150,8 @@ class _UnreadMessagesNotice extends StatelessWidget {
                 child: Text(
                   '你有 $count 条未读私信，点击查看消息来源',
                   style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -273,8 +274,8 @@ class _UserRowState extends ConsumerState<_UserRow> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -289,7 +290,7 @@ class _UserRowState extends ConsumerState<_UserRow> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: MusicTypography.smallCaptionSize,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -449,7 +450,10 @@ class _RemoveFollowerSheet extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               '移除 ${user.displayName}？',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              style: const TextStyle(
+                fontSize: MusicTypography.headingSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 8),
             Text(

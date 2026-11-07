@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../shared/widgets/beta_glass_controls.dart';
 import 'netease_message_diagnostics.dart';
+import '../../../themes/music_typography.dart';
 
 /// Export belongs to the user's explicit action, never to polling or parsing.
 /// The owner callback also prevents copying a stale report after an account
@@ -36,7 +37,7 @@ class NeteaseMessageDiagnosticAction extends StatelessWidget {
                 const SizedBox(height: 16),
                 SelectableText(
                   report.json,
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: MusicTypography.captionSize),
                 ),
               ],
             ),

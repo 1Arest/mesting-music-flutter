@@ -10,6 +10,7 @@ import 'netease_fallback.dart';
 import 'netease_membership_page.dart';
 import 'netease_playback_options.dart';
 import 'netease_account_source_info.dart';
+import '../../themes/music_typography.dart';
 
 /// Reuses the existing playback settings page; loading/disabled state is shared
 /// across all mutations so rapid edits cannot overwrite another saved option.
@@ -65,7 +66,10 @@ class _NeteaseSourceSettingsPanelState
         const SizedBox(height: 20),
         const Text(
           '备用音源与音质',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: MusicTypography.bodySize,
+            fontWeight: MusicTypography.titleWeight,
+          ),
         ),
         const SizedBox(height: 6),
         const Text(
@@ -195,7 +199,9 @@ class _NeteaseSourceSettingsPanelState
                     padding: const EdgeInsets.only(top: 12),
                     child: SelectableText(
                       diagnostics.json,
-                      style: const TextStyle(fontSize: 12),
+                      style: const TextStyle(
+                        fontSize: MusicTypography.captionSize,
+                      ),
                     ),
                   ),
               ],

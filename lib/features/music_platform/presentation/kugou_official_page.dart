@@ -17,6 +17,7 @@ import '../domain/platform_session.dart';
 import '../kugou_listening_profile_providers.dart';
 import '../music_platform_providers.dart';
 import 'kugou_standard_authorization_page.dart';
+import '../../themes/music_typography.dart';
 
 Future<void> openKugouOfficialPage(
   BuildContext context,
@@ -300,8 +301,8 @@ class _KugouOfficialPageState extends ConsumerState<KugouOfficialPage> {
                         child: Text(
                           '酷狗官方详情',
                           style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
+                            fontSize: MusicTypography.sectionTitleSize,
+                            fontWeight: MusicTypography.titleWeight,
                           ),
                         ),
                       ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../features/themes/music_typography.dart';
 
 /// Shared drawn mark for compact comment notices and the central login HUD.
 class BetaSuccessMark extends StatelessWidget {
@@ -162,8 +163,8 @@ class _BetaLoginSuccessState extends State<BetaLoginSuccess>
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontSize: MusicTypography.subheadlineSize,
+                                fontWeight: MusicTypography.bodyWeight,
                                 decoration: TextDecoration.none,
                               ),
                         ),

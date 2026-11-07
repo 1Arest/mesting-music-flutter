@@ -13,6 +13,7 @@ import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
 import '../kugou_listening_profile_providers.dart';
 import '../../../core/network/music_http_client.dart';
+import '../../themes/music_typography.dart';
 
 /// 生产复用本机注册设备；测试可注入响应，不需要访问手机或真实账号。
 final kugouStandardAuthorizationClientFactoryProvider =
@@ -229,8 +230,8 @@ class _StandardAuthorizationState
                       child: Text(
                         '验证酷狗官方功能',
                         style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.sectionTitleSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -246,8 +247,8 @@ class _StandardAuthorizationState
                           ? '当前酷狗账号'
                           : widget.owner.nickname,
                       style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.titleSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 12),

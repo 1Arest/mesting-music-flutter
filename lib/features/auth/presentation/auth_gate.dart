@@ -9,6 +9,7 @@ import '../auth_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../music_platform/music_platform_providers.dart';
 import 'beta_login_navigation.dart';
+import '../../themes/music_typography.dart';
 
 Future<bool> ensureAuthenticated(
   BuildContext context,
@@ -118,7 +119,10 @@ class _AuthRequiredSheet extends StatelessWidget {
             const SizedBox(height: 17),
             const Text(
               '登录后继续',
-              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontSize: MusicTypography.sectionTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+              ),
             ),
             const SizedBox(height: 7),
             Text(
@@ -126,7 +130,7 @@ class _AuthRequiredSheet extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 height: 1.55,
-                fontSize: 13,
+                fontSize: MusicTypography.footnoteSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -144,7 +148,7 @@ class _AuthRequiredSheet extends StatelessWidget {
                 ),
                 child: const Text(
                   '去登录 / 注册',
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                  style: TextStyle(fontWeight: MusicTypography.titleWeight),
                 ),
               ),
             ),

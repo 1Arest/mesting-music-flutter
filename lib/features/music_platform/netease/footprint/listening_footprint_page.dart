@@ -26,6 +26,7 @@ import 'listening_footprint_chart.dart';
 import 'listening_footprint_models.dart';
 import 'listening_footprint_providers.dart';
 import 'listening_footprint_reader.dart';
+import '../../../themes/music_typography.dart';
 
 /// Apple's large-title hierarchy over the app's existing glass/music shell.
 /// This page only reads official reports; diagnostics and local playback
@@ -375,8 +376,8 @@ class _ListeningFootprintPageState
                 key: const ValueKey('footprint-period-label'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  fontSize: MusicTypography.calloutSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),
@@ -487,7 +488,10 @@ class _ListeningFootprintPageState
         Text(
           '${selected.year} 年 · ${officialDuration(selected.seconds)}',
           key: const ValueKey('footprint-selected-year'),
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: MusicTypography.bodySize,
+            fontWeight: MusicTypography.titleWeight,
+          ),
         ),
         const SizedBox(height: 20),
         FootprintDurationChart(
@@ -558,8 +562,8 @@ class _ListeningFootprintPageState
                 oldDay ? '上次听歌记录 · ${value.day}' : '今日听过',
                 key: const ValueKey('footprint-today-title'),
                 style: const TextStyle(
-                  fontSize: 23,
-                  fontWeight: FontWeight.w800,
+                  fontSize: MusicTypography.sectionTitleSize,
+                  fontWeight: MusicTypography.titleWeight,
                   letterSpacing: -.4,
                 ),
               ),
@@ -607,7 +611,9 @@ class _ListeningFootprintPageState
                   padding: const EdgeInsets.only(top: 14),
                   child: Text(
                     '找到 ${songs.length} 首歌曲',
-                    style: const TextStyle(fontSize: 13),
+                    style: const TextStyle(
+                      fontSize: MusicTypography.footnoteSize,
+                    ),
                   ),
                 ),
               if (value == null)
@@ -734,7 +740,7 @@ class _FootprintHeader extends StatelessWidget {
                         key: const ValueKey('footprint-collapsing-title'),
                         style: TextStyle(
                           fontSize: lerpDouble(34, 17, t),
-                          fontWeight: FontWeight.w800,
+                          fontWeight: MusicTypography.titleWeight,
                           height: 1.15,
                           letterSpacing: lerpDouble(-.9, -.2, t),
                         ),
@@ -760,8 +766,8 @@ class _FootprintHeader extends StatelessWidget {
                                   : '累计听歌 ${officialDuration(total.value!)}',
                               key: const ValueKey('footprint-official-total'),
                               style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontSize: MusicTypography.subheadlineSize,
+                                fontWeight: MusicTypography.bodyWeight,
                               ),
                             ),
                             if (total.failed)
@@ -772,7 +778,7 @@ class _FootprintHeader extends StatelessWidget {
                                       ? '读取失败，点击右上角重试'
                                       : '刷新失败，保留上次官方读数',
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: MusicTypography.captionSize,
                                     color: scheme.onSurfaceVariant,
                                   ),
                                 ),
@@ -818,11 +824,9 @@ class _FootprintHeader extends StatelessWidget {
                               },
                               key: ValueKey('footprint-scale-${value.name}'),
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: MusicTypography.subheadlineSize,
                                 color: scheme.onSurface,
-                                fontWeight: scale == value
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                                fontWeight: MusicTypography.bodyWeight,
                               ),
                             ),
                           ),
@@ -854,14 +858,19 @@ class _DaySelection extends StatelessWidget {
         children: [
           Text(
             '${d.month}月${d.day}日 · 周${['一', '二', '三', '四', '五', '六', '日'][d.weekday - 1]}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: MusicTypography.subheadlineSize,
+              fontWeight: MusicTypography.bodyWeight,
+            ),
           ),
           const SizedBox(height: 5),
           Text(
             value == null ? '官方未返回这一天的数据' : officialDuration(value.seconds),
             style: TextStyle(
-              fontSize: value == null ? 15 : 23,
-              fontWeight: FontWeight.w700,
+              fontSize: value == null
+                  ? MusicTypography.subheadlineSize
+                  : MusicTypography.sectionTitleSize,
+              fontWeight: MusicTypography.titleWeight,
             ),
           ),
           if (value != null)
@@ -918,8 +927,8 @@ class _DurationHeadline extends StatelessWidget {
   Widget build(BuildContext context) {
     final h = seconds ~/ 3600, m = seconds % 3600 ~/ 60;
     const units = TextStyle(
-      fontSize: 17,
-      fontWeight: FontWeight.w600,
+      fontSize: MusicTypography.bodySize,
+      fontWeight: MusicTypography.titleWeight,
       letterSpacing: 0,
     );
     return Text.rich(
@@ -934,9 +943,9 @@ class _DurationHeadline extends StatelessWidget {
         ],
       ),
       style: const TextStyle(
-        fontSize: 30,
+        fontSize: MusicTypography.largeTitleSize,
         height: 1.3,
-        fontWeight: FontWeight.w800,
+        fontWeight: MusicTypography.titleWeight,
         letterSpacing: -.6,
       ),
     );
@@ -950,7 +959,7 @@ class _Footnote extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text,
     style: TextStyle(
-      fontSize: 12,
+      fontSize: MusicTypography.captionSize,
       height: 1.5,
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     ),
@@ -974,7 +983,10 @@ class _UnavailableReport extends StatelessWidget {
       children: [
         Text(
           loading ? '正在读取官方数据…' : message,
-          style: const TextStyle(fontSize: 15, height: 1.6),
+          style: const TextStyle(
+            fontSize: MusicTypography.subheadlineSize,
+            height: 1.6,
+          ),
         ),
         if (!loading) ...[
           const SizedBox(height: 14),
@@ -1032,8 +1044,8 @@ class _TodaySongRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.calloutSize,
+                    fontWeight: MusicTypography.bodyWeight,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -1043,7 +1055,7 @@ class _TodaySongRow extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -1055,7 +1067,7 @@ class _TodaySongRow extends StatelessWidget {
           Text(
             _clock(song.lastPlayedAt),
             style: TextStyle(
-              fontSize: 11,
+              fontSize: MusicTypography.smallCaptionSize,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),

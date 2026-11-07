@@ -20,6 +20,7 @@ import '../../themes/music_application_theme.dart';
 import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
 import 'music_home_catalogues.dart';
+import '../../themes/music_typography.dart';
 
 /// Fixed launchpad: only destinations with a working local/platform owner are
 /// shown. Tiles inherit the quiet Apple library surface; expensive live glass
@@ -238,8 +239,8 @@ class _FunctionGrid extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                     color: context.musicThemeTokens.textPrimary,
                   ),
                 ),

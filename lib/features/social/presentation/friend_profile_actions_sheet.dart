@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../domain/social_models.dart';
 import 'social_widgets.dart';
+import '../../themes/music_typography.dart';
 
 /// Actions shared by a friend's profile and the conversation header.
 enum FriendProfileAction { remark, share, removeFollower, block }
@@ -100,7 +101,7 @@ class _FriendProfileActionRow extends StatelessWidget {
       leading: Icon(icon, color: color),
       title: Text(
         title,
-        style: TextStyle(color: color, fontWeight: FontWeight.w800),
+        style: TextStyle(color: color, fontWeight: MusicTypography.titleWeight),
       ),
       trailing: const Icon(Icons.chevron_right_rounded),
     );

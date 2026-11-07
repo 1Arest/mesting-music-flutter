@@ -44,6 +44,7 @@ import 'netease_comments_repository.dart';
 import '../../downloads/audio_downloads_page.dart';
 import 'netease_playlist_import_page.dart';
 import 'full/netease_full_page.dart';
+import '../../themes/music_typography.dart';
 
 final neteaseFeaturesProvider = Provider<NeteaseFeaturesRepository>(
   (ref) => NeteaseFeaturesRepository(ref.watch(neteaseMusicRepositoryProvider)),
@@ -398,17 +399,17 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
     final yes = await showCupertinoDialog<bool>(
       context: context,
       builder: (c) => CupertinoAlertDialog(
-        title: const Text('从网易云云盘删除？'),
+        title: const Text('从网易云云盘删除？', style: MusicTypography.titleEmphasis),
         content: Text('“${item.name}”将从当前账号云盘移除，本地原文件保留。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('删除'),
+            child: const Text('删除', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -791,7 +792,10 @@ class NeteaseLibraryLinks extends StatelessWidget {
               NeteaseFeaturesRepository.titles[feed]!,
               style: section == null
                   ? null
-                  : const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  : const TextStyle(
+                      fontSize: MusicTypography.bodySize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
             ),
             leading: Icon(
               feed == NeteaseFeed.cloud
@@ -817,7 +821,10 @@ class NeteaseLibraryLinks extends StatelessWidget {
               '导入歌单',
               style: section == null
                   ? null
-                  : const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  : const TextStyle(
+                      fontSize: MusicTypography.bodySize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
             ),
             leading: Icon(
               CupertinoIcons.doc_text,
@@ -1051,7 +1058,7 @@ class _NeteaseResourceActionsState
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: MusicTypography.captionSize),
               ),
             ),
           ],

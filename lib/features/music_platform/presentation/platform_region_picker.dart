@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../domain/platform_regions.dart';
+import '../../themes/music_typography.dart';
 
 Future<({String province, String city})?> showPlatformRegionPicker(
   BuildContext context,
@@ -94,7 +95,10 @@ class _RegionPickerState extends State<_RegionPicker> {
                 child: Text(
                   '选择地区',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: MusicTypography.bodySize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
               ),
               CupertinoButton(
@@ -128,7 +132,9 @@ class _RegionPickerState extends State<_RegionPicker> {
                             region.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 17),
+                            style: const TextStyle(
+                              fontSize: MusicTypography.bodySize,
+                            ),
                           ),
                         ),
                     ],
@@ -149,7 +155,9 @@ class _RegionPickerState extends State<_RegionPicker> {
                             city.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 17),
+                            style: const TextStyle(
+                              fontSize: MusicTypography.bodySize,
+                            ),
                           ),
                         ),
                     ],

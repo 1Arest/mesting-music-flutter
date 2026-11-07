@@ -18,6 +18,7 @@ import '../netease/netease_features_page.dart';
 import '../netease/netease_features_repository.dart';
 import '../music_platform_providers.dart';
 import '../data/music_platform_api.dart';
+import '../../themes/music_typography.dart';
 
 class MusicMvPage extends ConsumerStatefulWidget {
   const MusicMvPage({required this.track, this.mvId, super.key});
@@ -290,19 +291,28 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
           const SizedBox(height: 24),
           Text(
             _mv?.title ?? widget.track.title,
-            style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontSize: MusicTypography.sectionTitleSize,
+              fontWeight: MusicTypography.titleWeight,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             widget.track.artist,
-            style: TextStyle(fontSize: 15, color: scheme.onSurfaceVariant),
+            style: TextStyle(
+              fontSize: MusicTypography.subheadlineSize,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           if (_absent)
             const Padding(
               padding: EdgeInsets.only(top: 28),
               child: Text(
                 '这首歌曲暂未提供可播放的 MV。',
-                style: TextStyle(fontSize: 16, height: 1.6),
+                style: TextStyle(
+                  fontSize: MusicTypography.calloutSize,
+                  height: 1.6,
+                ),
               ),
             ),
           if (_error != null)
@@ -322,7 +332,10 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
             const SizedBox(height: 28),
             const Text(
               '清晰度',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: MusicTypography.calloutSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
             ),
             const SizedBox(height: 12),
             Wrap(
@@ -358,7 +371,7 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
           Text(
             'MV 播放期间音乐暂停；返回时按进入前的播放状态恢复。',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: MusicTypography.footnoteSize,
               height: 1.6,
               color: scheme.onSurfaceVariant,
             ),
@@ -501,14 +514,14 @@ class _VideoSurfaceState extends State<_VideoSurface> {
                               Text(
                                 _time(value.position),
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: MusicTypography.captionSize,
                                   color: Colors.white,
                                 ),
                               ),
                               Text(
                                 _time(value.duration),
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: MusicTypography.captionSize,
                                   color: Colors.white,
                                 ),
                               ),

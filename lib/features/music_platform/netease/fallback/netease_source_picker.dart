@@ -13,6 +13,7 @@ import '../../../player/presentation/beta_playback_actions.dart';
 import '../netease_fallback.dart';
 import '../netease_track_sources.dart';
 import '../../retained_kugou_scope.dart';
+import '../../../themes/music_typography.dart';
 
 typedef NeteaseSourceAvailability =
     Future<bool> Function(
@@ -175,7 +176,10 @@ class _NeteaseSourcePickerState extends ConsumerState<NeteaseSourcePicker> {
               ListTile(
                 title: const Text(
                   '选择音乐来源',
-                  style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: MusicTypography.sectionTitleSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 subtitle: Text(
                   widget.track.title,

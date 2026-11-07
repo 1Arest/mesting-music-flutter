@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'beta_glass_controls.dart';
 import 'beta_secondary_music_layout.dart';
+import '../../features/themes/music_typography.dart';
 
 /// Secondary music pages inherit the existing neutral surface, readable type
 /// and independent glass navigation. Feature state stays with each caller.
@@ -22,10 +23,7 @@ class MusicFeaturePage extends StatelessWidget {
       appBar: AppBar(
         leadingWidth: 68,
         leading: const Center(child: BetaGlassBackButton()),
-        title: Text(
-          title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-        ),
+        title: Text(title, style: MusicTypography.headline),
         actions: actions,
       ),
       body: SafeArea(
@@ -56,7 +54,7 @@ class MusicFeatureMessage extends StatelessWidget {
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: MusicTypography.calloutSize,
               height: 1.6,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),

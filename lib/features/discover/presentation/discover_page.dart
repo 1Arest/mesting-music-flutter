@@ -12,6 +12,7 @@ import '../domain/curated_playlist.dart';
 import '../../themes/music_theme_preset.dart';
 import '../../themes/theme_controller.dart';
 import '../../themes/music_theme_tokens.dart';
+import '../../themes/music_typography.dart';
 
 const double discoverPageBottomClearance = 168;
 
@@ -56,8 +57,8 @@ class DiscoverPage extends StatelessWidget {
                           'DISCOVER ONLINE',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             letterSpacing: 1.8,
                           ),
                         ),
@@ -198,14 +199,17 @@ class _PlaylistCard extends ConsumerWidget {
                 playlist.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w900),
+                style: const TextStyle(fontWeight: MusicTypography.titleWeight),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               child: Text(
                 '在线电台',
-                style: TextStyle(color: tokens.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: MusicTypography.captionSize,
+                ),
               ),
             ),
           ],
@@ -231,8 +235,8 @@ class _SourceBadge extends StatelessWidget {
           'Audius',
           style: TextStyle(
             color: Color(0xFF4B63D0),
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       ),

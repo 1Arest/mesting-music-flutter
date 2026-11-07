@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../messages/netease_messages_page.dart';
 import '../messages/netease_messages_repository.dart';
+import '../../../themes/music_typography.dart';
 
 /// One compact relationship row, using the capsule's overlapping circular
 /// portraits. Text remains independent so long nicknames and large fonts wrap
@@ -43,9 +44,9 @@ class TogetherRoomMembers extends StatelessWidget {
                 names,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
+                  fontSize: MusicTypography.calloutSize,
                   height: 1.45,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
             ),

@@ -28,9 +28,8 @@ class CollectionPlayIntent {
 }
 
 /// A page, account and deliberate selection own each pending playback. Route
-/// observers ignore popup confirmations but permanently revoke a covered page;
-/// returning to it must not revive an earlier request. A started read is not
-/// cancelled on the server, but cannot publish or attach FM to another queue.
+/// observers permanently revoke a covered page, so returning to it cannot
+/// revive an earlier request or attach FM to another queue.
 class PlatformCoverPlayLease {
   PlatformCoverPlayLease(this.ref, this.context, this.isMounted)
     : _owner = ref.read(platformAccountProvider).value,
@@ -55,7 +54,7 @@ class PlatformCoverPlayLease {
   late final ModalRoute<dynamic>? _route;
   late final BetaPageRouteObserver? _routes;
   late final ProviderSubscription<AsyncValue<PlatformSession?>> _subscription;
-  bool _revoked = false, _disposed = false, _playbackDialogAllowed = false;
+  bool _revoked = false, _disposed = false;
 
   void _checkRoute() {
     if (!isMounted() || !(_routes?.isTopPage(_route) ?? true)) revoke();
@@ -63,8 +62,7 @@ class PlatformCoverPlayLease {
 
   /// ModalRoute.of registered the widget's dependency above. In a minimal host
   /// without the production route observer, loss of current-page visibility
-  /// during loading must still revoke the read permanently. The deliberate
-  /// pending-queue dialog is allowed only around the common playback action.
+  /// during loading must still revoke the read permanently.
   void observePageVisibility() {
     if (!isMounted()) return revoke();
     final visible = context
@@ -73,19 +71,8 @@ class PlatformCoverPlayLease {
     if (visible == false ||
         _route?.isActive == false ||
         (_routes != null && !_routes.isTopPage(_route)) ||
-        (_routes == null &&
-            _route?.isCurrent == false &&
-            !_playbackDialogAllowed)) {
+        (_routes == null && _route?.isCurrent == false)) {
       revoke();
-    }
-  }
-
-  Future<T> withPlaybackDialog<T>(Future<T> Function() action) async {
-    _playbackDialogAllowed = true;
-    try {
-      return await action();
-    } finally {
-      _playbackDialogAllowed = false;
     }
   }
 
@@ -215,14 +202,12 @@ class _SelectionPlayState extends ConsumerState<PlatformSelectionPlayButton> {
           : ref.read(platformRecommendationSessionProvider);
       final tracks = await widget.load(ref, current);
       if (mounted && current() && tracks.isNotEmpty) {
-        final played = await lease.withPlaybackDialog(
-          () => playBetaSelection(
-            context,
-            ref,
-            tracks.first,
-            playAll: stream == null ? tracks : null,
-            stillCurrent: current,
-          ),
+        final played = await playBetaSelection(
+          context,
+          ref,
+          tracks.first,
+          playAll: stream == null ? tracks : null,
+          stillCurrent: current,
         );
         if (played && current() && stream != null) {
           session!.adoptCurrent(stream, tracks.first);

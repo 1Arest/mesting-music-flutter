@@ -23,6 +23,7 @@ import 'audio_download_storage.dart';
 import 'netease_download_source_picker.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/music_list_footer.dart';
+import '../themes/music_typography.dart';
 
 Future<void> enqueueAudioDownload(
   BuildContext context,
@@ -257,8 +258,8 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                           '播放全部',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.footnoteSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ),
@@ -275,7 +276,9 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                         child: const Text(
                           '打开目录',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(
+                            fontSize: MusicTypography.footnoteSize,
+                          ),
                         ),
                       ),
                     ),
@@ -293,7 +296,9 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                         child: const Text(
                           '选择目录',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13),
+                          style: TextStyle(
+                            fontSize: MusicTypography.footnoteSize,
+                          ),
                         ),
                       ),
                     ),

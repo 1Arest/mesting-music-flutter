@@ -13,6 +13,7 @@ import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../search_providers.dart';
+import '../../themes/music_typography.dart';
 
 /// A single lazy scroll view owns pagination and row construction. Avoid a
 /// shrink-wrapped list inside another list: later search pages can contain
@@ -35,8 +36,8 @@ class AppleSearchResults extends ConsumerWidget {
           Text(
             name,
             style: theme.textTheme.titleLarge?.copyWith(
-              fontSize: 23,
-              fontWeight: FontWeight.w700,
+              fontSize: MusicTypography.sectionTitleSize,
+              fontWeight: MusicTypography.titleWeight,
             ),
           ),
           const Spacer(),
@@ -111,7 +112,10 @@ class AppleSearchResults extends ConsumerWidget {
                   : state.onlineTracks.isEmpty || state.hasMore
                   ? const SizedBox.shrink()
                   : const Center(
-                      child: Text('已显示全部搜索结果', style: TextStyle(fontSize: 12)),
+                      child: Text(
+                        '已显示全部搜索结果',
+                        style: TextStyle(fontSize: MusicTypography.captionSize),
+                      ),
                     ),
             ),
           ),
@@ -179,8 +183,8 @@ class _SearchSongRow extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: MusicTypography.calloutSize,
+                                    fontWeight: MusicTypography.bodyWeight,
                                     color: active
                                         ? theme.colorScheme.primary
                                         : theme.colorScheme.onSurface,
@@ -195,7 +199,7 @@ class _SearchSongRow extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: MusicTypography.footnoteSize,
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),

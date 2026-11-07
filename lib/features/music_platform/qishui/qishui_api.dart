@@ -90,6 +90,16 @@ class QishuiApi {
   String? get credential => _session?.credentialId;
   QishuiApi loginClient() => QishuiApi(client, context: context);
 
+  /// A settings change revokes old in-flight work without replacing the live
+  /// account jar. Already-dispatched writes keep the existing unknown journal.
+  void invalidateSigner() {
+    ++_epoch;
+    for (final abort in _pending.toList()) {
+      if (!abort.isCompleted) abort.complete();
+    }
+    signer?.invalidateIdentity();
+  }
+
   void configure(QishuiSession? session) {
     ++_epoch;
     if (!_identityAbort.isCompleted) _identityAbort.complete();
@@ -279,24 +289,7 @@ class QishuiApi {
           'version_code': '100215040',
           'device_platform': 'android',
         } else if (signedPc) ...{
-          'aid': '386088',
-          'app_name': 'luna_pc',
-          'region': 'cn',
-          'geo_region': 'cn',
-          'os_region': 'cn',
-          'sim_region': '',
-          'cdid': '',
-          'version_name': '3.3.0',
-          'version_code': '30030000',
-          'channel': 'official',
-          'build_mode': 'master',
-          'network_carrier': '',
-          'ac': 'wifi',
-          'tz_name': 'Asia/Shanghai',
-          'resolution': '',
-          'device_platform': 'windows',
-          'device_type': 'Windows',
-          'os_version': 'Windows 11',
+          ...qishuiDesktopParameters(device),
         } else ...{
           'aid': '386088',
           'app_name': 'luna_pc',
@@ -311,14 +304,14 @@ class QishuiApi {
             'iid': _session!.webInstallId,
           },
         },
-        ...device,
+        if (!signedPc) ...device,
         '_rticket': '${DateTime.now().millisecondsSinceEpoch}',
         ...(route?.query ?? query),
       });
       final headers = <String, String>{
         'accept': 'application/json',
         'user-agent': signedPc
-            ? SodaMRequestSigner.userAgent
+            ? device['user_agent'] ?? SodaMRequestSigner.userAgent
             : 'MestingMusic/1.0 (Android; Soda mobile adapter)',
       };
       final method = (route?.get ?? get) ? 'GET' : 'POST';

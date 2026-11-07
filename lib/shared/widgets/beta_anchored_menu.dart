@@ -2,6 +2,7 @@ import '../../core/platform/distribution_channel.dart';
 import 'beta_glass_controls.dart';
 import 'beta_glass_popover.dart';
 import 'package:flutter/material.dart';
+import '../../features/themes/music_typography.dart';
 
 /// Measures the actual, scaled trigger at open time. Menu width therefore
 /// stays identical in large text as well as the normal 90dp minimum layout.
@@ -91,8 +92,8 @@ class _BetaAnchoredMenuState<T> extends State<BetaAnchoredMenu<T>> {
                     widget.label(value),
                     maxLines: 1,
                     style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.subheadlineSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                 ),
@@ -143,8 +144,8 @@ class _BetaAnchoredMenuState<T> extends State<BetaAnchoredMenu<T>> {
                 Text(
                   widget.label(widget.value),
                   style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(width: 6),

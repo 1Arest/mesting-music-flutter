@@ -23,6 +23,7 @@ import '../../music_platform/presentation/platform_avatar.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../../shared/widgets/song_list_tools.dart';
+import '../../themes/music_typography.dart';
 
 /// THESIS: Cover art leads a personal listening space with editorial pacing.
 /// OWN-WORLD: Large Chinese system type, generous space, theme-aware neutrals,
@@ -114,8 +115,8 @@ class EditorialHeader extends ConsumerWidget {
       title,
       style: TextStyle(
         color: context.musicThemeTokens.textPrimary,
-        fontSize: 34,
-        fontWeight: FontWeight.w800,
+        fontSize: MusicTypography.largeTitleSize,
+        fontWeight: MusicTypography.titleWeight,
         letterSpacing: -.9,
         height: 1.2,
       ),
@@ -165,7 +166,7 @@ class EditorialSection extends StatelessWidget {
     this.title, {
     this.onTap,
     this.actionLabel = '查看全部',
-    this.fontWeight = FontWeight.w800,
+    this.fontWeight = MusicTypography.titleWeight,
     super.key,
   });
   final String title;
@@ -182,7 +183,7 @@ class EditorialSection extends StatelessWidget {
             title,
             style: TextStyle(
               color: context.musicThemeTokens.textPrimary,
-              fontSize: 23,
+              fontSize: MusicTypography.sectionTitleSize,
               fontWeight: fontWeight,
               letterSpacing: -.4,
             ),
@@ -285,7 +286,7 @@ class EditorialCover extends StatelessWidget {
                           color: Colors.white,
                           fontSize: 56,
                           height: 1,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: MusicTypography.titleWeight,
                           shadows: [
                             Shadow(color: Colors.black45, blurRadius: 12),
                           ],
@@ -306,7 +307,7 @@ class EditorialCover extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Color(0xE6FFFFFF),
-                              fontSize: 13,
+                              fontSize: MusicTypography.footnoteSize,
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -316,8 +317,8 @@ class EditorialCover extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 23,
+                              fontWeight: MusicTypography.titleWeight,
+                              fontSize: MusicTypography.sectionTitleSize,
                               height: 1.2,
                             ),
                           ),
@@ -337,8 +338,8 @@ class EditorialCover extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: context.musicThemeTokens.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: MusicTypography.subheadlineSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               if (subtitle.isNotEmpty)
@@ -348,7 +349,7 @@ class EditorialCover extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: context.musicThemeTokens.textSecondary,
-                    fontSize: 12,
+                    fontSize: MusicTypography.captionSize,
                     height: 1.6,
                   ),
                 ),
@@ -425,7 +426,7 @@ class EditorialTrackRow extends ConsumerWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: context.musicThemeTokens.textSecondary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
               ),
@@ -440,8 +441,8 @@ class EditorialTrackRow extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: context.musicThemeTokens.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: MusicTypography.calloutSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -449,7 +450,7 @@ class EditorialTrackRow extends ConsumerWidget {
                     track: track,
                     style: TextStyle(
                       color: context.musicThemeTokens.textSecondary,
-                      fontSize: 13,
+                      fontSize: MusicTypography.footnoteSize,
                     ),
                   ),
                 ],

@@ -4,6 +4,7 @@ import 'player_glass_button.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_glass_popover.dart';
 import '../../themes/beta_appearance.dart';
+import '../../themes/music_typography.dart';
 
 class PlayerMenuAction {
   const PlayerMenuAction(
@@ -116,7 +117,10 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
                               Expanded(
                                 child: Text(
                                   widget.disclosure!.title,
-                                  style: TextStyle(color: ink, fontSize: 15),
+                                  style: TextStyle(
+                                    color: ink,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -127,7 +131,7 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: ink.withValues(alpha: .65),
-                                    fontSize: 12,
+                                    fontSize: MusicTypography.captionSize,
                                   ),
                                 ),
                               ),
@@ -173,8 +177,8 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
                                     action.label,
                                     style: TextStyle(
                                       color: ink,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: MusicTypography.subheadlineSize,
+                                      fontWeight: MusicTypography.bodyWeight,
                                     ),
                                   ),
                                 ),

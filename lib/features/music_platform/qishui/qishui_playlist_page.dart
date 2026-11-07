@@ -1,3 +1,4 @@
+import '../../themes/music_typography.dart';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -127,6 +128,7 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
     List<Track> tracks, {
     int index = 0,
     bool random = false,
+    bool playAll = false,
   }) => _act(() async {
     if (tracks.isEmpty) return;
     final intent = ++_playIntent;
@@ -134,14 +136,23 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
     if (random) queue.shuffle(Random());
     // The handler and resolver retain the original Qishui track identity;
     // this action has no fallback source or anonymous substitute URL.
-    await ref
-        .read(audioHandlerProvider)
-        .replaceQueue(
-          queue,
-          initialIndex: random ? 0 : index,
-          togetherGuard: () =>
-              ownerCurrent && _music.current && intent == _playIntent,
-        );
+    bool current() => ownerCurrent && _music.current && intent == _playIntent;
+    final handler = ref.read(audioHandlerProvider);
+    if (playAll) {
+      await handler.replaceQueue(
+        queue,
+        initialIndex: index,
+        togetherGuard: current,
+      );
+    } else {
+      final selected = queue[random ? 0 : index];
+      await handler.playSingleTrack(
+        selected,
+        playbackContext: [selected],
+        discardRecommendations: true,
+        isCurrent: current,
+      );
+    }
   });
 
   Future<void> _manage(List<Track> tracks) async {
@@ -448,7 +459,8 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                                         loading: _busy,
                                         onPressed: visible.isEmpty || _busy
                                             ? null
-                                            : () => _play(visible),
+                                            : () =>
+                                                  _play(visible, playAll: true),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -483,7 +495,7 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                                             SizedBox(width: 6),
                                             Flexible(
                                               child: Text(
-                                                '随机播放',
+                                                '随机选一首',
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -549,7 +561,9 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                             visible[index].title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontWeight: MusicTypography.titleWeight,
+                            ),
                           ),
                           subtitle: Text(
                             [
@@ -686,7 +700,7 @@ class _PlaylistHeader extends StatelessWidget {
               Text(
                 playlist.name,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 10),

@@ -5,6 +5,7 @@ import '../../shared/models/track.dart';
 import '../music_platform/music_platform_providers.dart';
 import '../themes/beta_appearance.dart';
 import 'audio_downloads.dart';
+import '../themes/music_typography.dart';
 
 /// Account-scoped completed documents, independent of favorites and playback.
 /// Failed/paused/network-100% tasks never receive a downloaded mark.
@@ -39,11 +40,16 @@ class DownloadedTrackSubtitle extends ConsumerWidget {
                   const SizedBox(width: 3),
                   Text(
                     '已下载',
-                    style: (style ?? const TextStyle(fontSize: 12)).copyWith(
-                      color: BetaAppearance.success(
-                        Theme.of(context).brightness,
-                      ),
-                    ),
+                    style:
+                        (style ??
+                                const TextStyle(
+                                  fontSize: MusicTypography.captionSize,
+                                ))
+                            .copyWith(
+                              color: BetaAppearance.success(
+                                Theme.of(context).brightness,
+                              ),
+                            ),
                   ),
                   const SizedBox(width: 6),
                   Expanded(child: artist()),

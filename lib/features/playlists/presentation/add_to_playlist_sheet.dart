@@ -14,6 +14,7 @@ import '../../library/library_providers.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../music_platform/data/platform_library_repository.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
+import '../../themes/music_typography.dart';
 
 const _openProfileAction = '__open_profile__';
 
@@ -131,7 +132,7 @@ class _AddToPlaylistSheet extends ConsumerWidget {
                             '请在“我的”页右上角 + 中创建',
                             style: TextStyle(
                               color: tokens.textSecondary,
-                              fontSize: 11,
+                              fontSize: MusicTypography.smallCaptionSize,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -191,7 +192,9 @@ class _AddToPlaylistSheet extends ConsumerWidget {
                           ),
                           title: Text(
                             playlist.name,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                              fontWeight: MusicTypography.titleWeight,
+                            ),
                           ),
                           subtitle: Text(
                             cloud ? '酷狗云端歌单' : '${tracks.length} 首歌曲',

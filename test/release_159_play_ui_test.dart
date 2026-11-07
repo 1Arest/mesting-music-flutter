@@ -477,7 +477,7 @@ void main() {
   );
 
   testWidgets(
-    'a deliberate queue confirmation stays valid without an observer',
+    'collection playback starts immediately with a pending queue and no observer',
     (tester) async {
       final queue = _Queue()
         ..pending = [const MediaItem(id: 'pending-fixture', title: '旧待播')];
@@ -494,9 +494,6 @@ void main() {
         ),
       );
       await tester.tap(find.byKey(const ValueKey('fallback-dialog')));
-      await _settle(tester);
-      expect(find.text('替换待播歌曲'), findsOneWidget);
-      await tester.tap(find.text('替换待播歌曲'));
       await _settle(tester);
       expect(queue.received.single.id, song157(1).id);
       await tester.pumpWidget(const SizedBox());

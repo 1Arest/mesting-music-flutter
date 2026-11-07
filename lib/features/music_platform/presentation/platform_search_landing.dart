@@ -28,6 +28,7 @@ import '../platform_backend_providers.dart';
 import '../netease/netease_features_page.dart';
 import '../netease/netease_features_repository.dart';
 import '../../downloads/audio_downloads_page.dart';
+import '../../themes/music_typography.dart';
 export '../platform_explore_providers.dart';
 
 /// Search history, real keyword boards, then upstream music exploration. A
@@ -233,7 +234,17 @@ class _ExploreSection extends ConsumerWidget {
                       )
                     else
                       SizedBox(
-                        height: 182,
+                        // Reserve two caption lines at the accessibility scale,
+                        // plus one pixel for fractional line-height rounding.
+                        height:
+                            132 +
+                            9 +
+                            2 *
+                                MediaQuery.textScalerOf(
+                                  context,
+                                ).scale(MusicTypography.subheadlineSize) *
+                                MusicTypography.subheadline.height! +
+                            1,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: items.length,
@@ -287,9 +298,7 @@ class _ExploreSection extends ConsumerWidget {
                                       item.title,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.labelLarge,
+                                      style: MusicTypography.subheadline,
                                     ),
                                   ],
                                 ),

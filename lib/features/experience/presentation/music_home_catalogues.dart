@@ -17,6 +17,7 @@ import '../../music_platform/presentation/platform_search_landing.dart'
     show PlatformExploreSongsPage;
 import '../../themes/music_theme_tokens.dart';
 import 'editorial_widgets.dart';
+import '../../themes/music_typography.dart';
 
 /// Home deliberately consumes music catalogues, not the mixed advertising,
 /// livestream or long-audio feed. Selection and tracks always come from Kugou.
@@ -108,7 +109,7 @@ class MusicHomeCatalogueShelf extends ConsumerWidget {
                         child: Text(
                           item.title,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: MusicTypography.calloutSize,
                             color: context.musicThemeTokens.textPrimary,
                           ),
                         ),

@@ -10,6 +10,7 @@ import '../../../core/security/avatar_image_validator.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../auth/auth_providers.dart';
+import '../../themes/music_typography.dart';
 
 const profileAvatarHeroTag = 'profile-avatar-preview';
 
@@ -63,8 +64,8 @@ class _AvatarPreviewPageState extends ConsumerState<AvatarPreviewPage> {
                   '当前头像',
                   style: TextStyle(
                     color: Color(0xB8FFFFFF),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                    fontSize: MusicTypography.captionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -148,8 +149,8 @@ class _AvatarPreviewPageState extends ConsumerState<AvatarPreviewPage> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Color(0xFF77727A),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontSize: MusicTypography.smallCaptionSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -285,8 +286,8 @@ class _AvatarActionButton extends StatelessWidget {
                   label,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
+                    fontSize: MusicTypography.subheadlineSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],

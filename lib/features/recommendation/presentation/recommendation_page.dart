@@ -25,6 +25,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../../themes/theme_controller.dart';
 import '../domain/personalized_recommendation.dart';
 import '../recommendation_providers.dart';
+import '../../themes/music_typography.dart';
 
 export '../data/daily_recommendations.dart' show recommendationTracksForDate;
 
@@ -475,9 +476,9 @@ class _DailyMixHero extends StatelessWidget {
                       '今日私人混合',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 27,
+                        fontSize: MusicTypography.titleSize,
                         height: 1,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -487,8 +488,8 @@ class _DailyMixHero extends StatelessWidget {
                           : '${tracks.length} 首偏爱与新鲜风格 · 随机开启今天',
                       style: const TextStyle(
                         color: Color(0xD9FFFFFF),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: MusicTypography.captionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -510,8 +511,8 @@ class _DailyMixHero extends StatelessWidget {
                         ),
                         minimumSize: const Size(124, 44),
                         textStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.captionSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -601,8 +602,8 @@ class _HeroTag extends StatelessWidget {
           'JUST FOR YOU',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 9,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
             letterSpacing: 1.3,
           ),
         ),
@@ -728,16 +729,16 @@ class _DailyRecommendationEntry extends StatelessWidget {
                       style: TextStyle(
                         color: badgePalette.day,
                         height: 1,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.headingSize,
+                        fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
                     Text(
                       '${now.month}月',
                       style: TextStyle(
                         color: badgePalette.month,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
+                        fontSize: MusicTypography.smallCaptionSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -752,8 +753,8 @@ class _DailyRecommendationEntry extends StatelessWidget {
                       '每日推荐',
                       style: TextStyle(
                         color: tokens.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
+                        fontSize: MusicTypography.subheadlineSize,
+                        fontWeight: MusicTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -761,7 +762,7 @@ class _DailyRecommendationEntry extends StatelessWidget {
                       '每天更新的专属歌单 · $trackCount 首',
                       style: TextStyle(
                         color: tokens.textSecondary,
-                        fontSize: 11,
+                        fontSize: MusicTypography.smallCaptionSize,
                       ),
                     ),
                   ],
@@ -771,8 +772,8 @@ class _DailyRecommendationEntry extends StatelessWidget {
                 '查看',
                 style: TextStyle(
                   color: accent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                 ),
               ),
               const SizedBox(width: 3),
@@ -816,8 +817,8 @@ class _SectionHeading extends StatelessWidget {
                 eyebrow,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.smallCaptionSize,
+                  fontWeight: MusicTypography.bodyWeight,
                   letterSpacing: 1.35,
                 ),
               ),
@@ -826,14 +827,17 @@ class _SectionHeading extends StatelessWidget {
                 title,
                 style: TextStyle(
                   color: tokens.textPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
+                  fontSize: MusicTypography.headingSize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: TextStyle(color: tokens.textSecondary, fontSize: 11),
+                style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
             ],
           ),
@@ -851,8 +855,8 @@ class _SectionHeading extends StatelessWidget {
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
               textStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w900,
+                fontSize: MusicTypography.smallCaptionSize,
+                fontWeight: MusicTypography.bodyWeight,
               ),
             ),
           ),
@@ -970,8 +974,8 @@ class _MoodCard extends StatelessWidget {
                         maxLines: 1,
                         style: TextStyle(
                           color: tokens.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
+                          fontSize: MusicTypography.footnoteSize,
+                          fontWeight: MusicTypography.bodyWeight,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -979,7 +983,10 @@ class _MoodCard extends StatelessWidget {
                         mood.subtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(color: tokens.textMuted, fontSize: 9),
+                        style: TextStyle(
+                          color: tokens.textMuted,
+                          fontSize: MusicTypography.smallCaptionSize,
+                        ),
                       ),
                     ],
                   ),
@@ -1273,8 +1280,8 @@ class _TrackRail extends StatelessWidget {
           '在线曲库暂时不可用，请稍后刷新',
           style: TextStyle(
             color: tokens.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontSize: MusicTypography.captionSize,
+            fontWeight: MusicTypography.bodyWeight,
           ),
         ),
       );
@@ -1341,15 +1348,18 @@ class _TrackRail extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: tokens.textPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
+                      fontSize: MusicTypography.captionSize,
+                      fontWeight: MusicTypography.bodyWeight,
                     ),
                   ),
                   Text(
                     track.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: tokens.textMuted, fontSize: 10),
+                    style: TextStyle(
+                      color: tokens.textMuted,
+                      fontSize: MusicTypography.smallCaptionSize,
+                    ),
                   ),
                 ],
               ),
@@ -1473,8 +1483,8 @@ class _RecommendationCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900,
+                            fontSize: MusicTypography.subheadlineSize,
+                            fontWeight: MusicTypography.bodyWeight,
                             shadows: [
                               Shadow(color: Colors.black54, blurRadius: 7),
                             ],
@@ -1485,8 +1495,8 @@ class _RecommendationCard extends StatelessWidget {
                           '为此刻挑选 · 在线歌单',
                           style: TextStyle(
                             color: Color(0xD9FFFFFF),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
+                            fontSize: MusicTypography.smallCaptionSize,
+                            fontWeight: MusicTypography.bodyWeight,
                           ),
                         ),
                       ],

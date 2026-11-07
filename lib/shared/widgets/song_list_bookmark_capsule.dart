@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'artwork_image.dart';
 import 'beta_glass_controls.dart';
+import '../../features/themes/music_typography.dart';
 
 /// One optical capsule with two independent hit targets. Closing never bubbles
 /// into locate, and a pending locate leaves the close target usable.
@@ -58,15 +59,15 @@ class SongListBookmarkCapsule extends StatelessWidget {
                   '上次播放到这首',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11),
+                  style: TextStyle(fontSize: MusicTypography.smallCaptionSize),
                 ),
                 Text(
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: MusicTypography.footnoteSize,
+                    fontWeight: MusicTypography.bodyWeight,
                   ),
                 ),
               ],

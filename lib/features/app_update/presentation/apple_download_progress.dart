@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../themes/beta_appearance.dart';
+import '../../themes/music_typography.dart';
 
 /// The first frame starts at persisted progress, so reopening a download never
 /// animates from zero. Only the capsule fill interpolates; labels always report
@@ -64,7 +65,7 @@ class AppleDownloadProgress extends StatelessWidget {
           const SizedBox(height: 10),
           DefaultTextStyle.merge(
             style: TextStyle(
-              fontSize: 13,
+              fontSize: MusicTypography.footnoteSize,
               color: scheme.onSurfaceVariant,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -76,7 +77,7 @@ class AppleDownloadProgress extends StatelessWidget {
                   percent,
                   style: TextStyle(
                     color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: MusicTypography.titleWeight,
                   ),
                 ),
               ],

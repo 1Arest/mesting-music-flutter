@@ -7,6 +7,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../app_update_providers.dart';
 import '../data/java_mysql_test_channel_repository.dart';
 import '../domain/app_update_models.dart';
+import '../../themes/music_typography.dart';
 
 const javaMysqlTestChannelSheetKey = ValueKey<String>(
   'java-mysql-test-channel-sheet',
@@ -133,7 +134,7 @@ class _JavaMysqlTestChannelSheetState
               'Java + MySQL 测试版',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 color: tokens.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: MusicTypography.titleWeight,
               ),
             ),
             const SizedBox(height: 8),

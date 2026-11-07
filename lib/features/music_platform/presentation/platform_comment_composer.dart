@@ -5,6 +5,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../experience/presentation/beta_bottom_bar.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../shared/widgets/beta_activity_indicator.dart';
+import '../../themes/music_typography.dart';
 
 /// Input and send are sibling glass surfaces. Nesting a glass button inside a
 /// glass container disables its refraction in the renderer. Keep both bounded
@@ -99,7 +100,10 @@ class PlatformCommentComposer extends StatelessWidget {
                     textInputAction: singleLine
                         ? TextInputAction.search
                         : TextInputAction.newline,
-                    style: const TextStyle(fontSize: 16, height: 1.4),
+                    style: const TextStyle(
+                      fontSize: MusicTypography.calloutSize,
+                      height: 1.4,
+                    ),
                     decoration: InputDecoration(
                       hintText:
                           hintText ?? (reply == null ? '写下你的评论…' : '回复评论…'),

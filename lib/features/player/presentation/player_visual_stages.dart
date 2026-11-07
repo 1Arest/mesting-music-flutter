@@ -8,6 +8,7 @@ import '../../../shared/widgets/artwork_image.dart';
 import '../../themes/mesting_palette.dart';
 import '../player_visual_style.dart';
 import 'vinyl_disc.dart';
+import '../../themes/music_typography.dart';
 
 const double alternativePlayerStageDefaultTopInset = 90;
 const double alternativePlayerStageHeaderClearance = 68;
@@ -722,9 +723,9 @@ class _TrackTitle extends StatelessWidget {
       textAlign: centered ? TextAlign.center : TextAlign.start,
       style: const TextStyle(
         color: Colors.white,
-        fontSize: 25,
+        fontSize: MusicTypography.titleSize,
         height: 1.1,
-        fontWeight: FontWeight.w900,
+        fontWeight: MusicTypography.titleWeight,
         letterSpacing: -.5,
       ),
     );
@@ -746,8 +747,8 @@ class _TrackArtist extends StatelessWidget {
       textAlign: centered ? TextAlign.center : TextAlign.start,
       style: TextStyle(
         color: Colors.white.withValues(alpha: .68),
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontSize: MusicTypography.footnoteSize,
+        fontWeight: MusicTypography.bodyWeight,
       ),
     );
   }
@@ -770,8 +771,8 @@ class _StageEyebrow extends StatelessWidget {
           label,
           style: const TextStyle(
             color: Color(0xBFFFFFFF),
-            fontSize: 10,
-            fontWeight: FontWeight.w900,
+            fontSize: MusicTypography.smallCaptionSize,
+            fontWeight: MusicTypography.bodyWeight,
             letterSpacing: 2,
           ),
         ),

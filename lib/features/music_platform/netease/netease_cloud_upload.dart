@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../data/music_platform_api.dart';
 import '../platform_backend_providers.dart';
 import 'netease_api.dart';
+import '../../themes/music_typography.dart';
 
 /// Streaming native upload. Music cookies only reach NeteaseApi; the NOS
 /// request has an isolated token and no redirects, cookies or auth headers.
@@ -144,16 +145,16 @@ Future<void> chooseAndUploadNeteaseCloud(
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (c) => CupertinoAlertDialog(
-        title: const Text('上传到网易云云盘？'),
+        title: const Text('上传到网易云云盘？', style: MusicTypography.titleEmphasis),
         content: Text('${file['name']}\n上传至当前网易云账号，原文件保留。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(c, false),
-            child: const Text('取消'),
+            child: const Text('取消', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(c, true),
-            child: const Text('上传'),
+            child: const Text('上传', style: MusicTypography.regularText),
           ),
         ],
       ),

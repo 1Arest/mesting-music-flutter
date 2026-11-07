@@ -19,6 +19,7 @@ import 'netease_together_exit.dart';
 import '../../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../../themes/music_application_theme.dart';
 import 'together_room_members.dart';
+import '../../../themes/music_typography.dart';
 
 Future<void> showNeteaseTogetherPanel(
   BuildContext context, {
@@ -155,8 +156,8 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
                       const Text(
                         '正在一起听',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.headingSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -279,8 +280,8 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
                       child: Text(
                         '邀请好友',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                          fontSize: MusicTypography.headingSize,
+                          fontWeight: MusicTypography.titleWeight,
                         ),
                       ),
                     ),
@@ -364,7 +365,10 @@ class _NeteaseTogetherPanelState extends ConsumerState<NeteaseTogetherPanel> {
                 const SizedBox(height: 24),
                 const Text(
                   '共享待播列表',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
                 ),
                 for (final song in controller.sharedTracks)
                   EditorialTrackRow(

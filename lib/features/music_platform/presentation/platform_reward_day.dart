@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../themes/beta_appearance.dart';
+import '../../themes/music_typography.dart';
 
 /// Calendar presentation only. Completion and today's focus are independent:
 /// green confirms a saved sign-in, while a blue outline identifies today.
@@ -59,11 +60,9 @@ class PlatformRewardDay extends StatelessWidget {
                       maxLines: 1,
                       softWrap: false,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: MusicTypography.calloutSize,
                         height: 1.05,
-                        fontWeight: today || checked
-                            ? FontWeight.w600
-                            : FontWeight.w400,
+                        fontWeight: MusicTypography.bodyWeight,
                         color: checked
                             ? green
                             : future

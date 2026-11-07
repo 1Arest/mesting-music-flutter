@@ -20,6 +20,7 @@ import '../../player/presentation/shinchan_progress_walker.dart';
 import '../../queue/presentation/queue_page.dart';
 import '../../themes/theme_controller.dart';
 import '../../themes/music_theme_preset.dart';
+import '../../themes/music_typography.dart';
 
 /// CONTRACT: Apple Music transport from the user's pinned reference. All five
 /// Beta styles share this exact component: progress, naked white glyphs, system
@@ -224,11 +225,17 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
               Text(
                 formatDuration(Duration(milliseconds: value.round())),
                 key: const ValueKey('playback-elapsed-time'),
-                style: const TextStyle(color: Colors.white60, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
               Text(
                 '-${formatDuration(Duration(milliseconds: (maximum - value).round()))}',
-                style: const TextStyle(color: Colors.white60, fontSize: 11),
+                style: const TextStyle(
+                  color: Colors.white60,
+                  fontSize: MusicTypography.smallCaptionSize,
+                ),
               ),
             ],
           ),
@@ -404,7 +411,7 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white60,
-                    fontSize: 11,
+                    fontSize: MusicTypography.smallCaptionSize,
                     height: 1.3,
                   ),
                 ),

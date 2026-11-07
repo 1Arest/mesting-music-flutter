@@ -1,3 +1,5 @@
+import 'qishui_lyrics_page.dart';
+import '../../themes/music_typography.dart';
 import '../../../shared/widgets/music_feature_page.dart';
 import 'dart:async';
 import 'qishui_page_scope.dart';
@@ -5,6 +7,7 @@ import 'qishui_playlist_grid.dart';
 import '../../auth/beta_account_choice.dart';
 import 'qishui_login_page.dart';
 import 'qishui_now_playing.dart';
+import 'qishui_player_navigation.dart';
 import 'qishui_feed_mode_menu.dart';
 import 'qishui_mine_widgets.dart';
 import 'qishui_mine_downloads.dart';
@@ -272,6 +275,16 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
       QishuiRoot.music => '音乐',
       QishuiRoot.mine => '我的',
     };
+    if (widget.root == QishuiRoot.music &&
+        ref.watch(qishuiMusicLyricsProvider)) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) ref.read(qishuiMusicLyricsProvider.notifier).showCover();
+        },
+        child: const QishuiLyricsPage(),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -293,7 +306,9 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                               Text(
                                 title,
                                 style: Theme.of(context).textTheme.headlineLarge
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                    ?.copyWith(
+                                      fontWeight: MusicTypography.titleWeight,
+                                    ),
                               ),
                               if (widget.root == QishuiRoot.music) ...[
                                 const SizedBox(width: 14),
@@ -434,8 +449,10 @@ class QishuiTrackTile extends ConsumerWidget {
             .read(audioHandlerProvider)
             .playSingleTrack(
               track,
-              playbackContext: queue.isEmpty ? [track] : queue,
-              replaceUpcoming: true,
+              // A row selects one recording; its surrounding list is not an
+              // implicit replacement queue. Only the explicit Play All does so.
+              playbackContext: [track],
+              discardRecommendations: true,
               isCurrent: () =>
                   context.mounted &&
                   music.current &&

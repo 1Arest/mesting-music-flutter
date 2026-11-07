@@ -11,6 +11,7 @@ import '../../themes/music_theme_tokens.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
+import '../../themes/music_typography.dart';
 
 class PlaylistDraft {
   const PlaylistDraft({
@@ -168,8 +169,8 @@ class _PlaylistEditorState extends State<_PlaylistEditor> {
             widget.initialName == null ? '新建歌单' : '编辑歌单',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
+              fontSize: MusicTypography.sectionTitleSize,
+              fontWeight: MusicTypography.titleWeight,
               color: tokens.textPrimary,
             ),
           ),
@@ -395,8 +396,8 @@ class _PlaylistEditorState extends State<_PlaylistEditor> {
                                 maxLength: 30,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: MusicTypography.sectionTitleSize,
+                                  fontWeight: MusicTypography.titleWeight,
                                   color: tokens.textPrimary,
                                 ),
                                 decoration: const InputDecoration(
@@ -561,7 +562,7 @@ class PlaylistTemplatePainter extends CustomPainter {
         style: TextStyle(
           color: Color(0xCCFFFFFF),
           fontSize: 60,
-          fontWeight: FontWeight.w800,
+          fontWeight: MusicTypography.titleWeight,
         ),
       ),
       textDirection: TextDirection.ltr,

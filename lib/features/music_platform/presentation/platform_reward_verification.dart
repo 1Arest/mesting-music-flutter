@@ -8,6 +8,7 @@ import '../../../shared/widgets/beta_glass_popover.dart';
 import '../domain/platform_rewards.dart';
 import '../retained_kugou_scope.dart';
 import '../../../core/diagnostics/diagnostic_activity.dart';
+import '../../themes/music_typography.dart';
 
 /// Adapted from md3Music's verify_captcha_dialog.dart (a69503b, AGPL-3.0).
 /// The Tencent SDK supplies the proof. Cancellation, account changes and page
@@ -126,8 +127,8 @@ Future<String?> showPlatformRewardVerification(
                             child: Text(
                               '安全验证',
                               style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
+                                fontSize: MusicTypography.headingSize,
+                                fontWeight: MusicTypography.titleWeight,
                               ),
                             ),
                           ),

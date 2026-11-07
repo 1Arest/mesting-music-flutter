@@ -18,6 +18,7 @@ import '../music_platform_providers.dart';
 import '../platform_profile_provider.dart';
 import 'platform_avatar.dart';
 import 'platform_region_picker.dart';
+import '../../themes/music_typography.dart';
 
 /// One edit session belongs to the account present on entry. Account changes
 /// invalidate the form rather than silently applying its draft to another user.
@@ -73,17 +74,17 @@ class _PlatformProfileEditPageState
     final discard = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('放弃本次修改？'),
+        title: const Text('放弃本次修改？', style: MusicTypography.titleEmphasis),
         content: const Text('尚未保存的资料会被丢弃。已提交的头像不受影响。'),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('继续编辑'),
+            child: const Text('继续编辑', style: MusicTypography.regularText),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('放弃修改'),
+            child: const Text('放弃修改', style: MusicTypography.regularText),
           ),
         ],
       ),
@@ -176,7 +177,10 @@ class _PlatformProfileEditPageState
             children: [
               const Text(
                 '更换头像',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: MusicTypography.sectionTitleSize,
+                  fontWeight: MusicTypography.titleWeight,
+                ),
               ),
               const SizedBox(height: 24),
               ClipOval(
@@ -226,17 +230,17 @@ class _PlatformProfileEditPageState
     final value = await showCupertinoModalPopup<int>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('性别'),
+        title: const Text('性别', style: MusicTypography.titleEmphasis),
         actions: [
           for (final choice in const [(0, '女'), (1, '男'), (2, '保密')])
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, choice.$1),
-              child: Text(choice.$2),
+              child: Text(choice.$2, style: MusicTypography.regularText),
             ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: const Text('取消', style: MusicTypography.regularText),
         ),
       ),
     );
@@ -266,7 +270,10 @@ class _PlatformProfileEditPageState
                   child: Text(
                     '生日',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: MusicTypography.bodySize,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
                 ),
                 CupertinoButton(
@@ -414,7 +421,9 @@ class _PlatformProfileEditPageState
                                       : _pendingAvatar != null
                                       ? '头像已提交，等待审核'
                                       : '更换头像',
-                                  style: const TextStyle(fontSize: 15),
+                                  style: const TextStyle(
+                                    fontSize: MusicTypography.subheadlineSize,
+                                  ),
                                 ),
                               ],
                             ),
@@ -499,7 +508,7 @@ class _PlatformProfileEditPageState
                         '修改将同步到当前${_owner.platformLabel}账号。头像提交后需由平台审核。',
                         style: TextStyle(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 13,
+                          fontSize: MusicTypography.footnoteSize,
                           height: 1.6,
                         ),
                       ),
@@ -515,7 +524,10 @@ class _PlatformProfileEditPageState
     padding: const EdgeInsets.only(left: 8, bottom: 10),
     child: Text(
       text,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+      style: const TextStyle(
+        fontSize: MusicTypography.subheadlineSize,
+        fontWeight: MusicTypography.bodyWeight,
+      ),
     ),
   );
   Widget _row(String label, String value, VoidCallback onTap) =>
@@ -528,7 +540,7 @@ class _PlatformProfileEditPageState
               label,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 16,
+                fontSize: MusicTypography.calloutSize,
               ),
             ),
             const SizedBox(width: 20),
@@ -538,7 +550,7 @@ class _PlatformProfileEditPageState
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 15,
+                  fontSize: MusicTypography.subheadlineSize,
                 ),
               ),
             ),

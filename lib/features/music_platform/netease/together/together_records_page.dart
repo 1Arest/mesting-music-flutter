@@ -16,6 +16,7 @@ import '../netease_music_repository.dart';
 import 'netease_together_page.dart';
 import 'together_record.dart';
 import 'together_records_repository.dart';
+import '../../../themes/music_typography.dart';
 
 /// Ended-session statistics have their own clock and identity. No part of this
 /// UI subscribes to the current room or adds elapsed local playback to a report.
@@ -339,8 +340,8 @@ class _ReportPanel extends StatelessWidget {
                 '一起听',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: MusicTypography.bodySize,
+                  fontWeight: MusicTypography.titleWeight,
                 ),
               ),
             ),
@@ -359,7 +360,7 @@ class _ReportPanel extends StatelessWidget {
           child: DefaultTextStyle.merge(
             style: const TextStyle(
               color: Color(0xFF9D2137),
-              fontSize: 15,
+              fontSize: MusicTypography.subheadlineSize,
               height: 1.5,
             ),
             child: Column(
@@ -457,7 +458,10 @@ class _ReportMetric extends StatelessWidget {
       Text(
         value,
         textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+        style: const TextStyle(
+          fontSize: MusicTypography.sectionTitleSize,
+          fontWeight: MusicTypography.titleWeight,
+        ),
       ),
     ],
   );
