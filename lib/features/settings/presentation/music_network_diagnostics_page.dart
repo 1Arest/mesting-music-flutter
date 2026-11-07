@@ -91,7 +91,7 @@ class _MusicNetworkDiagnosticsPageState
                 child: Text(
                   '${row['platform']} · ${_operation(row['operation'])}\n'
                   '${_outcome(row['outcome'])} · ${row['elapsedMs']} ms'
-                  '${row['status'] == null ? '' : ' · ${row['status']}'}\n'
+                  '${_status(row)}\n'
                   '${row['phase'] == null ? '' : '${_phase(row['phase'])}${row['family'] == null ? '' : ' · ${_family(row['family'])}'}\n'}'
                   '${row['nativeStep'] == null ? '' : '${_nativeStep(row['nativeStep'])}\n'}'
                   '${row['nativeReason'] == null ? '' : '${_nativeReason(row['nativeReason'])}\n'}'
@@ -104,6 +104,20 @@ class _MusicNetworkDiagnosticsPageState
       },
     ),
   );
+
+  /// A transport status and a platform's business code can both be 301. Keep
+  /// their meaning visible without exposing a response body or redirect URL.
+  static String _status(Map<String, Object> row) {
+    final status = row['status'];
+    if (status is! int) return '';
+    final label = row['outcome'] == 'business'
+        ? '业务码'
+        : status >= 100 && status <= 599
+        ? 'HTTP'
+        : '状态码';
+    return ' · $label $status';
+  }
+
   static String _operation(Object? name) => switch (name) {
     'playbackUrl' => '播放地址',
     'audio' => '音频加载',
@@ -136,6 +150,8 @@ class _MusicNetworkDiagnosticsPageState
     'audioRead' => '音频文件读取',
     'audioDecode' => '本机音频准备',
     'audioVerify' => '音频时长与格式校验',
+    'accountSigning' => '账号参与签名检查',
+    'entitlementRead' => '账号权益读取',
     _ => '准备连接',
   };
   static String _nativeStep(Object? name) => switch (name) {

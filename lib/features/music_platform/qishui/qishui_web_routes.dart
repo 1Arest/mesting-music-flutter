@@ -91,6 +91,10 @@ class QishuiWebRoute {
         // Verified 19.0.0 read DTO, also served by api.qishui.com. This check
         // never consumes quota; a required debit is a separate user operation.
         return QishuiWebRoute(path, false, body, params);
+      case '/luna/commerce/v2/commerce_info':
+        // Read already earned account benefits using the pinned PC welfare
+        // contract. This does not enable apply/gain/ad-task writes.
+        return QishuiWebRoute(path, false, body, params);
     }
     throw const QishuiException('当前扫码会话尚未接通此汽水接口，请在汽水音乐App中操作；原账号已保留');
   }

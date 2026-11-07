@@ -24,6 +24,7 @@ import '../network/system_music_io_client.dart';
 typedef RadioTrackLoader =
     Future<List<Track>> Function(Set<String> excludedTrackKeys);
 typedef TrackPlaybackResolver = Future<Track> Function(Track track);
+typedef TrackLoadFailurePolicy = bool Function(Track track, Object error);
 
 /// The only owner of the active `just_audio` source and media-session state.
 ///
@@ -212,12 +213,17 @@ class MestingAudioHandler extends BaseAudioHandler
   bool isAutomaticallyQueued(String id) => _recommendedUpcomingIds.contains(id);
   void Function()? _onExplicitPlayback;
   TrackPlaybackResolver? _trackPlaybackResolver;
+  TrackLoadFailurePolicy? _skipUnplayableTrack;
   bool _refreshingSource = false;
 
   /// A provider may refresh expiring URLs without coupling this audio owner to
   /// a particular account system, server transport or music catalogue.
-  void configureTrackPlaybackResolver(TrackPlaybackResolver? resolver) {
+  void configureTrackPlaybackResolver(
+    TrackPlaybackResolver? resolver, {
+    TrackLoadFailurePolicy? skipUnplayableTrack,
+  }) {
     _trackPlaybackResolver = resolver;
+    _skipUnplayableTrack = skipUnplayableTrack;
   }
 
   /// Refresh the current stream without rebuilding the logical queue, history,
@@ -480,6 +486,74 @@ class MestingAudioHandler extends BaseAudioHandler
   /// listener taps a track before the restore finishes, the restore is dropped
   /// rather than taking control back from that explicit command.
   Future<bool> _loadQueue(
+    List<Track> tracks, {
+    int initialIndex = 0,
+    Duration initialPosition = Duration.zero,
+    bool preload = true,
+    bool deferSource = false,
+    int? requiredUserCommandEpoch,
+    int? requiredTransportIntentEpoch,
+    bool Function()? ownerCurrent,
+    bool allowFailureRecovery = false,
+  }) async {
+    // Resolve one bounded queue snapshot, in order, without recursive loads or
+    // recommendation refills. Each failed identity is removed for this round.
+    // A newer tap, Pause, account change or failed global service cancels it.
+    final intent = requiredTransportIntentEpoch ?? _transportIntentEpoch;
+    var remaining = tracks;
+    var index = initialIndex;
+    var position = initialPosition;
+    final attempted = <String>{};
+    while (true) {
+      final attemptEpoch = _queueLoadEpoch + 1;
+      try {
+        return await _loadQueueOnce(
+          remaining,
+          initialIndex: index,
+          initialPosition: position,
+          preload: preload,
+          deferSource: deferSource,
+          requiredUserCommandEpoch: requiredUserCommandEpoch,
+          requiredTransportIntentEpoch: intent,
+          ownerCurrent: ownerCurrent,
+        );
+      } on Object catch (error) {
+        if (remaining.isEmpty ||
+            !allowFailureRecovery ||
+            deferSource ||
+            intent != _transportIntentEpoch ||
+            attemptEpoch != _queueLoadEpoch ||
+            ownerCurrent?.call() == false ||
+            (requiredUserCommandEpoch != null &&
+                requiredUserCommandEpoch != _userCommandEpoch)) {
+          rethrow;
+        }
+        final safeIndex = index.clamp(0, remaining.length - 1);
+        final failed = remaining[safeIndex];
+        if (_skipUnplayableTrack?.call(failed, error) != true) rethrow;
+        attempted.add(failed.id);
+        remaining = [
+          ...remaining.skip(safeIndex + 1),
+          ...remaining.take(safeIndex),
+        ].where((track) => !attempted.contains(track.id)).toList();
+        if (remaining.isEmpty) {
+          _resolutionError = '本轮队列没有可播放的歌曲，已停止，请稍后重试';
+          playbackState.add(
+            playbackState.value.copyWith(
+              processingState: AudioProcessingState.error,
+              playing: false,
+              errorMessage: _resolutionError,
+            ),
+          );
+          throw PlaybackContinuationException(_resolutionError!);
+        }
+        index = 0;
+        position = Duration.zero;
+      }
+    }
+  }
+
+  Future<bool> _loadQueueOnce(
     List<Track> tracks, {
     int initialIndex = 0,
     Duration initialPosition = Duration.zero,
@@ -1089,6 +1163,46 @@ class MestingAudioHandler extends BaseAudioHandler
         'playback-failed id=$failedTrackId origin=$origin '
         'failures=$_consecutiveLoadFailures',
       );
+      if (failedTrack?.source == TrackSource.qishui) {
+        // Native failures share the same bounded recovery as lookup failures.
+        // Consume only the remaining snapshot; do not wrap to failed tracks or
+        // fetch an unbounded recommendation chain after the entire queue fails.
+        if (_skipUnplayableTrack?.call(failedTrack!, error) != true) return;
+        final remaining = _tracks
+            .skip(1)
+            .where((track) => track.id != failedTrackId)
+            .toList();
+        if (remaining.isEmpty) {
+          _resolutionError = '本轮队列没有可播放的歌曲，已停止，请稍后重试';
+          playbackState.add(
+            playbackState.value.copyWith(
+              processingState: AudioProcessingState.error,
+              playing: false,
+              errorMessage: _resolutionError,
+            ),
+          );
+          return;
+        }
+        final intent = _transportIntentEpoch;
+        final command = _userCommandEpoch;
+        try {
+          final applied = await _loadQueue(
+            remaining,
+            requiredTransportIntentEpoch: intent,
+            requiredUserCommandEpoch: command,
+            allowFailureRecovery: true,
+          );
+          if (applied &&
+              intent == _transportIntentEpoch &&
+              command == _userCommandEpoch) {
+            _startPlayer();
+          }
+        } on Object {
+          // The source loader has already published its classified terminal
+          // state. Runtime recovery has no UI awaiting this Future to catch it.
+        }
+        return;
+      }
       if (_consecutiveLoadFailures <= 4) {
         // A broken source must not be repeated forever in single-track mode.
         unawaited(
@@ -1254,6 +1368,7 @@ class MestingAudioHandler extends BaseAudioHandler
       final applied = await _loadQueue(
         _tracks,
         initialPosition: _deferredPosition ?? Duration.zero,
+        allowFailureRecovery: togetherGuard == null,
       );
       if (!applied || !_togetherCurrent(togetherGuard, togetherRevision)) {
         return;
@@ -1565,7 +1680,9 @@ class MestingAudioHandler extends BaseAudioHandler
           playbackState.value.copyWith(
             processingState: AudioProcessingState.error,
             playing: false,
-            errorMessage: '下一首音源解析失败，请重新选择歌曲',
+            errorMessage: error is PlaybackContinuationException
+                ? error.message
+                : '下一首音源解析失败，请重新选择歌曲',
           ),
         );
       } else if (!_continueAfterExplicitQueue) {
@@ -2007,6 +2124,7 @@ class MestingAudioHandler extends BaseAudioHandler
       <Track>[track, ...pending],
       requiredTransportIntentEpoch: transportEpoch,
       ownerCurrent: isCurrent,
+      allowFailureRecovery: autoplay,
     );
     if (!applied) {
       _historyNavigation = false;
@@ -2172,6 +2290,7 @@ class MestingAudioHandler extends BaseAudioHandler
       initialIndex: initialIndex,
       initialPosition: initialPosition,
       requiredTransportIntentEpoch: transportEpoch,
+      allowFailureRecovery: autoplay && togetherGuard == null,
     );
     if (!applied || !_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (_order.shuffle) {
@@ -2399,4 +2518,6 @@ class _PendingAdvanceRequest {
 class PlaybackContinuationException implements Exception {
   const PlaybackContinuationException(this.message);
   final String message;
+  @override
+  String toString() => message;
 }

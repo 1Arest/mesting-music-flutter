@@ -7,13 +7,22 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../core/security/android_credential_archive.dart';
 import '../../../core/security/retained_secure_read.dart';
+import 'qishui_signer_defaults.dart';
 
 /// User-owned service configuration. Music-account credentials never belong in
 /// this record; the Bearer token authorizes only the selected signing helper.
 class QishuiSignerConfig {
-  const QishuiSignerConfig._(this.baseUri, this.accessToken);
+  const QishuiSignerConfig._(
+    this.baseUri,
+    this.accessToken,
+    this.accountBoundSigning,
+  );
 
-  factory QishuiSignerConfig.parse(String address, String token) {
+  factory QishuiSignerConfig.parse(
+    String address,
+    String token, {
+    bool accountBoundSigning = false,
+  }) {
     final uri = Uri.tryParse(address.trim());
     if (uri == null ||
         !{'http', 'https'}.contains(uri.scheme) ||
@@ -32,6 +41,13 @@ class QishuiSignerConfig {
         )) {
       throw const FormatException('请填写完整的 HTTP 或 HTTPS 服务地址，不要附带令牌或查询参数');
     }
+    // Old records stay anonymous. Account participation is a separate explicit
+    // choice, valid only for the user's HTTPS helper, never the public signer.
+    if (accountBoundSigning &&
+        (uri.scheme != 'https' ||
+            uri.host == Uri.parse(qishuiReferenceSignerUrl).host)) {
+      throw const FormatException('账号参与签名仅支持自建 HTTPS 服务，请检查地址或关闭此开关');
+    }
     final normalizedToken = token.trim().replaceFirst(
       RegExp(r'^Bearer\s+', caseSensitive: false),
       '',
@@ -41,11 +57,16 @@ class QishuiSignerConfig {
     }
     var path = uri.path.replaceAll(RegExp(r'/+$'), '');
     if (path.endsWith('/sign')) path = path.substring(0, path.length - 5);
-    return QishuiSignerConfig._(uri.replace(path: '$path/'), normalizedToken);
+    return QishuiSignerConfig._(
+      uri.replace(path: '$path/'),
+      normalizedToken,
+      accountBoundSigning,
+    );
   }
 
   final Uri baseUri;
   final String accessToken;
+  final bool accountBoundSigning;
   Uri get signUri => baseUri.resolve('sign');
   Uri get configUri => baseUri.resolve('config');
 
@@ -53,17 +74,21 @@ class QishuiSignerConfig {
     'schema': 1,
     'address': baseUri.toString(),
     'accessToken': accessToken,
+    'accountBoundSigning': accountBoundSigning,
   };
 
   factory QishuiSignerConfig.fromJson(Map<String, dynamic> value) {
     if (value['schema'] != 1 ||
         value['address'] is! String ||
-        value['accessToken'] is! String) {
+        value['accessToken'] is! String ||
+        (value.containsKey('accountBoundSigning') &&
+            value['accountBoundSigning'] is! bool)) {
       throw const FormatException('签名服务设置无法读取，请重新保存');
     }
     return QishuiSignerConfig.parse(
       value['address'] as String,
       value['accessToken'] as String,
+      accountBoundSigning: value['accountBoundSigning'] == true,
     );
   }
 
@@ -71,9 +96,10 @@ class QishuiSignerConfig {
   bool operator ==(Object other) =>
       other is QishuiSignerConfig &&
       other.baseUri == baseUri &&
-      other.accessToken == accessToken;
+      other.accessToken == accessToken &&
+      other.accountBoundSigning == accountBoundSigning;
   @override
-  int get hashCode => Object.hash(baseUri, accessToken);
+  int get hashCode => Object.hash(baseUri, accessToken, accountBoundSigning);
   @override
   String toString() => 'QishuiSignerConfig(<private>)';
 }

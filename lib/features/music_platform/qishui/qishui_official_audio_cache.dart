@@ -168,7 +168,12 @@ class QishuiOfficialAudioCache {
         await response.stream.listen((_) {}).cancel();
         throw QishuiException(
           '汽水音频请求未完成（HTTP ${response.statusCode}）',
-          kind: QishuiFailureKind.connection,
+          code: 'http_${response.statusCode}',
+          kind: {401, 403}.contains(response.statusCode)
+              ? QishuiFailureKind.authentication
+              : {301, 404, 410}.contains(response.statusCode)
+              ? QishuiFailureKind.refused
+              : QishuiFailureKind.connection,
         );
       }
       final type = (response.headers['content-type'] ?? '').toLowerCase();

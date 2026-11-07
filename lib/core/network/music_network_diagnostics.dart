@@ -60,6 +60,8 @@ enum MusicDiagnosticPhase {
   audioRead,
   audioDecode,
   audioVerify,
+  accountSigning,
+  entitlementRead,
 }
 
 enum MusicFailureFamily {
@@ -125,6 +127,12 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     int? playerInfoUrls,
     MusicNativeAudioStep? nativeStep,
     MusicNativeAudioReason? nativeReason,
+    bool? accountCookieSigned,
+    bool? freeListeningActive,
+    bool? membershipActive,
+    bool? preview,
+    int? catalogDurationMs,
+    int? mediaDurationMs,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -148,6 +156,14 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
             : 'other',
         if (status != null && status >= 0 && status <= 999999) 'status': status,
         if (phase != null) 'phase': phase.name,
+        'accountCookieSigned': ?accountCookieSigned,
+        'freeListeningActive': ?freeListeningActive,
+        'membershipActive': ?membershipActive,
+        'preview': ?preview,
+        if (catalogDurationMs != null)
+          'catalogDurationMs': catalogDurationMs.clamp(0, 86400000),
+        if (mediaDurationMs != null)
+          'mediaDurationMs': mediaDurationMs.clamp(0, 86400000),
         if (family != null) 'family': family.name,
         if (nativeStep != null) 'nativeStep': nativeStep.name,
         if (nativeReason != null) 'nativeReason': nativeReason.name,

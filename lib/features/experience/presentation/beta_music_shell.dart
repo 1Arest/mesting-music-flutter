@@ -1,6 +1,9 @@
 import '../../music_platform/qishui/qishui_providers.dart';
 import '../../music_platform/qishui/qishui_pages.dart';
 import '../../music_platform/qishui/qishui_chrome_policy.dart';
+import '../../music_platform/qishui/qishui_appearance.dart';
+import '../../music_platform/qishui/qishui_player_navigation.dart';
+import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -386,6 +389,29 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
 
   @override
   Widget build(BuildContext context) {
+    final artworkCandidate = qishuiLyricsAppearanceActive(
+      musicRootVisible: qishuiMusicRootHidesMiniPlayer(
+        qishui: ref.watch(qishuiNavigationProvider),
+        location: widget.location,
+        hasSecondaryPage: _tabNavigation.hasSecondaryPages(1),
+      ),
+      lyricsVisible: ref.watch(qishuiMusicLyricsProvider),
+      qishuiTrack: true,
+      searching: _anySearch,
+      chromeVisible: widget.chromeVisible,
+    );
+    // A closed/offscreen lyrics view must not initialize playback providers on
+    // account forms, other platforms or pages with no active media session.
+    final artwork =
+        artworkCandidate &&
+        ref.watch(currentTrackProvider).source == TrackSource.qishui;
+    return QishuiArtworkAppearance(
+      active: artwork,
+      child: Consumer(builder: (context, ref, _) => _buildShell(context, ref)),
+    );
+  }
+
+  Widget _buildShell(BuildContext context, WidgetRef ref) {
     ref.watch(platformRewardAutomationProvider);
     final playerRoute = Uri.parse(widget.location).path == '/player';
     ref.listen(

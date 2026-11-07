@@ -8,6 +8,7 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../core/platform/share_bridge.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_image.dart';
+import '../../../shared/widgets/track_artwork.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
@@ -74,7 +75,9 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
   Future<void> _reload() async {
     if (!ownerCurrent) return;
     final next = _load();
-    setState(() => _tracks = next);
+    setState(() {
+      _tracks = next;
+    });
     await next;
   }
 
@@ -546,15 +549,12 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                             12,
                             10,
                           ),
-                          leading: SizedBox(
-                            width: 28,
-                            child: Center(
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: TrackArtwork(
+                              track: visible[index],
+                              width: 48,
+                              height: 48,
                             ),
                           ),
                           title: Text(

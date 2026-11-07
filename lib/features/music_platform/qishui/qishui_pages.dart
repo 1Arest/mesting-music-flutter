@@ -382,7 +382,9 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                         return SliverToBoxAdapter(
                           child: QishuiError(
                             error: snapshot.error!,
-                            retry: () => setState(() => _content = _load()),
+                            retry: () => setState(() {
+                              _content = _load();
+                            }),
                           ),
                         );
                       }
@@ -400,7 +402,9 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                           SliverToBoxAdapter(
                             child: QishuiError(
                               error: snapshot.error!,
-                              retry: () => setState(() => _content = _load()),
+                              retry: () => setState(() {
+                                _content = _load();
+                              }),
                             ),
                           ),
                           body,
@@ -489,7 +493,9 @@ class _QishuiTrackPageState extends ConsumerState<QishuiTrackPage>
           if (snapshot.hasError) {
             return QishuiError(
               error: snapshot.error!,
-              retry: () => setState(() => _tracks = widget.load(pageAbort)),
+              retry: () => setState(() {
+                _tracks = widget.load(pageAbort);
+              }),
             );
           }
           if (!snapshot.hasData) {
@@ -529,11 +535,11 @@ class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
 
   void _search(String text) {
     if (text.trim().isEmpty) return;
-    setState(
-      () => _results = ref
+    setState(() {
+      _results = ref
           .read(qishuiRepositoryProvider)
-          .search(text, abortTrigger: pageAbort),
-    );
+          .search(text, abortTrigger: pageAbort);
+    });
   }
 
   @override

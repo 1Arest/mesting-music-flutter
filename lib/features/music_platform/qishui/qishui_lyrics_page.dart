@@ -16,6 +16,7 @@ import '../presentation/song_actions_sheet.dart';
 import 'qishui_lyrics_content.dart';
 import 'qishui_player_navigation.dart';
 import 'qishui_playback_notice.dart';
+import 'qishui_appearance.dart';
 
 /// Structure follows the user's official Qishui screenshot; all artwork and
 /// metadata come from the existing player. This is an inline Music-tab view,
@@ -40,19 +41,7 @@ class QishuiLyricsPage extends ConsumerWidget {
     final playing = ref.watch(
       playbackStateProvider.select((s) => s.value?.playing ?? false),
     );
-    final base = Theme.of(context);
-    final theme = base.copyWith(
-      brightness: Brightness.dark,
-      colorScheme: base.colorScheme.copyWith(
-        brightness: Brightness.dark,
-        onSurface: Colors.white,
-        onSurfaceVariant: Colors.white70,
-      ),
-      textTheme: base.textTheme.apply(
-        bodyColor: Colors.white,
-        displayColor: Colors.white,
-      ),
-    );
+    final theme = qishuiArtworkTheme(Theme.of(context));
     return Theme(
       data: theme,
       child: Builder(
@@ -100,7 +89,14 @@ class QishuiLyricsPage extends ConsumerWidget {
                               child: const Icon(Icons.arrow_back_rounded),
                             ),
                             const Spacer(),
-                            SongActionsButton(track: track),
+                            BetaGlassButton(
+                              key: ValueKey('song-actions-${track.id}'),
+                              onPressed: () =>
+                                  showSongActions(context, ref, track),
+                              label: '歌曲操作',
+                              horizontalPadding: 14,
+                              child: const Icon(Icons.more_vert_rounded),
+                            ),
                           ],
                         ),
                       ),
@@ -150,7 +146,7 @@ class QishuiLyricsPage extends ConsumerWidget {
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       fontSize: MusicTypography.subheadlineSize,
-                                      color: Colors.white60,
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   QishuiPlaybackNotice(

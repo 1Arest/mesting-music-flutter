@@ -23,6 +23,7 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
   bool _hydrated = false, _testing = false, _saving = false, _reveal = false;
   String? _message;
   bool _failed = false;
+  bool _accountBoundSigning = false;
   Completer<void>? _abort;
 
   void _edited(String _) => setState(() => _message = null);
@@ -31,7 +32,11 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
     if (_saving || _testing) return;
     QishuiSignerConfig config;
     try {
-      config = QishuiSignerConfig.parse(_address.text, _token.text);
+      config = QishuiSignerConfig.parse(
+        _address.text,
+        _token.text,
+        accountBoundSigning: _accountBoundSigning,
+      );
     } on FormatException catch (error) {
       setState(() {
         _message = error.message;
@@ -112,6 +117,7 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
               _address.text =
                   saved?.baseUri.toString() ?? qishuiSelfHostedSignerAddress;
               _token.text = saved?.accessToken ?? '';
+              _accountBoundSigning = saved?.accountBoundSigning ?? false;
             }
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 220),
@@ -159,6 +165,27 @@ class _SignerSettingsState extends ConsumerState<QishuiSignerSettingsPage> {
                       ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 24),
+                SwitchListTile.adaptive(
+                  key: const ValueKey('qishui-account-signing'),
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('账号参与签名'),
+                  subtitle: const Text(
+                    '开启后，歌曲请求所需的 Cookie 会通过 HTTPS 交给你自建的 NAS 生成签名，用于核对当前账号的播放权益。请只填写你信任并管理的服务地址。',
+                  ),
+                  value: _accountBoundSigning,
+                  onChanged: enabled
+                      ? (value) => setState(() {
+                          _accountBoundSigning = value;
+                          _message = null;
+                        })
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  '默认关闭。公共签名服务和诊断导出不接收账号 Cookie。测试连接仍使用匿名请求；开关在保存后生效。',
+                  style: MusicTypography.footnote,
                 ),
                 const SizedBox(height: 24),
                 Wrap(

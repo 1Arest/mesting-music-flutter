@@ -74,6 +74,9 @@ final currentTrackProvider = Provider<Track>((ref) {
             item?.artUri?.toString() ??
             '',
         lyricsAsset: item?.extras?['lyricsAsset']?.toString() ?? '',
+        coverAlternatives: publicArtworkAlternatives(
+          item?.extras?['coverAlternatives'],
+        ),
         platformSongId: item?.extras?['platformSongId']?.toString() ?? '',
         playbackQuality: item?.extras?['playbackQuality']?.toString() ?? '',
         audioOrigin: AudioOrigin.fromJson(item?.extras?['audioOrigin']),

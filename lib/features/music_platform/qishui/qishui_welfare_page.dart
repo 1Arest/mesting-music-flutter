@@ -9,6 +9,8 @@ import 'qishui_api.dart';
 import 'qishui_models.dart';
 import 'qishui_providers.dart';
 import 'qishui_repository.dart';
+import 'qishui_entitlements.dart';
+import 'qishui_session.dart';
 
 /// Account/date-scoped activity journal. A submitted or uncertain write is
 /// never replayed automatically, including after a process restart.
@@ -18,6 +20,7 @@ String qishuiClaimJournalKey(String uid, String day) =>
 class QishuiWelfareStatus {
   QishuiWelfareStatus(this.payload);
   final Map<String, dynamic> payload;
+  QishuiEntitlements get entitlements => QishuiEntitlements(payload);
   int get _serverMillis =>
       sodaInt(sodaMap(payload['status_info'])['now_ts_ms']);
   Map<String, dynamic> get activity => sodaMap(payload['activity_free_vip']);
@@ -128,6 +131,11 @@ class _QishuiWelfarePageState extends ConsumerState<QishuiWelfarePage>
   @override
   Widget build(BuildContext context) {
     if (!watchOwner()) return changedAccount();
+    // The QR/PC contract now supports reading existing benefits. Its activity
+    // claim write remains unsupported, so never offer a button that can only
+    // create an unconfirmed local journal and then fail before dispatch.
+    final canClaimHere =
+        _music.api.session?.protocol == QishuiSessionProtocol.mobile;
     return MusicFeaturePage(
       title: '免费听与权益',
       child: SizedBox.expand(
@@ -149,11 +157,14 @@ class _QishuiWelfarePageState extends ConsumerState<QishuiWelfarePage>
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 16),
+                    Text(status.entitlements.membershipSummary),
+                    const SizedBox(height: 16),
                     Text(
-                      status.membership['is_membership'] == true
-                          ? '当前会员权益有效'
-                          : '当前未确认有效会员',
+                      status.entitlements.listeningSummary,
+                      key: const ValueKey('qishui-free-listening-status'),
                     ),
+                    const SizedBox(height: 12),
+                    const Text('这里读取当前账号已获得的权益。单曲能否整首播放，仍以汽水实际返回的音频为准。'),
                     const SizedBox(height: 28),
                     Text(
                       '活动免费 VIP',
@@ -171,10 +182,10 @@ class _QishuiWelfarePageState extends ConsumerState<QishuiWelfarePage>
                     BetaGlassButton(
                       blue: true,
                       loading: _busy,
-                      onPressed: !_busy && status.claimable
+                      onPressed: !_busy && status.claimable && canClaimHere
                           ? () => _claim(status)
                           : null,
-                      child: const Text('领取今日活动 VIP'),
+                      child: Text(canClaimHere ? '领取今日活动 VIP' : '请在官版App领取'),
                     ),
                     const SizedBox(height: 32),
                     Text(
@@ -198,7 +209,9 @@ class _QishuiWelfarePageState extends ConsumerState<QishuiWelfarePage>
                   BetaGlassButton(
                     onPressed: _busy
                         ? null
-                        : () => setState(() => _status = _read()),
+                        : () => setState(() {
+                            _status = _read();
+                          }),
                     child: const Text('刷新权益'),
                   ),
                   if (_message != null) ...[

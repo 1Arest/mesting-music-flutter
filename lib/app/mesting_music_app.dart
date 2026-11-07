@@ -1,6 +1,7 @@
 import '../features/music_platform/qishui/qishui_effects.dart';
 import '../features/music_platform/qishui/qishui_providers.dart';
 import '../features/music_platform/qishui/qishui_download_playback.dart';
+import '../features/music_platform/qishui/qishui_playback_recovery.dart';
 import '../features/downloads/audio_downloads.dart';
 import '../shared/widgets/beta_scroll_behavior.dart';
 import '../features/music_platform/domain/platform_session.dart';
@@ -141,7 +142,7 @@ class MestingMusicApp extends ConsumerWidget {
           throw MusicPlatformException(resolved.availabilityMessage);
         }
         return resolved;
-      });
+      }, skipUnplayableTrack: qishuiCanSkipPlaybackFailure);
     }
     if (DistributionChannel.isBeta) {
       ref.watch(qishuiEffectsProvider);

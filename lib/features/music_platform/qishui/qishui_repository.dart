@@ -7,6 +7,7 @@ import 'qishui_write_journal.dart';
 import 'qishui_official_audio_cache.dart';
 import 'qishui_playback_media.dart';
 import 'qishui_player_info_loader.dart';
+import 'qishui_entitlements.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 
 /// Typed feature adapter. Account ownership is captured at construction; a
@@ -393,19 +394,32 @@ class QishuiRepository {
       abortTrigger: abortTrigger,
     ),
   );
-  Future<Map<String, dynamic>> commerce({Future<void>? abortTrigger}) => call(
-    '/luna/commerce/v2/commerce_info',
-    abortTrigger: abortTrigger,
-    body: {
-      'includes': [
-        'treasure',
-        'play_entitlements',
-        'activity_free_vip',
-        'membership',
-        'benefit_base',
-      ],
-    },
-  );
+  Future<Map<String, dynamic>> commerce({Future<void>? abortTrigger}) async {
+    final result = await call(
+      '/luna/commerce/v2/commerce_info',
+      abortTrigger: abortTrigger,
+      body: {
+        'includes': [
+          'treasure',
+          'play_entitlements',
+          'incentive',
+          'activity_free_vip',
+          'membership',
+          'benefit_base',
+        ],
+      },
+    );
+    final rights = QishuiEntitlements(result);
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'qishui',
+      operation: MusicNetworkOperation.read,
+      outcome: MusicNetworkOutcome.success,
+      phase: MusicDiagnosticPhase.entitlementRead,
+      freeListeningActive: rights.freeListeningActive,
+      membershipActive: rights.membershipActive,
+    );
+    return result;
+  }
 
   Future<Map<String, dynamic>> media(String id, {Future<void>? abortTrigger}) =>
       call(
@@ -493,6 +507,16 @@ class QishuiRepository {
       requireQuality: requireQuality,
     );
     final candidate = selected.media;
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'qishui',
+      operation: MusicNetworkOperation.playbackUrl,
+      outcome: MusicNetworkOutcome.success,
+      transport: 'local',
+      phase: MusicDiagnosticPhase.mediaSelection,
+      preview: selected.isPreview,
+      catalogDurationMs: track.duration.inMilliseconds,
+      mediaDurationMs: candidate.duration.inMilliseconds,
+    );
     if (download) {
       await _requireDownloadPermission(
         track.platformSongId,

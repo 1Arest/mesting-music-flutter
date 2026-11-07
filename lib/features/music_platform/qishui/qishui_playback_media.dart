@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../core/network/music_network_diagnostics.dart';
 import '../domain/platform_audio_quality.dart';
 import 'qishui_api.dart';
@@ -26,7 +28,17 @@ List<Uri> qishuiPlayerInfoUris(Object? data) {
   var remaining = 12000;
   void visit(Object? value, int depth) {
     if (depth > 12 || --remaining < 0) return;
-    if (value is List) {
+    if (value is String &&
+        value.length <= 2 * 1024 * 1024 &&
+        value.trimLeft().startsWith('{')) {
+      // Some player containers carry their JSON as a string. Inspect that
+      // bounded container using the same explicit field/origin rules below.
+      try {
+        visit(jsonDecode(value), depth + 1);
+      } on FormatException {
+        /* Not a JSON player container. */
+      }
+    } else if (value is List) {
       for (final child in value) {
         visit(child, depth + 1);
       }
@@ -36,7 +48,16 @@ List<Uri> qishuiPlayerInfoUris(Object? data) {
             entry.value is String) {
           final uri = Uri.tryParse((entry.value as String).trim());
           if (uri != null) result.add(uri);
-        } else if (entry.value is Map || entry.value is List) {
+        } else if (entry.value is Map ||
+            entry.value is List ||
+            entry.value is String &&
+                {
+                  'track_player',
+                  'trackPlayer',
+                  'video_model',
+                  'videoModel',
+                  'player_info',
+                }.contains(entry.key)) {
           visit(entry.value, depth + 1);
         }
       }

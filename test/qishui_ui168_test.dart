@@ -357,7 +357,18 @@ void main() {
     tester,
   ) async {
     await mount(tester, size: const Size(320, 760), scale: 1.8, dark: true);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -500));
+    // The explicit Cookie disclosure adds variable-height content. Locate the
+    // action semantically instead of assuming a fixed 500px scroll distance.
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('qishui-signer-save')),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(ListView).first,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await settle168(tester);
     await tester.tap(find.byKey(const ValueKey('qishui-signer-save')));
     await settle168(tester);

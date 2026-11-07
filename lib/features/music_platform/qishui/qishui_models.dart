@@ -43,31 +43,76 @@ class QishuiFeedMode {
 }
 
 String sodaPicture(Object? value) {
-  if (value == null) return '';
-  if (value is String) {
-    final uri = Uri.tryParse(value);
-    return uri?.scheme == 'https' && uri!.userInfo.isEmpty ? value : '';
+  return sodaPictures(value).firstOrNull ?? '';
+}
+
+/// Keep all valid catalog candidates, rather than accepting an empty first
+/// alias or only the first CDN. URI/template DTOs are assembled only against a
+/// supplied base, and a complete signed picture URL is preserved byte-for-byte.
+List<String> sodaPictures(Object? value) {
+  final result = <String>{};
+  var budget = 64;
+  String publicUrl(String raw) {
+    var text = raw.trim();
+    if (text.startsWith('//')) text = 'https:$text';
+    final uri = Uri.tryParse(text);
+    if (uri == null ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        !{'http', 'https'}.contains(uri.scheme) ||
+        uri.hasFragment) {
+      return '';
+    }
+    return uri.scheme == 'http'
+        ? uri.replace(scheme: 'https').toString()
+        : text;
   }
-  if (value is List) {
-    for (final entry in value) {
-      final image = sodaPicture(entry);
-      if (image.isNotEmpty) return image;
+
+  void visit(Object? raw, int depth) {
+    if (--budget < 0 || depth > 6) return;
+    if (raw is String) {
+      final url = publicUrl(raw);
+      if (url.isNotEmpty) result.add(url);
+    } else if (raw is List) {
+      for (final item in raw.take(16)) {
+        visit(item, depth + 1);
+      }
+    } else if (raw is Map) {
+      final image = sodaMap(raw);
+      final uri = '${image['uri'] ?? ''}'.trim();
+      final template = '${image['template_prefix'] ?? ''}'.trim();
+      final urls = image['urls'] ?? image['url_list'];
+      if (urls is List) {
+        for (final url in urls.take(16)) {
+          final base = url is String ? publicUrl(url) : '';
+          if (base.isEmpty) continue;
+          final parsed = Uri.parse(base);
+          if (parsed.path.endsWith('/') && !parsed.hasQuery) {
+            if (uri.isEmpty ||
+                !RegExp(r'^[A-Za-z0-9_./-]+$').hasMatch(uri) ||
+                uri.split('/').contains('..') ||
+                uri.startsWith('/')) {
+              continue;
+            }
+            if (template.isNotEmpty &&
+                !RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(template)) {
+              continue;
+            }
+            result.add(
+              '$base$uri${template.isEmpty ? '' : '~$template-resize:960:960.png'}',
+            );
+          } else {
+            result.add(base);
+          }
+        }
+      }
+      visit(image['url'], depth + 1);
+      if (uri.startsWith('https://')) visit(uri, depth + 1);
     }
   }
-  final image = sodaMap(value);
-  if (image.isEmpty) return '';
-  final urls = image['urls'] ?? image['url_list'];
-  if (urls is List && urls.isNotEmpty) {
-    final base = sodaPicture(urls.first);
-    final uri = '${image['uri'] ?? ''}';
-    if (base.endsWith('/img/') && uri.isEmpty) return '';
-    if (base.endsWith('/img/') && uri.isNotEmpty) {
-      final template = '${image['template_prefix'] ?? ''}';
-      return '$base$uri${template.isEmpty ? '' : '~$template-resize:960:960.png'}';
-    }
-    return base;
-  }
-  return sodaPicture(image['url']);
+
+  visit(value, 0);
+  return List.unmodifiable(result.take(4));
 }
 
 /// Catalog duration is milliseconds. Do not infer full playback or quality
@@ -88,6 +133,12 @@ Track? sodaTrack(Map<String, dynamic> row) {
   }
   final album = sodaMap(row['album']);
   final artists = sodaRows(row['artists']);
+  final covers = sodaPictures([
+    row['url_cover'],
+    row['cover_url'],
+    album['url_cover'],
+    album['cover_url'],
+  ]);
   return Track(
     id: 'qishui_$id',
     platformSongId: id,
@@ -102,9 +153,8 @@ Track? sodaTrack(Map<String, dynamic> row) {
     duration: Duration(
       milliseconds: sodaInt(row['duration'] ?? row['duration_ms']),
     ),
-    coverAsset: sodaPicture(
-      row['url_cover'] ?? row['cover_url'] ?? album['url_cover'],
-    ),
+    coverAsset: covers.firstOrNull ?? '',
+    coverAlternatives: covers.skip(1).toList(growable: false),
     audioAsset: 'mesting-platform://qishui/$id',
     lyricsAsset: 'mesting-lyrics://qishui/$id',
     provider: '汽水音乐',
@@ -207,9 +257,11 @@ class QishuiPlaylist {
         lists[id] = QishuiPlaylist(
           id,
           name,
-          sodaPicture(
-            row['url_cover'] ?? row['cover_url'] ?? style['cover_url_list'],
-          ),
+          sodaPicture([
+            row['url_cover'],
+            row['cover_url'],
+            style['cover_url_list'],
+          ]),
           count: sodaInt(
             row['count_tracks'] ?? row['track_count'] ?? row['media_count'],
           ),

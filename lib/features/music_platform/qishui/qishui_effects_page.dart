@@ -89,7 +89,9 @@ class _QishuiEffectsPageState extends ConsumerState<QishuiEffectsPage>
               BetaGlassButton(
                 onPressed: _busy
                     ? null
-                    : () => setState(() => _catalog = _load()),
+                    : () => setState(() {
+                        _catalog = _load();
+                      }),
                 child: const Text('刷新可用音效'),
               ),
               const SizedBox(height: 20),

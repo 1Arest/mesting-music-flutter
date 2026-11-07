@@ -63,8 +63,8 @@ Future<Map<String, String>> qishuiAndroidContext() async {
 typedef QishuiContext = Future<Map<String, String>> Function();
 
 /// Each credential remains bound to its first-party protocol/host. There is
-/// Signatures are requested anonymously before first-party credentials are
-/// attached; the signer cannot redirect an authenticated request to another host.
+/// Signatures default to anonymous, with an explicit private-HTTPS media opt-in.
+/// A signer cannot redirect an authenticated request to another host.
 class QishuiApi {
   QishuiApi(
     this.client, {
@@ -268,6 +268,8 @@ class QishuiApi {
           (route!.path == '/luna/pc/track_v2' ||
               route.path == '/luna/commerce/v2/check_download' ||
               write);
+      final commerceRead =
+          web && route!.path == '/luna/commerce/v2/commerce_info';
       if (signedPc && signer == null) {
         throw const QishuiException('汽水应用签名服务尚未就绪，请稍后重试', code: 'signer');
       }
@@ -288,6 +290,13 @@ class QishuiApi {
           'version_name': '21.5.0',
           'version_code': '100215040',
           'device_platform': 'android',
+        } else if (commerceRead) ...{
+          ...qishuiDesktopParameters({
+            if (_session!.webDeviceId.isNotEmpty)
+              'device_id': _session!.webDeviceId,
+            if (_session!.webInstallId.isNotEmpty)
+              'iid': _session!.webInstallId,
+          }),
         } else if (signedPc) ...{
           ...qishuiDesktopParameters(device),
         } else ...{
@@ -312,13 +321,27 @@ class QishuiApi {
         'accept': 'application/json',
         'user-agent': signedPc
             ? device['user_agent'] ?? SodaMRequestSigner.userAgent
+            : commerceRead
+            ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36'
             : 'MestingMusic/1.0 (Android; Soda mobile adapter)',
+        if (commerceRead) ...{
+          'x-luna-background-type': 'foreground',
+          'x-luna-is-background-req': '0',
+          'x-luna-is-local-user': '1',
+        },
       };
       final method = (route?.get ?? get) ? 'GET' : 'POST';
       // Encode once; do not re-encode a Map after a signature has been issued.
       final encodedBody = method == 'GET'
           ? ''
           : jsonEncode(route?.body ?? body);
+      // Snapshot the eligible first-party Cookie once. Rotation by a concurrent
+      // read must not change these bytes between signing and official dispatch.
+      final cookie = authenticated ? _cookieHeader(uri) : '';
+      final firstPartyTokens = Map<String, String>.of(_tokens);
+      final csrf = _eligibleCookies(
+        uri,
+      ).where((c) => c['name'] == 'passport_csrf_token').firstOrNull?['value'];
       if (signedPc) {
         headers.addAll({
           'content-type': 'application/json; charset=utf-8',
@@ -330,6 +353,17 @@ class QishuiApi {
           'x-luna-is-background-req': '0',
           'x-luna-is-local-user': '0',
         });
+        final accountSigner = signer;
+        if (route.path == '/luna/pc/track_v2' &&
+            accountSigner is QishuiAccountRequestSigner &&
+            await (accountSigner as QishuiAccountRequestSigner)
+                .usesAccountCookie() &&
+            cookie.isNotEmpty) {
+          headers['cookie'] = cookie;
+        }
+        if (epoch != _epoch || abort.isCompleted) {
+          throw const QishuiException('操作已取消');
+        }
         final signed = await signer!.sign(
           uri,
           method,
@@ -343,14 +377,10 @@ class QishuiApi {
         uri = signed.uri;
         headers.addAll(signed.headers);
       }
-      // Attach credentials only after the anonymous signing operation, and
-      // only to the fixed original first-party host. No signer-supplied auth.
-      final cookie = _cookieHeader(uri);
+      // Public/default signing remains anonymous. Only the saved opt-in above
+      // sends this same Cookie to the user's HTTPS helper. Tokens stay here.
       if (cookie.isNotEmpty) headers['cookie'] = cookie;
-      headers.addAll(_tokens);
-      final csrf = _eligibleCookies(
-        uri,
-      ).where((c) => c['name'] == 'passport_csrf_token').firstOrNull?['value'];
+      headers.addAll(firstPartyTokens);
       if (csrf?.isNotEmpty == true) headers['x-tt-passport-csrf-token'] = csrf!;
       final response = await sendMusicRequest(
         client: client,
@@ -385,8 +415,18 @@ class QishuiApi {
         throw const QishuiException('操作已取消');
       }
       if (response.statusCode != 200) {
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'qishui',
+          operation: path == '/luna/media_v2'
+              ? MusicNetworkOperation.playbackUrl
+              : MusicNetworkOperation.read,
+          outcome: MusicNetworkOutcome.http,
+          phase: MusicDiagnosticPhase.responseValidate,
+          status: response.statusCode,
+        );
         throw QishuiException(
           '汽水请求未完成（HTTP ${response.statusCode}）',
+          code: 'http_${response.statusCode}',
           kind: response.statusCode == 401
               ? QishuiFailureKind.authentication
               : QishuiFailureKind.refused,
@@ -415,8 +455,19 @@ class QishuiApi {
           ? rawCode
           : 'invalid';
       if (!allowBusinessError && code != '0') {
+        // HTTP success and business refusal are different receipts. Export
+        // only a bounded numeric code, never the raw error/body or Location.
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'qishui',
+          operation: path == '/luna/media_v2'
+              ? MusicNetworkOperation.playbackUrl
+              : MusicNetworkOperation.read,
+          outcome: MusicNetworkOutcome.business,
+          phase: MusicDiagnosticPhase.responseValidate,
+          status: int.tryParse(code),
+        );
         throw QishuiException(
-          code == '1000062' ? '汽水暂未接受当前客户端请求（1000062）' : '汽水拒绝了请求（$code）',
+          code == '1000062' ? '汽水暂未接受当前客户端请求（1000062）' : '汽水拒绝了请求（业务码 $code）',
           code: code,
           kind: QishuiFailureKind.refused,
         );

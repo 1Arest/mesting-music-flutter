@@ -61,6 +61,11 @@ class QishuiPlayerInfoLoader {
               media.duration + const Duration(seconds: 5) >= catalogDuration,
         );
     if (hasComplete) return {'media': data, 'player_models': models};
+    if (urls.isEmpty && embedded.isEmpty) {
+      // A 200 response may contain catalog/lyric data but no player media. Keep
+      // this distinct from failed native decoding, without exporting the DTO.
+      record(MusicNetworkOutcome.format);
+    }
     QishuiException? failure;
     for (final uri in urls) {
       check();
@@ -94,6 +99,7 @@ class QishuiPlayerInfoLoader {
           record(MusicNetworkOutcome.http, status: response.statusCode);
           failure = QishuiException(
             '汽水播放资料请求未完成（HTTP ${response.statusCode}）',
+            code: 'http_${response.statusCode}',
             kind: QishuiFailureKind.refused,
           );
           continue;

@@ -14,7 +14,9 @@ class QishuiSignedRequest {
 }
 
 /// Signatures cover the exact URL, body bytes and application headers. The
-/// service sees no Cookie, CSRF, user token, Passport nonce or account jar.
+/// Anonymous is the default. The separate opt-in policy permits only the exact
+/// official Cookie header to a user-selected HTTPS helper; CSRF/token headers
+/// and the account jar are never part of the helper payload.
 abstract interface class QishuiRequestSigner {
   Future<Map<String, String>> identity(Future<void> abort);
   Future<QishuiSignedRequest> sign(
@@ -27,21 +29,46 @@ abstract interface class QishuiRequestSigner {
   void invalidateIdentity();
 }
 
+/// Kept separate so test/local signers cannot accidentally opt into credentials.
+/// The API consults this before exposing even the eligible Cookie header.
+abstract interface class QishuiAccountRequestSigner {
+  Future<bool> usesAccountCookie();
+}
+
 /// Adapter for the public SodaM service selected explicitly by the user.
 /// Only fixed, first-party business requests can be signed, and returned data
 /// cannot redirect authentication to another origin or overwrite auth headers.
-class SodaMRequestSigner implements QishuiRequestSigner {
+class SodaMRequestSigner
+    implements QishuiRequestSigner, QishuiAccountRequestSigner {
   SodaMRequestSigner(
     this.client, {
     Uri? endpoint,
     String? accessToken,
     this.custom = false,
+    this.accountBoundSigning = false,
   }) : endpoint = endpoint ?? Uri.parse(qishuiReferenceSignerUrl),
        accessToken = accessToken ?? qishuiReferenceSignerToken;
   final http.Client client;
   final Uri endpoint;
   final String accessToken;
   final bool custom;
+  final bool accountBoundSigning;
+
+  bool get _accountAllowed =>
+      accountBoundSigning &&
+      custom &&
+      endpoint.scheme == 'https' &&
+      endpoint.host != Uri.parse(qishuiReferenceSignerUrl).host &&
+      endpoint.userInfo.isEmpty;
+
+  @override
+  Future<bool> usesAccountCookie() async {
+    if (accountBoundSigning && !_accountAllowed) {
+      throw const QishuiException('账号参与签名仅支持自建 HTTPS 服务', code: 'signer');
+    }
+    return _accountAllowed;
+  }
+
   Future<Map<String, String>>? _identity;
   static const userAgent = 'SodaMusic/3.3.0';
   static const _headerNames = {
@@ -221,6 +248,9 @@ class SodaMRequestSigner implements QishuiRequestSigner {
     Map<String, String> headers,
     Future<void> abort,
   ) async {
+    // Validate again at the transport boundary, even when called outside the
+    // settings UI. An invalid opt-in never downgrades to HTTP or a public host.
+    final withAccount = await usesAccountCookie();
     if (uri.scheme != 'https' ||
         uri.host != 'api.qishui.com' ||
         uri.port != 443 ||
@@ -234,7 +264,13 @@ class SodaMRequestSigner implements QishuiRequestSigner {
     }
     final safeHeaders = <String, String>{};
     for (final entry in headers.entries) {
-      if (_headerNames.contains(entry.key.toLowerCase())) {
+      final name = entry.key.toLowerCase();
+      if (_headerNames.contains(name) ||
+          withAccount && uri.path == '/luna/pc/track_v2' && name == 'cookie') {
+        if (entry.value.contains(RegExp(r'[\r\n]')) ||
+            entry.value.length > 32768) {
+          throw const QishuiException('签名请求头未通过校验', code: 'signer');
+        }
         safeHeaders[entry.key] = entry.value;
       }
     }
@@ -273,6 +309,15 @@ class SodaMRequestSigner implements QishuiRequestSigner {
     if (!signedHeaders.keys.toSet().containsAll({'x-helios', 'x-medusa'})) {
       throw const QishuiException('汽水签名服务未返回完整应用签名，请稍后重试', code: 'signer');
     }
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'qishui',
+      operation: MusicNetworkOperation.playbackUrl,
+      outcome: MusicNetworkOutcome.success,
+      phase: MusicDiagnosticPhase.accountSigning,
+      accountCookieSigned: safeHeaders.keys.any(
+        (key) => key.toLowerCase() == 'cookie',
+      ),
+    );
     if (custom && value['device_id'] != uri.queryParameters['device_id']) {
       throw const QishuiException('签名助手返回的设备身份不一致，请检查助手配置', code: 'signer');
     }
@@ -330,7 +375,8 @@ Map<String, String> qishuiDesktopParameters(Map<String, String> identity) {
 
 /// Reads only committed settings; an unreadable saved record must fail closed.
 /// Selecting a private helper never silently retries against a public service.
-class ConfiguredQishuiRequestSigner implements QishuiRequestSigner {
+class ConfiguredQishuiRequestSigner
+    implements QishuiRequestSigner, QishuiAccountRequestSigner {
   ConfiguredQishuiRequestSigner(this.client, this.load);
   final http.Client client;
   final Future<QishuiSignerConfig?> Function() load;
@@ -353,6 +399,7 @@ class ConfiguredQishuiRequestSigner implements QishuiRequestSigner {
         endpoint: config.signUri,
         accessToken: config.accessToken,
         custom: true,
+        accountBoundSigning: config.accountBoundSigning,
       );
     }
     return _delegate!;
@@ -361,6 +408,9 @@ class ConfiguredQishuiRequestSigner implements QishuiRequestSigner {
   @override
   Future<Map<String, String>> identity(Future<void> abort) async =>
       (await _selected()).identity(abort);
+  @override
+  Future<bool> usesAccountCookie() async =>
+      (await _selected()).usesAccountCookie();
   @override
   Future<QishuiSignedRequest> sign(
     Uri uri,

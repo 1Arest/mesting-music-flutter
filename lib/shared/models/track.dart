@@ -41,6 +41,7 @@ class Track {
     this.audioBitrate = 0,
     this.audioOrigin,
     this.audioAlternatives = const [],
+    this.coverAlternatives = const [],
   }) : _sourceTitle = title;
 
   final String id;
@@ -59,6 +60,10 @@ class Track {
   /// resolved primary clears old candidates unless the resolver supplies them.
   final List<String> audioAlternatives;
   final String coverAsset;
+
+  /// Exact public picture candidates supplied by the catalog, without account
+  /// headers. Artwork can try each candidate after a final image failure.
+  final List<String> coverAlternatives;
   final String lyricsAsset;
   final TrackSource source;
   final String provider;
@@ -119,6 +124,7 @@ class Track {
       'audioAsset': audioAsset,
       if (audioAlternatives.isNotEmpty) 'audioAlternatives': audioAlternatives,
       'coverAsset': coverAsset,
+      if (coverAlternatives.isNotEmpty) 'coverAlternatives': coverAlternatives,
       'lyricsAsset': resolvedLyricsAsset,
       'source': source.name,
       'provider': provider,
@@ -144,6 +150,7 @@ class Track {
       audioAsset: json['audioAsset']! as String,
       audioAlternatives: publicAudioAlternatives(json['audioAlternatives']),
       coverAsset: json['coverAsset']! as String,
+      coverAlternatives: publicArtworkAlternatives(json['coverAlternatives']),
       lyricsAsset: json['lyricsAsset']! as String,
       source: TrackSource.values.firstWhere(
         (source) => source.name == json['source'],
@@ -182,6 +189,8 @@ class Track {
         if (audioAlternatives.isNotEmpty)
           'audioAlternatives': audioAlternatives,
         'coverAsset': coverAsset,
+        if (coverAlternatives.isNotEmpty)
+          'coverAlternatives': coverAlternatives,
         'lyricsAsset': resolvedLyricsAsset,
         'source': source.name,
         'provider': provider,
@@ -210,6 +219,7 @@ class Track {
     int? audioBitrate,
     AudioOrigin? audioOrigin,
     List<String>? audioAlternatives,
+    List<String>? coverAlternatives,
   }) {
     return Track(
       id: id,
@@ -222,6 +232,7 @@ class Track {
           audioAlternatives ??
           (audioAsset == null ? this.audioAlternatives : const []),
       coverAsset: coverAsset ?? this.coverAsset,
+      coverAlternatives: coverAlternatives ?? this.coverAlternatives,
       lyricsAsset: lyricsAsset ?? this.lyricsAsset,
       source: source,
       provider: provider,
@@ -236,6 +247,26 @@ class Track {
       audioOrigin: audioOrigin ?? this.audioOrigin,
     );
   }
+}
+
+/// Bounded public artwork backups survive queue/history restoration. The
+/// image widget never receives an authorization header or a credential URL.
+List<String> publicArtworkAlternatives(Object? value) {
+  if (value is! List) return const [];
+  return List.unmodifiable(
+    value
+        .whereType<String>()
+        .where((text) {
+          final uri = Uri.tryParse(text);
+          return uri != null &&
+              uri.scheme == 'https' &&
+              uri.host.isNotEmpty &&
+              uri.userInfo.isEmpty &&
+              !uri.hasFragment;
+        })
+        .toSet()
+        .take(4),
+  );
 }
 
 /// Allow only public media headers across persistence and playback boundaries.

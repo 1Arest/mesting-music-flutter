@@ -31,12 +31,23 @@ class TrackArtwork extends ConsumerStatefulWidget {
 
 class _TrackArtworkState extends ConsumerState<TrackArtwork> {
   String? _failedUri;
+  final Set<String> _failedCandidates = {};
+  String? _owner;
   @override
   Widget build(BuildContext context) {
     final track = widget.track;
     final platform =
         DistributionChannel.isBeta && track.source == TrackSource.kugou;
     final original = track.coverAsset;
+    if (_owner != track.id) {
+      _owner = track.id;
+      _failedCandidates.clear();
+      _failedUri = null;
+    }
+    final candidates = [
+      original,
+      ...track.coverAlternatives,
+    ].where((url) => url.isNotEmpty && !_failedCandidates.contains(url));
     final local =
         original.startsWith('assets/') ||
         original.startsWith('file:') ||
@@ -49,7 +60,11 @@ class _TrackArtworkState extends ConsumerState<TrackArtwork> {
     final restored = repair
         ? ref.watch(platformArtworkProvider(track)).value
         : null;
-    final uri = restored?.isNotEmpty == true ? restored! : original;
+    final uri = track.source == TrackSource.qishui
+        ? candidates.firstOrNull ?? _failedCandidates.lastOrNull ?? original
+        : restored?.isNotEmpty == true
+        ? restored!
+        : original;
     return ArtworkImage(
       frameOwner: '${track.source.name}:${track.id}',
       uri: uri,
@@ -59,6 +74,17 @@ class _TrackArtworkState extends ConsumerState<TrackArtwork> {
       decodeHeight: widget.decodeHeight,
       fit: widget.fit,
       retryOnNetworkError: widget.retryOnNetworkError,
+      onLoadFailure: track.source == TrackSource.qishui
+          ? () {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted &&
+                    _owner == track.id &&
+                    !_failedCandidates.contains(uri)) {
+                  setState(() => _failedCandidates.add(uri));
+                }
+              });
+            }
+          : null,
       onNetworkError: platform && !repair
           ? () {
               WidgetsBinding.instance.addPostFrameCallback((_) {
