@@ -100,6 +100,43 @@ final songs172 = List.generate(
 class AuditMusic172 extends QishuiRepository {
   AuditMusic172(super.api);
   bool activityFixture = false;
+  // The production search now has an independent paged catalog adapter. Keep
+  // this existing appearance fixture at the transport boundary it actually
+  // calls, rather than accidentally dispatching an empty mock response.
+  @override
+  Future<Map<String, dynamic>> call(
+    String path, {
+    Map<String, Object?> body = const {},
+    Map<String, String> query = const {},
+    bool get = false,
+    bool write = false,
+    Future<void>? abortTrigger,
+  }) {
+    if (path.startsWith('/luna/search/')) {
+      return Future.value({
+        'tracks': [
+          for (final song in songs172)
+            {
+              'id': song.platformSongId,
+              'name': song.title,
+              'artists': [
+                {'name': song.artist},
+              ],
+              'duration': song.duration.inMilliseconds,
+            },
+        ],
+      });
+    }
+    return super.call(
+      path,
+      body: body,
+      query: query,
+      get: get,
+      write: write,
+      abortTrigger: abortTrigger,
+    );
+  }
+
   @override
   Future<Map<String, dynamic>> profile() async => {
     'my_info': {'nickname': '界面测试账号'},

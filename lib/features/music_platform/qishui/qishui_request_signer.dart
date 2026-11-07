@@ -257,7 +257,8 @@ class SodaMRequestSigner
         uri.userInfo.isNotEmpty ||
         !(uri.path.startsWith('/luna/pc/') ||
             uri.path == '/luna/me/playlist/media/sort' ||
-            uri.path == '/luna/commerce/v2/check_download') ||
+            uri.path == '/luna/commerce/v2/check_download' ||
+            uri.path == '/luna/video/uploader' && method == 'GET') ||
         !{'GET', 'POST'}.contains(method) ||
         utf8.encode(body).length > 1024 * 1024) {
       throw const QishuiException('汽水签名请求参数未通过校验');

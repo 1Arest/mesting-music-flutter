@@ -1,11 +1,11 @@
 {
-  "version": "1.0.72",
-  "androidVersionCode": 93,
-  "originalApkSha256": "9dd5894ce6733db35189fce0d425eeb99608df931aaf21859284101c136063e4",
+  "version": "1.0.73",
+  "androidVersionCode": 94,
+  "originalApkSha256": "da997b8cff50b74ad77bbd6f6b80501a8c869a8f5ded9c80854a017375cf32bc",
   "sourceAvailable": true,
   "sourceOrigin": "Original frozen per-version ZIP",
-  "originalFrozenSourceSha256": "949cb6970741d7fb88f17368815b92d10f90e7418743334d39da3f091a8e9bd0",
-  "privateRecordsExcluded": 868,
+  "originalFrozenSourceSha256": "b66ac25c822badf8887b46af7dc25877ab31ec3325f38fd091d717c4f4825f24",
+  "privateRecordsExcluded": 879,
   "productFiles": {
     ".gitignore": {
       "size": 1484,
@@ -612,8 +612,8 @@
       "sha256": "12dfb1986971bcec1401ad817e4b9c943c5d027225b55d7d7043a33bebf949b5"
     },
     "assets/data/release-notes.json": {
-      "size": 906,
-      "sha256": "5b827122fd01746d3294fec036005ca126a77b4421912266b72231f572a0238a"
+      "size": 878,
+      "sha256": "46096a5ac6b4c7449efc5216e0be3fb9b6b2988d96c7447bce6daa87a57918ea"
     },
     "assets/images/player/netease-style-tonearm.png": {
       "size": 110366,
@@ -1140,8 +1140,8 @@
       "sha256": "4e8eb736aef7d8e3d55f604cc2e2d5c522fc3b17ac61b5ca7db0597ccc4815ee"
     },
     "lib/app/mesting_music_app.dart": {
-      "size": 11409,
-      "sha256": "ba2de586ba5f3503e3d54f6a5f112d9ae3c3fc2c839c6a1760f87afa9649f922"
+      "size": 11585,
+      "sha256": "5df980b594af3e79f97e79ed7ab7ced43183686ca76e1afde1c9308d09c17737"
     },
     "lib/app/router/app_router.dart": {
       "size": 33578,
@@ -1164,8 +1164,8 @@
       "sha256": "334dcc85fc8102283cfe3d7913e0d27806815a4fe262ee3884b7908d3bdeae9e"
     },
     "lib/app/system_back_coordinator.dart": {
-      "size": 2587,
-      "sha256": "c85a7facdca06499012c247a6d5ec1ea5b354073d2c757667ce4a06e793ed57e"
+      "size": 3810,
+      "sha256": "15044a55482f4f6de065fd5b436e2f7b514b8e52e6a8ad15d37b41a9c5236029"
     },
     "lib/core/audio/actual_listening_counter.dart": {
       "size": 1786,
@@ -1292,8 +1292,8 @@
       "sha256": "28ac8dd7c0b8b52c155b80614d6ae16ee3ca121091c59e6e7b71b6270c93791c"
     },
     "lib/core/network/music_network_diagnostics.dart": {
-      "size": 8426,
-      "sha256": "b15efe3ab4a47abfe6ba13f1d066db33d3ec902d054eb1fd7f4068c26c86597c"
+      "size": 8574,
+      "sha256": "3913d21a31e4e1675a336fcbf8e46b9e07eb32641311e4010c14e5b7dd02fcf0"
     },
     "lib/core/network/system_music_io_client.dart": {
       "size": 12580,
@@ -1664,8 +1664,8 @@
       "sha256": "7f3c5486677028048a135a40d0c46c1b3484af257652df8be3e3e222e6bf8349"
     },
     "lib/features/experience/presentation/beta_music_shell.dart": {
-      "size": 28268,
-      "sha256": "a1cf1228b4030fa13ea09f6042a6253dd286be5eec0c22f96e6b9ea51d42878f"
+      "size": 28503,
+      "sha256": "fc61e2d1ef8bdeffad171204021c38fda4040b3e24c506c8892846769f4cae27"
     },
     "lib/features/experience/presentation/beta_now_playing_page.dart": {
       "size": 32776,
@@ -2828,16 +2828,28 @@
       "sha256": "4751d3adeee6c94da6054b83b2bec706a3bb969edb3b1e77e03f1110013cf7d2"
     },
     "lib/features/music_platform/qishui/qishui_api.dart": {
-      "size": 21908,
-      "sha256": "8925ce8542e1d596bab41aa39c141d1e60973f395fb7404e9f36ff923cba2cb7"
+      "size": 22562,
+      "sha256": "aa6236cd030c8225b9be8b5d91fd8afbe7307441ce824ca5d5fb680ac26cf5e5"
     },
     "lib/features/music_platform/qishui/qishui_appearance.dart": {
       "size": 4219,
       "sha256": "5460200e76087e761011f940079e703459ad70c7ed4c1923c0375bab307bf73e"
     },
+    "lib/features/music_platform/qishui/qishui_artist_page.dart": {
+      "size": 7359,
+      "sha256": "e21c56d2d084df440960f61ba31d6e1ee3e4d9abccacd4b6908db9f2eed43f15"
+    },
     "lib/features/music_platform/qishui/qishui_auth_errors.dart": {
       "size": 2016,
       "sha256": "32660fad4ed80a45ab2f74a3150a8cd1da92c0bb64a8adbe4ff66d47a745dfe3"
+    },
+    "lib/features/music_platform/qishui/qishui_catalog_providers.dart": {
+      "size": 747,
+      "sha256": "333a8d92b1b9261e05a93f12e009176a71ccb210ebc4f6557fd6b9be9312f213"
+    },
+    "lib/features/music_platform/qishui/qishui_catalog_widgets.dart": {
+      "size": 3571,
+      "sha256": "beed23b60d755af47c77e8489e23b17c54addbcefd695a98f9b202c735c4167d"
     },
     "lib/features/music_platform/qishui/qishui_chrome_policy.dart": {
       "size": 440,
@@ -2863,6 +2875,22 @@
       "size": 4806,
       "sha256": "ec2f05cfbe4e9acba22be7280c22d21cd467a1ecde5b40b8004c640a952bbb8e"
     },
+    "lib/features/music_platform/qishui/qishui_history_providers.dart": {
+      "size": 2452,
+      "sha256": "9db3e983cfd8e307690ae913d25a9a8ee951bd4cad94b408ad2cd01a09056b4e"
+    },
+    "lib/features/music_platform/qishui/qishui_history_reporter.dart": {
+      "size": 2797,
+      "sha256": "dc9004c26fb72c0e74976b7c0121c552c8de773a0f6aefec113f6dedd3174132"
+    },
+    "lib/features/music_platform/qishui/qishui_history_repository.dart": {
+      "size": 7656,
+      "sha256": "94fe94082c85399074a1f4cf721d77fce9aa3e1cf0f6918686a3c22093795b15"
+    },
+    "lib/features/music_platform/qishui/qishui_image_upload.dart": {
+      "size": 12481,
+      "sha256": "506bc23ce22ecfc220f4b660ba1123d8ce871174e43c50d2850cbb688dc5009a"
+    },
     "lib/features/music_platform/qishui/qishui_library_repository.dart": {
       "size": 3668,
       "sha256": "6705e9ea05fa50db3cd067efaa6e5d348ce7dde15e083ea43fabf06f13ac372e"
@@ -2875,13 +2903,21 @@
       "size": 481,
       "sha256": "547fd8959e6c64df42f3ec0724b1e8f844056e2082ccd957b2bbc102eece2500"
     },
+    "lib/features/music_platform/qishui/qishui_lyrics_back_scope.dart": {
+      "size": 4010,
+      "sha256": "f40b4f381c56b0a3fbe280691b1ad2d83289541ced451db57807a00c0d67f5dd"
+    },
     "lib/features/music_platform/qishui/qishui_lyrics_content.dart": {
       "size": 13634,
       "sha256": "0ea17cf15c511cfd72b8ba6a28722cfe65ee4773284a90b2fae13360e47df04f"
     },
     "lib/features/music_platform/qishui/qishui_lyrics_page.dart": {
-      "size": 9261,
-      "sha256": "718682ed0de6d56595c4e5269bee9f60b1230715f6bc595af90b7aabdcd0cf1b"
+      "size": 9950,
+      "sha256": "dc9445b1f8dd438deaaf77ebdf2703fb62427810f2c79aa86f4f7a4705124c6d"
+    },
+    "lib/features/music_platform/qishui/qishui_media_attempts.dart": {
+      "size": 1976,
+      "sha256": "65a6006469c57ee8279c0487c64aef71b83a95e971753f48b4071ac6347dd6af"
     },
     "lib/features/music_platform/qishui/qishui_mine_downloads.dart": {
       "size": 4050,
@@ -2892,44 +2928,56 @@
       "sha256": "e077abcb5c4753f416fa552dab09ab52a66e440465d986eb368afe7d70801195"
     },
     "lib/features/music_platform/qishui/qishui_models.dart": {
-      "size": 20886,
-      "sha256": "0c69a540b716b8358d7f9d79fc4942cdd7fa452eca2498a038603d2ecd55f8d2"
+      "size": 21304,
+      "sha256": "37db44d473babe0fe6e3ee6f0325a0172b512b674b6d6263ae5158332d187f2f"
     },
     "lib/features/music_platform/qishui/qishui_native_audio_failure.dart": {
       "size": 2747,
       "sha256": "63f9c8092e30b227858c2894b03e2457e1876c93b6b98c829044ce73b3ddb9e3"
     },
     "lib/features/music_platform/qishui/qishui_now_playing.dart": {
-      "size": 4394,
-      "sha256": "14d86350027bcc233f2a32680ed6af1dcc2a5d91e31a62bd3689aac530d060c5"
+      "size": 5462,
+      "sha256": "ecfcd38bb4f4be3ebce083c7b3da9eb9ddcde6f606bc272a89ce704d435d2db0"
     },
     "lib/features/music_platform/qishui/qishui_official_audio_cache.dart": {
-      "size": 13811,
-      "sha256": "797dfbadda054f4f4ab2c4e9cd84127caeabf5adb11dc1cae905b5110d989aac"
+      "size": 13878,
+      "sha256": "a3637988b0edecbe2c373415c751ec7e00e0e3bc3e7880f3156618caa1d7166b"
     },
     "lib/features/music_platform/qishui/qishui_page_scope.dart": {
       "size": 1643,
       "sha256": "707f859483691ed1a18d4abaabd37396eb656fbaf3ce8de1f1908ec25b4c011b"
     },
     "lib/features/music_platform/qishui/qishui_pages.dart": {
-      "size": 23213,
-      "sha256": "b5dd15eb44a623745d84caa68f95a5c31a40ea39a7d306ace371c6ae9f3c035b"
+      "size": 20834,
+      "sha256": "708ad6826ef22edbc90414bb0f89055f794699d9d9cbafd9b8217a09160896fe"
     },
     "lib/features/music_platform/qishui/qishui_phone_protocol.dart": {
       "size": 1330,
       "sha256": "39d140e17775d04c4fc181518bda9f81e2c878b18c30bf50f41fefc0246f53a8"
     },
+    "lib/features/music_platform/qishui/qishui_playback_failures.dart": {
+      "size": 1541,
+      "sha256": "7bed5d5f02b31569e49f52874b6acebc1c5822fc71d54eb4bc2bcd05999ea02e"
+    },
+    "lib/features/music_platform/qishui/qishui_playback_failures_button.dart": {
+      "size": 2362,
+      "sha256": "aee2f7012f05d11ccdaf24df192a77b902642a82c4e6547743c6682c6834486a"
+    },
     "lib/features/music_platform/qishui/qishui_playback_media.dart": {
-      "size": 5829,
-      "sha256": "d57aff664a3a54b1efcd9c4b7d39128448e6fca36d6f305ad993012e9e5537bc"
+      "size": 6635,
+      "sha256": "c73a483e8638e63fa7de7c01679277b0b988867c2218c8854eedbaf30895e0fc"
     },
     "lib/features/music_platform/qishui/qishui_playback_notice.dart": {
       "size": 1180,
       "sha256": "faf028ae8c71558dca633ddb6e07092ada5a21f08fe558ca602e1b510433982d"
     },
+    "lib/features/music_platform/qishui/qishui_playback_progress.dart": {
+      "size": 6591,
+      "sha256": "0beae0df31dc854dba3dacfb4fd690ba8fa1b943383d04253f68b99e8d8426b5"
+    },
     "lib/features/music_platform/qishui/qishui_playback_recovery.dart": {
-      "size": 1006,
-      "sha256": "02a6d1f190912a2648d2c975fa294dfca253c8fc883a600003c2b4d2bd182c45"
+      "size": 2047,
+      "sha256": "d3265ad2d83a0cff8b3c24ac7f2b409aab75e0ece83289673e8aa14ee0c7033b"
     },
     "lib/features/music_platform/qishui/qishui_player_info_loader.dart": {
       "size": 5548,
@@ -2943,6 +2991,10 @@
       "size": 12613,
       "sha256": "7d09042973337ce4ea5f5d0b2ca24eb9a5e7ce8941add753a893328ec3517332"
     },
+    "lib/features/music_platform/qishui/qishui_playlist_cover_page.dart": {
+      "size": 8380,
+      "sha256": "1f98bcb3266594b05f5292e1608da52680b7eb9ca263bef414f72f01b5439bef"
+    },
     "lib/features/music_platform/qishui/qishui_playlist_dialogs.dart": {
       "size": 4908,
       "sha256": "2fce86a82aa83660418f7eda5019341f8e733582b543f93d9ed7a6e1295d3a51"
@@ -2952,8 +3004,8 @@
       "sha256": "fae89b86dcdff172fa68bf8e2c5592a2e536fbdf2c7e835118cc86fb1725caa0"
     },
     "lib/features/music_platform/qishui/qishui_playlist_page.dart": {
-      "size": 31009,
-      "sha256": "625909fdaebcb69e8c98915ca8c4faf70ddbf79cd916cb15f599adfa6886c813"
+      "size": 32131,
+      "sha256": "2533798b3f70584da91762ba1ff9de23635ff7adb845dfa1c08602cb8fb5fabf"
     },
     "lib/features/music_platform/qishui/qishui_playlist_selection.dart": {
       "size": 2479,
@@ -2984,12 +3036,20 @@
       "sha256": "00caffe953049726c0617cf2134e76e297cee7ea3d9580b4dd86d10c40b28820"
     },
     "lib/features/music_platform/qishui/qishui_repository.dart": {
-      "size": 23898,
-      "sha256": "c7e656c65919320c3762e1ab664e4fe76bb9aa9aebe070720d1cfbe6f87cabea"
+      "size": 28081,
+      "sha256": "2ddb26d30698509a38c9ff0fe1fd87d2663240953938ba195cd116c3f0d28cac"
     },
     "lib/features/music_platform/qishui/qishui_request_signer.dart": {
-      "size": 16492,
-      "sha256": "6c798c1787977ea9658eacc821c9c0359c2b30aa8b4cf50a200299427ec25964"
+      "size": 16562,
+      "sha256": "9383ad6817092cefd62d4ec4d7bcedb5567e334f5085246228f448247efe6f9a"
+    },
+    "lib/features/music_platform/qishui/qishui_search_catalog.dart": {
+      "size": 12849,
+      "sha256": "96965023890b16cee1898ce6c855ac4de549e9cb2b07f7bd4ef54fa7dfd8bca3"
+    },
+    "lib/features/music_platform/qishui/qishui_search_page.dart": {
+      "size": 9041,
+      "sha256": "4d968c894141fb9530c3b86a39b825cff97fa4de609fc083bd860625ca793e16"
     },
     "lib/features/music_platform/qishui/qishui_session.dart": {
       "size": 5977,
@@ -3016,8 +3076,8 @@
       "sha256": "c158dd844d02c8f529525997068cf9b24fc1d619d4752b5a0f3eab3740fda46e"
     },
     "lib/features/music_platform/qishui/qishui_web_routes.dart": {
-      "size": 4228,
-      "sha256": "54238125cfee4d557774fd246fdb4fa5c7ce959c920104f5694c2904178257a0"
+      "size": 5469,
+      "sha256": "087f2d6dbd97db7dae2fd9e018a8dc3ba69a2ca1539d0016ba081e093471d08a"
     },
     "lib/features/music_platform/qishui/qishui_welfare_page.dart": {
       "size": 9804,
@@ -3491,6 +3551,10 @@
       "size": 5322,
       "sha256": "ddc2523d456270b8a57094cc480012fbf484b7c87f6ac738e4466346a0d7d51d"
     },
+    "lib/shared/widgets/beta_back_state_changes.dart": {
+      "size": 343,
+      "sha256": "6ef91af0a8a2cb6bda7e463335abb79b5f26686c76ae552e2d040e5635936799"
+    },
     "lib/shared/widgets/beta_bottom_search.dart": {
       "size": 5538,
       "sha256": "fb3b2869f3d4141350d63f66f0785293e057816e982201428686a728efc801a6"
@@ -3696,8 +3760,8 @@
       "sha256": "34c7d6e357e5f08a81f85b492582c0f9a18367fa264b0548acdbf6c401ca4f51"
     },
     "pubspec.yaml": {
-      "size": 13222,
-      "sha256": "f63a7f120d5b4b06800a35d81587a81d2ce34ad6e338cab95945b64962c091b0"
+      "size": 13515,
+      "sha256": "57ba5409feb624c416430f54a11ff37dc2b0801bcce65d1c76803ac4ae2918ba"
     },
     "test/adaptive_layout_test.dart": {
       "size": 3918,
@@ -4415,21 +4479,41 @@
       "size": 9900,
       "sha256": "6111a8f0f934e19773504f9a539e05d853b70784bdfe08176da8864d182692e2"
     },
+    "test/qishui_api173_test.dart": {
+      "size": 4112,
+      "sha256": "c901172a94d659005495923f57d83287ba125687c8959fd99c44e8d9901a3665"
+    },
     "test/qishui_appearance172_ui_test.dart": {
-      "size": 28361,
-      "sha256": "e30681280d6935ed412c6de83270b9f15eded2747f9f4fd1e78cb47fc4e81d31"
+      "size": 30177,
+      "sha256": "c86f0fd075806fd923eb578b7f52446f9a399767e95d7428ab2f2eb04657e244"
     },
     "test/qishui_artwork172_test.dart": {
       "size": 4523,
       "sha256": "c33bda25b842fa6220ef85c0a7140ea8cf6ecacc4c593873ce1cedc526c06864"
     },
+    "test/qishui_capture173_ui_test.dart": {
+      "size": 12711,
+      "sha256": "af74974496762e0ab7efc652bf731f2bda72622735ada04755ce4961d7a2a7d9"
+    },
+    "test/qishui_cover173_test.dart": {
+      "size": 6853,
+      "sha256": "033fbcae207d4aac55ddc8313d4bdb8bc0759d5d7316e499eb751f83f80a9d98"
+    },
     "test/qishui_download_playback167_test.dart": {
       "size": 3393,
       "sha256": "d8b41edf02181b310a073c783e9804ea141875bf68e120dac61eb2ad17c1506c"
     },
+    "test/qishui_history173_test.dart": {
+      "size": 14027,
+      "sha256": "7c2d4fac938acc752f2dec8e9cfde09d9cdbd64a132212588f54a9f3fa978b2c"
+    },
     "test/qishui_media172_test.dart": {
       "size": 4943,
       "sha256": "e34602535e51b709b7a339fb684f0e93e4ee0d1b89b106019b452603ccae4daa"
+    },
+    "test/qishui_media173_test.dart": {
+      "size": 6829,
+      "sha256": "ed5847aeaf89fc14d923f9bad60ec7f7b4e9fe6c137194930388d09ed4919769"
     },
     "test/qishui_media_integration167_test.dart": {
       "size": 6081,
@@ -4446,6 +4530,10 @@
     "test/qishui_playback170_test.dart": {
       "size": 19116,
       "sha256": "99226abb3799952fcc00571b3a06f86317bfe7a1ead12d93ed52d4326d626e3b"
+    },
+    "test/qishui_player173_ui_test.dart": {
+      "size": 15485,
+      "sha256": "35d10f12aa046ab91691fe6d3e90c5c18caf33b0f5fe72dea3802ec797b19f47"
     },
     "test/qishui_playlist_selection167_test.dart": {
       "size": 2660,
@@ -4479,6 +4567,14 @@
       "size": 9951,
       "sha256": "f75adf89c45891fdccf536921c85fbe1205bf479e4a62c0494b089a66f124a67"
     },
+    "test/qishui_search173_test.dart": {
+      "size": 13622,
+      "sha256": "76604ff197356cf4e3aec1e42eafeceb2b8d56f5f38c20737dd1919e1368c131"
+    },
+    "test/qishui_search173_ui_test.dart": {
+      "size": 10965,
+      "sha256": "80a636d52737524430959d9020fcfba866205a11fc0196db59f3913f5e1cedce"
+    },
     "test/qishui_settings169_test.dart": {
       "size": 7867,
       "sha256": "5fd1c3991695ccfb9c3372c6e94213dec59e08f446695de2234382632f004e79"
@@ -4492,8 +4588,8 @@
       "sha256": "8f176f8646e79c66f43590fa57c54dc251a9542055c97895d253a3d553a77db3"
     },
     "test/qishui_ui168_test.dart": {
-      "size": 21456,
-      "sha256": "ae158fb1cc068f12074ed5adad59389b788f62b69439a597ad2e6ff98ca175ea"
+      "size": 21591,
+      "sha256": "7e017e69c5c2214e7f56f4dd82108ff122663eb7cdbd9ca93f8b2f654545cab3"
     },
     "test/qishui_ui_test.dart": {
       "size": 15433,

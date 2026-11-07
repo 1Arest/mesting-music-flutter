@@ -28,6 +28,7 @@ class QishuiWebRoute {
         '/luna/me/collection/media' => '/luna/pc/me/collection/media',
         '/luna/me/collection/media/delete' =>
           '/luna/pc/me/collection/media/delete',
+        '/luna/me/recently-played-media' => '/luna/pc/me/recently-played-media',
         _ => null,
       };
       if (target == null) throw const QishuiException('此汽水写入操作尚未完成适配');
@@ -39,6 +40,22 @@ class QishuiWebRoute {
         final value = body[key];
         if (value != null) params[key] = '$value';
       }
+    }
+
+    // Pinned PC artist reads (baka-plugins qishui.js / TuneWeave catalog).
+    // The mobile tracks endpoint is POST, whereas this exact PC endpoint is
+    // GET. Restrict the identifier instead of blindly rewriting any URL.
+    final artist = RegExp(
+      r'^/luna/artists/([0-9]{1,32})(/tracks)?$',
+    ).firstMatch(path);
+    if (artist != null) {
+      copyFields(['cursor', 'count']);
+      return QishuiWebRoute(
+        '/luna/pc/artists/${artist[1]}${artist[2] ?? ''}',
+        true,
+        const {},
+        params,
+      );
     }
 
     switch (path) {
@@ -56,8 +73,29 @@ class QishuiWebRoute {
           params,
         );
       case '/luna/search/track':
-        copyFields(['q', 'cursor', 'search_id', 'search_method']);
-        return QishuiWebRoute('/luna/pc/search/track', true, const {}, params);
+      case '/luna/search/artist':
+        copyFields([
+          'q',
+          'cursor',
+          'search_id',
+          'search_method',
+          'debug_params',
+          'from_search_id',
+          'search_scene',
+        ]);
+        return QishuiWebRoute(
+          path == '/luna/search/track'
+              ? '/luna/pc/search/track'
+              : '/luna/pc/search/artist',
+          true,
+          const {},
+          params,
+        );
+      case '/luna/video/uploader':
+        // The official IMAGE uploader uses this name too (UploadType.Image=0,
+        // UploadScene.Default=0). Never guess a '/pc/video/uploader' endpoint.
+        copyFields(['track_id', 'upload_type', 'scene']);
+        return QishuiWebRoute(path, true, const {}, params);
       case '/luna/discover/mix':
         return QishuiWebRoute('/luna/pc/discover/mix', false, body, params);
       case '/luna/feed/mode':

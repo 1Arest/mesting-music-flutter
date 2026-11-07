@@ -82,6 +82,24 @@ class QishuiPlaybackSelection {
     required bool download,
     PlatformAudioQuality? quality,
     required bool requireQuality,
+  }) => candidates(
+    streams,
+    catalogDuration: catalogDuration,
+    download: download,
+    quality: quality,
+    requireQuality: requireQuality,
+  ).first;
+
+  /// Preserve the existing full-track/quality preference, then retain other
+  /// eligible addresses for this same authorized recording. A failed full
+  /// stream must not silently fall back to a short preview; previews are only
+  /// eligible when the official response did not grant any complete stream.
+  static List<QishuiPlaybackSelection> candidates(
+    List<QishuiMedia> streams, {
+    required Duration catalogDuration,
+    required bool download,
+    PlatformAudioQuality? quality,
+    required bool requireQuality,
   }) {
     final decodable = streams.where((m) => m.canDecodeOfficial).toList();
     void record(MusicNetworkOutcome outcome) =>
@@ -136,9 +154,11 @@ class QishuiPlaybackSelection {
         quality == PlatformAudioQuality.standard &&
             media.bitrate > 0 &&
             media.bitrate <= 220000;
-    final matching = pool.where(matches).firstOrNull;
-    final selected = matching ?? (requireQuality ? null : pool.first);
-    if (selected == null) {
+    final matching = pool.where(matches).toList();
+    final eligible = requireQuality
+        ? matching
+        : [...matching, ...pool.where((item) => !matches(item))];
+    if (eligible.isEmpty) {
       record(MusicNetworkOutcome.business);
       throw const QishuiException(
         '汽水未提供所选音质',
@@ -146,6 +166,9 @@ class QishuiPlaybackSelection {
       );
     }
     record(MusicNetworkOutcome.success);
-    return QishuiPlaybackSelection(selected, isPreview: !full(selected));
+    return List.unmodifiable([
+      for (final media in eligible)
+        QishuiPlaybackSelection(media, isPreview: !full(media)),
+    ]);
   }
 }

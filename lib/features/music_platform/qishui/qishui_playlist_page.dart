@@ -26,6 +26,7 @@ import 'qishui_playlist_batch_page.dart';
 import 'qishui_playlist_tools.dart';
 import 'qishui_providers.dart';
 import 'qishui_repository.dart';
+import 'qishui_playlist_cover_page.dart';
 import 'qishui_song_actions.dart';
 
 /// The official collection layout sits on Mesting's existing material and
@@ -62,6 +63,8 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
   bool _busy = false;
   int _playIntent = 0;
   bool? _isPrivate;
+  QishuiPlaylist? _updatedPlaylist;
+  QishuiPlaylist get _playlist => _updatedPlaylist ?? widget.playlist;
 
   @override
   void initState() {
@@ -163,7 +166,7 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
     final changed = await Navigator.of(context, rootNavigator: true).push<bool>(
       betaContentRoute<bool>(
         QishuiPlaylistBatchPage(
-          playlist: widget.playlist,
+          playlist: _playlist,
           tracks: tracks,
           owned: widget.owned,
         ),
@@ -250,10 +253,18 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   QishuiPlaylistSheetHeading(
-                    playlist: widget.playlist,
+                    playlist: _playlist,
                     currentCount: tracks.length,
                   ),
                   const SizedBox(height: 24),
+                  if (widget.owned)
+                    ListTile(
+                      leading: const Icon(Icons.image_outlined),
+                      title: const Text('更换歌单封面'),
+                      onTap: _playlist.kind == 1
+                          ? null
+                          : () => Navigator.pop(sheet, 'cover'),
+                    ),
                   if (widget.owned)
                     ListTile(
                       leading: const Icon(Icons.playlist_add),
@@ -297,8 +308,24 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
         },
       ),
     );
-    if (action == null || !ownerCurrent) return;
+    if (action == null || !mounted || !ownerCurrent) return;
     switch (action) {
+      case 'cover':
+        final updated = await Navigator.of(context, rootNavigator: true)
+            .push<QishuiPlaylist>(
+              betaContentRoute<QishuiPlaylist>(
+                QishuiPlaylistCoverPage(playlist: _playlist),
+              ),
+            );
+        if (updated != null && mounted && ownerCurrent) {
+          setState(() => _updatedPlaylist = updated);
+          showMusicNotice(
+            context,
+            icon: Icons.check_rounded,
+            title: '歌单封面已保存',
+            message: '汽水云端封面已核对',
+          );
+        }
       case 'add':
         await _add();
       case 'manage':
@@ -358,7 +385,7 @@ class _QishuiPlaylistPageState extends ConsumerState<QishuiPlaylistPage>
                     ),
                     SliverToBoxAdapter(
                       child: _PlaylistHeader(
-                        playlist: widget.playlist,
+                        playlist: _playlist,
                         count: snapshot.hasData ? tracks.length : null,
                         isPrivate: _isPrivate,
                       ),

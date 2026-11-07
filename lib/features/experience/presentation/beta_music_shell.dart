@@ -6,6 +6,7 @@ import '../../music_platform/qishui/qishui_player_navigation.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/material.dart';
+import '../../music_platform/qishui/qishui_lyrics_back_scope.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -476,7 +477,10 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                           child: TickerMode(
                             enabled: !_searching,
                             child: MestingAdaptiveContentFrame(
-                              child: widget.child,
+                              child: QishuiLyricsNavigationHost(
+                                route: ModalRoute.of(context),
+                                child: widget.child,
+                              ),
                             ),
                           ),
                         ),

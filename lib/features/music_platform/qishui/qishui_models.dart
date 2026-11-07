@@ -219,8 +219,10 @@ class QishuiPlaylist {
     this.commentCount,
     this.shareCount,
     this.collected,
+    this.coverUri = '',
   });
   final String id, name, cover;
+  final String coverUri;
   final int count;
   final int kind;
   final String ownerId, ownerName, description;
@@ -265,6 +267,8 @@ class QishuiPlaylist {
           count: sodaInt(
             row['count_tracks'] ?? row['track_count'] ?? row['media_count'],
           ),
+          coverUri:
+              '${sodaMap(row['url_cover'])['uri'] ?? row['cover_uri'] ?? ''}',
           kind: sodaInt(row['type']),
           ownerId: '${owner['id'] ?? ''}',
           ownerName: '${owner['nickname'] ?? owner['public_name'] ?? ''}',
@@ -493,7 +497,10 @@ class QishuiMedia {
           // catalog image/avatar URL must never become an audio candidate.
           if (playerModel) ...['url', 'URL'],
         ]),
-        field(row, [
+        // These are separate CDN alternatives, not aliases of one field.
+        // Keep every server-provided address; result[url] deduplicates exact
+        // duplicates below without discarding backup 2/3 behind backup 1.
+        for (final key in [
           'BackupPlayUrl',
           'backup_play_url',
           'backup_url',
@@ -501,7 +508,8 @@ class QishuiMedia {
           'BackupUrl',
           'backup_url_2',
           'backup_url_3',
-        ]),
+        ])
+          field(row, [key]),
       ]) {
         final url = decodeUrl(rawUrl);
         if (url.isNotEmpty) {

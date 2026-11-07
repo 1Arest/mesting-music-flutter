@@ -16,6 +16,7 @@ import '../presentation/song_actions_sheet.dart';
 import 'qishui_lyrics_content.dart';
 import 'qishui_player_navigation.dart';
 import 'qishui_playback_notice.dart';
+import 'qishui_playback_progress.dart';
 import 'qishui_appearance.dart';
 
 /// Structure follows the user's official Qishui screenshot; all artwork and
@@ -177,27 +178,42 @@ class QishuiLyricsPage extends ConsumerWidget {
                           key: ValueKey('qishui-inline-lyrics'),
                         ),
                       ),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+                        child: QishuiPlaybackProgress(),
+                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
                         child: Row(
                           children: [
-                            BetaGlassButton(
-                              onPressed: () => _action(
-                                context,
-                                () => ShareBridge.shareText(
-                                  '${track.title} — ${track.artist}（汽水音乐）',
+                            Expanded(
+                              child: Align(
+                                child: BetaGlassButton(
+                                  onPressed: () => _action(
+                                    context,
+                                    () => ShareBridge.shareText(
+                                      '${track.title} — ${track.artist}（汽水音乐）',
+                                    ),
+                                  ),
+                                  label: '分享歌曲',
+                                  child: const Icon(Icons.ios_share_rounded),
                                 ),
                               ),
-                              label: '分享歌曲',
-                              child: const Icon(Icons.ios_share_rounded),
                             ),
-                            const Spacer(),
-                            FavoriteToggleButton(track: track),
-                            const SizedBox(width: 24),
-                            BetaGlassButton(
-                              onPressed: () => showPlaybackQueueSheet(context),
-                              label: '待播列表',
-                              child: const Icon(Icons.queue_music_rounded),
+                            Expanded(
+                              child: Align(
+                                child: FavoriteToggleButton(track: track),
+                              ),
+                            ),
+                            Expanded(
+                              child: Align(
+                                child: BetaGlassButton(
+                                  onPressed: () =>
+                                      showPlaybackQueueSheet(context),
+                                  label: '待播列表',
+                                  child: const Icon(Icons.queue_music_rounded),
+                                ),
+                              ),
                             ),
                           ],
                         ),

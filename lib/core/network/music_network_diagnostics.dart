@@ -133,6 +133,7 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     bool? preview,
     int? catalogDurationMs,
     int? mediaDurationMs,
+    int? mediaCandidateAttempt,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -164,6 +165,8 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
           'catalogDurationMs': catalogDurationMs.clamp(0, 86400000),
         if (mediaDurationMs != null)
           'mediaDurationMs': mediaDurationMs.clamp(0, 86400000),
+        if (mediaCandidateAttempt != null)
+          'mediaCandidateAttempt': mediaCandidateAttempt.clamp(1, 4),
         if (family != null) 'family': family.name,
         if (nativeStep != null) 'nativeStep': nativeStep.name,
         if (nativeReason != null) 'nativeReason': nativeReason.name,

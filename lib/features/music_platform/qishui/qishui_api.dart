@@ -9,6 +9,7 @@ import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_session.dart';
 import 'qishui_web_routes.dart';
 import 'qishui_request_signer.dart';
+import 'qishui_playback_failures.dart';
 
 /// Stable, credential-free categories shared by the transport and status HUD.
 /// A malformed media reply must never be presented as a broken user network.
@@ -101,6 +102,7 @@ class QishuiApi {
   }
 
   void configure(QishuiSession? session) {
+    QishuiPlaybackFailures.shared.beginOwner(session?.credentialId);
     ++_epoch;
     if (!_identityAbort.isCompleted) _identityAbort.complete();
     _identityAbort = Completer<void>();
@@ -267,9 +269,14 @@ class QishuiApi {
           web &&
           (route!.path == '/luna/pc/track_v2' ||
               route.path == '/luna/commerce/v2/check_download' ||
+              route.path == '/luna/video/uploader' ||
               write);
       final commerceRead =
           web && route!.path == '/luna/commerce/v2/commerce_info';
+      final pcCatalogRead =
+          web &&
+          (route!.path.startsWith('/luna/pc/search/') ||
+              route.path.startsWith('/luna/pc/artists/'));
       if (signedPc && signer == null) {
         throw const QishuiException('汽水应用签名服务尚未就绪，请稍后重试', code: 'signer');
       }
@@ -290,12 +297,14 @@ class QishuiApi {
           'version_name': '21.5.0',
           'version_code': '100215040',
           'device_platform': 'android',
-        } else if (commerceRead) ...{
+        } else if (commerceRead || pcCatalogRead) ...{
           ...qishuiDesktopParameters({
             if (_session!.webDeviceId.isNotEmpty)
               'device_id': _session!.webDeviceId,
             if (_session!.webInstallId.isNotEmpty)
               'iid': _session!.webInstallId,
+            if (pcCatalogRead && _session!.webDeviceId.isNotEmpty)
+              'fp': _session!.webDeviceId,
           }),
         } else if (signedPc) ...{
           ...qishuiDesktopParameters(device),
@@ -321,7 +330,7 @@ class QishuiApi {
         'accept': 'application/json',
         'user-agent': signedPc
             ? device['user_agent'] ?? SodaMRequestSigner.userAgent
-            : commerceRead
+            : commerceRead || pcCatalogRead
             ? 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36'
             : 'MestingMusic/1.0 (Android; Soda mobile adapter)',
         if (commerceRead) ...{
@@ -436,7 +445,11 @@ class QishuiApi {
       if (response.bodyBytes.isEmpty) {
         if (signedPc) signer?.invalidateIdentity();
         throw QishuiException(
-          signedPc ? '汽水未接受本次应用签名，请稍后重试' : '汽水服务返回空响应，请稍后重试',
+          signedPc
+              ? '汽水未接受本次应用签名，请稍后重试'
+              : pcCatalogRead
+              ? '汽水搜索或歌手接口返回空响应，尚未取得结果；请重试或核对连接诊断'
+              : '汽水服务返回空响应，请稍后重试',
           kind: QishuiFailureKind.refused,
           unknownWrite: write && dispatched,
         );

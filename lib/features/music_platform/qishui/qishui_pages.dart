@@ -1,4 +1,5 @@
 import 'qishui_lyrics_page.dart';
+import 'qishui_lyrics_back_scope.dart';
 import '../../themes/music_typography.dart';
 import '../../../shared/widgets/music_feature_page.dart';
 import 'dart:async';
@@ -32,7 +33,12 @@ import '../presentation/song_actions_sheet.dart';
 import 'qishui_models.dart';
 import 'qishui_providers.dart';
 import 'qishui_repository.dart';
+import 'qishui_history_providers.dart';
 import 'qishui_welfare_page.dart';
+import 'qishui_search_page.dart';
+
+// Keep historical imports source-compatible after separating catalog pages.
+export 'qishui_search_page.dart';
 
 enum QishuiRoot { discover, music, mine }
 
@@ -277,13 +283,7 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
     };
     if (widget.root == QishuiRoot.music &&
         ref.watch(qishuiMusicLyricsProvider)) {
-      return PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) ref.read(qishuiMusicLyricsProvider.notifier).showCover();
-        },
-        child: const QishuiLyricsPage(),
-      );
+      return const QishuiLyricsBackScope(child: QishuiLyricsPage());
     }
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -361,9 +361,21 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-                      child: Text(
-                        '历史播放',
-                        style: Theme.of(context).textTheme.titleSmall,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '历史播放',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 6),
+                          Consumer(
+                            builder: (context, ref, _) => Text(
+                              ref.watch(qishuiHistoryStatusProvider).message,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -512,93 +524,6 @@ class _QishuiTrackPageState extends ConsumerState<QishuiTrackPage>
                 QishuiTrackTile(track: tracks[i], queue: tracks),
           );
         },
-      ),
-    );
-  }
-}
-
-class QishuiSearchPage extends ConsumerStatefulWidget {
-  const QishuiSearchPage({super.key});
-  @override
-  ConsumerState<QishuiSearchPage> createState() => _QishuiSearchPageState();
-}
-
-class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
-    with QishuiOwnedPage<QishuiSearchPage> {
-  final _query = TextEditingController();
-  Future<List<Track>>? _results;
-  @override
-  void dispose() {
-    _query.dispose();
-    super.dispose();
-  }
-
-  void _search(String text) {
-    if (text.trim().isEmpty) return;
-    setState(() {
-      _results = ref
-          .read(qishuiRepositoryProvider)
-          .search(text, abortTrigger: pageAbort);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!watchOwner()) return changedAccount();
-    return MusicFeaturePage(
-      title: '搜索汽水音乐',
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: BetaGlassField(
-              child: TextField(
-                controller: _query,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                onSubmitted: _search,
-                decoration: InputDecoration(
-                  labelText: '歌曲、歌手',
-                  suffixIcon: IconButton(
-                    tooltip: '搜索',
-                    onPressed: () => _search(_query.text),
-                    icon: const Icon(Icons.search),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: _results == null
-                ? const Center(child: Text('输入关键词，搜索汽水歌曲'))
-                : FutureBuilder<List<Track>>(
-                    future: _results,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return QishuiError(
-                          error: snapshot.error!,
-                          retry: () => _search(_query.text),
-                        );
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: MusicActivityIndicator());
-                      }
-                      final tracks = snapshot.data!;
-                      if (tracks.isEmpty) {
-                        return const Center(child: Text('没有找到歌曲，试试其他关键词'));
-                      }
-                      return ListView.builder(
-                        padding: EdgeInsets.only(
-                          bottom: BetaContentInsets.musicBottomOf(context),
-                        ),
-                        itemCount: tracks.length,
-                        itemBuilder: (context, i) =>
-                            QishuiTrackTile(track: tracks[i], queue: tracks),
-                      );
-                    },
-                  ),
-          ),
-        ],
       ),
     );
   }

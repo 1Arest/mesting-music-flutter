@@ -60,6 +60,9 @@ final song168 = Track(
 class Player168 extends Fake implements MestingAudioHandler {
   Player168({this.preview = false});
   final bool preview;
+  @override
+  Stream<Duration?> get durationStream =>
+      Stream.value(preview ? const Duration(seconds: 60) : song168.duration);
   final seeks = <Duration>[];
   int plays = 0;
   @override

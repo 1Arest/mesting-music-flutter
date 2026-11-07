@@ -4,10 +4,13 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/track_artwork.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
 import '../presentation/platform_feedback.dart';
 import '../../queue/presentation/queue_page.dart';
 import 'qishui_player_navigation.dart';
+import 'qishui_playback_failures_button.dart';
 import 'qishui_playback_notice.dart';
+import 'qishui_playback_progress.dart';
 
 /// The music root reflects the one existing player rather than constructing a
 /// second preview player. Offscreen list work stays outside this subscription.
@@ -38,12 +41,21 @@ class QishuiNowPlaying extends ConsumerWidget {
     }
     final handler = ref.read(audioHandlerProvider);
     final track = ref.watch(currentTrackProvider);
+    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final usableHeight =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.paddingOf(context).vertical -
+        BetaContentInsets.musicBottomOf(context) -
+        80;
+    // Reserve timeline/controls before sizing decorative artwork. Large text
+    // and a compact phone must not put every transport control under chrome.
+    final coverEdge = (usableHeight - 300 * scale).clamp(140.0, 360.0);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Column(
         children: [
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
+            constraints: BoxConstraints(maxWidth: coverEdge),
             child: AspectRatio(
               aspectRatio: 1,
               child: ClipRRect(
@@ -65,12 +77,24 @@ class QishuiNowPlaying extends ConsumerWidget {
           const SizedBox(height: 22),
           Text(
             track.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(track.artist, textAlign: TextAlign.center),
+          Text(
+            track.artist,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
           QishuiPlaybackNotice(preview: track.isPreview),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: const QishuiPlaybackProgress(),
+          ),
           const SizedBox(height: 20),
           Wrap(
             spacing: 16,
@@ -108,6 +132,7 @@ class QishuiNowPlaying extends ConsumerWidget {
               ),
             ],
           ),
+          const QishuiRecentPlaybackFailuresButton(),
         ],
       ),
     );

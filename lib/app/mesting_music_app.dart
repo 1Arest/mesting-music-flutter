@@ -1,4 +1,5 @@
 import '../features/music_platform/qishui/qishui_effects.dart';
+import '../features/music_platform/qishui/qishui_history_providers.dart';
 import '../features/music_platform/qishui/qishui_providers.dart';
 import '../features/music_platform/qishui/qishui_download_playback.dart';
 import '../features/music_platform/qishui/qishui_playback_recovery.dart';
@@ -146,6 +147,7 @@ class MestingMusicApp extends ConsumerWidget {
     }
     if (DistributionChannel.isBeta) {
       ref.watch(qishuiEffectsProvider);
+      ref.watch(qishuiHistorySyncProvider);
       ref.watch(musicEqualizerProvider);
       ref.watch(platformRecommendationBindingProvider);
       ref.watch(audiobookProgressBindingProvider);
@@ -203,6 +205,7 @@ class MestingMusicApp extends ConsumerWidget {
         data: Theme.of(context),
         child: SystemBackCoordinator(
           canPop: appRouter.canPop,
+          navigationChanges: appRouter.routerDelegate,
           child: FirstLaunchDisclaimerCoordinator(
             child: FirstLaunchAuthCoordinator(
               betaBackDispatcher: appRouter.backButtonDispatcher,
