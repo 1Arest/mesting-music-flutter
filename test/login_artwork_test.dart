@@ -9,8 +9,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
 import 'package:mesting_music/features/music_platform/data/music_platform_api.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
@@ -26,11 +24,6 @@ import 'package:mesting_music/shared/widgets/beta_glass_scroll_body.dart';
 class _Account extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async => null;
-}
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 class _Server implements MusicServer {
@@ -63,7 +56,7 @@ void main() {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         platformAccountProvider.overrideWith(_Account.new),
-        authControllerProvider.overrideWith(_Auth.new),
+
         neteaseApiProvider.overrideWithValue(NeteaseApi(client)),
         musicPlatformApiProvider.overrideWithValue(
           MusicPlatformApi(

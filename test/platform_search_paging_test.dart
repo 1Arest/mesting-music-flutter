@@ -7,8 +7,6 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
 import 'package:mesting_music/features/music_platform/data/music_platform_api.dart';
 import 'package:mesting_music/features/music_platform/data/platform_search_repository.dart';
@@ -91,9 +89,7 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(
           await SharedPreferences.getInstance(),
         ),
-        authRepositoryProvider.overrideWithValue(
-          const UnconfiguredAuthRepository(),
-        ),
+
         platformSessionStoreProvider.overrideWithValue(_Store()),
         musicPlatformApiProvider.overrideWithValue(
           MusicPlatformApi(server: _Server(), client: MockClient(respond)),

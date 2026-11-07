@@ -12,7 +12,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/experience/presentation/beta_music_shell.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/lyrics/lyrics_providers.dart';
@@ -30,7 +29,7 @@ import 'package:mesting_music/features/music_platform/qishui/qishui_providers.da
 import 'package:mesting_music/features/music_platform/qishui/qishui_search_catalog.dart';
 import 'package:mesting_music/shared/widgets/beta_bottom_search.dart';
 import 'qishui_appearance172_ui_test.dart'
-    show AuditMusic172, AuditLibrary172, AuditPlayer172, AuditAuth172;
+    show AuditMusic172, AuditLibrary172, AuditPlayer172;
 import 'qishui_protocol_test.dart' show sodaSession, fixtureJson;
 import 'qishui_ui168_test.dart' show song168;
 import 'qishui_ui_test.dart' show FixtureAccount;
@@ -143,7 +142,7 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             platformAccountProvider.overrideWith(FixtureAccount.new),
-            authControllerProvider.overrideWith(AuditAuth172.new),
+
             qishuiApiProvider.overrideWithValue(api),
             qishuiNavigationProvider.overrideWithValue(true),
             qishuiRepositoryProvider.overrideWithValue(AuditMusic172(api)),

@@ -14,8 +14,6 @@ import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/presentation/beta_onboarding_page.dart';
 import 'package:mesting_music/features/auth/presentation/beta_welcome_page.dart';
 import 'package:mesting_music/features/auth/presentation/mesting_music_companions.dart';
@@ -45,11 +43,6 @@ const _song = Track(
   duration: Duration(minutes: 3, seconds: 26),
   lyricsAsset: '',
 );
-
-class _NoAuth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
-}
 
 class _NoPlatform extends PlatformAccountController {
   @override
@@ -186,7 +179,7 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
-          authControllerProvider.overrideWith(_NoAuth.new),
+
           platformAccountProvider.overrideWith(_NoPlatform.new),
           currentTrackProvider.overrideWithValue(_song),
           mediaVolumeProvider.overrideWith(_Volume.new),
@@ -269,8 +262,8 @@ void main() {
       expect(prefs.getBool(userAgreementAcceptedPreferenceKey), isNull);
       expect(prefs.getBool(privacyPolicyAcceptedPreferenceKey), isNull);
       expect(find.byKey(liquidGlassDisclaimerSurfaceKey), findsNothing);
-      expect(find.text('手机号登录'), findsOneWidget);
-      await tester.tap(find.text('手机号登录'));
+      expect(find.text('酷狗登录'), findsOneWidget);
+      await tester.tap(find.text('酷狗登录'));
       await tester.pump(const Duration(milliseconds: 260));
       expect(find.text('请先阅读并同意协议与隐私政策'), findsOneWidget);
       expect(prefs.getBool(userAgreementAcceptedPreferenceKey), isNull);
@@ -505,10 +498,10 @@ void main() {
     () {
       if (!DistributionChannel.isBeta) return;
       final policy = legalDocumentFor(LegalDocumentType.privacyPolicy);
-      expect(policy.effectiveDate, contains('2026 年 10 月 27 日'));
+      expect(policy.effectiveDate, contains('2026 年 11 月 7 日'));
       expect(
         policy.sections.map((s) => s.body).join(),
-        contains('未启用自动听歌时长上报'),
+        contains('可在设置中关闭后续上报'),
       );
       expect(policy.sections.map((s) => s.body).join(), contains('不会自动注销平台账号'));
       expect(

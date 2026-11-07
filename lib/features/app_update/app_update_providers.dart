@@ -13,7 +13,6 @@ import 'data/app_update_repository.dart';
 import 'data/app_update_release_source.dart';
 import 'data/ring_app_update_transport.dart';
 import '../../core/platform/distribution_channel.dart';
-import 'data/java_mysql_test_channel_repository.dart';
 import 'domain/app_update_models.dart';
 
 const _snoozedVersionPreference = 'app_update_snoozed_version';
@@ -52,14 +51,6 @@ final appUpdateRepositoryProvider = Provider<AppUpdateRepository>((ref) {
         : null,
   );
 });
-
-final javaMysqlTestChannelRepositoryProvider =
-    Provider<JavaMysqlTestChannelRepository>((ref) {
-      return JavaMysqlTestChannelRepository(
-        client: ref.watch(appUpdateHttpClientProvider),
-        downloader: ref.watch(appUpdateRepositoryProvider),
-      );
-    });
 
 final appVersionProvider = FutureProvider<AppVersionInfo>((ref) {
   return ref.watch(appUpdateRepositoryProvider).currentVersion();

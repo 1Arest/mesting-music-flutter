@@ -10,8 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/experience/presentation/music_functions_page.dart';
 import 'package:mesting_music/features/experience/presentation/player_glass_button.dart';
 import 'package:mesting_music/features/experience/presentation/player_more_menu.dart';
@@ -28,11 +26,6 @@ import 'package:mesting_music/features/themes/music_theme_preset.dart';
 class _Account extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async => null;
-}
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 void main() {
@@ -124,7 +117,7 @@ void main() {
               overrides: [
                 sharedPreferencesProvider.overrideWithValue(preferences),
                 platformAccountProvider.overrideWith(_Account.new),
-                authControllerProvider.overrideWith(_Auth.new),
+
                 platformListeningSyncSummaryProvider.overrideWith(
                   (ref) => Stream.value(ListeningSyncSummary(const [])),
                 ),

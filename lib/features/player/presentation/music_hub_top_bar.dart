@@ -4,17 +4,12 @@ import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/platform_profile_provider.dart';
-import '../../auth/account_capabilities.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
-import '../../auth/auth_providers.dart';
 import '../../legal/presentation/disclaimer_dialog.dart';
-import '../../social/social_providers.dart';
-import '../../social/social_attention.dart';
-import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'music_page_transition.dart';
 import '../../themes/music_typography.dart';
@@ -264,34 +259,17 @@ class _MusicHubPanel extends ConsumerStatefulWidget {
 
 class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || ref.read(authControllerProvider).value?.user == null) {
-        return;
-      }
-      ref.invalidate(socialSummaryProvider);
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final tokens = context.musicThemeTokens;
-    final auth = ref.watch(authControllerProvider);
-    final platform = DistributionChannel.isBeta
-        ? ref.watch(platformAccountProvider).value
-        : null;
-    final user = auth.value?.user;
-    final accountState = user != null || platform != null
+    final account = ref.watch(platformAccountProvider);
+    final platform = account.value;
+    final accountState = platform != null
         ? _PanelAccountState.signedIn
-        : auth.isLoading
+        : account.isLoading
         ? _PanelAccountState.restoring
-        : auth.hasError
+        : account.hasError
         ? _PanelAccountState.unavailable
         : _PanelAccountState.signedOut;
-    final unreadCount = user == null
-        ? 0
-        : ref.watch(socialAttentionControllerProvider).unreadCount;
     final size = MediaQuery.sizeOf(context);
 
     return ConstrainedBox(
@@ -345,22 +323,16 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                       _PanelAccountState.unavailable => '账号状态暂不可用',
                       _PanelAccountState.signedOut => '登录后收藏你的音乐',
                       _PanelAccountState.signedIn =>
-                        platform != null
-                            ? (platform.nickname.isEmpty
-                                  ? '酷狗账号'
-                                  : platform.nickname)
-                            : user!.nickname,
+                        platform!.nickname.isEmpty
+                            ? platform.platformLabel
+                            : platform.nickname,
                     },
                     caption: switch (accountState) {
                       _PanelAccountState.restoring => '正在读取本机登录状态',
                       _PanelAccountState.unavailable => '请稍后重新打开侧边菜单',
                       _PanelAccountState.signedOut => '同步收藏、歌单和个人资料',
                       _PanelAccountState.signedIn =>
-                        platform != null
-                            ? '酷狗账号 · 云端收藏与歌单'
-                            : user!.bio.trim().isNotEmpty
-                            ? user.bio
-                            : '欢迎回到你的音乐空间',
+                        '${platform!.platformLabel}账号 · 云端收藏与歌单',
                     },
                     avatarUrl: platform != null
                         ? (ref
@@ -368,7 +340,7 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                                   .value
                                   ?.avatarUrl ??
                               platform.avatarUrl)
-                        : user?.avatarUrl,
+                        : null,
                     fallbackIcon: switch (accountState) {
                       _PanelAccountState.restoring =>
                         Icons.person_search_rounded,
@@ -388,22 +360,6 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (ref.watch(showMestingFeaturesProvider)) ...[
-                          const _PanelLabel('好友与消息'),
-                          _PanelSection(
-                            children: [
-                              _PanelTile(
-                                key: const ValueKey('music-hub-my-messages'),
-                                icon: Icons.mail_outline_rounded,
-                                title: '我的消息',
-                                subtitle: '互相关注好友的私信与会话',
-                                unreadCount: unreadCount,
-                                onTap: () => _openMessages(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                        ],
                         const _PanelLabel('应用设置'),
                         _PanelSection(
                           children: [
@@ -467,10 +423,6 @@ class _MusicHubPanelState extends ConsumerState<_MusicHubPanel> {
 
   Future<void> _openLegalDocuments(BuildContext panelContext) {
     return _dismissPanelThenOpenRoute(panelContext, '/legal');
-  }
-
-  Future<void> _openMessages(BuildContext panelContext) {
-    return _dismissPanelThenOpenRoute(panelContext, '/social/messages');
   }
 
   Future<void> _openDisclaimer(BuildContext panelContext) async {
@@ -640,7 +592,6 @@ class _PanelTile extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.highlighted = false,
-    this.unreadCount = 0,
     super.key,
   });
 
@@ -649,7 +600,6 @@ class _PanelTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
   final bool highlighted;
-  final int unreadCount;
 
   @override
   Widget build(BuildContext context) {
@@ -701,55 +651,12 @@ class _PanelTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (unreadCount > 0)
-              _UnreadMessagesBadge(count: unreadCount)
-            else
-              Icon(
-                Icons.chevron_right_rounded,
-                color: tokens.textMuted,
-                size: 19,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UnreadMessagesBadge extends StatelessWidget {
-  const _UnreadMessagesBadge({required this.count});
-
-  final int count;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = count > 99 ? '99+' : '$count';
-    return Semantics(
-      label: '$count 条未读消息',
-      child: Container(
-        key: const ValueKey('music-hub-unread-badge'),
-        constraints: const BoxConstraints(minWidth: 24, minHeight: 22),
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: MestingPalette.heart,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x36CC3F56),
-              blurRadius: 8,
-              offset: Offset(0, 3),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: tokens.textMuted,
+              size: 19,
             ),
           ],
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: MusicTypography.smallCaptionSize,
-            fontWeight: MusicTypography.bodyWeight,
-            height: 1,
-          ),
         ),
       ),
     );

@@ -16,7 +16,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/audiobooks/audiobook_models.dart';
 import 'package:mesting_music/features/audiobooks/audiobook_repository.dart';
 import 'package:mesting_music/features/audiobooks/audiobook_playback.dart';
@@ -247,7 +246,7 @@ void main() {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
         platformAccountProvider.overrideWith(_Account.new),
-        currentUserProvider.overrideWithValue(null),
+        
         musicPlatformApiProvider.overrideWithValue(api),
         currentMediaItemProvider.overrideWith((ref) => Stream.value(null)),
         platformRewardAutomationProvider.overrideWith((ref) {}),

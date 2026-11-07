@@ -4,7 +4,7 @@ import '../../core/persistence/app_preferences.dart';
 
 /// Selection is separate from either credential format. A saved guest choice
 /// prevents an old credential from becoming active again after logout.
-enum BetaAccountChoice { guest, mesting, kugou, netease, qishui }
+enum BetaAccountChoice { guest, kugou, netease, qishui }
 
 final betaAccountChoiceProvider =
     NotifierProvider<BetaAccountChoiceController, BetaAccountChoice?>(
@@ -17,6 +17,10 @@ class BetaAccountChoiceController extends Notifier<BetaAccountChoice?> {
   @override
   BetaAccountChoice? build() {
     final saved = ref.read(sharedPreferencesProvider).getString(preferenceKey);
+    // A retired account choice must not silently activate a saved platform.
+    // Keep every platform credential and local database row intact; the user
+    // can explicitly select a supported platform from the guest surface.
+    if (saved == 'mesting') return BetaAccountChoice.guest;
     return BetaAccountChoice.values
         .where((value) => value.name == saved)
         .firstOrNull;

@@ -1,18 +1,21 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
+import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/legal/presentation/disclaimer_dialog.dart';
 import 'package:mesting_music/features/player/presentation/music_hub_top_bar.dart';
 import 'package:mesting_music/features/settings/presentation/settings_page.dart';
 import 'package:mesting_music/shared/widgets/liquid_glass_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _GuestSidebar175 extends PlatformAccountController {
+  @override
+  Future<PlatformSession?> build() async => null;
+}
 
 void main() {
   late SharedPreferences preferences;
@@ -25,10 +28,8 @@ void main() {
   Widget app({Brightness brightness = Brightness.light}) {
     return ProviderScope(
       overrides: [
-        authRepositoryProvider.overrideWithValue(
-          const UnconfiguredAuthRepository(),
-        ),
         sharedPreferencesProvider.overrideWithValue(preferences),
+        platformAccountProvider.overrideWith(_GuestSidebar175.new),
       ],
       child: MaterialApp(
         theme: ThemeData(brightness: brightness),
@@ -94,65 +95,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('账号恢复完成前侧栏不会误显示未登录提示', (tester) async {
-    tester.view.physicalSize = const Size(360, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final repository = _DelayedRestoreAuthRepository();
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authRepositoryProvider.overrideWithValue(repository),
-          sharedPreferencesProvider.overrideWithValue(preferences),
-        ],
-        child: const MaterialApp(
-          home: Scaffold(
-            body: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: MusicHubTopBar(title: '发现音乐', subtitle: '探索音乐'),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.byIcon(Icons.menu_rounded));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 310));
-
-    expect(
-      find.byKey(const ValueKey('music-hub-account-restoring')),
-      findsOneWidget,
-    );
-    expect(find.text('正在恢复账号'), findsOneWidget);
-    expect(find.text('正在读取本机登录状态'), findsOneWidget);
-    expect(find.text('登录后收藏你的音乐'), findsNothing);
-
-    repository.restoreGate.complete(
-      AuthSession(
-        user: const AuthUser(uid: 'restored-user', nickname: 'Mesti'),
-        accessToken: 'restored-access',
-        refreshToken: 'restored-refresh',
-        expiresAt: DateTime.now().add(const Duration(hours: 1)),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('music-hub-account-signedIn')),
-      findsOneWidget,
-    );
-    expect(find.text('Mesti'), findsOneWidget);
-    expect(find.text('欢迎回到你的音乐空间'), findsOneWidget);
-    expect(find.text('正在恢复账号'), findsNothing);
-    expect(find.text('登录后收藏你的音乐'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('二级页左侧使用同系列实体返回按钮', (tester) async {
     var popped = false;
     await tester.pumpWidget(
@@ -212,7 +154,7 @@ void main() {
 
     expect(find.text('项目性质'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 160));
+    await tester.pump(const Duration(milliseconds: 260));
     expect(find.text('项目性质'), findsNothing);
     await tester.pumpAndSettle();
     expect(find.text('项目性质'), findsNothing);
@@ -295,10 +237,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authRepositoryProvider.overrideWithValue(
-            const UnconfiguredAuthRepository(),
-          ),
           sharedPreferencesProvider.overrideWithValue(preferences),
+          platformAccountProvider.overrideWith(_GuestSidebar175.new),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -310,73 +250,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('装扮'), findsOneWidget);
-    expect(find.text('登录 / 注册'), findsOneWidget);
+    expect(find.text('账号管理'), findsOneWidget);
     expect(find.byKey(const ValueKey('settings-back')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('消息入口在侧栏退出并完成两个合成帧后再打开消息页', (tester) async {
-    tester.view.physicalSize = const Size(360, 800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const Scaffold(
-            body: SafeArea(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: MusicHubTopBar(title: '发现音乐', subtitle: '探索音乐'),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: '/social/messages',
-          builder: (context, state) =>
-              const Scaffold(body: Center(child: Text('消息页已打开'))),
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authRepositoryProvider.overrideWithValue(
-            const UnconfiguredAuthRepository(),
-          ),
-          sharedPreferencesProvider.overrideWithValue(preferences),
-        ],
-        child: MaterialApp.router(routerConfig: router),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.menu_rounded));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byKey(const ValueKey('music-hub-my-messages')));
-    await tester.pump(const Duration(milliseconds: 150));
-    expect(find.text('消息页已打开'), findsNothing);
-
-    await tester.pump(const Duration(milliseconds: 160));
-    expect(find.text('消息页已打开'), findsNothing);
-
-    await tester.pump();
-    expect(find.text('消息页已打开'), findsNothing);
-    await tester.pump();
-    await tester.pumpAndSettle();
-    expect(find.text('消息页已打开'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-}
-
-class _DelayedRestoreAuthRepository extends UnconfiguredAuthRepository {
-  final restoreGate = Completer<AuthSession?>();
-
-  @override
-  Future<AuthSession?> restoreSession() => restoreGate.future;
+  testWidgets(
+    'guest sidebar has no retired Mesting social or registration action',
+    (tester) async {
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.menu_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('登录后收藏你的音乐'), findsOneWidget);
+      expect(find.byKey(const ValueKey('music-hub-my-messages')), findsNothing);
+      expect(find.text('注册 / 登录'), findsNothing);
+      expect(find.text('设置'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

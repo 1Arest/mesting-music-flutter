@@ -3,11 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/experience/presentation/favorite_tracks_search.dart';
 import 'package:mesting_music/features/library/data/favorite_track_window.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
@@ -19,11 +16,6 @@ import 'package:mesting_music/features/music_platform/netease/messages/netease_m
 import 'package:mesting_music/features/music_platform/platform_backend_providers.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_comment_composer.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_design.dart';
-import 'package:mesting_music/features/social/domain/social_models.dart';
-import 'package:mesting_music/features/social/presentation/social_messages_page.dart';
-import 'package:mesting_music/features/social/presentation/social_widgets.dart';
-import 'package:mesting_music/features/social/social_providers.dart';
-import 'package:mesting_music/features/social/data/social_repository.dart';
 import 'package:mesting_music/shared/models/song_list_memory.dart';
 import 'package:mesting_music/shared/models/track_page.dart';
 import 'package:mesting_music/shared/widgets/song_list_tools.dart';
@@ -118,28 +110,6 @@ class _Inbox149 extends NeteaseMessagesRepository {
   ]) async => [];
 }
 
-class _User149 extends Notifier<AuthUser?> {
-  @override
-  AuthUser? build() => const AuthUser(uid: 'one', nickname: '一');
-  void change() => state = const AuthUser(uid: 'two', nickname: '二');
-}
-
-class _Social149 implements SocialRepository {
-  final waiting = Completer<List<SocialConversation>>();
-  int calls = 0;
-  @override
-  Future<List<SocialConversation>> listConversations() => calls++ == 0
-      ? Future.value([
-          SocialConversation(
-            peer: const SocialUser(uid: 'old-peer', nickname: '旧账号好友'),
-            updatedAt: DateTime(2026, 11, 4),
-          ),
-        ])
-      : waiting.future;
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 void main() {
   setUpAll(() async {
     await LiquidGlassWidgets.initialize();
@@ -161,52 +131,7 @@ void main() {
       }
     }
   });
-  test(
-    'conversation refresh cache is invalidated by owner identity even with a retained repository',
-    () async {
-      final users = NotifierProvider<_User149, AuthUser?>(_User149.new);
-      final repo = _Social149();
-      final container = ProviderContainer(
-        overrides: [
-          currentUserProvider.overrideWith((ref) => ref.watch(users)),
-          socialRepositoryProvider.overrideWithValue(repo),
-        ],
-      );
-      addTearDown(container.dispose);
-      final first = container.listen(
-        socialConversationsByOwnerProvider('one'),
-        (_, _) {},
-      );
-      addTearDown(first.close);
-      expect(
-        (await container.read(
-          socialConversationsByOwnerProvider('one').future,
-        )).single.peer.uid,
-        'old-peer',
-      );
-      container.read(users.notifier).change();
-      final second = container.listen(
-        socialConversationsByOwnerProvider('two'),
-        (_, _) {},
-      );
-      addTearDown(second.close);
-      await Future<void>.delayed(Duration.zero);
-      expect(
-        container.read(socialConversationsByOwnerProvider('two')).value,
-        isNull,
-      );
-      expect(
-        await container.read(socialConversationsByOwnerProvider('one').future),
-        isEmpty,
-      );
-      repo.waiting.complete([]);
-      expect(
-        await container.read(socialConversationsByOwnerProvider('two').future),
-        isEmpty,
-      );
-      expect(repo.calls, 2);
-    },
-  );
+
   for (final dark in [false, true]) {
     testWidgets(
       'narrow large text list hint retains tappable controls dark=$dark',
@@ -456,59 +381,6 @@ void main() {
         expect(find.text('重试'), findsNothing);
         expect(find.byType(Image), findsNWidgets(3));
         await shot148(tester, 'category-ready-$dark');
-        expect(tester.takeException(), isNull);
-        await tester.pumpWidget(const SizedBox());
-      },
-    );
-    testWidgets(
-      'messages retain the same owners rows during background reload dark=$dark',
-      (tester) async {
-        var calls = 0;
-        final gate = Completer<List<SocialConversation>>();
-        SocialConversation row(String name) => SocialConversation(
-          peer: SocialUser(
-            uid: 'friend',
-            nickname: name,
-            avatarUrl: profileFixtureCover,
-          ),
-          updatedAt: DateTime(2026, 11, 4, 10),
-          unreadCount: 3,
-        );
-        final fixture = await PersonalProfileFixture.create(
-          extraOverrides: [
-            currentUserProvider.overrideWithValue(
-              const AuthUser(uid: 'ui-owner', nickname: '测试'),
-            ),
-            socialConversationsProvider.overrideWith(
-              (_) =>
-                  calls++ == 0 ? Future.value([row('好友列表已显示')]) : gate.future,
-            ),
-          ],
-        );
-        addTearDown(fixture.dispose);
-        await mount148(
-          tester,
-          fixture,
-          const Material(
-            type: MaterialType.transparency,
-            child: SocialMessagesPage(),
-          ),
-          dark: dark,
-        );
-        await tester.pump();
-        await tester.pump();
-        await ready146(tester);
-        expect(find.text('好友列表已显示'), findsOneWidget);
-        fixture.container.invalidate(socialConversationsProvider);
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 60));
-        expect(find.text('好友列表已显示'), findsOneWidget);
-        expect(find.byType(SocialLoadingState), findsNothing);
-        await shot148(tester, 'messages-retained-$dark');
-        gate.complete([row('好友列表已更新')]);
-        await tester.pump();
-        await tester.pump();
-        expect(find.text('好友列表已更新'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       },

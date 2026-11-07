@@ -15,8 +15,6 @@ import 'package:mesting_music/app/startup_video_surface.dart';
 import 'package:mesting_music/features/themes/startup_style.dart';
 import 'package:mesting_music/features/player/presentation/shinchan_progress_walker.dart';
 import 'package:mesting_music/features/themes/theme_controller.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/presentation/beta_entry_coordinator.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
@@ -26,11 +24,6 @@ class _RecoveryFailure extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async =>
       throw const FormatException('Local recovery test');
-}
-
-class _NoRecoveryLegacyAccount extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 /// Tests the renderer's layout contract without substituting host software
@@ -82,7 +75,6 @@ void main() {
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             platformAccountProvider.overrideWith(_RecoveryFailure.new),
-            authControllerProvider.overrideWith(_NoRecoveryLegacyAccount.new),
           ],
           child: MaterialApp(
             builder: (context, child) => BetaEntryCoordinator(child: child!),

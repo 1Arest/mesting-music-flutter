@@ -16,8 +16,6 @@ import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/core/database/app_database.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/library/presentation/music_home_page.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
@@ -202,9 +200,7 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(
           await SharedPreferences.getInstance(),
         ),
-        authRepositoryProvider.overrideWithValue(
-          const UnconfiguredAuthRepository(),
-        ),
+
         platformSessionStoreProvider.overrideWithValue(
           _Store(guest ? null : _identity),
         ),

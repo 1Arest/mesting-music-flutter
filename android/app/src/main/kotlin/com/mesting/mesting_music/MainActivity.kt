@@ -3,8 +3,6 @@ package com.mesting.music
 import android.Manifest
 import android.app.Activity
 import android.app.ActivityOptions
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.ContentValues
@@ -23,11 +21,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
-import android.telephony.SubscriptionManager
-import android.telephony.TelephonyManager
 import androidx.core.content.FileProvider
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -69,7 +63,6 @@ open class MainActivity : AudioServiceActivity() {
     private lateinit var lyricsChannel: MethodChannel
     private var secureScreenRequests = 0
     private var pendingImageSave: PendingImageSave? = null
-    private var pendingPhoneNumberResult: MethodChannel.Result? = null
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         togetherLocationBridge?.dispose()
@@ -192,6 +185,14 @@ open class MainActivity : AudioServiceActivity() {
             SYSTEM_CHANNEL,
         ).setMethodCallHandler { call, result ->
             when (call.method) {
+                "getRenderContext" -> {
+                    // This is the embedder's request, not proof of which GPU
+                    // backend initialized. Keep that distinction in reports.
+                    result.success(mapOf(
+                        "requestedBackend" to RendererCompatibility.selectedBackend,
+                        "flavor" to BuildConfig.FLAVOR,
+                    ))
+                }
                 "getRecentAppExits" -> {
                     val bridge = appExitDiagnosticsBridge ?: AppExitDiagnosticsBridge(this).also {
                         appExitDiagnosticsBridge = it
@@ -221,21 +222,6 @@ open class MainActivity : AudioServiceActivity() {
                     }
                     result.success(null)
                 }
-                "notificationPermissionGranted" -> result.success(notificationPermissionGranted())
-                "requestNotificationPermission" -> {
-                    requestNotificationPermission()
-                    result.success(null)
-                }
-                "showSocialNotification" -> {
-                    val id = call.argument<Int>("id")
-                    val title = call.argument<String>("title")
-                    val body = call.argument<String>("body")
-                    if (id == null || title.isNullOrBlank() || body.isNullOrBlank()) {
-                        result.error("invalid_social_notification", "消息通知内容不完整", null)
-                    } else {
-                        result.success(showSocialNotification(id, title, body))
-                    }
-                }
                 "enterSecureScreen" -> {
                     secureScreenRequests += 1
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -248,16 +234,6 @@ open class MainActivity : AudioServiceActivity() {
                     }
                     result.success(null)
                 }
-                else -> result.notImplemented()
-            }
-        }
-
-        MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            DEVICE_IDENTITY_CHANNEL,
-        ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "getDataSimPhoneNumber" -> requestDataSimPhoneNumber(result)
                 else -> result.notImplemented()
             }
         }
@@ -344,7 +320,6 @@ open class MainActivity : AudioServiceActivity() {
                 "canRequestPackageInstalls" -> result.success(canRequestPackageInstalls())
                 "openInstallPermission" -> openInstallPermission(result)
                 "installApk" -> installApk(call, result)
-                "installExternalApk" -> installExternalApk(call, result)
                 else -> result.notImplemented()
             }
         }
@@ -449,62 +424,6 @@ open class MainActivity : AudioServiceActivity() {
         val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
             data = uri
             clipData = ClipData.newRawUri("Mesting 音乐更新", uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        runCatching { startActivity(intent) }
-            .onSuccess { result.success(null) }
-            .onFailure {
-                result.error("installer_unavailable", "系统安装程序不可用", null)
-            }
-    }
-
-    private fun installExternalApk(call: MethodCall, result: MethodChannel.Result) {
-        val expectedPackageName = call.argument<String>("expectedPackageName")
-        if (expectedPackageName != JAVA_MYSQL_TEST_PACKAGE) {
-            result.error("invalid_package", "测试安装包标识无效", null)
-            return
-        }
-        val requestedPath = call.argument<String>("path")
-        if (requestedPath.isNullOrBlank()) {
-            result.error("invalid_path", "安装包路径无效", null)
-            return
-        }
-        val file = runCatching { File(requestedPath).canonicalFile }.getOrNull()
-        val allowedRoots = listOf(cacheDir, filesDir).mapNotNull { root ->
-            runCatching { File(root, "app_updates").canonicalFile }.getOrNull()
-        }
-        val inAllowedRoot = file != null && allowedRoots.any { root ->
-            file.path.startsWith("${root.path}${File.separator}")
-        }
-        if (
-            file == null ||
-            !inAllowedRoot ||
-            !file.isFile ||
-            file.extension.lowercase() != "apk" ||
-            file.length() <= 0 ||
-            file.length() > MAX_UPDATE_APK_BYTES
-        ) {
-            result.error("invalid_path", "安装包路径不安全", null)
-            return
-        }
-        val archiveInfo = archivePackageInfo(file)
-        if (archiveInfo == null || archiveInfo.packageName != expectedPackageName) {
-            result.error("apk_package_mismatch", "测试安装包标识不匹配", null)
-            return
-        }
-        if (!canRequestPackageInstalls()) {
-            result.error("install_permission_required", "尚未允许安装此来源的应用", null)
-            return
-        }
-        val uri = runCatching {
-            FileProvider.getUriForFile(this, "$packageName.update_files", file)
-        }.getOrElse {
-            result.error("invalid_path", "无法安全共享安装包", null)
-            return
-        }
-        val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
-            data = uri
-            clipData = ClipData.newRawUri("Java + MySQL 测试版", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         runCatching { startActivity(intent) }
@@ -688,23 +607,6 @@ open class MainActivity : AudioServiceActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (togetherLocationBridge?.permissions(requestCode) == true) return
         if (localMusicBridge?.onRequestPermissionsResult(requestCode, permissions, grantResults) == true) return
-        if (requestCode == PHONE_NUMBER_PERMISSION_REQUEST_CODE) {
-            val result = pendingPhoneNumberResult ?: return
-            pendingPhoneNumberResult = null
-            if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
-                result.success(readDataSimPhoneNumber())
-            } else {
-                result.success(
-                    mapOf(
-                        "phoneNumber" to "",
-                        "maskedPhoneNumber" to "",
-                        "simSlot" to 0,
-                        "unavailableReason" to "permission_denied",
-                    ),
-                )
-            }
-            return
-        }
         if (requestCode != IMAGE_SAVE_PERMISSION_REQUEST_CODE) return
         val request = pendingImageSave ?: return
         pendingImageSave = null
@@ -713,84 +615,6 @@ open class MainActivity : AudioServiceActivity() {
         } else {
             request.result.error("permission_denied", "需要存储权限才能保存头像", null)
         }
-    }
-
-    private fun requestDataSimPhoneNumber(result: MethodChannel.Result) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            result.success(readDataSimPhoneNumber())
-            return
-        }
-        if (checkSelfPermission(Manifest.permission.READ_PHONE_NUMBERS) ==
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            result.success(readDataSimPhoneNumber())
-            return
-        }
-        if (pendingPhoneNumberResult != null) {
-            result.error("request_in_progress", "正在获取当前上网卡信息，请稍候", null)
-            return
-        }
-        pendingPhoneNumberResult = result
-        requestPermissions(
-            arrayOf(Manifest.permission.READ_PHONE_NUMBERS),
-            PHONE_NUMBER_PERMISSION_REQUEST_CODE,
-        )
-    }
-
-    @Suppress("DEPRECATION")
-    private fun readDataSimPhoneNumber(): Map<String, Any> {
-        val subscriptionId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            SubscriptionManager.getActiveDataSubscriptionId()
-        } else {
-            SubscriptionManager.getDefaultDataSubscriptionId()
-        }
-        if (subscriptionId == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
-            return phoneNumberResult(unavailableReason = "no_active_data_sim")
-        }
-        val slotIndex = SubscriptionManager.getSlotIndex(subscriptionId)
-        val rawNumber = runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                getSystemService(SubscriptionManager::class.java)
-                    ?.getPhoneNumber(subscriptionId)
-            } else {
-                getSystemService(TelephonyManager::class.java)
-                    ?.createForSubscriptionId(subscriptionId)
-                    ?.line1Number
-            }
-        }.getOrNull()
-        val normalized = normalizeMainlandPhoneNumber(rawNumber)
-        return phoneNumberResult(
-            phoneNumber = normalized,
-            simSlot = if (slotIndex >= 0) slotIndex + 1 else 0,
-            unavailableReason = if (normalized.isEmpty()) "number_unavailable" else "",
-        )
-    }
-
-    private fun normalizeMainlandPhoneNumber(raw: String?): String {
-        val digits = raw.orEmpty().filter(Char::isDigit)
-        return when {
-            digits.length == 11 && digits.startsWith("1") -> digits
-            digits.length == 13 && digits.startsWith("86") -> digits.substring(2)
-            else -> ""
-        }
-    }
-
-    private fun phoneNumberResult(
-        phoneNumber: String = "",
-        simSlot: Int = 0,
-        unavailableReason: String,
-    ): Map<String, Any> {
-        val masked = if (phoneNumber.length == 11) {
-            "${phoneNumber.substring(0, 3)}****${phoneNumber.substring(7)}"
-        } else {
-            ""
-        }
-        return mapOf(
-            "phoneNumber" to phoneNumber,
-            "maskedPhoneNumber" to masked,
-            "simSlot" to simSlot,
-            "unavailableReason" to unavailableReason,
-        )
     }
 
     private fun brandStyleComponents(): Map<String, List<ComponentName>> = mapOf(
@@ -1076,61 +900,6 @@ open class MainActivity : AudioServiceActivity() {
         }.isSuccess
     }
 
-    private fun notificationPermissionGranted(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted()) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQUEST_CODE)
-        }
-    }
-
-    private fun showSocialNotification(id: Int, title: String, body: String): Boolean {
-        if (!notificationPermissionGranted()) return false
-        val manager = getSystemService(NotificationManager::class.java) ?: return false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(
-                NotificationChannel(
-                    SOCIAL_NOTIFICATION_CHANNEL,
-                    "Mesting 好友消息",
-                    NotificationManager.IMPORTANCE_HIGH,
-                ).apply {
-                    description = "好友关注、私信和音乐分享提醒"
-                },
-            )
-        }
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            addFlags(
-                Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                    Intent.FLAG_ACTIVITY_NEW_TASK,
-            )
-        } ?: return false
-        val contentIntent = PendingIntent.getActivity(
-            this,
-            id,
-            launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        val notification = NotificationCompat.Builder(this, SOCIAL_NOTIFICATION_CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_social_notification)
-            .setColor(Color.parseColor("#CC3F56"))
-            .setContentTitle(title)
-            .setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
-            .setContentIntent(contentIntent)
-            .setAutoCancel(true)
-            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-            .build()
-        return runCatching {
-            NotificationManagerCompat.from(this).notify(id, notification)
-            true
-        }.getOrDefault(false)
-    }
-
     /**
      * Flutter follows the display vsync and can render at 90/120 Hz. Some Android
      * devices still default third-party windows to 60 Hz, so prefer the
@@ -1204,7 +973,6 @@ open class MainActivity : AudioServiceActivity() {
     companion object {
         private const val LYRICS_CHANNEL = "com.mesting.music/lyrics_overlay"
         private const val SYSTEM_CHANNEL = "com.mesting.music/system_media"
-        private const val DEVICE_IDENTITY_CHANNEL = "com.mesting.music/device_identity"
         private const val BRAND_STYLE_CHANNEL = "com.mesting.music/brand_style"
         private const val BRAND_STYLE_PREFERENCES = "mesting_brand_style"
         private const val PENDING_BRAND_STYLE = "pending_brand_style"
@@ -1213,11 +981,7 @@ open class MainActivity : AudioServiceActivity() {
         private const val SHARE_CHANNEL = "com.mesting.music/share"
         private const val MEDIA_LIBRARY_CHANNEL = "com.mesting.music/media_library"
         private const val APP_UPDATE_CHANNEL = "com.mesting.music/app_update"
-        private const val JAVA_MYSQL_TEST_PACKAGE = "com.mesting.music.javatest"
-        private const val SOCIAL_NOTIFICATION_CHANNEL = "com.mesting.music.social"
-        private const val NOTIFICATION_REQUEST_CODE = 7102
         private const val IMAGE_SAVE_PERMISSION_REQUEST_CODE = 7103
-        private const val PHONE_NUMBER_PERMISSION_REQUEST_CODE = 7104
         private const val OVERLAY_PERMISSION_REQUEST_CODE = 7105
         private const val MAX_SAVED_IMAGE_BYTES = 10 * 1024 * 1024
         private const val MAX_UPDATE_APK_BYTES = 350L * 1024L * 1024L

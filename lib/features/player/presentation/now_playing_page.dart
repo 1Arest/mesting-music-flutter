@@ -8,27 +8,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/audio/playback_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
-import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/layout/adaptive_layout.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/models/track.dart';
-import '../../../shared/widgets/music_notice.dart';
-import '../../auth/auth_providers.dart';
-import '../../auth/presentation/auth_gate.dart';
 import '../../auth/account_capabilities.dart';
 import '../../library/presentation/library_access.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
 import '../../library/library_providers.dart';
 import '../../lyrics/presentation/lyrics_panel.dart';
-import '../../social/domain/listen_together.dart';
-import '../../social/domain/social_models.dart';
-import '../../social/domain/track_share.dart';
-import '../../social/listen_together_providers.dart';
-import '../../social/presentation/listen_together_sheet.dart';
-import '../../social/presentation/social_widgets.dart';
-import '../../social/presentation/track_share_sheet.dart';
-import '../../social/social_providers.dart';
 import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_preset.dart';
 import '../../themes/theme_controller.dart';
@@ -179,8 +167,6 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
     final safeTop = MediaQuery.paddingOf(context).top;
     final preset = ref.watch(effectiveMusicThemeProvider);
     final playerStyle = ref.watch(playerVisualStyleProvider);
-    final togetherSession = ref.watch(listenTogetherControllerProvider).value;
-    final currentUser = ref.watch(currentUserProvider);
     final routeAnimation =
         ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
     final foregroundOpacity = CurvedAnimation(
@@ -201,117 +187,6 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
         await ref.read(libraryRepositoryProvider).toggleFavorite(track);
       } catch (error) {
         if (context.mounted) showPlatformFailure(context, error);
-      }
-    }
-
-    Future<void> shareTrack() async {
-      final allowed = await ensureAuthenticated(
-        context,
-        ref,
-        reason: '登录后才能把正在听的音乐分享给好友。',
-        redirect: '/player',
-      );
-      if (!allowed || !context.mounted) return;
-      final friend = await showTrackShareSheet(context: context, track: track);
-      if (friend == null || !context.mounted) return;
-
-      try {
-        await ref
-            .read(socialRepositoryProvider)
-            .sendMessage(
-              friend.uid,
-              kind: SocialMessageKind.text,
-              text: encodeTrackShareMessage(track),
-              mediaUrl: trackShareRemoteUrl(track.audioAsset),
-              thumbnailUrl: trackShareRemoteUrl(track.coverAsset),
-            );
-        ref.invalidate(socialConversationsProvider);
-        ref.invalidate(socialMessagesProvider(friend.uid));
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.check_rounded,
-          title: '已分享给${friend.displayName}',
-          message: '《${track.title}》已发送',
-        );
-      } on Object catch (error) {
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.error_outline_rounded,
-          title: '分享失败',
-          message: userFacingErrorMessage(error, fallback: '暂时无法分享这首歌，请稍后重试'),
-        );
-      }
-    }
-
-    Future<void> inviteToListenTogether() async {
-      final friend = await showListenTogetherInviteSheet(
-        context: context,
-        track: track,
-      );
-      if (friend == null || !context.mounted) return;
-      try {
-        await ref
-            .read(listenTogetherControllerProvider.notifier)
-            .invite(friend.uid);
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.headphones_rounded,
-          title: '邀请已发送',
-          message: '正在等待${friend.displayName}加入一起听',
-        );
-      } on Object catch (error) {
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.error_outline_rounded,
-          title: '暂时无法发起一起听',
-          message: userFacingErrorMessage(error, fallback: '请稍后再试'),
-        );
-      }
-    }
-
-    Future<void> openListenTogether() async {
-      final allowed = await ensureAuthenticated(
-        context,
-        ref,
-        reason: '登录后才能邀请互相关注的好友一起听音乐。',
-        redirect: '/player',
-      );
-      if (!allowed || !context.mounted) return;
-      final session = ref.read(listenTogetherControllerProvider).value;
-      if (session == null) {
-        await inviteToListenTogether();
-        return;
-      }
-      final action = await showListenTogetherStatusSheet(
-        context: context,
-        session: session,
-      );
-      if (action == null || !context.mounted) return;
-      if (action == ListenTogetherSheetAction.invite) {
-        await inviteToListenTogether();
-        return;
-      }
-      try {
-        await ref.read(listenTogetherControllerProvider.notifier).leave();
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.check_rounded,
-          title: session.isPending ? '已取消邀请' : '一起听已结束',
-          message: '本次时长和音乐记录已经保存',
-        );
-      } on Object catch (error) {
-        if (!context.mounted) return;
-        showMusicNotice(
-          context,
-          icon: Icons.error_outline_rounded,
-          title: '操作失败',
-          message: userFacingErrorMessage(error, fallback: '请稍后再试'),
-        );
       }
     }
 
@@ -699,28 +574,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                   ),
                 ),
               ),
-            if (!_lyricsVisible && ref.watch(showMestingFeaturesProvider))
-              Positioned(
-                left: 72,
-                right: 72,
-                top: safeTop + 8,
-                child: FadeTransition(
-                  opacity: foregroundOpacity,
-                  child: Center(
-                    child: _ListenTogetherPlayerChip(
-                      session: togetherSession,
-                      currentUser: currentUser == null
-                          ? null
-                          : SocialUser(
-                              uid: currentUser.uid,
-                              nickname: currentUser.nickname,
-                              avatarUrl: currentUser.avatarUrl,
-                            ),
-                      onTap: openListenTogether,
-                    ),
-                  ),
-                ),
-              ),
+
             if (ref.watch(showPlatformFeaturesProvider) &&
                 track.source == TrackSource.kugou)
               Positioned(
@@ -749,21 +603,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                 top: safeTop + 8,
                 child: const PlatformQualityButton(),
               ),
-            if (ref.watch(showMestingFeaturesProvider))
-              Positioned(
-                right: 24,
-                top: safeTop + 8,
-                child: FadeTransition(
-                  opacity: foregroundOpacity,
-                  child: _RoundGlassButton(
-                    tooltip: '分享给好友',
-                    icon: Icons.ios_share_rounded,
-                    onTap: shareTrack,
-                    size: 42,
-                    iconColor: Colors.white,
-                  ),
-                ),
-              ),
+
             Positioned(
               left: 0,
               right: 0,
@@ -788,129 +628,6 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ListenTogetherPlayerChip extends StatefulWidget {
-  const _ListenTogetherPlayerChip({
-    required this.session,
-    required this.currentUser,
-    required this.onTap,
-  });
-
-  final ListenTogetherSession? session;
-  final SocialUser? currentUser;
-  final VoidCallback onTap;
-
-  @override
-  State<_ListenTogetherPlayerChip> createState() =>
-      _ListenTogetherPlayerChipState();
-}
-
-class _ListenTogetherPlayerChipState extends State<_ListenTogetherPlayerChip> {
-  Timer? _clock;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncClock();
-  }
-
-  @override
-  void didUpdateWidget(covariant _ListenTogetherPlayerChip oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.session?.isActive != widget.session?.isActive) _syncClock();
-  }
-
-  void _syncClock() {
-    _clock?.cancel();
-    _clock = null;
-    if (widget.session?.isActive != true) return;
-    _clock = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _clock?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final session = widget.session;
-    final current = widget.currentUser;
-    final label = switch (session?.status) {
-      ListenTogetherStatus.pending => '等待好友加入',
-      ListenTogetherStatus.active =>
-        '一起听 ${formatListenTogetherDuration(session!.accumulatedDurationAt())}',
-      ListenTogetherStatus.ended => '一起听记录',
-      ListenTogetherStatus.declined ||
-      ListenTogetherStatus.expired ||
-      null => '好友一起听',
-    };
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        key: const ValueKey('listen-together-player-entry'),
-        color: const Color(0xFF17131E).withValues(alpha: .42),
-        shape: StadiumBorder(
-          side: BorderSide(color: Colors.white.withValues(alpha: .2)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: widget.onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (session != null && current != null) ...[
-                  SizedBox(
-                    width: 43,
-                    height: 27,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 0,
-                          child: SocialAvatar(user: current, size: 27),
-                        ),
-                        Positioned(
-                          right: 0,
-                          child: SocialAvatar(user: session.peer, size: 27),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 7),
-                ] else ...[
-                  const Icon(
-                    Icons.headphones_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: MusicTypography.smallCaptionSize,
-                      fontWeight: MusicTypography.bodyWeight,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

@@ -17,8 +17,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/database/app_database.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/downloads/audio_downloads.dart';
 import 'package:mesting_music/features/downloads/audio_downloads_page.dart';
@@ -45,11 +43,6 @@ import 'package:mesting_music/shared/widgets/beta_scroll_behavior.dart';
 import 'package:mesting_music/shared/media/persistent_network_image_cache.dart';
 import 'netease_v115_sources_test.dart' show TestAccount;
 import 'netease_v112_fallback_download_test.dart' show recording;
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
-}
 
 class _Library extends CloudLibraryRepository {
   _Library(super.db) : super(ownerId: 'netease:7');
@@ -208,7 +201,7 @@ void main() {
           await SharedPreferences.getInstance(),
         ),
         platformAccountProvider.overrideWith(TestAccount.new),
-        authControllerProvider.overrideWith(_Auth.new),
+
         neteaseMusicRepositoryProvider.overrideWithValue(
           NeteaseMusicRepository(api),
         ),

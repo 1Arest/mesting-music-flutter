@@ -1,3 +1,4 @@
+import '../../auth/account_capabilities.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'beta_category_search_results.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/audio/playback_providers.dart';
-import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/utils/duration_format.dart';
 import '../../../shared/widgets/track_artwork.dart';
@@ -21,15 +21,11 @@ import '../../library/library_providers.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../player/presentation/music_page_transition.dart';
 import '../../recommendation/recommendation_providers.dart';
-import '../../social/domain/social_models.dart';
-import '../../social/social_providers.dart';
-import '../../social/presentation/social_widgets.dart';
 import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../domain/music_rankings.dart';
 import '../search_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
-import '../../auth/account_capabilities.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../music_platform/presentation/platform_search_landing.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
@@ -1102,10 +1098,6 @@ class _SearchInputPreview extends ConsumerWidget {
     if (state.isLoading && !state.hasResults) {
       return _SearchLoading(query: state.query);
     }
-    final users = ref.watch(showMestingFeaturesProvider)
-        ? ref.watch(socialUserSearchProvider(state.query))
-        : const AsyncData<List<SocialUser>>([]);
-
     return SingleChildScrollView(
       key: const ValueKey('search-input-preview-scroll'),
       physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
@@ -1115,21 +1107,11 @@ class _SearchInputPreview extends ConsumerWidget {
       ),
       child: _NeteaseSearchOverview(
         query: state.query,
-        users: users.value ?? const <SocialUser>[],
         tracks: [...state.localTracks, ...state.onlineTracks],
         onSearch: onSearch,
       ),
     );
   }
-}
-
-enum _SearchResultCategory { tracks, users }
-
-extension on _SearchResultCategory {
-  String get label => switch (this) {
-    _SearchResultCategory.tracks => '单曲',
-    _SearchResultCategory.users => '用户',
-  };
 }
 
 class _SearchResults extends ConsumerStatefulWidget {
@@ -1143,7 +1125,6 @@ class _SearchResults extends ConsumerStatefulWidget {
 }
 
 class _SearchResultsState extends ConsumerState<_SearchResults> {
-  _SearchResultCategory _category = _SearchResultCategory.tracks;
   final _scroll = ScrollController();
   @override
   void initState() {
@@ -1151,8 +1132,7 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
     _scroll.addListener(() {
       if (_scroll.hasClients &&
           _scroll.position.extentAfter < 320 &&
-          widget.state.moreError == null &&
-          _category == _SearchResultCategory.tracks) {
+          widget.state.moreError == null) {
         ref.read(musicSearchControllerProvider.notifier).loadMore();
       }
     });
@@ -1167,23 +1147,9 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
-    final showUsers =
-        _category == _SearchResultCategory.users &&
-        ref.watch(showMestingFeaturesProvider);
-    final showTracks = !showUsers;
-    final userResults = showUsers
-        ? ref.watch(socialUserSearchProvider(state.query))
-        : const AsyncData<List<SocialUser>>(<SocialUser>[]);
-    final hasUserResults = userResults.value?.isNotEmpty == true;
-    final allUsers = userResults.value ?? const <SocialUser>[];
     if (DistributionChannel.isBeta) return const BetaCategorySearchResults();
     return Column(
       children: [
-        if (ref.watch(showMestingFeaturesProvider))
-          _SearchResultTabs(
-            selected: _category,
-            onSelected: (category) => setState(() => _category = category),
-          ),
         Expanded(
           child: ListView(
             key: const ValueKey('search-results-scroll'),
@@ -1196,7 +1162,7 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
               EdgeInsets.fromLTRB(18, 14, 18, 96),
             ),
             children: [
-              if (showTracks && state.errorMessage != null)
+              if (state.errorMessage != null)
                 _MessageCard(
                   icon: Icons.cloud_off_rounded,
                   message: state.errorMessage!,
@@ -1205,29 +1171,21 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
                       .read(musicSearchControllerProvider.notifier)
                       .retry,
                 ),
-              if (showTracks)
-                for (final warning in state.warnings)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _MessageCard(
-                      icon: Icons.info_outline_rounded,
-                      message: warning,
-                    ),
+              for (final warning in state.warnings)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: _MessageCard(
+                    icon: Icons.info_outline_rounded,
+                    message: warning,
                   ),
-              if (showUsers && hasUserResults) ...[
-                _SectionTitle(title: '用户', count: allUsers.length, unit: '位'),
-                const SizedBox(height: 8),
-                _UserResults(users: allUsers, query: state.query),
-              ] else if (showUsers && userResults.isLoading) ...[
-                const _SearchingUsersCard(),
-              ],
-              if (showTracks && state.localTracks.isNotEmpty) ...[
+                ),
+              if (state.localTracks.isNotEmpty) ...[
                 _SectionTitle(title: '本地音乐', count: state.localTracks.length),
                 const SizedBox(height: 8),
                 _TrackResults(tracks: state.localTracks),
                 const SizedBox(height: 22),
               ],
-              if (showTracks && state.onlineTracks.isNotEmpty) ...[
+              if (state.onlineTracks.isNotEmpty) ...[
                 _SectionTitle(
                   title: '在线音乐',
                   count: state.onlineTracks.length,
@@ -1267,19 +1225,10 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
                         : const Center(child: Text('已显示全部搜索结果')),
                   ),
               ],
-              if (_category == _SearchResultCategory.tracks &&
-                  !state.hasResults &&
-                  state.errorMessage == null)
+              if (!state.hasResults && state.errorMessage == null)
                 _MessageCard(
                   icon: Icons.music_off_outlined,
                   message: '没有找到“${state.query}”相关单曲',
-                ),
-              if (_category == _SearchResultCategory.users &&
-                  !hasUserResults &&
-                  !userResults.isLoading)
-                _MessageCard(
-                  icon: Icons.person_search_outlined,
-                  message: '没有找到“${state.query}”相关用户',
                 ),
             ],
           ),
@@ -1296,13 +1245,11 @@ class _SearchResultsState extends ConsumerState<_SearchResults> {
 class _NeteaseSearchOverview extends ConsumerWidget {
   const _NeteaseSearchOverview({
     required this.query,
-    required this.users,
     required this.tracks,
     this.onSearch,
   });
 
   final String query;
-  final List<SocialUser> users;
   final List<Track> tracks;
   final ValueChanged<String>? onSearch;
 
@@ -1318,15 +1265,12 @@ class _NeteaseSearchOverview extends ConsumerWidget {
     final previewTracks = uniqueTracks.values.take(3).toList(growable: false);
     final suggestions = _searchSuggestionValues(
       query: query,
-      users: users,
       tracks: uniqueTracks.values,
     );
 
     return Column(
       key: const ValueKey('netease-search-overview'),
       children: [
-        if (users.isNotEmpty)
-          _NeteaseArtistResult(user: users.first, query: query),
         for (final track in previewTracks)
           _NeteaseTrackResult(
             track: track,
@@ -1348,71 +1292,6 @@ class _NeteaseSearchOverview extends ConsumerWidget {
             onTap: onSearch == null ? null : () => onSearch!(suggestion),
           ),
       ],
-    );
-  }
-}
-
-class _NeteaseArtistResult extends StatelessWidget {
-  const _NeteaseArtistResult({required this.user, required this.query});
-
-  final SocialUser user;
-  final String query;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.musicThemeTokens;
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final accent = dark ? MestingPalette.heartBright : MestingPalette.heart;
-    return Semantics(
-      button: true,
-      label: '歌手 ${user.displayName}',
-      child: InkWell(
-        key: const ValueKey('netease-search-artist-result'),
-        onTap: () =>
-            context.push('/social/users/${Uri.encodeComponent(user.uid)}'),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(13, 10, 13, 9),
-          child: Row(
-            children: [
-              SocialAvatar(user: user, size: 50),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _HighlightedSearchText(
-                      value: user.displayName,
-                      query: query,
-                      baseStyle: TextStyle(
-                        color: accent,
-                        fontSize: MusicTypography.bodySize,
-                        fontWeight: MusicTypography.titleWeight,
-                      ),
-                      highlightStyle: TextStyle(
-                        color: accent,
-                        fontSize: MusicTypography.bodySize,
-                        fontWeight: MusicTypography.titleWeight,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '艺人 · ${_compactCount(user.followerCount)}粉丝',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: tokens.textSecondary,
-                        fontSize: MusicTypography.captionSize,
-                        fontWeight: MusicTypography.bodyWeight,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.verified_rounded, color: accent, size: 23),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -1656,7 +1535,6 @@ List<TextSpan> _highlightSearchSpans({
 
 List<String> _searchSuggestionValues({
   required String query,
-  required Iterable<SocialUser> users,
   required Iterable<Track> tracks,
 }) {
   final normalized = query.trim();
@@ -1675,10 +1553,6 @@ List<String> _searchSuggestionValues({
 
   // The exact query stays first, just like the native search suggestions.
   add(normalized);
-  for (final user in users) {
-    add(user.displayName);
-    add('$normalized ${user.displayName}');
-  }
   for (final track in tracks) {
     add(track.artist);
     add(track.title);
@@ -1686,208 +1560,6 @@ List<String> _searchSuggestionValues({
     add('$normalized ${track.artist}');
   }
   return List<String>.unmodifiable(values);
-}
-
-String _compactCount(int value) {
-  if (value >= 100000000) {
-    return '${(value / 100000000).toStringAsFixed(value % 100000000 == 0 ? 0 : 1)}亿';
-  }
-  if (value >= 10000) {
-    return '${(value / 10000).toStringAsFixed(value % 10000 == 0 ? 0 : 1)}万';
-  }
-  return '$value';
-}
-
-class _SearchResultTabs extends StatelessWidget {
-  const _SearchResultTabs({required this.selected, required this.onSelected});
-
-  final _SearchResultCategory selected;
-  final ValueChanged<_SearchResultCategory> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accent = theme.brightness == Brightness.dark
-        ? MestingPalette.heartBright
-        : MestingPalette.heart;
-    final tokens = context.musicThemeTokens;
-    return Container(
-      key: const ValueKey('search-result-tabs'),
-      height: 50,
-      margin: const EdgeInsets.only(top: 7),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: accent.withValues(alpha: .18)),
-        ),
-      ),
-      child: Row(
-        children: [
-          for (final category in _SearchResultCategory.values)
-            Expanded(
-              child: Semantics(
-                selected: selected == category,
-                button: true,
-                label: '${category.label}搜索结果',
-                child: InkWell(
-                  key: ValueKey('search-result-tab-${category.name}'),
-                  onTap: () => onSelected(category),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Text(
-                        category.label,
-                        style: TextStyle(
-                          color: selected == category
-                              ? accent
-                              : tokens.textSecondary,
-                          fontSize: MusicTypography.subheadlineSize,
-                          fontWeight: MusicTypography.bodyWeight,
-                        ),
-                      ),
-                      if (selected == category)
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Container(
-                            key: ValueKey(
-                              'search-result-tab-indicator-${category.name}',
-                            ),
-                            width: 24,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: accent,
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SearchingUsersCard extends StatelessWidget {
-  const _SearchingUsersCard();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: 18),
-    child: Center(
-      child: MestingLoadingIndicator(
-        key: ValueKey('search-users-loading-animation'),
-        size: 48,
-        semanticLabel: '正在搜索用户',
-      ),
-    ),
-  );
-}
-
-class _UserResults extends StatelessWidget {
-  const _UserResults({required this.users, required this.query});
-
-  final List<SocialUser> users;
-  final String query;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SearchGlass(
-      child: ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: EdgeInsets.zero,
-        itemCount: users.length,
-        separatorBuilder: (context, index) =>
-            const Divider(height: 1, indent: 76),
-        itemBuilder: (context, index) =>
-            _SearchUserRow(user: users[index], query: query),
-      ),
-    );
-  }
-}
-
-class _SearchUserRow extends ConsumerStatefulWidget {
-  const _SearchUserRow({required this.user, required this.query});
-
-  final SocialUser user;
-  final String query;
-
-  @override
-  ConsumerState<_SearchUserRow> createState() => _SearchUserRowState();
-}
-
-class _SearchUserRowState extends ConsumerState<_SearchUserRow> {
-  bool _working = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final user = widget.user;
-    return ListTile(
-      onTap: () =>
-          context.push('/social/users/${Uri.encodeComponent(user.uid)}'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
-      leading: SocialAvatar(user: user, size: 52),
-      title: Text(
-        user.displayName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: MusicTypography.titleWeight),
-      ),
-      subtitle: Text(
-        user.bio.trim().isEmpty ? '${user.followerCount} 粉丝' : user.bio,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: SizedBox(
-        height: 36,
-        child: user.isFollowing
-            ? OutlinedButton(
-                onPressed: _working ? null : () => _toggle(user),
-                child: Text(user.isFriend ? '互相关注' : '已关注'),
-              )
-            : FilledButton.tonalIcon(
-                onPressed: _working ? null : () => _toggle(user),
-                icon: const Icon(Icons.add_rounded, size: 17),
-                label: const Text('关注'),
-              ),
-      ),
-    );
-  }
-
-  Future<void> _toggle(SocialUser user) async {
-    setState(() => _working = true);
-    try {
-      await ref
-          .read(socialRepositoryProvider)
-          .setFollowing(user.uid, following: !user.isFollowing);
-      ref.invalidate(socialUserSearchProvider(widget.query));
-      ref.invalidate(socialUserProvider(user.uid));
-      ref.invalidate(socialConnectionsProvider);
-      ref.invalidate(socialSummaryProvider);
-      if (mounted) {
-        showMusicNotice(
-          context,
-          icon: Icons.check_rounded,
-          title: user.isFollowing ? '已取消关注' : '已关注',
-          message: !user.isFollowing && user.followsMe ? '你们现在可以聊天了' : '',
-        );
-      }
-    } on Object catch (error) {
-      if (mounted) {
-        showMusicNotice(
-          context,
-          icon: Icons.error_outline_rounded,
-          title: '关注失败',
-          message: userFacingErrorMessage(error, fallback: '关注操作失败，请稍后重试'),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _working = false);
-    }
-  }
 }
 
 class _TrackResults extends ConsumerWidget {
@@ -2044,17 +1716,12 @@ class _SearchQueueButton extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-    required this.count,
-    this.suffix,
-    this.unit = '首',
-  });
+  const _SectionTitle({required this.title, required this.count, this.suffix});
 
   final String title;
   final int count;
   final String? suffix;
-  final String unit;
+  static const unit = '首';
 
   @override
   Widget build(BuildContext context) {

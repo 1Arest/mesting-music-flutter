@@ -11,8 +11,6 @@ import 'package:mesting_music/features/recommendation/recommendation_providers.d
 import 'package:mesting_music/features/search/data/hot_music_repository.dart';
 import 'package:mesting_music/features/search/presentation/music_search_page.dart';
 import 'package:mesting_music/features/search/search_providers.dart';
-import 'package:mesting_music/features/social/domain/social_models.dart';
-import 'package:mesting_music/features/social/social_providers.dart';
 import 'package:mesting_music/features/themes/mesting_palette.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -69,7 +67,6 @@ void main() {
   Widget searchApp({
     bool showReadyResults = false,
     bool showColdStartRanking = false,
-    List<SocialUser> userResults = const [],
     Set<String> favoriteTrackIds = const <String>{},
     String? activeTrackId,
   }) {
@@ -88,9 +85,7 @@ void main() {
           musicSearchControllerProvider.overrideWith(
             _ReadySearchController.new,
           ),
-          socialUserSearchProvider.overrideWith(
-            (ref, query) async => userResults,
-          ),
+
           currentMediaItemProvider.overrideWith(
             (ref) => Stream.value(
               activeTrackId == null
@@ -161,8 +156,8 @@ void main() {
 
     expect(find.byKey(const ValueKey('search-submit-action')), findsOneWidget);
     expect(find.text('取消'), findsNothing);
-    expect(find.byKey(const ValueKey('search-result-tabs')), findsOneWidget);
     expect(find.text('在线音乐'), findsOneWidget);
+    expect(find.text(testTracks.first.title), findsOneWidget);
   });
 
   testWidgets('四个榜单可以在同一张榜单卡片内切换', (tester) async {
@@ -255,38 +250,6 @@ void main() {
     expect(title.style?.color, MestingPalette.heart);
   });
 
-  testWidgets('搜索预览按网易云风格分层展示歌手、歌曲和联想词', (tester) async {
-    final artist = SocialUser(
-      uid: 'artist-chen-li',
-      nickname: '陈粒',
-      followerCount: 7303000,
-    );
-    await tester.pumpWidget(
-      searchApp(showReadyResults: true, userResults: [artist]),
-    );
-    await tester.enterText(find.byType(EditableText), '陈粒');
-    await tester.pumpAndSettle();
-
-    expect(
-      find.byKey(const ValueKey('netease-search-overview')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('netease-search-artist-result')),
-      findsOneWidget,
-    );
-    expect(find.text('艺人 · 730.3万粉丝'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('netease-search-suggestion-陈粒')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('netease-search-track-test_track_one')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('search-result-tabs')), findsNothing);
-  });
-
   testWidgets('联想预览标记已收藏歌曲的红色爱心', (tester) async {
     await tester.pumpWidget(
       searchApp(
@@ -312,68 +275,6 @@ void main() {
         matching: find.byIcon(Icons.favorite_rounded),
       ),
       findsOneWidget,
-    );
-  });
-
-  testWidgets('搜索结果只保留单曲和用户并默认停留单曲', (tester) async {
-    final users = List.generate(
-      5,
-      (index) => SocialUser(
-        uid: 'user-$index',
-        nickname: '用户${index + 1}',
-        followerCount: index + 1,
-      ),
-    );
-    await tester.pumpWidget(
-      searchApp(showReadyResults: true, userResults: users),
-    );
-    await tester.enterText(find.byType(EditableText), '用户1');
-    tester.widget<EditableText>(find.byType(EditableText)).onSubmitted!('用户1');
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('search-result-tabs')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('search-result-tab-indicator-tracks')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('search-result-tab-all')), findsNothing);
-    expect(find.text('综合'), findsNothing);
-    expect(find.text('在线音乐'), findsOneWidget);
-    final selectedTab = tester.widget<Text>(find.text('单曲'));
-    expect(selectedTab.style?.color, MestingPalette.heart);
-    final resultScroll = find.byKey(const ValueKey('search-results-scroll'));
-    for (final user in users) {
-      expect(
-        find.descendant(of: resultScroll, matching: find.text(user.nickname)),
-        findsNothing,
-      );
-    }
-
-    await tester.tap(find.byKey(const ValueKey('search-result-tab-users')));
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('search-result-tab-indicator-users')),
-      findsOneWidget,
-    );
-    expect(find.text('在线音乐'), findsNothing);
-    expect(find.text('5 位'), findsOneWidget);
-    for (final user in users) {
-      expect(
-        find.descendant(of: resultScroll, matching: find.text(user.nickname)),
-        findsOneWidget,
-      );
-    }
-
-    await tester.tap(find.byKey(const ValueKey('search-result-tab-tracks')));
-    await tester.pump();
-    expect(
-      find.byKey(const ValueKey('search-result-tab-indicator-tracks')),
-      findsOneWidget,
-    );
-    expect(find.text('在线音乐'), findsOneWidget);
-    expect(
-      find.descendant(of: resultScroll, matching: find.text('用户1')),
-      findsNothing,
     );
   });
 }

@@ -42,7 +42,6 @@ import '../core/persistence/playback_persistence_controller.dart';
 import '../features/library/library_providers.dart';
 import '../features/recommendation/recommendation_providers.dart';
 import '../features/search/search_providers.dart';
-import '../features/social/presentation/social_attention_coordinator.dart';
 import 'router/app_router.dart';
 import 'system_back_coordinator.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -212,14 +211,12 @@ class MestingMusicApp extends ConsumerWidget {
               onBetaLogout: () => appRouter.go('/music/recommend'),
               child: AppUpdateCoordinator(
                 navigatorKey: appRootNavigatorKey,
-                child: SocialAttentionCoordinator(
-                  child: DownloadSourceCoordinator(
-                    navigatorKey: appRootNavigatorKey,
-                    enabled: DistributionChannel.isBeta,
-                    child: LyricsOverlayCoordinator(
-                      child: SongListToolsHost(
-                        child: child ?? const SizedBox.shrink(),
-                      ),
+                child: DownloadSourceCoordinator(
+                  navigatorKey: appRootNavigatorKey,
+                  enabled: DistributionChannel.isBeta,
+                  child: LyricsOverlayCoordinator(
+                    child: SongListToolsHost(
+                      child: child ?? const SizedBox.shrink(),
                     ),
                   ),
                 ),

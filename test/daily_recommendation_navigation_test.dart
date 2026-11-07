@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/library/presentation/music_home_page.dart';
 import 'package:mesting_music/features/recommendation/presentation/recommendation_page.dart';
@@ -59,9 +57,6 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          authRepositoryProvider.overrideWithValue(
-            const UnconfiguredAuthRepository(),
-          ),
           favoriteTracksProvider.overrideWith((ref) => Stream.value(const [])),
           listeningSignalsProvider.overrideWith(
             (ref) => Stream.value(const []),

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/persistence/app_preferences.dart';
 import '../../auth/beta_entry_flow.dart';
-import '../../auth/auth_providers.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../themes/music_typography.dart';
 
@@ -71,10 +70,7 @@ class _ColdStartGreetingState extends ConsumerState<ColdStartGreeting> {
         : hour < 18
         ? '下午好'
         : '晚上好';
-    final name =
-        account.value?.nickname ??
-        ref.watch(currentUserProvider)?.nickname ??
-        '';
+    final name = account.value?.nickname ?? '';
     final ink = Theme.of(context).colorScheme.onSurface;
     final reduced = MediaQuery.disableAnimationsOf(context);
     return AnimatedSize(

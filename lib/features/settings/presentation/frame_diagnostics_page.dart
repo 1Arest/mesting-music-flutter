@@ -43,6 +43,20 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
 
   Future<Map<String, Object>> _environment() async {
     final info = await PackageInfo.fromPlatform();
+    var backendRequest = 'unknown';
+    try {
+      final native = await const MethodChannel(
+        'com.mesting.music/system_media',
+      ).invokeMapMethod<String, Object?>('getRenderContext');
+      final request = native?['requestedBackend'];
+      if (const {'auto', 'opengles', 'vulkan'}.contains(request)) {
+        backendRequest = request! as String;
+      }
+    } on MissingPluginException {
+      // Host/non-Android captures cannot establish the native backend.
+    } on PlatformException {
+      // A failed optional metadata read must not block timing collection.
+    }
     if (!mounted) return {};
     final view = View.of(context);
     return {
@@ -53,19 +67,28 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
       'physicalHeight': view.physicalSize.height,
       'devicePixelRatio': view.devicePixelRatio,
       'shaderFilterSupported': ui.ImageFilter.isShaderFilterSupported,
+      'requestedRendererBackend': backendRequest,
     };
   }
 
   Future<void> _start(
     DiagnosticRunController controller, {
     bool resume = false,
+    bool interactionsOnly = false,
   }) async {
     if (controller.running ||
         FrameTimingProbe.recording.value ||
         FrameTimingProbe.draining.value) {
       return;
     }
-    final environment = await _environment();
+    final effectiveInteractionsOnly = resume
+        ? ((controller.checkpoint['environment'] as Map?)?['diagnosticScope'] ==
+              'core')
+        : interactionsOnly;
+    final environment = {
+      ...await _environment(),
+      'diagnosticScope': effectiveInteractionsOnly ? 'core' : 'full',
+    };
     if (!mounted) return;
     final container = ProviderScope.containerOf(context, listen: false);
     final navigator = Navigator.of(context);
@@ -102,6 +125,7 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
       navigator: navigator,
       originalPlatform: original,
       originalAccountChoice: originalChoice,
+      interactionsOnly: effectiveInteractionsOnly,
     );
     try {
       await controller.run(
@@ -197,6 +221,14 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                     '报告记录逐帧耗时、慢帧、玻璃绘制计数与固定页面名称，不包含账号、歌曲、私信内容或凭据。帧耗时用于定位卡顿，不能证明屏幕持续 120 FPS 或永不闪退。',
                   ),
                   const SizedBox(height: 24),
+                  BetaGlassButton(
+                    key: const ValueKey('diagnostic-core-interactions'),
+                    onPressed: busy
+                        ? null
+                        : () => _start(controller, interactionsOnly: true),
+                    child: const Text('测试常用交互与快速 Tab'),
+                  ),
+                  const SizedBox(height: 12),
                   BetaGlassButton(
                     blue: true,
                     onPressed: busy ? null : () => _start(controller),
@@ -406,6 +438,11 @@ String _reasonLabel(Object? value) => switch (value) {
   'no_frame_timings' => '未收到有效帧数据',
   'page_error' => '页面加载或导航失败',
   'stage_error' => '阶段操作失败',
+  'navigation_chromeMissing' => '未找到当前可操作的真实底栏',
+  'navigation_selectionMismatch' => '底栏选中项与实际路由不一致',
+  'navigation_viewportMissing' => '未找到唯一的当前页面视口',
+  'navigation_finalRouteMismatch' => '快速切换未到达最终路由',
+  'navigation_finalSurfaceMismatch' => '最终页面尚未实际绘制或转场未结束',
   'page_close_failed' => '返回页面失败，已继续下一项',
   'stage_cancelled' => '超时操作已失效',
   'no_current_platform_song' => '此平台暂无当前歌曲',

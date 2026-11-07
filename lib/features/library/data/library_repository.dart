@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart' show OrderingTerm;
 import '../../../core/performance/track_snapshots.dart';
@@ -6,7 +5,6 @@ import '../../../core/performance/track_snapshots.dart';
 import '../../../core/database/app_database.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/models/track_page.dart';
-import 'library_sync_api.dart';
 import 'retired_bundled_tracks.dart';
 import 'playlist_directory_window.dart';
 
@@ -22,19 +20,14 @@ class FavoriteTrackRequiredException implements Exception {
 }
 
 class LibraryRepository {
-  static const _mutationSyncDebounce = Duration(seconds: 8);
-
   LibraryRepository(
     this._database, {
     required this.ownerId,
-    LibrarySyncApi? syncApi,
     bool Function()? canWrite,
-  }) : _syncApi = syncApi,
-       _canWrite = canWrite;
+  }) : _canWrite = canWrite;
 
   final AppDatabase _database;
   final String ownerId;
-  final LibrarySyncApi? _syncApi;
   final bool Function()? _canWrite;
 
   /// Guard every mutation, including non-widget notification/media actions.
@@ -45,12 +38,7 @@ class LibraryRepository {
     }
   }
 
-  Future<bool>? _activeSync;
-  Timer? _syncTimer;
-  bool _syncAgain = false;
-  bool _forcePullAgain = false;
   bool _disposed = false;
-  Object? lastSyncError;
 
   Stream<List<Track>> watchFavorites() {
     return _database
@@ -129,13 +117,11 @@ class LibraryRepository {
   Future<void> setFavorite(Track track, {required bool favorite}) async {
     _requireWriteAccess();
     await _database.setFavorite(ownerId, track, favorite: favorite);
-    _scheduleSync();
   }
 
   Future<bool> toggleFavorite(Track track) async {
     _requireWriteAccess();
     final favorite = await _database.toggleFavorite(ownerId, track);
-    _scheduleSync();
     return favorite;
   }
 
@@ -202,7 +188,6 @@ class LibraryRepository {
       coverAsset: coverAsset,
       coverCloudId: coverCloudId,
     );
-    _scheduleSync();
   }
 
   Future<void> updatePlaylist({
@@ -221,13 +206,11 @@ class LibraryRepository {
       coverAsset: coverAsset,
       coverCloudId: coverCloudId,
     );
-    _scheduleSync();
   }
 
   Future<void> deletePlaylist(String id) async {
     _requireWriteAccess();
     await _database.deletePlaylist(ownerId, id);
-    _scheduleSync();
   }
 
   Future<void> addTrackToPlaylist(String playlistId, Track track) async {
@@ -236,7 +219,6 @@ class LibraryRepository {
       throw const FavoriteTrackRequiredException();
     }
     await _database.addTrackToPlaylist(ownerId, playlistId, track);
-    _scheduleSync();
   }
 
   Future<void> removeTrackFromPlaylist(
@@ -245,7 +227,6 @@ class LibraryRepository {
   ) async {
     _requireWriteAccess();
     await _database.removeTrackFromPlaylist(ownerId, playlistId, trackId);
-    _scheduleSync();
   }
 
   Future<void> reorderPlaylistTracks(
@@ -254,7 +235,6 @@ class LibraryRepository {
   ) async {
     _requireWriteAccess();
     await _database.reorderPlaylistTracks(ownerId, playlistId, trackIds);
-    _scheduleSync();
   }
 
   Future<int> countLegacyFavorites() => _database.countLegacyFavorites();
@@ -262,75 +242,14 @@ class LibraryRepository {
   Future<void> importLegacyLibrary() async {
     _requireWriteAccess();
     await _database.importLegacyLibraryTo(ownerId);
-    _scheduleSync();
   }
 
-  Future<bool> synchronize({bool forcePull = false}) {
-    if (_syncApi == null || _disposed) return Future.value(true);
-    _syncTimer?.cancel();
-    _syncTimer = null;
-    final active = _activeSync;
-    if (active != null) {
-      _syncAgain = true;
-      _forcePullAgain = _forcePullAgain || forcePull;
-      return active;
-    }
-    final future = _synchronizeSafely(forcePull: forcePull);
-    _activeSync = future;
-    unawaited(
-      future.whenComplete(() {
-        if (!identical(_activeSync, future)) return;
-        _activeSync = null;
-        if (_syncAgain) {
-          final forcePullAgain = _forcePullAgain;
-          _syncAgain = false;
-          _forcePullAgain = false;
-          _scheduleSync(forcePull: forcePullAgain, delay: Duration.zero);
-        }
-      }),
-    );
-    return future;
-  }
-
-  Future<bool> _synchronizeSafely({required bool forcePull}) async {
-    try {
-      var pullCloudSnapshot = forcePull;
-      while (true) {
-        final mutations = await _database.pendingLibraryMutations(ownerId);
-        if (mutations.isEmpty && !pullCloudSnapshot) break;
-        final snapshot = await _syncApi!.synchronize(mutations);
-        pullCloudSnapshot = false;
-        final complete = await _database.completeLibrarySync(
-          ownerId,
-          acknowledgedMutationIds: mutations.map((item) => item.localId),
-          snapshot: snapshot,
-        );
-        if (complete) break;
-      }
-      lastSyncError = null;
-      return true;
-    } on Object catch (error) {
-      lastSyncError = error;
-      return false;
-    }
-  }
-
-  void _scheduleSync({
-    bool forcePull = false,
-    Duration delay = _mutationSyncDebounce,
-  }) {
-    if (_syncApi == null || _disposed) return;
-    _syncTimer?.cancel();
-    _syncTimer = Timer(delay, () {
-      _syncTimer = null;
-      unawaited(synchronize(forcePull: forcePull));
-    });
-  }
+  /// Local storage has no remote synchronization. Platform repositories
+  /// override this interface with their own authenticated protocol.
+  Future<bool> synchronize({bool forcePull = false}) async => true;
 
   void dispose() {
     _disposed = true;
-    _syncTimer?.cancel();
-    _syncTimer = null;
   }
 
   Track _decodeTrack(String snapshot) {

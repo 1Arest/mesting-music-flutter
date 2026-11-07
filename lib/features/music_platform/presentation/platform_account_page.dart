@@ -25,7 +25,6 @@ import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../data/music_platform_api.dart';
 import '../music_platform_providers.dart';
-import '../../auth/auth_providers.dart';
 import '../platform_profile_provider.dart';
 import 'platform_avatar.dart';
 import '../../themes/music_typography.dart';
@@ -444,8 +443,6 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
     try {
       if (ref.read(platformAccountProvider).value != null) {
         await ref.read(platformAccountProvider.notifier).signOut();
-      } else {
-        await ref.read(authControllerProvider.notifier).signOut();
       }
     } catch (_) {
       if (mounted) setState(() => _message = '退出未完成，请重试');
@@ -466,11 +463,10 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
     }
     final account = ref.watch(platformAccountProvider);
     final session = account.value;
-    final user = ref.watch(currentUserProvider);
     final profile = session == null
         ? null
         : ref.watch(platformProfileProvider).value;
-    final signedIn = !widget.loginOnly && (session != null || user != null);
+    final signedIn = !widget.loginOnly && session != null;
     final scheme = Theme.of(context).colorScheme;
     final title = signedIn
         ? '当前账号'
@@ -518,26 +514,13 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
                           ListTile(
                             contentPadding: EdgeInsets.zero,
                             leading: PlatformAvatar(
-                              url:
-                                  profile?.avatarUrl ??
-                                  session?.avatarUrl ??
-                                  user?.avatarUrl ??
-                                  '',
+                              url: profile?.avatarUrl ?? session.avatarUrl,
                             ),
-                            title: Text(
-                              profile?.nickname ??
-                                  session?.nickname ??
-                                  user?.nickname ??
-                                  '当前账号',
-                            ),
-                            subtitle: Text(
-                              session != null
-                                  ? '${session.platformLabel}账号 · 已登录'
-                                  : 'Mesting 账号 · 已登录',
-                            ),
+                            title: Text(profile?.nickname ?? session.nickname),
+                            subtitle: Text('${session.platformLabel}账号 · 已登录'),
                           ),
                           const SizedBox(height: 24),
-                          if (session?.platform == MusicPlatform.netease)
+                          if (session.platform == MusicPlatform.netease)
                             BetaGlassButton(
                               onPressed: _busy
                                   ? null
@@ -568,7 +551,7 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
                                     },
                               child: const Text('刷新网易云登录状态'),
                             ),
-                          if (session?.platform == MusicPlatform.netease)
+                          if (session.platform == MusicPlatform.netease)
                             const SizedBox(height: 16),
                           BetaGlassButton(
                             loading: _busy && _busyAction == 'logout',

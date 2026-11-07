@@ -15,9 +15,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/auth/beta_account_choice.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/presentation/beta_welcome_page.dart';
 import 'package:mesting_music/features/auth/presentation/mesting_music_companions.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
@@ -34,11 +32,6 @@ import 'package:mesting_music/features/music_platform/presentation/platform_logi
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_controls.dart';
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
-}
 
 class _Store implements PlatformSessionStore {
   PlatformSession? value;
@@ -134,7 +127,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        authControllerProvider.overrideWith(_Auth.new),
+
         platformSessionStoreProvider.overrideWithValue(_Store()),
         neteaseSessionStoreProvider.overrideWithValue(_NetStore()),
         neteaseApiProvider.overrideWithValue(NeteaseApi(client)),

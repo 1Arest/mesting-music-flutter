@@ -5,7 +5,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -427,55 +426,51 @@ void main() {
                 index: selected,
                 children: [
                   for (var i = 0; i < 4; i++)
-                    ColoredBox(color: Colors.white, child: Text('tab$i')),
+                    ColoredBox(
+                      key: ValueKey('rapid-surface-$i'),
+                      color: Colors.white,
+                      child: Text('tab$i'),
+                    ),
                 ],
               );
             },
           ),
         ),
       );
-      final controller = tester
-          .widget<PageView>(
-            find.byKey(const ValueKey('beta-root-tab-viewport')),
-          )
-          .controller!;
+      final viewport = tester.state<BetaRootTabViewportState>(
+        find.byType(BetaRootTabViewport),
+      );
+      double left(int i) =>
+          tester.getRect(find.byKey(ValueKey('rapid-surface-$i'))).left;
       update(() => selected = 3);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
-      final before = controller.page!;
-      expect(before, greaterThan(0));
+      final before = left(0);
+      expect(before, lessThan(0));
       update(() => selected = 0);
       await tester.pump();
-      expect(controller.page, closeTo(before, .001));
+      expect(left(0), closeTo(before, .001));
       await tester.pump(const Duration(milliseconds: 40));
-      expect(controller.page, lessThan(before));
+      expect(left(0), greaterThan(before));
       for (final target in [2, 1, 3, 0, 2, 3, 1, 0]) {
+        final previous = {for (final i in viewport.paintedIndices) i: left(i)};
         update(() => selected = target);
-        final previous = controller.page!;
         await tester.pump();
-        expect(controller.page, closeTo(previous, .001));
+        final retained = viewport.paintedIndices.intersection(
+          previous.keys.toSet(),
+        );
+        expect(retained, isNotEmpty);
+        for (final i in retained) {
+          expect(left(i), closeTo(previous[i]!, .001));
+        }
         await tester.pump(const Duration(milliseconds: 16));
-        RenderSliverFillViewport? found;
-        void visit(RenderObject object) {
-          if (object is RenderSliverFillViewport) {
-            found = object;
-          } else {
-            object.visitChildren(visit);
-          }
-        }
-
-        visit(tester.renderObject(find.byType(SliverFillViewport)));
-        final sliver = found!;
-        var count = 0;
-        RenderBox? child = sliver.firstChild;
-        while (child != null) {
-          count++;
-          child = sliver.childAfter(child);
-        }
-        expect(count, lessThanOrEqualTo(2));
+        expect(viewport.paintedIndices.length, lessThanOrEqualTo(2));
       }
       await tester.pumpAndSettle();
-      expect(controller.page, 0);
+      expect(viewport.selectedIndex, 0);
+      expect(viewport.motionSettled, isTrue);
+      expect(viewport.paintedIndices, {0});
+      expect(left(0), 0);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

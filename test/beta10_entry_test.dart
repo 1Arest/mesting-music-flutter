@@ -18,8 +18,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
 import 'package:mesting_music/features/auth/presentation/beta_entry_coordinator.dart';
 import 'package:mesting_music/features/auth/presentation/beta_welcome_page.dart';
@@ -35,11 +33,6 @@ import 'package:mesting_music/shared/widgets/beta_success_feedback.dart';
 class _Server implements MusicServer {
   @override
   Future<Uri> start() async => Uri.parse('http://127.0.0.1:12345');
-}
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 class _Platform extends PlatformAccountController {
@@ -101,7 +94,7 @@ void _betaEntryTests() {
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        authControllerProvider.overrideWith(_Auth.new),
+
         if (api != null) musicPlatformApiProvider.overrideWithValue(api),
         platformAccountProvider.overrideWith(_Platform.new),
       ],

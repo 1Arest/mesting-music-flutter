@@ -15,7 +15,6 @@ import 'data/music_platform_api.dart';
 import 'data/platform_session_store.dart';
 import 'data/kugou_account_store.dart';
 import 'domain/platform_session.dart';
-import '../../core/platform/distribution_channel.dart';
 import '../../core/performance/startup_timing_probe.dart';
 import '../auth/beta_account_choice.dart';
 import '../auth/beta_entry_flow.dart';
@@ -110,16 +109,14 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   @override
   Future<PlatformSession?> build() async {
     _failedRestorePlatform = null;
-    if (DistributionChannel.isBeta) {
+    {
       ref.listen(betaAccountChoiceProvider, (previous, choice) {
-        if (choice == BetaAccountChoice.mesting ||
-            choice == BetaAccountChoice.guest) {
+        if (choice == BetaAccountChoice.guest) {
           _publish(null);
         }
       });
       final choice = ref.read(betaAccountChoiceProvider);
-      if (choice == BetaAccountChoice.mesting ||
-          choice == BetaAccountChoice.guest) {
+      if (choice == BetaAccountChoice.guest) {
         return null;
       }
     }
@@ -188,12 +185,11 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       rethrow;
     }
     StartupTimingProbe.mark('account_storage_ready');
-    if (session != null && DistributionChannel.isBeta) {
+    if (session != null) {
       // On upgrade, prefer the existing platform identity when no choice was
       // saved by Beta.1. No CloudBase request is needed to make that decision.
       final choice = ref.read(betaAccountChoiceProvider);
-      if (choice == BetaAccountChoice.mesting ||
-          choice == BetaAccountChoice.guest) {
+      if (choice == BetaAccountChoice.guest) {
         return null;
       }
       await ref
@@ -222,10 +218,6 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   }) => _serialize(() async {
     // Initialization must settle before a fresh login may replace its state.
     await readyForInteractiveLogin();
-    if (DistributionChannel.isBeta &&
-        ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-      throw const MusicPlatformException('请先退出当前 Mesting 账号');
-    }
     final hadAccount = state.value != null;
     final PlatformSession session;
     try {
@@ -254,7 +246,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       transport: 'local',
       elapsedMs: saveWatch.elapsedMilliseconds,
     );
-    if (DistributionChannel.isBeta && !hadAccount) {
+    if (!hadAccount) {
       ref.read(betaEntryFlowProvider.notifier).authenticated();
     }
   });
@@ -314,7 +306,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
           await store.write(session);
         }
         check();
-        if (DistributionChannel.isBeta) {
+        {
           await ref
               .read(betaAccountChoiceProvider.notifier)
               .select(BetaAccountChoice.kugou);
@@ -342,7 +334,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
         await store.write(session);
       }
       check();
-      if (DistributionChannel.isBeta) {
+      {
         await ref
             .read(betaAccountChoiceProvider.notifier)
             .select(BetaAccountChoice.kugou);
@@ -386,9 +378,6 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
         : await store.read();
     if (session == null || session.userId != userId) {
       throw const MusicPlatformException('该账号的本机登录已移除，请重新添加');
-    }
-    if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-      throw const MusicPlatformException('请先退出当前 Mesting 账号');
     }
     await _selectKugou(session);
   });
@@ -443,9 +432,6 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
 
   Future<void> acceptNetease(NeteaseSession session) => _serialize(() async {
     await readyForInteractiveLogin();
-    if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-      throw const MusicPlatformException('请先退出当前 Mesting 账号');
-    }
     final hadAccount = state.value != null;
     if (session.userId.isEmpty ||
         session.deviceId.isEmpty ||
@@ -546,9 +532,6 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
 
     check();
     if (!session.complete) throw const MusicPlatformException('汽水登录凭据不完整');
-    if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-      throw const MusicPlatformException('请先退出当前 Mesting 账号');
-    }
     final store = ref.read(qishuiSessionStoreProvider);
     final choice = ref.read(betaAccountChoiceProvider);
     final previousClient = ref.read(qishuiApiProvider).session;
@@ -752,13 +735,13 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       ref.read(retainedKugouMutationProvider.notifier).publish(null);
       ref.invalidate(savedKugouSessionProvider);
     }
-    if (DistributionChannel.isBeta) {
+    {
       await ref
           .read(betaAccountChoiceProvider.notifier)
           .select(BetaAccountChoice.guest);
     }
     _publish(null);
-    if (DistributionChannel.isBeta) {
+    {
       await ref.read(betaEntryFlowProvider.notifier).welcome();
     }
   });

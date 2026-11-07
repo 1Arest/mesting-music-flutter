@@ -11,9 +11,7 @@ import 'package:mesting_music/features/app_update/domain/app_update_models.dart'
 import 'package:mesting_music/features/app_update/domain/release_history.dart';
 import 'package:mesting_music/features/app_update/presentation/app_update_coordinator.dart';
 import 'package:mesting_music/features/app_update/presentation/release_history_page.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/presentation/first_launch_auth_coordinator.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
@@ -40,11 +38,6 @@ class _OfflineUpdate extends AppUpdateController {
     );
     return null;
   }
-}
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 class _Account extends PlatformAccountController {
@@ -83,7 +76,7 @@ void main() {
         appUpdateControllerProvider.overrideWith(() => update),
         autoAppUpdateChecksEnabledProvider.overrideWithValue(automaticChecks),
         autoInstalledReleaseNotesEnabledProvider.overrideWithValue(startup),
-        authControllerProvider.overrideWith(_Auth.new),
+
         platformAccountProvider.overrideWith(_Account.new),
       ],
     );

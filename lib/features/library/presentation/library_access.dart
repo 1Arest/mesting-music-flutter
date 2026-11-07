@@ -1,46 +1,30 @@
-import '../../auth/presentation/beta_login_navigation.dart';
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/music_notice.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../core/platform/distribution_channel.dart';
-import '../../auth/presentation/auth_gate.dart';
-import '../../auth/beta_account_choice.dart';
-import '../../auth/auth_providers.dart';
+import '../../../shared/widgets/music_notice.dart';
+import '../../auth/presentation/beta_login_navigation.dart';
 import '../../music_platform/music_platform_providers.dart';
 
-/// Listening stays available to guests; persistent personal mutations require
-/// a real account. All protected widgets share the same welcome destination.
+/// Await credential recovery before deciding whether a personal mutation is
+/// allowed. A storage failure never turns an existing identity into a guest.
 Future<bool> ensureLibraryAccess(
   BuildContext context,
   WidgetRef ref, {
   required String reason,
   required String redirect,
 }) async {
-  if (DistributionChannel.isBeta) {
-    try {
-      // Never write guest data while an existing platform login is restoring.
-      await ref.read(platformAccountProvider.future);
-      if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
-        await ref.read(authControllerProvider.future);
-      }
-      if (ref.read(platformAccountProvider).value != null ||
-          ref.read(currentUserProvider) != null) {
-        return true;
-      }
-      if (context.mounted) await openBetaLogin(context, redirect: redirect);
-      return false;
-    } catch (_) {
-      if (context.mounted) {
-        showMusicNotice(
-          context,
-          icon: Icons.error_outline_rounded,
-          title: '当前账号曲库尚未就绪，请重试',
-          message: '',
-        );
-      }
-      return false;
+  try {
+    final platform = await ref.read(platformAccountProvider.future);
+    if (platform != null) return true;
+    if (context.mounted) await openBetaLogin(context, redirect: redirect);
+  } on Object {
+    if (context.mounted) {
+      showMusicNotice(
+        context,
+        icon: Icons.error_outline_rounded,
+        title: '当前账号曲库尚未就绪，请重试',
+        message: '',
+      );
     }
   }
-  return ensureAuthenticated(context, ref, reason: reason, redirect: redirect);
+  return false;
 }

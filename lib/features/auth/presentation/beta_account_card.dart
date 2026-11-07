@@ -8,7 +8,6 @@ import '../../music_platform/platform_profile_provider.dart';
 import '../../music_platform/presentation/platform_account_page.dart';
 import '../../music_platform/presentation/platform_avatar.dart';
 import '../../music_platform/presentation/platform_profile_edit_page.dart';
-import '../auth_providers.dart';
 import 'beta_login_navigation.dart';
 import 'beta_welcome_page.dart';
 import '../../music_platform/netease/netease_membership_page.dart';
@@ -21,13 +20,11 @@ class BetaAccountCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final platform = ref.watch(platformAccountProvider).value;
-    final user = ref.watch(currentUserProvider);
     final profile = platform == null
         ? null
         : ref.watch(platformProfileProvider).value;
-    final signedIn = platform != null || user != null;
-    final name =
-        profile?.nickname ?? platform?.nickname ?? user?.nickname ?? '';
+    final signedIn = platform != null;
+    final name = profile?.nickname ?? platform?.nickname ?? '';
     final scheme = Theme.of(context).colorScheme;
     return Container(
       key: const ValueKey('beta11-unified-account'),
@@ -52,11 +49,7 @@ class BetaAccountCard extends ConsumerWidget {
                           betaEntryRoute<void>(const PlatformProfileEditPage()),
                         ),
                   child: PlatformAvatar(
-                    url:
-                        profile?.avatarUrl ??
-                        platform?.avatarUrl ??
-                        user?.avatarUrl ??
-                        '',
+                    url: profile?.avatarUrl ?? platform?.avatarUrl ?? '',
                   ),
                 ),
               ),
@@ -79,9 +72,7 @@ class BetaAccountCard extends ConsumerWidget {
                     const NeteaseLocalSvipBadge(),
                     Text(
                       signedIn
-                          ? (platform != null
-                                ? '${platform.platformLabel}账号 · 已登录'
-                                : 'Mesting 账号 · 已登录')
+                          ? '${platform.platformLabel}账号 · 已登录'
                           : '登录后同步喜欢的音乐与歌单',
                       style: TextStyle(
                         fontSize: MusicTypography.footnoteSize,
@@ -119,10 +110,6 @@ class BetaAccountCard extends ConsumerWidget {
                 Navigator.of(
                   context,
                 ).push(betaEntryRoute<void>(const PlatformAccountPage()));
-              } else if (user != null) {
-                // Existing Mesting sessions remain intact; their logout stays in settings.
-                final router = Navigator.of(context);
-                router.push(betaEntryRoute<void>(const PlatformAccountPage()));
               } else {
                 openBetaLogin(context);
               }

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/persistence/app_preferences.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_success_feedback.dart';
-import '../auth_providers.dart';
 import '../beta_entry_flow.dart';
 import '../../music_platform/music_platform_providers.dart';
 import 'beta_welcome_page.dart';
@@ -89,14 +88,13 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
       }
     });
     final stage = ref.watch(betaEntryFlowProvider);
-    final auth = ref.watch(authControllerProvider);
     final platform = ref.watch(platformAccountProvider);
     final completed =
         ref
             .read(sharedPreferencesProvider)
             .getBool(BetaEntryFlow.completedKey) ==
         true;
-    final restored = auth.value?.user != null || platform.value != null;
+    final restored = platform.value != null;
     final first =
         stage == BetaEntryStage.idle &&
         !completed &&
@@ -104,17 +102,21 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
         !platform.hasError;
     Widget overlay = const SizedBox.shrink(key: ValueKey('entry-app'));
     if (stage == BetaEntryStage.welcome || first) {
-      // Music login and guest entry remain available if CloudBase restoration
-      // is offline. Only the platform's local credential read gates this frame.
+      // Music login and guest entry depend only on their own local store. Only the platform's local credential read gates this frame.
       overlay = first && platform.isLoading
           ? const Center(
               key: ValueKey('entry-restoring'),
               child: BetaActivityIndicator(label: '正在恢复账号'),
             )
-          : Navigator(
-              key: _navigator,
-              onGenerateRoute: (_) =>
-                  betaEntryRoute<void>(const BetaWelcomePage()),
+          : HeroControllerScope.none(
+              // Entry owns a separate Navigator above the app's Router. It
+              // must not claim MaterialApp's controller, which already belongs
+              // to the app Navigator. Its spatial routes animate themselves.
+              child: Navigator(
+                key: _navigator,
+                onGenerateRoute: (_) =>
+                    betaEntryRoute<void>(const BetaWelcomePage()),
+              ),
             );
     } else if (stage == BetaEntryStage.success ||
         stage == BetaEntryStage.guide) {

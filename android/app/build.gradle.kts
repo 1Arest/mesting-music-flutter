@@ -63,10 +63,6 @@ android {
         create("stable") {
             dimension = "distribution"
         }
-        create("javaMysqlTest") {
-            dimension = "distribution"
-            applicationIdSuffix = ".javatest"
-        }
         // The flavor still selects the existing UI/native libraries. From
         // 1.0.50 daily releases use the requested public package identity;
         // only isolated profile benchmarks retain their separate sandbox.

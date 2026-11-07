@@ -14,11 +14,9 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
 import 'package:mesting_music/features/experience/presentation/editorial_widgets.dart';
 import 'package:mesting_music/features/auth/account_capabilities.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
 import 'package:mesting_music/features/music_platform/data/music_platform_api.dart';
 import 'package:mesting_music/features/music_platform/data/platform_comments_repository.dart';
@@ -67,11 +65,6 @@ class _Account extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async => _identity;
   void replace(PlatformSession next) => state = AsyncData(next);
-}
-
-class _Auth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 class _Comments extends PlatformCommentsRepository {
@@ -143,7 +136,7 @@ void main() {
       sharedPreferencesProvider.overrideWithValue(preferences),
       musicPlatformApiProvider.overrideWithValue(api),
       platformAccountProvider.overrideWith(_Account.new),
-      authControllerProvider.overrideWith(_Auth.new),
+
       showPlatformFeaturesProvider.overrideWithValue(true),
       currentTrackProvider.overrideWithValue(_track),
     ],

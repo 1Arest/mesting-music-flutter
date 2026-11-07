@@ -1,4 +1,4 @@
-/// A music-platform identity is independent of the Mesting CloudBase session.
+/// Each music-platform identity owns a separate local library namespace.
 /// Credentials are serialized only into the platform's secure-storage entry.
 enum MusicPlatform { kugou, netease, qishui }
 

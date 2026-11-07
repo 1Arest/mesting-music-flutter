@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/experience/presentation/music_library_page.dart';
 import 'package:mesting_music/features/history/listening_history_providers.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
@@ -145,7 +144,6 @@ void main() {
         final fixture = await PersonalProfileFixture.create(
           accountFactory: netease ? null : _KugouAccount.new,
           extraOverrides: [
-            currentUserProvider.overrideWithValue(null),
             recentPlaybackProvider.overrideWith(
               (ref) => Stream.value(const []),
             ),

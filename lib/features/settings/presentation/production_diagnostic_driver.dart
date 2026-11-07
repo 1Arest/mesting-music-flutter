@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/audio/playback_providers.dart';
 import '../../../core/diagnostics/diagnostic_run.dart';
+import '../../../core/performance/frame_timing_probe.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
+import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../../../shared/widgets/beta_glass_controls.dart'
     show BetaActivityIndicator;
@@ -17,6 +19,8 @@ import '../../auth/beta_account_choice.dart';
 import '../../audiobooks/audiobooks_page.dart';
 import '../../kugou_together/together_page.dart';
 import '../../experience/presentation/beta_bottom_bar.dart';
+import '../../../shared/widgets/beta_music_chrome_scope.dart';
+import '../../experience/presentation/music_library_page.dart';
 import '../../experience/presentation/beta_now_playing_page.dart';
 import '../../experience/presentation/music_home_catalogues.dart';
 import '../../experience/presentation/editorial_widgets.dart';
@@ -38,7 +42,6 @@ import '../../music_platform/netease/messages/netease_messages_page.dart';
 import '../../music_platform/netease/messages/netease_messages_repository.dart';
 import '../../music_platform/presentation/music_effects_page.dart';
 import '../../music_platform/presentation/platform_design.dart';
-import '../../music_platform/presentation/platform_library_page.dart';
 import '../../music_platform/presentation/platform_recommendations_page.dart';
 import '../../music_platform/presentation/platform_catalog_detail_page.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
@@ -200,7 +203,6 @@ const _excludedScreens = {
   'commerce': '会员购买 / 付费 / 奖励验证：不自动触发交易或领取',
   'social-writing': '发消息 / 评论 / 邀请 / 上传：不自动产生社交内容',
   'media-autoplay': 'MV / 视频详情：生产页面会自动播放，需用户主动进入',
-  'mesting-social': 'Mesting 社交页：此次巡检使用网易云和酷狗身份，不切换第三方账号',
   'sleep-timer': '睡眠定时器：只读浏览不更改定时，需用户主动设置',
   'onboarding': '欢迎与首次引导：不重置已完成的引导状态',
 };
@@ -239,8 +241,8 @@ const _labels = {
   'privacy': '隐私政策',
 };
 
-// These feeds have no entity-ID prerequisite. Detail feeds are handled using
-// real returned entities below; a missing item is a skip, never a fake song.
+// These feeds need no public entity lookup. userPlaylists uses the active
+// NetEase account as its explicit seed below; missing seeds are honest skips.
 const _standaloneFeeds = [
   NeteaseFeed.recommended,
   NeteaseFeed.premium,
@@ -283,12 +285,14 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     required this.navigator,
     required this.originalPlatform,
     this.originalAccountChoice,
+    this.interactionsOnly = false,
   });
   final ProviderContainer container;
   final GoRouter router;
   final NavigatorState navigator;
   final MusicPlatform? originalPlatform;
   final BetaAccountChoice? originalAccountChoice;
+  final bool interactionsOnly;
   String? _expectedPlatform;
   Route<void>? _route;
   GlobalKey? _pageKey;
@@ -296,7 +300,30 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   bool _qishuiLyricsOpened = false;
 
   @override
-  List<DiagnosticScenario> get scenarios => productionDiagnosticScenarios();
+  List<DiagnosticScenario> get scenarios => interactionsOnly
+      ? productionDiagnosticScenarios()
+            .where(
+              (scenario) => const {
+                'recommend',
+                'functions',
+                'music',
+                'library',
+                'profile',
+                'tabs',
+                'favorites',
+                'history',
+                'playlist',
+                'search',
+                'player',
+                'lyrics',
+                'settings',
+                'themes',
+                'local',
+                'downloads',
+              }.contains(scenario.id.split('/').last),
+            )
+            .toList()
+      : productionDiagnosticScenarios();
 
   @override
   Future<void> open(
@@ -340,7 +367,9 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       'history': '/profile/listening',
       'replay': '/music/replay',
       'queue-list': '/music/queue',
-      'playlists': '/music/playlists',
+      // This is the canonical retained-shell alias. The old redirect-only URL
+      // always failed its own exact-path assertion, without opening a new page.
+      'playlists': '/music/view?view=playlists',
       'legal': '/legal',
       'agreement': '/legal/user-agreement',
       'privacy': '/legal/privacy-policy',
@@ -350,7 +379,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     if (path != null) {
       router.go(path);
       await _settle(ticket);
-      if (router.routeInformationProvider.value.uri.path != path) {
+      if (router.routeInformationProvider.value.uri != Uri.parse(path)) {
         throw StateError('route_redirected');
       }
     } else {
@@ -455,9 +484,20 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       );
     }
     if (id.startsWith('feed-')) {
-      return NeteaseFeaturesPage(
-        feed: NeteaseFeed.values.byName(id.substring(5)),
-      );
+      final feed = NeteaseFeed.values.byName(id.substring(5));
+      var seed = '';
+      if (feed == NeteaseFeed.userPlaylists) {
+        final account = container.read(platformAccountProvider).value;
+        if (account?.platform != MusicPlatform.netease ||
+            account!.userId.trim().isEmpty) {
+          throw const DiagnosticSkip('no_real_detail_seed');
+        }
+        // /user/playlist requires uid. An empty ID previously opened an error
+        // page, so it never measured the signed-in user's actual playlists.
+        // The identifier remains page state and is never copied into reports.
+        seed = account.userId;
+      }
+      return NeteaseFeaturesPage(feed: feed, id: seed);
     }
     if (id.startsWith('collection-')) {
       final kind = PlatformExploreKind.values.byName(id.substring(11));
@@ -478,7 +518,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
           title: '私人 FM',
         );
       case 'favorites':
-        return const PlatformLibraryPage(favorites: true);
+        return const MusicLibraryPage(view: 'favorites');
       case 'history':
         return const ListeningHistoryPage();
       case 'effects':
@@ -625,8 +665,20 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
 
   /// Enumerate only active, painted production descendants. Offstage routes,
   /// PageView cache neighbours and covered Navigator pages cannot own actions.
-  List<Element> _visible() {
-    final root = (_pageKey?.currentContext ?? navigator.context) as Element;
+  List<Element> _visible({bool includeChrome = false}) {
+    var root = (_pageKey?.currentContext ?? navigator.context) as Element;
+    if (includeChrome) {
+      // The page Navigator lives BELOW its persistent shell. Searching only
+      // its descendants cannot discover the real bottom bar and used to fail
+      // every platform's rapid-tab stage before issuing a single selection.
+      navigator.context.visitAncestorElements((element) {
+        if (element.widget is BetaMusicChromeScope) {
+          root = element;
+          return false;
+        }
+        return true;
+      });
+    }
     final result = <Element>[];
     void walk(Element element) {
       final widget = element.widget;
@@ -712,24 +764,78 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       final destinations = scenario.platform == 'qishui'
           ? [0, 1, 3, 1, 0, 3, 1, 0, 3, 0, 1, 3]
           : [0, 1, 2, 3, 2, 1, 0, 3, 0, 2, 1, 3];
+      var observedSelections = 0;
+      var motionObserved = false;
       for (final index in destinations) {
         ticket.check();
-        final bars = _visible()
-            .map((e) => e.widget)
-            .whereType<BetaMusicBottomBar>();
-        if (bars.isEmpty) throw StateError('production_bar_missing');
+        final bars = _visible(
+          includeChrome: true,
+        ).map((e) => e.widget).whereType<BetaMusicBottomBar>();
+        if (bars.isEmpty) {
+          throw const DiagnosticNavigationFailure(
+            DiagnosticNavigationFailureReason.chromeMissing,
+          );
+        }
         // This is the production onTabSelected callback, including existing
         // BetaTabNavigation coalescing; never bypass it with repeated go().
+        FrameTimingProbe.markTransition('tab_request_$index');
         bars.last.onTabSelected(index);
         await Future<void>.delayed(const Duration(milliseconds: 65));
+        await WidgetsBinding.instance.endOfFrame;
+        ticket.check();
+        final visible = _visible(includeChrome: true);
+        final bar = visible
+            .map((e) => e.widget)
+            .whereType<BetaMusicBottomBar>()
+            .last;
+        if (bar.selectedIndex != index ||
+            router.routeInformationProvider.value.uri.path !=
+                betaMusicRoutes[index]) {
+          throw const DiagnosticNavigationFailure(
+            DiagnosticNavigationFailureReason.selectionMismatch,
+          );
+        }
+        final viewports = visible
+            .whereType<StatefulElement>()
+            .map((e) => e.state)
+            .whereType<BetaRootTabViewportState>()
+            .toList();
+        if (viewports.length != 1) {
+          throw const DiagnosticNavigationFailure(
+            DiagnosticNavigationFailureReason.viewportMissing,
+          );
+        }
+        final viewport = viewports.single;
+        FrameTimingProbe.markTransition('tab_selected_$index');
+        motionObserved = motionObserved || !viewport.motionSettled;
+        observedSelections++;
       }
       await _settle(ticket);
       await _settle(ticket);
       if (router.routeInformationProvider.value.uri.path != '/profile') {
-        throw StateError('final_tab_mismatch');
+        throw const DiagnosticNavigationFailure(
+          DiagnosticNavigationFailureReason.finalRouteMismatch,
+        );
       }
+      final viewport = _visible(includeChrome: true)
+          .whereType<StatefulElement>()
+          .map((e) => e.state)
+          .whereType<BetaRootTabViewportState>()
+          .single;
+      if (!viewport.motionSettled ||
+          viewport.selectedIndex != 3 ||
+          viewport.paintedIndices.length != 1 ||
+          !viewport.paintedIndices.contains(3)) {
+        throw const DiagnosticNavigationFailure(
+          DiagnosticNavigationFailureReason.finalSurfaceMismatch,
+        );
+      }
+      FrameTimingProbe.markTransition('tabs_settled_3');
       return {
         'requests': 12,
+        'observedSelections': observedSelections,
+        'motionObserved': motionObserved,
+        'finalPaintedTabVerified': true,
         'finalTab': 'profile',
         'productionNavigation': true,
       };

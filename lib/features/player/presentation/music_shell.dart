@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/layout/adaptive_layout.dart';
 import '../../../core/platform/distribution_channel.dart';
-import '../../social/listen_together_providers.dart';
 import '../../themes/music_theme_background.dart';
 import 'music_navigation.dart';
 import 'persistent_mini_player.dart';
@@ -45,7 +44,6 @@ class _MusicShellState extends ConsumerState<MusicShell> {
   Widget build(BuildContext context) {
     final location = widget.location;
     final child = widget.child;
-    ref.watch(listenTogetherControllerProvider);
     final searchOverlay = location.startsWith('/music/search');
     final settingsOverlay = location.startsWith('/music/settings');
     final fullPlayer = location.startsWith('/player');

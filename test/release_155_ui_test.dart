@@ -6,8 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/network/music_network_diagnostics.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/security/credential_failure.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/auth/beta_account_choice.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
 import 'package:mesting_music/features/auth/presentation/beta_entry_coordinator.dart';
@@ -22,11 +20,6 @@ const _keyFailure = CredentialStoreException(
   MusicFailureFamily.keyInvalidated,
 );
 const _healthy = PlatformSession(userId: '155', token: 'synthetic-current');
-
-class _NoAuth extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
-}
 
 class _UnreadableTarget extends PlatformAccountController {
   @override
@@ -58,7 +51,7 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(
           await SharedPreferences.getInstance(),
         ),
-        authControllerProvider.overrideWith(_NoAuth.new),
+
         platformAccountProvider.overrideWith(factory),
       ],
     );

@@ -5,7 +5,6 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../shared/models/track.dart';
-import '../sync/library_sync_models.dart';
 
 part 'app_database.g.dart';
 
@@ -57,6 +56,9 @@ class UserPlaylistTracks extends Table {
 /// Library edits are first committed to the device database so the UI can
 /// update immediately. The synchronizer later sends these compact mutations
 /// to the backend and acknowledges them only after the server accepts them.
+// Compatibility-only table: preserve its schema and historical rows during
+// upgrades. The retired account's cloud readers, writers and journal are gone;
+// current three-platform synchronization uses each platform repository.
 class SyncMutations extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get ownerId => text()();
@@ -386,13 +388,6 @@ class AppDatabase extends _$AppDatabase {
           deletedAt: Value(favorite ? null : now),
         ),
       );
-      await _enqueueSyncMutation(
-        ownerId: ownerId,
-        entityType: 'favorite',
-        entityId: track.id,
-        operation: favorite ? 'upsert' : 'delete',
-        payload: jsonEncode(track.toJson()),
-      );
     });
   }
 
@@ -417,13 +412,6 @@ class AppDatabase extends _$AppDatabase {
           updatedAt: now,
           deletedAt: Value(favorite ? null : now),
         ),
-      );
-      await _enqueueSyncMutation(
-        ownerId: ownerId,
-        entityType: 'favorite',
-        entityId: track.id,
-        operation: favorite ? 'upsert' : 'delete',
-        payload: jsonEncode(track.toJson()),
       );
     });
     return favorite;
@@ -476,19 +464,6 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: now,
       ),
     );
-    await _enqueueSyncMutation(
-      ownerId: ownerId,
-      entityType: 'playlist',
-      entityId: id,
-      operation: 'upsert',
-      payload: jsonEncode({
-        'id': id,
-        'name': name,
-        'description': description,
-        'cover_asset': coverAsset,
-        'cover_cloud_id': coverCloudId,
-      }),
-    );
   }
 
   Future<void> updatePlaylist({
@@ -510,19 +485,6 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await _enqueueSyncMutation(
-      ownerId: ownerId,
-      entityType: 'playlist',
-      entityId: id,
-      operation: 'upsert',
-      payload: jsonEncode({
-        'id': id,
-        'name': name,
-        'description': description,
-        'cover_asset': coverAsset,
-        'cover_cloud_id': coverCloudId,
-      }),
-    );
   }
 
   Future<void> deletePlaylist(String ownerId, String id) async {
@@ -534,12 +496,6 @@ class AppDatabase extends _$AppDatabase {
       await (delete(
         userPlaylists,
       )..where((row) => row.ownerId.equals(ownerId) & row.id.equals(id))).go();
-      await _enqueueSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playlist',
-        entityId: id,
-        operation: 'delete',
-      );
     });
   }
 
@@ -573,16 +529,6 @@ class AppDatabase extends _$AppDatabase {
             (row) => row.ownerId.equals(ownerId) & row.id.equals(playlistId),
           ))
           .write(UserPlaylistsCompanion(updatedAt: Value(DateTime.now())));
-      await _enqueueSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playlist_item',
-        entityId: '$playlistId:${track.id}',
-        operation: 'upsert',
-        payload: jsonEncode({
-          'playlist_id': playlistId,
-          'track': track.toJson(),
-        }),
-      );
     });
   }
 
@@ -599,13 +545,6 @@ class AppDatabase extends _$AppDatabase {
         ))
         .go();
     await _normalizePlaylistOrder(ownerId, playlistId);
-    await _enqueueSyncMutation(
-      ownerId: ownerId,
-      entityType: 'playlist_item',
-      entityId: '$playlistId:$trackId',
-      operation: 'delete',
-      payload: jsonEncode({'playlist_id': playlistId, 'track_id': trackId}),
-    );
   }
 
   Future<void> reorderPlaylistTracks(
@@ -627,13 +566,6 @@ class AppDatabase extends _$AppDatabase {
             (row) => row.ownerId.equals(ownerId) & row.id.equals(playlistId),
           ))
           .write(UserPlaylistsCompanion(updatedAt: Value(DateTime.now())));
-      await _enqueueSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playlist_order',
-        entityId: playlistId,
-        operation: 'upsert',
-        payload: jsonEncode({'track_ids': orderedTrackIds}),
-      );
     });
   }
 
@@ -694,13 +626,6 @@ class AppDatabase extends _$AppDatabase {
             deletedAt: const Value(null),
           ),
         );
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'favorite',
-          entityId: row.trackId,
-          operation: 'upsert',
-          payload: row.trackSnapshot,
-        );
       }
 
       final playlists = await (select(
@@ -719,19 +644,6 @@ class AppDatabase extends _$AppDatabase {
             updatedAt: now,
           ),
         );
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playlist',
-          entityId: row.id,
-          operation: 'upsert',
-          payload: jsonEncode({
-            'id': row.id,
-            'name': row.name,
-            'description': row.description,
-            'cover_asset': row.coverAsset,
-            'cover_cloud_id': row.coverCloudId,
-          }),
-        );
       }
 
       final items = await (select(
@@ -748,17 +660,6 @@ class AppDatabase extends _$AppDatabase {
             addedAt: row.addedAt,
           ),
         );
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playlist_item',
-          entityId: '${row.playlistId}:${row.trackId}',
-          operation: 'upsert',
-          payload: jsonEncode({
-            'playlist_id': row.playlistId,
-            'track': jsonDecode(row.trackSnapshot),
-            'sort_order': row.sortOrder,
-          }),
-        );
       }
     });
   }
@@ -767,356 +668,6 @@ class AppDatabase extends _$AppDatabase {
   ///
   /// Sending in insertion order preserves the user's edit intent when several
   /// different library entities are changed while the device is offline.
-  Future<List<LibrarySyncMutation>> pendingLibraryMutations(
-    String ownerId, {
-    int limit = 100,
-  }) async {
-    final rows =
-        await (select(syncMutations)
-              ..where((row) => row.ownerId.equals(ownerId))
-              ..orderBy([(row) => OrderingTerm.asc(row.id)])
-              ..limit(limit))
-            .get();
-    return rows
-        .map((row) {
-          Map<String, Object?> payload;
-          try {
-            final decoded = jsonDecode(row.payload);
-            payload = decoded is Map
-                ? Map<String, Object?>.from(decoded)
-                : const <String, Object?>{};
-          } on Object {
-            payload = const <String, Object?>{};
-          }
-          return LibrarySyncMutation(
-            localId: row.id,
-            entityType: row.entityType,
-            entityId: row.entityId,
-            operation: row.operation,
-            payload: payload,
-            createdAt: row.createdAt,
-          );
-        })
-        .toList(growable: false);
-  }
-
-  /// Rebuilds an Outbox snapshot when an account needs a first cloud upload.
-  ///
-  /// History rows use replacement mutations because only their newest totals
-  /// matter; favorites and playlist rows retain the normal entity mutation
-  /// semantics used by later incremental edits.
-  Future<void> enqueueLibraryCloudBootstrap(String ownerId) async {
-    await transaction(() async {
-      final favorites =
-          await (select(favoriteTracks)..where(
-                (row) => row.ownerId.equals(ownerId) & row.deletedAt.isNull(),
-              ))
-              .get();
-      for (final row in favorites) {
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'favorite',
-          entityId: row.trackId,
-          operation: 'upsert',
-          payload: row.trackSnapshot,
-        );
-      }
-
-      final playlists = await (select(
-        userPlaylists,
-      )..where((row) => row.ownerId.equals(ownerId))).get();
-      for (final row in playlists) {
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playlist',
-          entityId: row.id,
-          operation: 'upsert',
-          payload: jsonEncode({
-            'id': row.id,
-            'name': row.name,
-            'description': row.description,
-            'cover_asset': row.coverAsset,
-            'cover_cloud_id': row.coverCloudId,
-          }),
-        );
-      }
-
-      final items = await (select(
-        userPlaylistTracks,
-      )..where((row) => row.ownerId.equals(ownerId))).get();
-      for (final row in items) {
-        await _enqueueSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playlist_item',
-          entityId: '${row.playlistId}:${row.trackId}',
-          operation: 'upsert',
-          payload: jsonEncode({
-            'playlist_id': row.playlistId,
-            'track': jsonDecode(row.trackSnapshot),
-            'sort_order': row.sortOrder,
-          }),
-        );
-      }
-
-      final histories = await (select(
-        playbackHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).get();
-      for (final row in histories) {
-        await _replacePendingSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playback_history',
-          entityId: row.trackId,
-          payload: jsonEncode(_playbackHistoryPayload(row)),
-        );
-      }
-
-      final dailyHistories = await (select(
-        playbackDailyHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).get();
-      for (final row in dailyHistories) {
-        await _replacePendingSyncMutation(
-          ownerId: ownerId,
-          entityType: 'playback_daily_history',
-          entityId: '${row.dayKey}:${row.trackId}',
-          payload: jsonEncode(_playbackDailyHistoryPayload(row)),
-        );
-      }
-    });
-  }
-
-  Future<void> acknowledgeLibraryMutations(
-    String ownerId,
-    Iterable<int> mutationIds,
-  ) async {
-    final ids = mutationIds.toList(growable: false);
-    if (ids.isEmpty) return;
-    await (delete(
-      syncMutations,
-    )..where((row) => row.ownerId.equals(ownerId) & row.id.isIn(ids))).go();
-  }
-
-  Future<int> countPendingLibraryMutations(String ownerId) async {
-    final count = syncMutations.id.count();
-    final query = selectOnly(syncMutations)
-      ..addColumns([count])
-      ..where(syncMutations.ownerId.equals(ownerId));
-    return query.map((row) => row.read(count) ?? 0).getSingle();
-  }
-
-  Future<void> replaceLibraryFromCloud(
-    String ownerId,
-    CloudLibrarySnapshot snapshot,
-  ) async {
-    await transaction(() => _replaceLibraryRows(ownerId, snapshot));
-  }
-
-  /// Atomically acknowledges uploaded mutations and applies a cloud snapshot.
-  ///
-  /// A snapshot is authoritative only when no newer local mutation remains.
-  /// Returning `false` tells the caller to upload the newly queued edits first
-  /// instead of accidentally overwriting them with an older server response.
-  Future<bool> completeLibrarySync(
-    String ownerId, {
-    required Iterable<int> acknowledgedMutationIds,
-    required CloudLibrarySnapshot snapshot,
-  }) async {
-    return transaction(() async {
-      final ids = acknowledgedMutationIds.toList(growable: false);
-      if (ids.isNotEmpty) {
-        await (delete(
-          syncMutations,
-        )..where((row) => row.ownerId.equals(ownerId) & row.id.isIn(ids))).go();
-      }
-      final remaining = await countPendingLibraryMutations(ownerId);
-      if (remaining > 0) return false;
-      await _replaceLibraryRows(ownerId, snapshot);
-      return true;
-    });
-  }
-
-  /// Removes all device-local library and playback rows owned by an account
-  /// after the backend has confirmed irreversible account deletion.
-  Future<void> deleteOwnerData(String ownerId) async {
-    await transaction(() async {
-      await (delete(
-        syncMutations,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        favoriteTracks,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        userPlaylistTracks,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        userPlaylists,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        playbackSessions,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        playbackHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-      await (delete(
-        playbackDailyHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-    });
-  }
-
-  /// Replaces one account's materialized local library from a trusted snapshot.
-  ///
-  /// Callers must run this inside the same transaction that establishes there
-  /// are no newer pending mutations for [ownerId].
-  Future<void> _replaceLibraryRows(
-    String ownerId,
-    CloudLibrarySnapshot snapshot,
-  ) async {
-    await (delete(
-      favoriteTracks,
-    )..where((row) => row.ownerId.equals(ownerId))).go();
-    await (delete(
-      userPlaylistTracks,
-    )..where((row) => row.ownerId.equals(ownerId))).go();
-    await (delete(
-      userPlaylists,
-    )..where((row) => row.ownerId.equals(ownerId))).go();
-    if (snapshot.includesPlaybackHistories) {
-      await (delete(
-        playbackHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-    }
-    if (snapshot.includesPlaybackDailyHistories) {
-      await (delete(
-        playbackDailyHistories,
-      )..where((row) => row.ownerId.equals(ownerId))).go();
-    }
-
-    for (final favorite in snapshot.favorites) {
-      await into(favoriteTracks).insert(
-        FavoriteTracksCompanion.insert(
-          ownerId: Value(ownerId),
-          trackId: favorite.track.id,
-          trackSnapshot: jsonEncode(favorite.track.toJson()),
-          createdAt: favorite.createdAt,
-          updatedAt: favorite.updatedAt,
-          deletedAt: const Value(null),
-        ),
-      );
-    }
-
-    for (final playlist in snapshot.playlists) {
-      await into(userPlaylists).insert(
-        UserPlaylistsCompanion.insert(
-          ownerId: Value(ownerId),
-          id: playlist.id,
-          name: playlist.name,
-          description: Value(playlist.description),
-          coverAsset: Value(playlist.coverAsset),
-          coverCloudId: Value(playlist.coverCloudId),
-          createdAt: playlist.createdAt,
-          updatedAt: playlist.updatedAt,
-        ),
-      );
-      for (final item in playlist.tracks) {
-        await into(userPlaylistTracks).insert(
-          UserPlaylistTracksCompanion.insert(
-            ownerId: Value(ownerId),
-            playlistId: playlist.id,
-            trackId: item.track.id,
-            trackSnapshot: jsonEncode(item.track.toJson()),
-            sortOrder: item.sortOrder,
-            addedAt: item.addedAt,
-          ),
-        );
-      }
-    }
-
-    if (snapshot.includesPlaybackHistories) {
-      for (final history in snapshot.playbackHistories) {
-        await into(playbackHistories).insert(
-          PlaybackHistoriesCompanion.insert(
-            ownerId: Value(ownerId),
-            trackId: history.track.id,
-            trackSnapshot: jsonEncode(history.track.toJson()),
-            playCount: Value(history.playCount),
-            completedPlayCount: Value(history.completedPlayCount),
-            totalPlayedMs: Value(history.totalPlayedMs),
-            lastPlayedAt: history.lastPlayedAt,
-          ),
-        );
-      }
-    }
-    if (snapshot.includesPlaybackDailyHistories) {
-      for (final history in snapshot.playbackDailyHistories) {
-        await into(playbackDailyHistories).insert(
-          PlaybackDailyHistoriesCompanion.insert(
-            ownerId: Value(ownerId),
-            dayKey: history.dayKey,
-            trackId: history.track.id,
-            trackSnapshot: jsonEncode(history.track.toJson()),
-            playCount: Value(history.playCount),
-            totalPlayedMs: Value(history.totalPlayedMs),
-            lastPlayedAt: history.lastPlayedAt,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _enqueueSyncMutation({
-    required String ownerId,
-    required String entityType,
-    required String entityId,
-    required String operation,
-    String payload = '{}',
-  }) async {
-    // Only the newest pending state for an entity needs to cross the network.
-    // This also collapses rapid favorite toggles and playlist edits into one
-    // CloudBase mutation while preserving the local-first UI response.
-    await (delete(syncMutations)..where(
-          (row) =>
-              row.ownerId.equals(ownerId) &
-              row.entityType.equals(entityType) &
-              row.entityId.equals(entityId),
-        ))
-        .go();
-    await into(syncMutations).insert(
-      SyncMutationsCompanion.insert(
-        ownerId: ownerId,
-        entityType: entityType,
-        entityId: entityId,
-        operation: operation,
-        payload: Value(payload),
-        createdAt: DateTime.now(),
-      ),
-    );
-  }
-
-  Future<void> _replacePendingSyncMutation({
-    required String ownerId,
-    required String entityType,
-    required String entityId,
-    required String payload,
-  }) async {
-    await (delete(syncMutations)..where(
-          (row) =>
-              row.ownerId.equals(ownerId) &
-              row.entityType.equals(entityType) &
-              row.entityId.equals(entityId),
-        ))
-        .go();
-    await _enqueueSyncMutation(
-      ownerId: ownerId,
-      entityType: entityType,
-      entityId: entityId,
-      operation: 'upsert',
-      payload: payload,
-    );
-  }
-
-  /// Stores one resumable playback snapshot per account (`id == 1`).
-  ///
-  /// The queue is stored as track JSON rather than audio-source state so a
-  /// later app version can safely rebuild the audio engine during restoration.
   Future<void> savePlaybackSession({
     required String ownerId,
     required List<Track> queue,
@@ -1192,36 +743,6 @@ class AppDatabase extends _$AppDatabase {
           lastPlayedAt: now,
         ),
       );
-      final aggregate = PlaybackHistory(
-        ownerId: ownerId,
-        trackId: track.id,
-        trackSnapshot: snapshot,
-        playCount: (existing?.playCount ?? 0) + 1,
-        completedPlayCount: existing?.completedPlayCount ?? 0,
-        totalPlayedMs: (existing?.totalPlayedMs ?? 0) + listened.inMilliseconds,
-        lastPlayedAt: now,
-      );
-      final dailyAggregate = PlaybackDailyHistory(
-        ownerId: ownerId,
-        dayKey: dayKey,
-        trackId: track.id,
-        trackSnapshot: snapshot,
-        playCount: (daily?.playCount ?? 0) + 1,
-        totalPlayedMs: (daily?.totalPlayedMs ?? 0) + listened.inMilliseconds,
-        lastPlayedAt: now,
-      );
-      await _replacePendingSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playback_history',
-        entityId: track.id,
-        payload: jsonEncode(_playbackHistoryPayload(aggregate)),
-      );
-      await _replacePendingSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playback_daily_history',
-        entityId: '$dayKey:${track.id}',
-        payload: jsonEncode(_playbackDailyHistoryPayload(dailyAggregate)),
-      );
     });
   }
 
@@ -1289,36 +810,6 @@ class AppDatabase extends _$AppDatabase {
               ),
             );
       }
-      final aggregate = existing.copyWith(
-        totalPlayedMs: existing.totalPlayedMs + listened.inMilliseconds,
-        lastPlayedAt: now,
-      );
-      final dailyAggregate = daily == null
-          ? PlaybackDailyHistory(
-              ownerId: ownerId,
-              dayKey: dayKey,
-              trackId: trackId,
-              trackSnapshot: existing.trackSnapshot,
-              playCount: 1,
-              totalPlayedMs: listened.inMilliseconds,
-              lastPlayedAt: now,
-            )
-          : daily.copyWith(
-              totalPlayedMs: daily.totalPlayedMs + listened.inMilliseconds,
-              lastPlayedAt: now,
-            );
-      await _replacePendingSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playback_history',
-        entityId: trackId,
-        payload: jsonEncode(_playbackHistoryPayload(aggregate)),
-      );
-      await _replacePendingSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playback_daily_history',
-        entityId: '$dayKey:$trackId',
-        payload: jsonEncode(_playbackDailyHistoryPayload(dailyAggregate)),
-      );
     });
   }
 
@@ -1344,21 +835,6 @@ class AppDatabase extends _$AppDatabase {
           totalPlayedMs: Value(existing?.totalPlayedMs ?? 0),
           lastPlayedAt: now,
         ),
-      );
-      final aggregate = PlaybackHistory(
-        ownerId: ownerId,
-        trackId: track.id,
-        trackSnapshot: snapshot,
-        playCount: existing?.playCount ?? 1,
-        completedPlayCount: (existing?.completedPlayCount ?? 0) + 1,
-        totalPlayedMs: existing?.totalPlayedMs ?? 0,
-        lastPlayedAt: now,
-      );
-      await _replacePendingSyncMutation(
-        ownerId: ownerId,
-        entityType: 'playback_history',
-        entityId: track.id,
-        payload: jsonEncode(_playbackHistoryPayload(aggregate)),
       );
     });
   }
@@ -1437,22 +913,6 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 }
-
-Map<String, Object?> _playbackHistoryPayload(PlaybackHistory row) => {
-  'track': jsonDecode(row.trackSnapshot),
-  'play_count': row.playCount,
-  'completed_play_count': row.completedPlayCount,
-  'total_played_ms': row.totalPlayedMs,
-  'last_played_at': row.lastPlayedAt.toUtc().toIso8601String(),
-};
-
-Map<String, Object?> _playbackDailyHistoryPayload(PlaybackDailyHistory row) => {
-  'day_key': row.dayKey,
-  'track': jsonDecode(row.trackSnapshot),
-  'play_count': row.playCount,
-  'total_played_ms': row.totalPlayedMs,
-  'last_played_at': row.lastPlayedAt.toUtc().toIso8601String(),
-};
 
 String _playbackDayKey(DateTime value) {
   final local = value.toLocal();

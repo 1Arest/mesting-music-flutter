@@ -4,9 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
 import 'package:mesting_music/features/music_platform/data/music_platform_api.dart';
 import 'package:mesting_music/features/music_platform/data/platform_session_store.dart';
@@ -79,15 +76,6 @@ class FixtureServer implements MusicServer {
   }
 }
 
-class NeverRestore extends UnconfiguredAuthRepository {
-  int calls = 0;
-  @override
-  Future<AuthSession?> restoreSession() async {
-    calls++;
-    throw StateError('CloudBase must stay untouched');
-  }
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late SharedPreferences preferences;
@@ -96,7 +84,6 @@ void main() {
   late MemoryNeteaseStore netease;
   late QishuiApi api;
   late MusicPlatformApi kugouApi;
-  late NeverRestore legacy;
   setUp(() async {
     SharedPreferences.setMockInitialValues({
       'beta_active_account_v2': 'qishui',
@@ -122,7 +109,6 @@ void main() {
       server: FixtureServer(),
       client: MockClient((_) async => http.Response('{"status":1}', 200)),
     );
-    legacy = NeverRestore();
   });
   ProviderContainer container() => ProviderContainer(
     overrides: [
@@ -132,25 +118,9 @@ void main() {
       platformSessionStoreProvider.overrideWithValue(kugou),
       neteaseSessionStoreProvider.overrideWithValue(netease),
       musicPlatformApiProvider.overrideWithValue(kugouApi),
-      authRepositoryProvider.overrideWithValue(legacy),
     ],
   );
-  test(
-    'cold restore selects only Soda without touching CloudBase or Kugou credentials',
-    () async {
-      final c = container();
-      addTearDown(c.dispose);
-      final identity = await c.read(platformAccountProvider.future);
-      expect(identity?.ownerId, 'qishui:fixture-user');
-      expect(identity?.token, soda.value!.credentialId);
-      expect(kugouApi.session, isNull);
-      expect(api.session?.userId, 'fixture-user');
-      expect(await c.read(authControllerProvider.future), isNull);
-      expect(legacy.calls, 0);
-      expect(kugou.value?.token, 'fixture-kugou-token');
-      expect(netease.value?.cookies['MUSIC_U'], 'fixture-cookie');
-    },
-  );
+
   test(
     'switching among all three accounts keeps stores isolated and playback owners explicit',
     () async {

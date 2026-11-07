@@ -22,9 +22,7 @@ import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/playing_equalizer.dart';
 import '../../discover/data/curated_playlists.dart';
 import '../../discover/domain/curated_playlist.dart';
-import '../../auth/auth_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
-import 'library_access.dart';
 import '../../music_platform/presentation/platform_discovery_page.dart';
 import '../../music_platform/presentation/platform_library_page.dart';
 import '../../experience/presentation/music_functions_page.dart';
@@ -67,7 +65,6 @@ class MusicHomePage extends ConsumerStatefulWidget {
 class _MusicHomePageState extends ConsumerState<MusicHomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _entrance;
-  bool _guardingRestrictedView = false;
 
   @override
   void initState() {
@@ -118,18 +115,6 @@ class _MusicHomePageState extends ConsumerState<MusicHomePage>
             ...?hotSnapshot?.risingTracks,
           ];
     final view = GoRouterState.of(context).uri.queryParameters['view'];
-    final auth = ref.watch(authControllerProvider);
-    final restrictedView = view == 'playlists';
-    if (restrictedView &&
-        !DistributionChannel.isBeta &&
-        !auth.isLoading &&
-        auth.value?.user == null &&
-        !_guardingRestrictedView) {
-      _guardingRestrictedView = true;
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _requestRestrictedView(view!),
-      );
-    }
     final topInset = MediaQuery.paddingOf(context).top;
     final bottomClearance = mestingMusicPageBottomClearanceForWidth(
       MediaQuery.sizeOf(context).width,
@@ -233,18 +218,6 @@ class _MusicHomePageState extends ConsumerState<MusicHomePage>
         ),
       ],
     );
-  }
-
-  Future<void> _requestRestrictedView(String view) async {
-    final allowed = await ensureLibraryAccess(
-      context,
-      ref,
-      reason: '登录后才能创建和管理个人歌单，歌单内容会跟随账号同步。',
-      redirect: '/music?view=$view',
-    );
-    if (!mounted) return;
-    if (!allowed) context.go('/music');
-    setState(() => _guardingRestrictedView = false);
   }
 }
 

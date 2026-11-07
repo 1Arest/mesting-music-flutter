@@ -43,14 +43,4 @@ class AppUpdatePlatform {
   Future<void> installApk(String path) {
     return _channel.invokeMethod<void>('installApk', {'path': path});
   }
-
-  Future<void> installExternalApk(
-    String path, {
-    required String expectedPackageName,
-  }) {
-    return _channel.invokeMethod<void>('installExternalApk', {
-      'path': path,
-      'expectedPackageName': expectedPackageName,
-    });
-  }
 }

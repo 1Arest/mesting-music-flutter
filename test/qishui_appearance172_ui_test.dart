@@ -18,8 +18,6 @@ import 'package:mesting_music/core/network/music_network_diagnostics.dart';
 import 'package:mesting_music/features/settings/presentation/music_network_diagnostics_page.dart';
 import 'package:mesting_music/features/downloads/audio_downloads.dart';
 import 'package:mesting_music/features/downloads/audio_downloads_page.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/app_update/app_update_providers.dart';
 import 'package:mesting_music/features/app_update/domain/app_update_models.dart';
 import 'package:mesting_music/features/settings/presentation/settings_page.dart';
@@ -214,11 +212,6 @@ class AuditPlayer172 extends Player168 {
 
 class AuditLibrary172 extends Fake implements LibraryRepository {}
 
-class AuditAuth172 extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
-}
-
 class AuditWebAccount172 extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async => account().identity;
@@ -313,7 +306,7 @@ void main() {
     final c = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        authControllerProvider.overrideWith(AuditAuth172.new),
+
         appVersionProvider.overrideWith((_) async => version172),
         appUpdateControllerProvider.overrideWith(AuditUpdate172.new),
         platformAccountProvider.overrideWith(

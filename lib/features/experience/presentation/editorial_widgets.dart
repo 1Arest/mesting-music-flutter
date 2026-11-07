@@ -15,7 +15,6 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/track_artwork.dart';
-import '../../auth/auth_providers.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/platform_profile_provider.dart';
@@ -124,7 +123,6 @@ class EditorialHeader extends ConsumerWidget {
     final profile = platform == null
         ? null
         : ref.watch(platformProfileProvider).value;
-    final user = ref.watch(currentUserProvider);
     final homeGreeting = !back && (title == '首页' || title == '发现');
     final titleLabel = Text(
       title,
@@ -162,11 +160,7 @@ class EditorialHeader extends ConsumerWidget {
                 tooltip: '我的账号',
                 onPressed: () => context.go('/profile'),
                 icon: PlatformAvatar(
-                  url:
-                      profile?.avatarUrl ??
-                      platform?.avatarUrl ??
-                      user?.avatarUrl ??
-                      '',
+                  url: profile?.avatarUrl ?? platform?.avatarUrl ?? '',
                   size: 42,
                 ),
               ),

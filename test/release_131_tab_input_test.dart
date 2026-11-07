@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:mesting_music/shared/widgets/beta_tab_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:mesting_music/shared/widgets/beta_root_tab_viewport.dart';
 import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:mesting_music/app/router/beta_tab_shell.dart';
@@ -139,9 +140,9 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
-      final controller = tester
-          .widget<PageView>(find.byType(PageView).first)
-          .controller!;
+      final viewport = tester.state<BetaRootTabViewportState>(
+        find.byType(BetaRootTabViewport),
+      );
       for (final target in [3, 1, 0, 2, 3, 0]) {
         final label = find
             .descendant(
@@ -159,7 +160,9 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
-      expect(controller.page, closeTo(0, .001));
+      expect(viewport.selectedIndex, 0);
+      expect(viewport.motionSettled, isTrue);
+      expect(viewport.paintedIndices, {0});
       await capture(tester, 'tab-latest-settled');
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

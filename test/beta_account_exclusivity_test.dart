@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:mesting_music/features/music_platform/presentation/platform_auth_page.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,12 +13,7 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
-import 'package:mesting_music/features/auth/beta_account_choice.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
-import 'package:mesting_music/features/auth/data/auth_repository.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
-import 'package:mesting_music/features/auth/presentation/auth_page.dart';
 import 'package:mesting_music/features/auth/presentation/first_launch_auth_coordinator.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/music_platform/data/embedded_music_server.dart';
@@ -33,11 +29,9 @@ import 'package:mesting_music/features/app_update/domain/app_update_models.dart'
 import 'package:mesting_music/features/search/search_providers.dart';
 import 'package:mesting_music/features/search/data/hot_music_repository.dart';
 import 'package:mesting_music/features/auth/account_capabilities.dart';
-import 'package:mesting_music/features/auth/presentation/auth_protected_page.dart';
 import 'package:mesting_music/features/music_platform/platform_profile_provider.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_account_page.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_avatar.dart';
-import 'package:mesting_music/features/player/presentation/music_hub_top_bar.dart';
 import 'package:mesting_music/features/music_platform/data/platform_comments_repository.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_comments_page.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_design.dart';
@@ -62,26 +56,14 @@ class _Server implements MusicServer {
   Future<Uri> start() async => Uri.parse('http://127.0.0.1:12345');
 }
 
-class _Legacy extends UnconfiguredAuthRepository {
-  int restores = 0;
-  final pending = Completer<AuthSession?>();
-  @override
-  Future<AuthSession?> restoreSession() {
-    restores++;
-    return pending.future;
-  }
-}
-
 void main() {
   late SharedPreferences preferences;
   late _Store store;
-  late _Legacy legacy;
   late MusicPlatformApi api;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     preferences = await SharedPreferences.getInstance();
     store = _Store();
-    legacy = _Legacy();
     api = MusicPlatformApi(
       server: _Server(),
       client: MockClient(
@@ -93,7 +75,7 @@ void main() {
     sharedPreferencesProvider.overrideWithValue(preferences),
     platformSessionStoreProvider.overrideWithValue(store),
     musicPlatformApiProvider.overrideWithValue(api),
-    authRepositoryProvider.overrideWithValue(legacy),
+
     playlistsProvider.overrideWith((ref) => Stream.value([])),
     favoriteTracksProvider.overrideWith((ref) => Stream.value([])),
     appVersionProvider.overrideWith(
@@ -111,66 +93,6 @@ void main() {
       ),
     ),
   ];
-
-  test(
-    'platform login defeats delayed CloudBase restoration and logout persists guest choice',
-    () async {
-      final container = ProviderContainer(overrides: overrides());
-      addTearDown(container.dispose);
-      container.read(authControllerProvider);
-      await container.read(platformAccountProvider.future);
-      await container.read(platformAccountProvider.notifier).accept({
-        'userid': '7',
-        'token': 'test',
-        'nickname': '酷狗昵称',
-      });
-      legacy.pending.complete(
-        AuthSession(
-          user: const AuthUser(uid: 'old', nickname: '旧账号'),
-          accessToken: 'old',
-          refreshToken: '',
-          expiresAt: DateTime(2100),
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
-      expect(container.read(currentUserProvider), null);
-      expect(container.read(platformAccountProvider).value?.userId, '7');
-      await container.read(platformAccountProvider.notifier).signOut();
-      expect(
-        container.read(betaAccountChoiceProvider),
-        BetaAccountChoice.guest,
-      );
-      expect(api.session, null);
-      final restarted = ProviderContainer(overrides: overrides());
-      addTearDown(restarted.dispose);
-      expect(await restarted.read(authControllerProvider.future), null);
-      expect(await restarted.read(platformAccountProvider.future), null);
-      expect(legacy.restores, 1);
-    },
-    skip: !DistributionChannel.isBeta,
-  );
-
-  test(
-    'Mesting selection blocks a stale platform login callback',
-    () async {
-      final container = ProviderContainer(overrides: overrides());
-      addTearDown(container.dispose);
-      await container.read(platformAccountProvider.future);
-      await container
-          .read(betaAccountChoiceProvider.notifier)
-          .select(BetaAccountChoice.mesting);
-      await expectLater(
-        container.read(platformAccountProvider.notifier).accept({
-          'userid': '7',
-          'token': 'test',
-        }),
-        throwsA(isA<MusicPlatformException>()),
-      );
-      expect(store.value, null);
-      expect(api.session, null);
-    },
-    skip: !DistributionChannel.isBeta,
-  );
 
   testWidgets(
     'Kugou profile hides old login; logout restores welcome and all choices',
@@ -202,7 +124,7 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: const MaterialApp(
-            home: AuthPage(initialMode: 'login', redirect: '/profile'),
+            home: PlatformAuthPage(redirect: '/profile'),
           ),
         ),
       );
@@ -325,7 +247,6 @@ void main() {
       expect(container.read(betaEntryFlowProvider), BetaEntryStage.idle);
       expect(find.byKey(const ValueKey('entry-success')), findsNothing);
       expect(find.byKey(const ValueKey('entry-guide')), findsNothing);
-      expect(container.read(currentUserProvider), null);
     },
     skip: !DistributionChannel.isBeta,
   );
@@ -363,7 +284,6 @@ void main() {
       expect(profile?.avatarUrl, 'https://img.example/400/avatar.jpg');
       await container.read(platformAccountProvider.notifier).signOut();
       expect(await container.read(platformProfileProvider.future), null);
-      expect(container.read(showMestingFeaturesProvider), false);
       expect(container.read(showPlatformFeaturesProvider), false);
       expect(container.read(canUseCurrentLibraryProvider), false);
     },
@@ -425,54 +345,6 @@ void main() {
           });
         }
       }
-    },
-    skip: !DistributionChannel.isBeta,
-  );
-
-  testWidgets(
-    'Kugou sidebar omits Mesting messages and protected pages reject direct access',
-    (tester) async {
-      store.value = const PlatformSession(
-        userId: '7',
-        token: 'test',
-        nickname: '酷狗昵称',
-      );
-      final container = ProviderContainer(overrides: overrides());
-      addTearDown(container.dispose);
-      await container.read(platformAccountProvider.future);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: MusicHubTopBar(title: '我的', subtitle: '酷狗概念版'),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.tap(find.byIcon(Icons.menu_rounded));
-      await tester.pumpAndSettle();
-      expect(find.text('我的消息'), findsNothing);
-      expect(find.text('好友与消息'), findsNothing);
-      expect(find.text('酷狗昵称'), findsOneWidget);
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: AuthProtectedPage(
-                reason: 'Mesting 消息',
-                redirect: '/social/messages',
-                child: Text('不应出现的 Mesting 消息内容'),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      expect(find.text('不应出现的 Mesting 消息内容'), findsNothing);
-      expect(find.text('此功能属于 Mesting 账号，返回我的'), findsOneWidget);
     },
     skip: !DistributionChannel.isBeta,
   );

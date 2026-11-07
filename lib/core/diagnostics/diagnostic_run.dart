@@ -24,6 +24,21 @@ class DiagnosticSkip implements Exception {
 
 class DiagnosticCancelled implements Exception {}
 
+/// Fixed categories make navigation failures actionable without exporting raw
+/// exceptions, content IDs, account information or arbitrary route parameters.
+enum DiagnosticNavigationFailureReason {
+  chromeMissing,
+  selectionMismatch,
+  viewportMissing,
+  finalRouteMismatch,
+  finalSurfaceMismatch,
+}
+
+class DiagnosticNavigationFailure implements Exception {
+  const DiagnosticNavigationFailure(this.reason);
+  final DiagnosticNavigationFailureReason reason;
+}
+
 /// Cooperative cancellation also invalidates a timed-out adapter. Dart's
 /// Future.timeout does not cancel its original future; every awaited adapter
 /// operation must check this ticket before performing its next navigation.
@@ -293,6 +308,8 @@ class DiagnosticRunController extends ChangeNotifier {
               status,
               reason: failure is DiagnosticSkip
                   ? failure.reason
+                  : failure is DiagnosticNavigationFailure
+                  ? 'navigation_${failure.reason.name}'
                   : failure is TimeoutException
                   ? 'stage_timeout'
                   : failure != null

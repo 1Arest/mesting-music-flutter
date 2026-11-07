@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
+import 'package:mesting_music/core/security/credential_failure.dart';
+import 'package:mesting_music/core/network/music_network_diagnostics.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/features/auth/beta_account_choice.dart';
 import 'package:mesting_music/features/auth/beta_entry_flow.dart';
@@ -130,7 +132,7 @@ void main() {
     skip: !DistributionChannel.isBeta,
   );
   test(
-    'a temporary missing read retries; malformed JSON never erases encrypted data',
+    'an absent entry is read once; malformed JSON never erases encrypted data',
     () async {
       var reads = 0, deletes = 0;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -141,9 +143,18 @@ void main() {
             }
             return ++reads == 1 ? null : '{broken-json';
           });
+      // A successful null is authoritative absence, unlike a transient native
+      // exception. A subsequent malformed value must report its decode phase.
+      expect(await const SecurePlatformSessionStore().read(), isNull);
       await expectLater(
         const SecurePlatformSessionStore().read(),
-        throwsFormatException,
+        throwsA(
+          isA<CredentialStoreException>().having(
+            (error) => error.phase,
+            'phase',
+            MusicDiagnosticPhase.storageDecode,
+          ),
+        ),
       );
       expect(reads, 2);
       expect(deletes, 0);
@@ -159,7 +170,13 @@ void main() {
           );
       await expectLater(
         const SecurePlatformSessionStore().read(),
-        throwsA(isA<PlatformException>()),
+        throwsA(
+          isA<CredentialStoreException>().having(
+            (error) => error.phase,
+            'phase',
+            MusicDiagnosticPhase.storageRead,
+          ),
+        ),
       );
     },
   );
@@ -170,7 +187,13 @@ void main() {
           .setMockMethodCallHandler(_storageChannel, (_) async => null);
       await expectLater(
         const SecurePlatformSessionStore().write(_session),
-        throwsStateError,
+        throwsA(
+          isA<CredentialStoreException>().having(
+            (error) => error.phase,
+            'phase',
+            MusicDiagnosticPhase.storageVerify,
+          ),
+        ),
       );
     },
   );

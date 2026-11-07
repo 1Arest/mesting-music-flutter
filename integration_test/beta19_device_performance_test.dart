@@ -6,9 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/features/auth/auth_providers.dart';
 import 'package:mesting_music/features/auth/presentation/beta_entry_coordinator.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_account_page.dart';
@@ -33,11 +31,6 @@ class _FailedPlatformAccount extends PlatformAccountController {
   @override
   Future<PlatformSession?> build() async =>
       throw const FormatException('Local recovery fixture');
-}
-
-class _NoLegacyAccount extends AuthController {
-  @override
-  Future<AuthSession?> build() async => null;
 }
 
 /// The production calendar is exercised against local state. Overscroll may
@@ -86,7 +79,7 @@ void main() {
                       ? _FailedPlatformAccount.new
                       : _NoPlatformAccount.new,
                 ),
-                authControllerProvider.overrideWith(_NoLegacyAccount.new),
+
                 platformRewardsProvider.overrideWith(_LocalRewardCalendar.new),
               ],
               child: MaterialApp(

@@ -1,3 +1,4 @@
+import '../../features/music_platform/presentation/platform_auth_page.dart';
 import '../../features/music_platform/qishui/qishui_pages.dart';
 import '../../shared/widgets/beta_page_motion.dart';
 import '../../shared/widgets/beta_page_route_observer.dart';
@@ -15,11 +16,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/platform/sensitive_screen.dart';
 import '../../core/platform/distribution_channel.dart';
-import '../../features/auth/presentation/auth_page.dart';
-import '../../features/auth/presentation/account_deletion_page.dart';
-import '../../features/auth/presentation/auth_protected_page.dart';
-import '../../features/auth/presentation/account_bindings_page.dart';
-import '../../features/auth/presentation/forgot_password_page.dart';
 import '../../features/legal/domain/legal_documents.dart';
 import '../../features/legal/presentation/legal_documents_page.dart';
 import '../../features/library/presentation/music_home_page.dart';
@@ -35,15 +31,7 @@ import '../../features/queue/presentation/queue_page.dart';
 import '../../features/search/presentation/music_search_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 import '../../features/music_platform/presentation/platform_profile_edit_page.dart';
-import '../../features/social/presentation/chat_page.dart';
-import '../../features/social/presentation/public_profile_page.dart';
-import '../../features/social/presentation/social_connections_page.dart';
-import '../../features/social/presentation/social_messages_page.dart';
-import '../../features/social/presentation/saved_messages_page.dart';
 import '../../features/themes/theme_gallery_page.dart';
-import '../../features/profile/presentation/profile_edit_page.dart';
-import '../../features/profile/presentation/avatar_preview_page.dart';
-import '../../features/profile/presentation/profile_background_page.dart';
 import '../../features/profile/presentation/profile_page.dart';
 import '../../features/recommendation/presentation/recommendation_page.dart';
 import '../../features/experience/presentation/music_library_page.dart';
@@ -72,37 +60,14 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => _ordinaryPage(
         state,
         SensitiveScreen(
-          child: AuthPage(
-            initialMode: state.uri.queryParameters['mode'] ?? 'register',
+          child: PlatformAuthPage(
             redirect:
                 state.uri.queryParameters['redirect'] ?? '/music/recommend',
           ),
         ),
       ),
     ),
-    GoRoute(
-      path: '/auth/recover',
-      // Retired Beta account recovery links return to the available platform
-      // login flow. The formal channel keeps its original recovery route.
-      redirect: (context, state) => DistributionChannel.isBeta
-          ? Uri(
-              path: '/auth',
-              queryParameters: {
-                'mode': 'login',
-                'redirect': state.uri.queryParameters['redirect'] ?? '/profile',
-              },
-            ).toString()
-          : null,
-      pageBuilder: (context, state) => _ordinaryPage(
-        state,
-        SensitiveScreen(
-          child: ForgotPasswordPage(
-            redirect:
-                state.uri.queryParameters['redirect'] ?? '/music/recommend',
-          ),
-        ),
-      ),
-    ),
+    GoRoute(path: '/auth/recover', redirect: (_, _) => '/auth'),
   ],
 );
 
@@ -235,13 +200,8 @@ List<RouteBase> _musicShellRoutes() {
       path: '/music/playlists/:playlistId',
       pageBuilder: (context, state) => _musicSlidePage(
         state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看和编辑个人歌单。',
-          allowBetaLocalLibrary: true,
-          redirect: state.uri.toString(),
-          child: PlaylistDetailPage(
-            playlistId: state.pathParameters['playlistId']!,
-          ),
+        child: PlaylistDetailPage(
+          playlistId: state.pathParameters['playlistId']!,
         ),
       ),
     ),
@@ -292,149 +252,13 @@ List<RouteBase> _musicShellRoutes() {
       path: '/profile/edit',
       pageBuilder: (context, state) => _profileEditTransitionPage(
         state: state,
-        child: SensitiveScreen(
-          child: DistributionChannel.isBeta
-              ? const PlatformProfileEditPage()
-              : const AuthProtectedPage(
-                  reason: '登录后才能编辑头像和个人资料。',
-                  redirect: '/profile/edit',
-                  child: ProfileEditPage(),
-                ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/profile/avatar',
-      pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
-        key: ValueKey(state.uri.toString()),
-        avatarFocused: true,
-        child: AuthProtectedPage(
-          reason: '登录后才能预览和管理头像。',
-          redirect: state.uri.toString(),
-          child: const AvatarPreviewPage(),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/profile/background',
-      pageBuilder: (context, state) => _AvatarPreviewTransitionPage(
-        key: ValueKey(state.uri.toString()),
-        child: AuthProtectedPage(
-          reason: '登录后才能预览和管理个人主页背景。',
-          redirect: state.uri.toString(),
-          child: const ProfileBackgroundPage(),
-        ),
+        child: SensitiveScreen(child: const PlatformProfileEditPage()),
       ),
     ),
     GoRoute(
       path: '/profile/listening',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看听歌排行和最近播放。',
-          redirect: state.uri.toString(),
-          child: const ListeningHistoryPage(),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/profile/account',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: const SensitiveScreen(
-          child: AuthProtectedPage(
-            reason: '登录后才能管理账号绑定。',
-            redirect: '/profile/account',
-            child: AccountBindingsPage(),
-          ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/profile/delete-account',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: const SensitiveScreen(
-          child: AuthProtectedPage(
-            reason: '登录后才能注销账号。',
-            redirect: '/profile/delete-account',
-            child: AccountDeletionPage(),
-          ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看关注、粉丝和好友。',
-          redirect: state.uri.toString(),
-          child: SocialConnectionsPage(
-            initialTab:
-                int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
-          ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social/messages',
-      pageBuilder: (context, state) => _messagesTransitionPage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看好友消息。',
-          redirect: state.uri.toString(),
-          child: const SocialMessagesPage(),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social/saved-messages',
-      pageBuilder: (context, state) => _messagesTransitionPage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看收藏消息。',
-          redirect: state.uri.toString(),
-          child: const SavedMessagesPage(),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social/saved-messages/:messageId',
-      pageBuilder: (context, state) => _messagesTransitionPage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看收藏消息。',
-          redirect: state.uri.toString(),
-          child: SavedMessageDetailPage(
-            messageId: state.pathParameters['messageId']!,
-          ),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social/users/:uid',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: AuthProtectedPage(
-          reason: '登录后才能查看用户主页。',
-          redirect: state.uri.toString(),
-          child: PublicProfilePage(uid: state.pathParameters['uid']!),
-        ),
-      ),
-    ),
-    GoRoute(
-      path: '/social/chat/:uid',
-      pageBuilder: (context, state) => _musicSlidePage(
-        state: state,
-        child: SensitiveScreen(
-          child: AuthProtectedPage(
-            reason: '登录后才能与好友聊天。',
-            redirect: state.uri.toString(),
-            child: ChatPage(uid: state.pathParameters['uid']!),
-          ),
-        ),
-      ),
+      pageBuilder: (context, state) =>
+          _musicSlidePage(state: state, child: const ListeningHistoryPage()),
     ),
     GoRoute(
       path: '/player',
@@ -675,59 +499,16 @@ Page<void> _profileEditTransitionPage({
   );
 }
 
-Page<void> _messagesTransitionPage({
-  required GoRouterState state,
-  required Widget child,
-}) {
-  // Beta message and chat routes must share a reversible full-width path.
-  // Mixing the old single-layer visibility handoff with a sliding child hid
-  // the message list until the last pop frame and produced a visible flash.
-  if (DistributionChannel.isBeta) {
-    return BetaContentTransitionPage<void>(
-      key: state.pageKey,
-      name: state.uri.toString(),
-      child: BetaEdgeBack(child: child),
-    );
-  }
-  final intent = state.extra is MusicPageTransitionIntent
-      ? state.extra! as MusicPageTransitionIntent
-      : const MusicPageTransitionIntent.forward();
-  if (intent.usesMusicHubPanelTransition) {
-    return _MusicHubPanelTransitionPage(
-      key: ValueKey(state.uri.toString()),
-      handoffProgress: messagesPageHandoffProgress,
-      child: child,
-    );
-  }
-  final horizontal = intent.direction == MusicPageTransitionDirection.forward
-      ? messagesPageHorizontalOffset
-      : -messagesPageHorizontalOffset;
-  return _SequencedMusicTransitionPage(
-    key: ValueKey(state.uri.toString()),
-    transitionDuration: messagesPageTransitionDuration,
-    reverseTransitionDuration: messagesPageReverseTransitionDuration,
-    enterOffset: Offset(horizontal, 0),
-    enterScale: messagesPageStartScale,
-    scaleAlignment: Alignment.centerRight,
-    handoffProgress: messagesPageHandoffProgress,
-    child: child,
-  );
-}
-
 /// Full-page continuation after [MusicHubPanelTransition] has dismissed.
 ///
 /// The drawer is dismissed before this route is pushed. A short, already-
 /// visible destination glide preserves that spatial relationship without
 /// repeating the drawer's full-width sweep or compositing both surfaces.
 class _MusicHubPanelTransitionPage extends Page<void> {
-  const _MusicHubPanelTransitionPage({
-    required this.child,
-    this.handoffProgress = musicPageHandoffProgress,
-    super.key,
-  });
+  const _MusicHubPanelTransitionPage({required this.child, super.key});
 
   final Widget child;
-  final double handoffProgress;
+  static const handoffProgress = musicPageHandoffProgress;
 
   @override
   Route<void> createRoute(BuildContext context) {
@@ -760,51 +541,6 @@ class _MusicHubPanelTransitionPage extends Page<void> {
 ///
 /// The route deliberately honors Android's reduced-motion setting instead of
 /// forcing a zoom animation on users who have disabled system animations.
-class _AvatarPreviewTransitionPage extends Page<void> {
-  const _AvatarPreviewTransitionPage({
-    required this.child,
-    this.avatarFocused = false,
-    super.key,
-  });
-
-  final Widget child;
-  final bool avatarFocused;
-
-  @override
-  Route<void> createRoute(BuildContext context) {
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    return PageRouteBuilder<void>(
-      settings: this,
-      opaque: false,
-      allowSnapshotting: false,
-      transitionDuration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 420),
-      reverseTransitionDuration: reduceMotion
-          ? Duration.zero
-          : const Duration(milliseconds: 280),
-      pageBuilder: (_, _, _) => child,
-      transitionsBuilder: (_, animation, _, child) {
-        if (reduceMotion) return child;
-        final opacity = CurvedAnimation(
-          parent: animation,
-          curve: const Interval(.03, .82, curve: Curves.easeOutCubic),
-          reverseCurve: const Interval(0, .78, curve: Curves.easeInCubic),
-        );
-        Widget transition = FadeTransition(opacity: opacity, child: child);
-        if (avatarFocused) {
-          transition = ScaleTransition(
-            alignment: Alignment.center,
-            scale: Tween<double>(begin: .975, end: 1).animate(opacity),
-            child: transition,
-          );
-        }
-        return transition;
-      },
-    );
-  }
-}
 
 Page<void> _collectionRevealPage({
   required GoRouterState state,
@@ -841,10 +577,10 @@ Page<void> _ordinaryPage(GoRouterState state, Widget child) =>
 class _SequencedMusicTransitionPage extends Page<void> {
   const _SequencedMusicTransitionPage({
     required this.child,
+    this.handoffProgress = musicPageHandoffProgress,
     required this.enterOffset,
     this.enterScale = 1,
     this.scaleAlignment = Alignment.center,
-    this.handoffProgress = musicPageHandoffProgress,
     this.transitionDuration = musicPageTransitionDuration,
     this.reverseTransitionDuration = musicPageReverseTransitionDuration,
     this.reverseMotionCurve = musicPageMotionCurve,

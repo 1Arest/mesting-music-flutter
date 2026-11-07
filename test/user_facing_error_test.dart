@@ -4,15 +4,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mesting_music/core/errors/user_facing_error.dart';
-import 'package:mesting_music/features/auth/domain/auth_models.dart';
 
 void main() {
   test('keeps deliberate Chinese domain messages', () {
     expect(
-      userFacingErrorMessage(
-        const AuthRequestException('邮箱或密码不正确'),
-        fallback: '登录失败',
-      ),
+      userFacingErrorMessage(Exception('邮箱或密码不正确'), fallback: '登录失败'),
       '邮箱或密码不正确',
     );
   });

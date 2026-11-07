@@ -1,5 +1,3 @@
-import '../../../core/platform/distribution_channel.dart';
-
 enum LegalDocumentType { userAgreement, privacyPolicy }
 
 class LegalDocumentSection {
@@ -25,107 +23,16 @@ class LegalDocument {
   final List<LegalDocumentSection> sections;
 }
 
-const userAgreementDocument = LegalDocument(
-  type: LegalDocumentType.userAgreement,
-  title: '用户协议',
-  summary: '说明使用 Mesting Music 时双方的权利、义务与服务边界。',
-  effectiveDate: '生效日期：2026 年 8 月 26 日',
-  sections: [
-    LegalDocumentSection(
-      title: '适用范围与接受',
-      body:
-          '本协议适用于你下载、安装、注册、登录或使用 Mesting Music 及其提供的音乐收藏、个人资料、社交互动和账号同步服务。点击同意或继续使用前，请先完整阅读本协议；不同意任一条款时，请停止使用需要账号或联网支持的功能。',
-    ),
-    LegalDocumentSection(
-      title: '账号与使用规则',
-      body:
-          '你应使用真实、合法且归你本人控制的手机号或邮箱完成验证，并妥善保管账号和验证码。不得冒用他人身份、干扰服务运行、绕过安全机制、批量抓取内容，或利用本应用从事违法、侵权、骚扰、欺诈等活动。',
-    ),
-    LegalDocumentSection(
-      title: '音乐内容与知识产权',
-      body:
-          '歌曲、歌词、封面及相关素材的权利归其权利人所有。本应用不是任何第三方音乐平台的官方客户端，不提供破解会员、规避付费或规避版权限制的服务。你仅可在法律和权利人许可的范围内个人使用内容，不得擅自下载后传播、商用或二次发布。',
-    ),
-    LegalDocumentSection(
-      title: '社交内容与互动',
-      body:
-          '当你使用关注、好友、私信或一起听功能时，应尊重他人隐私与合法权益，不得发布违法、侵权、侮辱、色情、暴力、欺诈或骚扰性内容。你应对自己发布、上传或发送的内容负责；我们可在法律允许的范围内对涉嫌违规内容采取限制展示、删除或限制账号功能等措施。',
-    ),
-    LegalDocumentSection(
-      title: '服务变更与可用性',
-      body:
-          '网络、设备、地区、第三方接口、版权或会员规则的变化，可能影响搜索、播放、歌词、封面及同步服务的可用性。本应用会尽力维持合理运行，但不承诺所有内容持续可用或完全无中断。涉及重要服务变化时，将在应用内以适当方式说明。',
-    ),
-    LegalDocumentSection(
-      title: '注销与终止',
-      body:
-          '当你的客户端和服务端已提供“注销账号”功能时，可在设置中提交申请。账号注销后，账号资料及可删除的云端数据将按隐私政策处理，且通常无法恢复；法律法规另有保存期限要求的数据除外。你也可以随时停止使用本应用。',
-    ),
-    LegalDocumentSection(
-      title: '协议更新与联系',
-      body:
-          '我们可能因功能、服务或法律要求更新本协议。重大变更会在应用内以显著方式提示，并在需要时重新取得你的同意。关于本协议的疑问，请以应用商店开发者主页或应用内公布的联系渠道为准。',
-    ),
-  ],
-);
+// All channels use the currently implemented platform/guest contract.
+const userAgreementDocument = betaUserAgreementDocument;
+const privacyPolicyDocument = betaPrivacyPolicyDocument;
 
-const privacyPolicyDocument = LegalDocument(
-  type: LegalDocumentType.privacyPolicy,
-  title: '隐私政策',
-  summary: '说明我们处理哪些信息、为何处理，以及你如何管理自己的数据。',
-  effectiveDate: '生效日期：2026 年 8 月 26 日',
-  sections: [
-    LegalDocumentSection(
-      title: '我们处理的信息',
-      body:
-          '为提供账号和云端服务，我们会处理你主动提交或在使用中产生的信息，包括：手机号或邮箱及其验证结果、账号标识、昵称、头像、个人简介和主页背景；收藏、歌单、播放历史等音乐资料；关注、好友关系、私信内容与一起听互动所需的数据。',
-    ),
-    LegalDocumentSection(
-      title: '设备与本地信息',
-      body:
-          '为保障运行、安全和更新，我们可能处理必要的设备与网络状态信息，例如系统版本、应用版本、网络可用状态及故障日志。你主动选择的头像、背景或本地媒体会先由系统授权读取，并仅用于你选择的展示、上传或播放功能。应用还会在本机保存登录凭证、播放队列、封面缓存和同步缓存，以提高使用体验。',
-    ),
-    LegalDocumentSection(
-      title: '使用目的',
-      body:
-          '上述信息用于完成注册登录和身份验证、展示个人资料、同步音乐资料、提供社交和私信服务、处理账号注销请求、排查故障与保障账号安全。我们不会将你的个人信息出售给任何第三方，也不会将信息用于与上述目的无关的广告定向。',
-    ),
-    LegalDocumentSection(
-      title: '存储与服务提供方',
-      body:
-          '正式稳定版的账号、资料、社交及文件同步服务目前使用腾讯云 CloudBase 提供的认证、数据库、云函数和文件存储能力。若你自愿安装“Java + MySQL 测试版”，同类数据会改由该独立测试服务处理；它与稳定版安装包、更新通道和账号数据相互独立。音乐内容或链接来自第三方服务时，还应同时遵守对应服务的规则。',
-    ),
-    LegalDocumentSection(
-      title: '共享、公开与委托',
-      body:
-          '我们仅在实现功能所必需、获得你的单独同意，或法律法规要求的情况下共享、公开或提供信息。向 CloudBase 等基础服务提供方传输数据仅限其受托提供相关服务所需的范围。你的头像、昵称、个人简介及你主动公开的动态，可能会被你允许访问的其他用户看到。',
-    ),
-    LegalDocumentSection(
-      title: '你的权利',
-      body:
-          '你可以在个人资料、设置和账号相关页面查询、修改或删除部分资料；可以退出登录、取消关注关系，或在功能可用时申请注销账号。注销会删除账号及可删除的云端资料，同时清理当前设备中的登录状态；因法律法规或争议处理需要保存的信息，将在法定期限内保留。',
-    ),
-    LegalDocumentSection(
-      title: '安全与保留',
-      body:
-          '我们采取传输加密、访问控制和设备安全存储等合理措施保护信息，并在实现服务目的所需的最短期限内保存。网络传输和互联网环境无法做到绝对安全，请不要通过昵称、简介或私信发送银行卡密码、验证码等敏感信息。',
-    ),
-    LegalDocumentSection(
-      title: '未成年人、更新与联系',
-      body:
-          '若你是未成年人，请在监护人同意和指导下使用本应用。我们更新本政策时，会在应用内以适当方式提示；涉及重要变化时，将在需要时重新取得同意。关于隐私权利的咨询，请以应用商店开发者主页或应用内公布的联系渠道为准。',
-    ),
-  ],
-);
-
-/// Beta has a different account entry and music-service boundary. Keep the
-/// historical stable-channel documents independent rather than mixing services.
 const betaUserAgreementDocument = LegalDocument(
   type: LegalDocumentType.userAgreement,
   title: '用户协议',
   summary:
       '本协议适用于 Mesting Music Android 版当前提供的音乐浏览、播放、账号与个性化功能。请在欢迎页主动阅读并选择是否同意。',
-  effectiveDate: '更新及生效日期：2026 年 10 月 28 日',
+  effectiveDate: '更新及生效日期：2026 年 11 月 7 日',
   sections: [
     LegalDocumentSection(
       title: '一、适用范围与自主选择',
@@ -135,12 +42,12 @@ const betaUserAgreementDocument = LegalDocument(
     LegalDocumentSection(
       title: '二、当前服务与账号范围',
       body:
-          '当前版本提供公开音乐发现、歌曲/专辑/歌手/歌单/歌词搜索、平台允许的在线播放、歌词、待播队列和历史，以及外观、播放器风格、启动页和进度条装扮。酷狗账号可通过手机号验证码或页面提供的扫码方式登录；网易云账号支持页面提供的扫码、手机验证码、手机号密码与邮箱密码登录；云端收藏、个人歌单、评论、签到及会员任务等能力取决于对应账号和平台接口。网易云专区还提供平台允许的动态、私信、账号管理、视频、播客、音乐人内容和一起听入口。已下架功能会标明平台暂不支持。游客可以使用当前开放的浏览、搜索与播放功能，受保护的收藏或歌单写入会引导登录。',
+          '当前版本提供公开音乐发现、歌曲/专辑/歌手/歌单/歌词搜索、平台允许的在线播放、歌词、待播队列和历史，以及外观、播放器风格、启动页和进度条装扮。酷狗账号可通过手机号验证码或页面提供的扫码方式登录；网易云账号支持页面提供的扫码、手机验证码、手机号密码与邮箱密码登录；汽水账号使用官版扫码登录。云端收藏、个人歌单、评论、签到及会员任务等能力取决于对应账号和平台接口。网易云专区还提供平台允许的动态、私信、账号管理、视频、播客、音乐人内容和一起听入口。已下架功能会标明平台暂不支持。游客可以使用当前开放的浏览、搜索与播放功能，受保护的收藏或歌单写入会引导登录。',
     ),
     LegalDocumentSection(
       title: '三、登录、安全与账号归属',
       body:
-          '请仅使用归你控制的账号、手机号和验证码，并在扫码时核对平台显示的授权信息。验证码是否发出、认证是否成功，以真实平台结果为准。当前版本不提供新的 Mesting 账号注册入口；已有历史会话、酷狗会话和网易云会话分别保存和管理，不因切换登录入口而合并。请勿向他人提供验证码或登录凭证，也不要冒用他人身份。',
+          '请仅使用归你控制的账号、手机号和验证码，并在扫码时核对平台显示的授权信息。验证码是否发出、认证是否成功，以真实平台结果为准。当前版本仅提供酷狗、网易云和汽水平台账号及游客入口，旧 Mesting 账号及其专属资料、社交和云同步功能已移除。三平台会话分别保存和管理，不因切换入口而合并；现有本地音乐和记录继续按原归属保存。请勿向他人提供验证码或登录凭证，也不要冒用他人身份。',
     ),
     LegalDocumentSection(
       title: '四、音乐、歌词和知识产权',
@@ -179,7 +86,7 @@ const betaPrivacyPolicyDocument = LegalDocument(
   type: LegalDocumentType.privacyPolicy,
   title: '隐私政策',
   summary: '说明当前 Android 客户端在你使用具体功能时涉及的信息、服务提供方、本机存储及管理方式。未开通的能力不作为收集信息的理由。',
-  effectiveDate: '更新及生效日期：2026 年 10 月 28 日',
+  effectiveDate: '更新及生效日期：2026 年 11 月 7 日',
   sections: [
     LegalDocumentSection(
       title: '一、浏览、搜索与在线播放',
@@ -219,7 +126,7 @@ const betaPrivacyPolicyDocument = LegalDocument(
     LegalDocumentSection(
       title: '八、服务提供方与历史账号',
       body:
-          '在线音乐、平台账号、资源和任务涉及所选酷狗或网易云及相应资源服务，验证页面涉及腾讯相关服务；第三方会按其自身规则处理收到的信息。本版随包的原生适配服务用于发起这些请求，不要求你另行配置 API。版本检查与更新文件由 Ring Download（download.csnas.asia 及 download1.csnas.asia）提供，服务端会接收联网所需的 IP 和请求信息。你主动下载更新时，还会发送应用版本及随机生成、保存在本机的安装级下载标识，用于下载会话和续传；该标识不读取 IMEI、不使用音乐账号身份。本版通过随包的 Ring Download SDK 执行 HTTPS 更新下载，并在节点可用时接收 P2P/P8P 辅助分片；连接协商可能向服务方及对端节点提供建立连接所需的网络地址与传输诊断。分片和整包均需校验；用户端文件上传分享保持关闭，音乐播放仍沿用原播放链路。安装更新需由系统确认，可能需你主动授予此应用的安装来源权限。共享工程的历史 Mesting 会话仍可能使用腾讯云 CloudBase 的认证、资料或存储能力；当前客户端已移除新的 Mesting 注册/登录入口，不将其与酷狗账号混同，也不把旧版 Java + MySQL 测试渠道描述成当前账号服务。',
+          '在线音乐、平台账号、资源和任务涉及所选酷狗、网易云或汽水及相应资源服务，验证页面涉及腾讯相关服务；第三方会按其自身规则处理收到的信息。酷狗和网易云请求由随包适配模块发起；汽水签名请求使用你在设置中保存的服务配置。只有显式开启账号参与签名并符合客户端限定的 HTTPS 服务及请求范围时，才会向该签名服务提供所需的账号 Cookie；访问令牌仅用于访问你配置的助手。版本检查与更新文件由 Ring Download（download.csnas.asia 及 download1.csnas.asia）提供，服务端会接收联网所需的 IP 和请求信息。你主动下载更新时，还会发送应用版本及随机生成、保存在本机的安装级下载标识，用于下载会话和续传；该标识不读取 IMEI、不使用音乐账号身份。本版通过随包的 Ring Download SDK 执行 HTTPS 更新下载，并在节点可用时接收 P2P/P8P 辅助分片；连接协商可能向服务方及对端节点提供建立连接所需的网络地址与传输诊断。分片和整包均需校验；用户端文件上传分享保持关闭，音乐播放仍沿用原播放链路。安装更新需由系统确认，可能需你主动授予此应用的安装来源权限。旧 Mesting 账号的认证、资料、社交及云同步客户端实现已移除，当前版本不再通过这些旧接口读取或上传账号资料。移除客户端代码不会替你注销远端账号或清理三平台数据。',
     ),
     LegalDocumentSection(
       title: '九、保留、退出与删除边界',
@@ -239,15 +146,7 @@ const betaPrivacyPolicyDocument = LegalDocument(
   ],
 );
 
-LegalDocument legalDocumentFor(LegalDocumentType type) {
-  if (DistributionChannel.isBeta) {
-    return switch (type) {
-      LegalDocumentType.userAgreement => betaUserAgreementDocument,
-      LegalDocumentType.privacyPolicy => betaPrivacyPolicyDocument,
-    };
-  }
-  return switch (type) {
-    LegalDocumentType.userAgreement => userAgreementDocument,
-    LegalDocumentType.privacyPolicy => privacyPolicyDocument,
-  };
-}
+LegalDocument legalDocumentFor(LegalDocumentType type) => switch (type) {
+  LegalDocumentType.userAgreement => userAgreementDocument,
+  LegalDocumentType.privacyPolicy => privacyPolicyDocument,
+};

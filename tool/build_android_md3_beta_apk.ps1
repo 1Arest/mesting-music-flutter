@@ -39,7 +39,6 @@ try {
     & $flutterCommand build apk "--$Mode" --flavor beta `
         "--target-platform=$TargetPlatform" `
         "--build-name=$VersionName" "--build-number=$VersionCode" `
-        '--dart-define=USE_CLOUDBASE_AUTH=true' `
         '--dart-define=ENABLE_APP_UPDATE_CHECKS=true' `
         '--dart-define=MESTING_NATIVE_PLAYBACK_LOGGING=false' `
         '--dart-define=MESTING_LOCAL_DIAGNOSTICS=false' `
