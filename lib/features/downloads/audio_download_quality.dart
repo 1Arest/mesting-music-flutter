@@ -1,3 +1,4 @@
+import '../music_platform/qishui/qishui_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/track.dart';
@@ -17,6 +18,9 @@ final downloadSongQualitiesProvider = FutureProvider.autoDispose
     .family<Set<PlatformAudioQuality>, String>((ref, id) async {
       final account = await ref.watch(platformAccountProvider.future);
       if (account == null) throw const MusicPlatformException('请先登录对应音乐平台');
+      if (id.startsWith('qishui_')) {
+        return ref.watch(qishuiRepositoryProvider).qualities(id);
+      }
       if (id.startsWith('netease_')) {
         return ref.watch(neteaseMusicRepositoryProvider).qualities(id);
       }

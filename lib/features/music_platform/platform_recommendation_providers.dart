@@ -1,3 +1,4 @@
+import 'qishui/qishui_providers.dart';
 import 'platform_backend_providers.dart';
 import '../../core/cache/cached_browse_provider.dart';
 import '../../core/cache/browse_response_cache.dart';
@@ -315,6 +316,19 @@ final platformRecommendationSessionProvider =
 /// Listen once at application scope, independent of which player is visible.
 /// Completion/favorite reports apply only to the active FM queue's provenance.
 final platformRecommendationBindingProvider = Provider<void>((ref) {
+  if (ref.watch(usesQishuiProvider)) {
+    final feed = ref.watch(qishuiFeedScopeProvider);
+    ref
+        .read(audioHandlerProvider)
+        .configureRadioTrackLoader(
+          (excluded) async => (await feed.load())
+              .where((track) => !excluded.contains(track.id))
+              .toList(),
+          preserveServerOrder: true,
+          continueAfterExplicitQueue: true,
+        );
+    return;
+  }
   final session = ref.watch(platformRecommendationSessionProvider);
   final handler = ref.read(audioHandlerProvider);
   handler.configureRadioTrackLoader(

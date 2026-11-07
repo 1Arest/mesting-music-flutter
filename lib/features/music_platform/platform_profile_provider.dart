@@ -1,3 +1,5 @@
+import 'qishui/qishui_providers.dart';
+import 'qishui/qishui_profile_repository.dart';
 import 'platform_backend_providers.dart';
 import '../../core/cache/cached_browse_provider.dart';
 import 'netease/netease_profile_repository.dart';
@@ -14,6 +16,9 @@ final platformProfileRepositoryProvider = Provider<PlatformProfileRepository>((
   ref,
 ) {
   final api = ref.watch(musicPlatformApiProvider);
+  if (ref.watch(usesQishuiProvider)) {
+    return QishuiProfileRepository(api, ref.watch(qishuiRepositoryProvider));
+  }
   return ref.watch(usesNeteaseProvider)
       ? NeteaseProfileRepository(api, ref.watch(neteaseMusicRepositoryProvider))
       : PlatformProfileRepository(api);

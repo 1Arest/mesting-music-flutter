@@ -19,9 +19,11 @@ class MusicPlatformApi {
     required MusicServer server,
     required http.Client client,
     bool Function()? sessionCurrent,
+    bool Function(String path)? routeAllowed,
     BrowseResponseCache? browseCache,
   }) : _server = server,
        _client = client,
+       _routeAllowed = routeAllowed ?? ((_) => true),
        _sessionCurrent = sessionCurrent ?? (() => true),
        browseCache = browseCache ?? browseResponseCache;
   final BrowseResponseCache browseCache;
@@ -29,6 +31,7 @@ class MusicPlatformApi {
   final MusicServer _server;
   final http.Client _client;
   final bool Function() _sessionCurrent;
+  final bool Function(String path) _routeAllowed;
   PlatformSession? session;
   String? _dfid;
   Future<void>? _registration;
@@ -45,6 +48,13 @@ class MusicPlatformApi {
     Future<void>? abortTrigger,
     PlatformSession? expectedSession,
   }) {
+    if (!_routeAllowed(path) ||
+        expectedSession?.platform == MusicPlatform.qishui ||
+        session?.platform == MusicPlatform.qishui) {
+      return Future.error(
+        const MusicPlatformException('此入口尚未接入汽水，请使用汽水页面中的功能'),
+      );
+    }
     Future<Map<String, dynamic>> load() => _request(
       'GET',
       path,
@@ -140,6 +150,11 @@ class MusicPlatformApi {
     Map<String, Object?>? body,
     List<int>? binaryBody,
   }) async {
+    if (!_routeAllowed(path) ||
+        expectedSession?.platform == MusicPlatform.qishui ||
+        session?.platform == MusicPlatform.qishui) {
+      throw const MusicPlatformException('此入口尚未接入汽水，请使用汽水页面中的功能');
+    }
     // Per-request account sources may outlive their parent provider while an
     // HTTP future settles. Reject every follow-up, not just the final result.
     if (!_sessionCurrent()) {

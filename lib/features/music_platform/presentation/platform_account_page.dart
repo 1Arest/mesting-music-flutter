@@ -1,3 +1,6 @@
+import '../qishui/qishui_providers.dart';
+import '../qishui/qishui_account_page.dart';
+import '../qishui/qishui_login_page.dart';
 import '../../../core/errors/user_facing_error.dart';
 import '../../../core/security/credential_failure.dart';
 import '../../settings/presentation/music_network_diagnostics_page.dart';
@@ -454,6 +457,12 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
   /// welcome's choice of account. Each field/button retains its own glass layer.
   @override
   Widget build(BuildContext context) {
+    if (widget.platform == MusicPlatform.qishui && widget.loginOnly) {
+      return const QishuiLoginPage();
+    }
+    if (!widget.loginOnly && ref.watch(usesQishuiProvider)) {
+      return const QishuiAccountPage();
+    }
     final account = ref.watch(platformAccountProvider);
     final session = account.value;
     final user = ref.watch(currentUserProvider);

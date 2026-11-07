@@ -1,3 +1,5 @@
+import '../qishui/qishui_providers.dart';
+import '../qishui/qishui_account_page.dart';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -343,6 +345,7 @@ class _PlatformProfileEditPageState
 
   @override
   Widget build(BuildContext context) {
+    if (ref.watch(usesQishuiProvider)) return const QishuiAccountPage();
     final current = ref.watch(platformAccountProvider).value;
     final valid =
         _owner != null &&

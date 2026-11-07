@@ -1,3 +1,6 @@
+import '../../features/music_platform/qishui/qishui_providers.dart';
+import '../../features/music_platform/qishui/qishui_pages.dart';
+import 'beta_page_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -48,6 +51,12 @@ class _SecondaryLayoutState extends ConsumerState<BetaSecondaryMusicLayout> {
   late final _emptySearch = BetaPageSearchController(
     hintText: '搜索歌曲、歌手',
     onSubmitted: (text) {
+      if (ref.read(qishuiNavigationProvider)) {
+        Navigator.of(
+          context,
+        ).push(betaContentRoute<void>(const QishuiSearchPage()));
+        return;
+      }
       // A page without a local filter delegates discovery to the app router.
       ref.read(musicSearchControllerProvider.notifier).submit(text);
       _navigate('/music/search');
@@ -159,6 +168,7 @@ class _SecondaryLayoutState extends ConsumerState<BetaSecondaryMusicLayout> {
                       child: Material(
                         type: MaterialType.transparency,
                         child: BetaMusicBottomBar(
+                          soda: ref.watch(qishuiNavigationProvider),
                           selectedIndex: 1,
                           isSearchActive: search.active || _compact,
                           inline: _compact && !search.active,

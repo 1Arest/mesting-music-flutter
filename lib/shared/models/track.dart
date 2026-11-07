@@ -2,7 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'audio_origin.dart';
 export 'audio_origin.dart';
 
-enum TrackSource { local, kugou, netease, audius, jamendo }
+enum TrackSource { local, kugou, netease, audius, jamendo, qishui }
 
 final _audioTitleSuffix = RegExp(
   r'\.(?:mp3|flac|m4a|wav|aac|ogg|opus|wma|aiff|aif|alac|ape|dsf|dff)\s*$',

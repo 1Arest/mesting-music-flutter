@@ -1,3 +1,5 @@
+import '../qishui/qishui_providers.dart';
+import '../qishui/qishui_effects_page.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +42,7 @@ class _MusicEffectsPageState extends ConsumerState<MusicEffectsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (ref.watch(usesQishuiProvider)) return const QishuiEffectsPage();
     if (ref.watch(usesNeteaseProvider)) return const MusicEqualizerPage();
     return BetaPageSearchLayout(
       controller: _search,

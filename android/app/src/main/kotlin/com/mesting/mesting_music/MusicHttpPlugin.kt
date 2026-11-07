@@ -74,7 +74,8 @@ class MusicHttpPlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                 val host = url.host.lowercase()
                 require(url.protocol == "https" && url.userInfo == null &&
                     (url.port == -1 || url.port == 443) &&
-                    (host == "music.163.com" || host.endsWith(".music.163.com") ||
+                    (host == "beta-luna.douyin.com" ||
+                     host == "music.163.com" || host.endsWith(".music.163.com") ||
                      host == "kugou.com" || host.endsWith(".kugou.com")))
                 val method = call.argument<String>("method") ?: "GET"
                 require(method == "GET" || method == "POST")

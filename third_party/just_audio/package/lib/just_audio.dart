@@ -117,6 +117,59 @@ class AudioPlayer {
   // Local Android-only extension: a stable logical owner survives the native
   // player's lazy disposal/recreation. All other platforms keep upstream code.
   final String? _androidAudioOutputOwner;
+  String? _sodaEffectConfig;
+
+  /// Local music-owner extension. Configuration is reapplied if this same
+  /// logical player lazily recreates its Android decoder after stop().
+  Future<Map<String, Object?>> setSodaAudioEffect(String? config) async {
+    if (!_isAndroid() || _androidAudioOutputOwner == null || _disposed) {
+      return {
+        'available': false,
+        'configured': false,
+        'failure': 'unsupported_platform'
+      };
+    }
+    final previous = _sodaEffectConfig;
+    if (!_active) {
+      // A failed selection must not silently become active on the next load.
+      // Clearing still removes an earlier configuration while the player sleeps.
+      if (config == null) _sodaEffectConfig = null;
+      return {
+        'available': false,
+        'configured': false,
+        'failure': 'player_inactive'
+      };
+    }
+    _sodaEffectConfig = config;
+    final platform = await _platform;
+    final value =
+        await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
+            .invokeMapMethod<String, Object?>(
+                'mestingSodaEffect', {'config': config});
+    if (value?['failure'] != '' && config != null) _sodaEffectConfig = previous;
+    return value ??
+        {
+          'available': false,
+          'configured': false,
+          'failure': 'native_unavailable'
+        };
+  }
+
+  Future<Map<String, Object?>> sodaAudioEffectStatus() async {
+    if (!_isAndroid() || !_active || _disposed) {
+      return {
+        'available': false,
+        'configured': false,
+        'failure': 'player_inactive'
+      };
+    }
+    final platform = await _platform;
+    return await MethodChannel(
+                'com.ryanheise.just_audio.methods.${platform.id}')
+            .invokeMapMethod<String, Object?>('mestingSodaEffectStatus') ??
+        {};
+  }
+
   final _proxy = _ProxyHttpServer();
   // ignore: deprecated_member_use_from_same_package
   final ConcatenatingAudioSource _playlist;
@@ -1671,6 +1724,12 @@ class AudioPlayer {
           await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
               .invokeMethod<void>(
                   'mestingSetOutputOwner', {'owner': _androidAudioOutputOwner});
+          if (_sodaEffectConfig != null) {
+            await MethodChannel(
+                    'com.ryanheise.just_audio.methods.${platform.id}')
+                .invokeMethod<Object?>(
+                    'mestingSodaEffect', {'config': _sodaEffectConfig});
+          }
         }
         _platformValue = platform;
         return platform;
@@ -3400,6 +3459,7 @@ class LockCachingAudioSource extends StreamAudioSource {
       rethrow;
     }
   }
+
   Future<HttpClientResponse>? _response;
   final Uri uri;
   final Map<String, String>? headers;
@@ -3710,12 +3770,14 @@ class LockCachingAudioSource extends StreamAudioSource {
         final partial = await _partialCacheFile;
         // Windows readers may briefly retain the .part handle; Android can
         // rename an open file. Cache publication stays atomic on both hosts.
-        for (var attempt = 0; ; attempt++) {
+        for (var attempt = 0;; attempt++) {
           try {
             await partial.rename(cacheFile.path);
             break;
           } on FileSystemException catch (error) {
-            if (!Platform.isWindows || error.osError?.errorCode != 32 || attempt >= 5) {
+            if (!Platform.isWindows ||
+                error.osError?.errorCode != 32 ||
+                attempt >= 5) {
               // Caching failure must not turn a fully delivered song into a
               // playback error. Only the final name is considered a cache hit.
               _response = null;
@@ -3729,7 +3791,9 @@ class LockCachingAudioSource extends StreamAudioSource {
       httpClient.close();
       _downloading = false;
     }, onError: (Object e, StackTrace stackTrace) async {
-      try { await subscription.cancel(); } catch (_) { /* Keep original stream failure. */ }
+      try {
+        await subscription.cancel();
+      } catch (_) {/* Keep original stream failure. */}
       httpClient.close(force: true);
       try {
         await sink.close();

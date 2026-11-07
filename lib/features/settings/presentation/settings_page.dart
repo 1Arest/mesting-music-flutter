@@ -1,3 +1,5 @@
+import '../../music_platform/qishui/qishui_providers.dart';
+import '../../music_platform/qishui/qishui_account_page.dart';
 import 'music_network_diagnostics_page.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../music_platform/presentation/platform_account_page.dart';
@@ -136,7 +138,7 @@ class SettingsPage extends ConsumerWidget {
                             icon: Icons.swap_horiz_rounded,
                             iconColor: const Color(0xFF527FD3),
                             title: '切换音乐平台',
-                            subtitle: '分别保留两个平台的登录与播放记录',
+                            subtitle: '分别保留各音乐平台的登录与播放记录',
                             onTap: () => Navigator.of(context).push(
                               betaEntryRoute<void>(
                                 const MusicPlatformSwitchPage(),
@@ -147,13 +149,19 @@ class SettingsPage extends ConsumerWidget {
                           _SettingsTile(
                             icon: Icons.cloud_sync_outlined,
                             iconColor: const Color(0xFF527FD3),
-                            title: ref.watch(usesNeteaseProvider)
+                            title: ref.watch(usesQishuiProvider)
+                                ? '汽水账号资料'
+                                : ref.watch(usesNeteaseProvider)
                                 ? '网易云播放与同步'
                                 : '酷狗播放同步',
-                            subtitle: '播放历史、真实听歌时长与同步状态',
+                            subtitle: ref.watch(usesQishuiProvider)
+                                ? '查看汽水账号资料与登录状态'
+                                : '播放历史、真实听歌时长与同步状态',
                             onTap: () => Navigator.of(context).push(
                               betaEntryRoute<void>(
-                                ref.read(usesNeteaseProvider)
+                                ref.read(usesQishuiProvider)
+                                    ? const QishuiAccountPage()
+                                    : ref.read(usesNeteaseProvider)
                                     ? const NeteasePlaybackSettingsPage()
                                     : const ListeningSyncPage(),
                               ),
@@ -223,7 +231,9 @@ class SettingsPage extends ConsumerWidget {
                           icon: Icons.surround_sound_outlined,
                           iconColor: const Color(0xFF527FD3),
                           title: '音效',
-                          subtitle: ref.watch(usesNeteaseProvider)
+                          subtitle: ref.watch(usesQishuiProvider)
+                              ? '汽水官版音效与账号权益'
+                              : ref.watch(usesNeteaseProvider)
                               ? '本地均衡器与声音预设'
                               : '社区、耳机与明星音效',
                           onTap: () =>

@@ -81,6 +81,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
 
     private final Context context;
     private String outputOwner;
+    private final SodaAudioProcessor sodaAudioProcessor;
     private volatile android.media.AudioTrack outputTrack;
     private final MethodChannel methodChannel;
     private final BetterEventChannel eventChannel;
@@ -155,6 +156,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
         boolean useLazyPreparation
     ) {
         this.context = applicationContext;
+        this.sodaAudioProcessor = new SodaAudioProcessor(applicationContext);
         this.rawAudioEffects = rawAudioEffects;
         this.offloadSchedulingEnabled = offloadSchedulingEnabled != null ? offloadSchedulingEnabled : false;
         this.useLazyPreparation = useLazyPreparation;
@@ -436,6 +438,15 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
 
     @Override
     public void onMethodCall(final MethodCall call, final Result result) {
+        if ("mestingSodaEffect".equals(call.method)) {
+            if (outputOwner == null) { result.error("owner", "Music owner required", null); return; }
+            result.success(sodaAudioProcessor.select(call.argument("config")));
+            return;
+        }
+        if ("mestingSodaEffectStatus".equals(call.method)) {
+            result.success(sodaAudioProcessor.status());
+            return;
+        }
         // Bind before lazy ExoPlayer initialization so only the music owner's
         // renderer gets routing observation; chat/video players stay upstream.
         if ("mestingSetOutputOwner".equals(call.method)) {
@@ -799,6 +810,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
                         // Delegate all decoding/buffering to Media3. Observe
                         // its actual AudioTrack, never reflection or a probe player.
                         return new DefaultAudioSink.Builder(sinkContext)
+                            .setAudioProcessors(new androidx.media3.common.audio.AudioProcessor[] { sodaAudioProcessor })
                             .setEnableFloatOutput(floatOutput)
                             .setEnableAudioOutputPlaybackParameters(playbackParams)
                             .setAudioTrackProvider((config, attributes, sessionId, trackContext) -> {
@@ -1091,6 +1103,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
         clearAudioEffects();
         if (player != null) {
             player.release();
+            sodaAudioProcessor.reset();
             // release() joins Media3's renderer teardown. Detach afterwards so
             // an in-flight old renderer cannot re-register a just-released
             // track between registry cleanup and ExoPlayer shutdown.

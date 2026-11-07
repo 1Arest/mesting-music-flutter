@@ -328,6 +328,13 @@ class MestingAudioHandler extends BaseAudioHandler
       .where((event) => event.reason == PositionDiscontinuityReason.autoAdvance)
       .map<void>((_) {});
   int? get androidAudioSessionId => _player.androidAudioSessionId;
+
+  /// The existing single player owns this PCM effect and its native lifetime.
+  /// Account/entitlement checks belong to the Soda effect controller.
+  Future<Map<String, Object?>> setQishuiAudioEffect(String? config) =>
+      _player.setSodaAudioEffect(config);
+  Future<Map<String, Object?>> qishuiAudioEffectStatus() =>
+      _player.sodaAudioEffectStatus();
   Stream<int?> get androidAudioSessionIdStream =>
       _player.androidAudioSessionIdStream;
 
@@ -451,17 +458,20 @@ class MestingAudioHandler extends BaseAudioHandler
     bool preload = true,
     int? requiredUserCommandEpoch,
     int? requiredTransportIntentEpoch,
+    bool Function()? ownerCurrent,
   }) async {
     final transportEpoch =
         requiredTransportIntentEpoch ?? _transportIntentEpoch;
     // A delayed, already superseded command must not invalidate the newer load.
-    if (transportEpoch != _transportIntentEpoch ||
+    if (ownerCurrent?.call() == false ||
+        transportEpoch != _transportIntentEpoch ||
         (requiredUserCommandEpoch != null &&
             requiredUserCommandEpoch != _userCommandEpoch)) {
       return false;
     }
     final loadEpoch = ++_queueLoadEpoch;
     bool isCurrent() =>
+        ownerCurrent?.call() != false &&
         loadEpoch == _queueLoadEpoch &&
         transportEpoch == _transportIntentEpoch &&
         (requiredUserCommandEpoch == null ||
@@ -1880,6 +1890,7 @@ class MestingAudioHandler extends BaseAudioHandler
   Future<void> playSingleTrack(
     Track track, {
     bool autoplay = true,
+    bool Function()? isCurrent,
     bool fromHistory = false,
     Iterable<Track>? playbackContext,
     bool preservePendingAdvance = false,
@@ -1887,6 +1898,7 @@ class MestingAudioHandler extends BaseAudioHandler
     bool replaceUpcoming = false,
     bool discardRecommendations = false,
   }) async {
+    if (isCurrent != null && !isCurrent()) return;
     _markUserCommand('playSingleTrack');
     if (!preservePendingAdvance) _transportIntentEpoch++;
     final transportEpoch = _transportIntentEpoch;
@@ -1901,6 +1913,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _knownTracks[track.id] = track;
     await _ready;
     await _pauseFadeController.cancel();
+    if (isCurrent?.call() == false) return;
     // Returning the current recording to the head makes Previous then Next
     // reversible without mutating the live queue before source resolution.
     final pending = <Track>[
@@ -1921,16 +1934,19 @@ class MestingAudioHandler extends BaseAudioHandler
       }
     }
     _historyNavigation = fromHistory;
-    final applied = await _loadQueue(<Track>[
-      track,
-      ...pending,
-    ], requiredTransportIntentEpoch: transportEpoch);
+    final applied = await _loadQueue(
+      <Track>[track, ...pending],
+      requiredTransportIntentEpoch: transportEpoch,
+      ownerCurrent: isCurrent,
+    );
     if (!applied) {
       _historyNavigation = false;
       return;
     }
     await _applyPlaybackOrder();
-    if (transportEpoch != _transportIntentEpoch) return;
+    if (transportEpoch != _transportIntentEpoch || isCurrent?.call() == false) {
+      return;
+    }
     if (autoplay) _startPlayer();
     if (_continueAfterExplicitQueue) unawaited(_ensureRadioFallbackTracks());
   }

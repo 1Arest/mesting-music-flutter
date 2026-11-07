@@ -1,3 +1,4 @@
+import '../../features/music_platform/qishui/qishui_pages.dart';
 import '../../shared/widgets/beta_page_motion.dart';
 import '../../shared/widgets/beta_page_route_observer.dart';
 import 'beta_tab_shell.dart';
@@ -112,19 +113,32 @@ List<RouteBase> _musicShellRoutes() {
   final routes = <GoRoute>[
     GoRoute(
       path: '/music/recommend',
-      pageBuilder: (context, state) =>
-          _musicSlidePage(state: state, child: const RecommendationPage()),
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const QishuiRootSwitch(
+          root: QishuiRoot.discover,
+          child: RecommendationPage(),
+        ),
+      ),
     ),
     GoRoute(
       path: '/music',
-      pageBuilder: (context, state) =>
-          _musicSlidePage(state: state, child: const MusicHomePage()),
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const QishuiRootSwitch(
+          root: QishuiRoot.music,
+          child: MusicHomePage(),
+        ),
+      ),
     ),
     GoRoute(
       path: '/music/library',
       pageBuilder: (context, state) => _musicSlidePage(
         state: state,
-        child: MusicLibraryPage(view: state.uri.queryParameters['view']),
+        child: QishuiRootSwitch(
+          root: QishuiRoot.mine,
+          child: MusicLibraryPage(view: state.uri.queryParameters['view']),
+        ),
       ),
     ),
     GoRoute(
@@ -266,8 +280,13 @@ List<RouteBase> _musicShellRoutes() {
     ),
     GoRoute(
       path: '/profile',
-      pageBuilder: (context, state) =>
-          _musicSlidePage(state: state, child: const ProfilePage()),
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: const QishuiRootSwitch(
+          root: QishuiRoot.mine,
+          child: ProfilePage(),
+        ),
+      ),
     ),
     GoRoute(
       path: '/profile/edit',

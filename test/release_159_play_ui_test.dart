@@ -1,3 +1,4 @@
+// This historical fixture covers NetEase/Kugou; Soda is covered by qishui_* tests.
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +67,7 @@ class _Queue extends Fake implements MestingAudioHandler {
     Track? returnToUpcoming,
     bool replaceUpcoming = false,
     bool discardRecommendations = false,
+    bool Function()? isCurrent,
   }) async => received = [track];
 }
 
@@ -191,7 +193,7 @@ void main() {
     },
   );
 
-  for (final platform in MusicPlatform.values) {
+  for (final platform in [MusicPlatform.kugou, MusicPlatform.netease]) {
     testWidgets(
       'daily mode plays full 77 tracks without navigating ${platform.name}',
       (tester) async {
@@ -542,7 +544,7 @@ void main() {
     },
   );
 
-  for (final platform in MusicPlatform.values) {
+  for (final platform in [MusicPlatform.kugou, MusicPlatform.netease]) {
     for (final rank in [false, true]) {
       testWidgets(
         'masthead independently plays the full collection ${platform.name} rank=$rank',
@@ -610,7 +612,7 @@ void main() {
     }
   }
 
-  for (final platform in MusicPlatform.values) {
+  for (final platform in [MusicPlatform.kugou, MusicPlatform.netease]) {
     testWidgets(
       'all highlight modes expose independent play controls ${platform.name}',
       (tester) async {

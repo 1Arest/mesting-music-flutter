@@ -1,3 +1,4 @@
+import '../music_platform/qishui/qishui_providers.dart';
 import '../../core/network/system_music_io_client.dart';
 import '../music_platform/netease/netease_track_sources.dart';
 import 'dart:async';
@@ -883,6 +884,16 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
       final track = task.track;
       final requested = task.requestedQuality;
       final quality = requested ?? ref.read(platformQualityProvider).preferred;
+      if (track.source == TrackSource.qishui && ref.read(usesQishuiProvider)) {
+        return ref
+            .read(qishuiRepositoryProvider)
+            .resolve(
+              track,
+              download: true,
+              quality: requested,
+              abortTrigger: abortTrigger,
+            );
+      }
       if (track.source == TrackSource.netease &&
           ref.read(usesNeteaseProvider)) {
         final music = ref.read(neteaseMusicRepositoryProvider);

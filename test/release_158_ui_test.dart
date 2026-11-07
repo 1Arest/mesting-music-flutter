@@ -1,3 +1,4 @@
+// This historical fixture covers NetEase/Kugou; Soda is covered by qishui_* tests.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,7 +77,7 @@ class _Pages extends PlatformExploreRepository {
 
 void main() {
   setUpAll(initialize151QA);
-  for (final platform in MusicPlatform.values) {
+  for (final platform in [MusicPlatform.kugou, MusicPlatform.netease]) {
     for (final dark in [false, true]) {
       for (final large in [false, true]) {
         testWidgets(
@@ -448,7 +449,7 @@ void main() {
       },
     );
   }
-  for (final platform in MusicPlatform.values) {
+  for (final platform in [MusicPlatform.kugou, MusicPlatform.netease]) {
     testWidgets(
       'rank cover plays every page without opening details ${platform.name}',
       (tester) async {

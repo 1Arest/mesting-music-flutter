@@ -108,6 +108,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       ref.listen(betaAccountChoiceProvider, (previous, choice) {
         if (choice == BetaAccountChoice.kugou ||
             choice == BetaAccountChoice.netease ||
+            choice == BetaAccountChoice.qishui ||
             choice == BetaAccountChoice.guest) {
           state = const AsyncData(null);
         }
@@ -115,6 +116,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       final choice = ref.read(betaAccountChoiceProvider);
       if (choice == BetaAccountChoice.kugou ||
           choice == BetaAccountChoice.netease ||
+          choice == BetaAccountChoice.qishui ||
           choice == BetaAccountChoice.guest) {
         return null;
       }
@@ -127,6 +129,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
         {
           BetaAccountChoice.kugou,
           BetaAccountChoice.netease,
+          BetaAccountChoice.qishui,
           BetaAccountChoice.guest,
         }.contains(ref.read(betaAccountChoiceProvider))) {
       return null;
@@ -500,6 +503,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
           const {
             BetaAccountChoice.kugou,
             BetaAccountChoice.netease,
+            BetaAccountChoice.qishui,
           }.contains(ref.read(betaAccountChoiceProvider))) {
         throw StateError('请先退出当前音乐平台账号');
       }
@@ -508,6 +512,7 @@ class AuthController extends AsyncNotifier<AuthSession?> {
         if (const {
           BetaAccountChoice.kugou,
           BetaAccountChoice.netease,
+          BetaAccountChoice.qishui,
         }.contains(ref.read(betaAccountChoiceProvider))) {
           throw StateError('当前已切换为音乐平台账号，请先退出');
         }

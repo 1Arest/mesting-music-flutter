@@ -113,6 +113,9 @@ open class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        if (!flutterEngine.plugins.has(QishuiContextPlugin::class.java)) {
+            flutterEngine.plugins.add(QishuiContextPlugin())
+        }
         if (!flutterEngine.plugins.has(MusicHttpPlugin::class.java)) {
             flutterEngine.plugins.add(MusicHttpPlugin())
         }

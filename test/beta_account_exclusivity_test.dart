@@ -213,7 +213,10 @@ void main() {
       await tester.pump();
       expect(find.text('酷狗登录'), findsOneWidget);
       expect(find.text('网易云登录'), findsOneWidget);
+      // Three platform entries can put consent below a short viewport.
+      await tester.ensureVisible(find.bySemanticsLabel('我已阅读并同意用户协议和隐私政策'));
       await tester.tap(find.bySemanticsLabel('我已阅读并同意用户协议和隐私政策'));
+      await tester.ensureVisible(find.text('酷狗登录'));
       await tester.pump();
       await tester.tap(find.text('酷狗登录'));
       await tester.pump();

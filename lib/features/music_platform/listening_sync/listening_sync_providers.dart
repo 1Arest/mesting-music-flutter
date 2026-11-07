@@ -121,9 +121,11 @@ final platformListeningSyncProvider = Provider<ListeningSyncCoordinator>((ref) {
   );
   void activate() => unawaited(
     coordinator.activate(
-      ref.read(platformAccountProvider).value?.platform == MusicPlatform.netease
-          ? null
-          : ref.read(platformAccountProvider).value,
+      // This coordinator uploads only Kugou counters. Other platform accounts
+      // must not acquire its worker or create pending Kugou report records.
+      ref.read(platformAccountProvider).value?.platform == MusicPlatform.kugou
+          ? ref.read(platformAccountProvider).value
+          : null,
       enabled: ref.read(platformListeningSyncEnabledProvider),
     ),
   );

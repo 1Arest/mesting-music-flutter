@@ -428,6 +428,10 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       case 'workflows':
         return const NeteaseFullHubPage();
       case 'comments':
+        if (container.read(platformAccountProvider).value?.platform ==
+            MusicPlatform.qishui) {
+          throw const DiagnosticSkip('qishui_comments_unavailable');
+        }
         final session = container.read(platformAccountProvider).value;
         final track = container.read(currentTrackProvider);
         if (session == null || track.platformSongId.isEmpty) {

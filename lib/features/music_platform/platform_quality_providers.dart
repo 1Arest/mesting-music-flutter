@@ -1,3 +1,4 @@
+import 'qishui/qishui_providers.dart';
 import 'platform_backend_providers.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,6 +50,9 @@ class _QualityRetentions {
 final platformSongQualitiesProvider = FutureProvider.autoDispose
     .family<Set<PlatformAudioQuality>, String>((ref, id) async {
       final session = await ref.watch(platformAccountProvider.future);
+      if (id.startsWith('qishui_')) {
+        return ref.watch(qishuiRepositoryProvider).qualities(id);
+      }
       if (id.startsWith('netease_')) {
         return ref.watch(neteaseMusicRepositoryProvider).qualities(id);
       }
@@ -110,7 +114,9 @@ final platformPlaybackQualitiesProvider = FutureProvider.autoDispose
       });
       try {
         Iterable<PlatformAudioQuality> candidates = const [];
-        if (origin?.isNetease == true || origin?.adapter == AudioOrigin.kugou) {
+        if (origin?.isNetease == true ||
+            origin?.adapter == AudioOrigin.kugou ||
+            origin?.adapter == AudioOrigin.qishui) {
           candidates = await ref.watch(
             platformSongQualitiesProvider(track.id).future,
           );
@@ -127,6 +133,11 @@ final platformPlaybackQualitiesProvider = FutureProvider.autoDispose
           current: current,
           resolve: (tier) async {
             if (abort.isCompleted || !current()) return null;
+            if (origin?.adapter == AudioOrigin.qishui) {
+              return ref
+                  .read(qishuiRepositoryProvider)
+                  .resolve(track, quality: tier, abortTrigger: abort.future);
+            }
             if (origin!.isNetease) {
               return music.resolve(
                 track,
@@ -181,7 +192,9 @@ class PlatformQualityState {
 /// The audio handler owns source replacement and stale-command protection.
 class PlatformQualityController extends Notifier<PlatformQualityState> {
   static const preferenceKey = 'beta_platform_audio_quality';
-  String get _key => ref.read(usesNeteaseProvider)
+  String get _key => ref.read(usesQishuiProvider)
+      ? '${preferenceKey}_qishui'
+      : ref.read(usesNeteaseProvider)
       ? '${preferenceKey}_netease'
       : preferenceKey;
   @override
@@ -192,7 +205,13 @@ class PlatformQualityController extends Notifier<PlatformQualityState> {
     final netease = ref.watch(usesNeteaseProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
     final saved = PlatformAudioQuality.fromCode(
-      prefs.getString(netease ? '${preferenceKey}_netease' : preferenceKey) ??
+      prefs.getString(
+            ref.watch(usesQishuiProvider)
+                ? '${preferenceKey}_qishui'
+                : netease
+                ? '${preferenceKey}_netease'
+                : preferenceKey,
+          ) ??
           prefs.getString(preferenceKey),
     );
     return PlatformQualityState(

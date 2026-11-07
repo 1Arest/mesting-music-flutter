@@ -1,3 +1,4 @@
+import '../qishui/qishui_song_actions.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -79,6 +80,14 @@ Future<void> showSongActions(
   List<SongMenuExtraAction> extras = const [],
   Future<Track> Function()? prepareForQueue,
 }) async {
+  if (track.source == TrackSource.qishui) {
+    return showQishuiSongActions(
+      context,
+      ref,
+      track,
+      extras: extras.map((e) => (e.label, e.icon, e.perform)).toList(),
+    );
+  }
   final account = ref.read(platformAccountProvider).value;
   final owner = ref.read(activeLibraryOwnerProvider);
   final library = ref.read(libraryRepositoryProvider);

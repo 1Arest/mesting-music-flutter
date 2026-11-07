@@ -1,3 +1,4 @@
+import '../qishui/qishui_login_page.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -26,9 +27,14 @@ class PlatformLoginOptionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _AccountChoiceFrame(
-    title: platform == MusicPlatform.kugou ? '酷狗登录' : '网易云登录',
+    title: '${platform.label}登录',
     children: [
-      if (platform == MusicPlatform.kugou)
+      if (platform == MusicPlatform.qishui)
+        BetaGlassButton(
+          onPressed: () => _open(context, const QishuiLoginPage()),
+          child: const Text('手机号登录'),
+        )
+      else if (platform == MusicPlatform.kugou)
         for (final item in const [
           (PlatformLoginMethod.phone, '手机号登录'),
           (PlatformLoginMethod.kugouQr, '酷狗扫码登录'),
@@ -140,7 +146,7 @@ class _MusicPlatformSwitchPageState
 
   Widget _platformButton(MusicPlatform platform, MusicPlatform? active) {
     final caption =
-        '${platform == MusicPlatform.kugou ? '酷狗音乐' : '网易云音乐'}'
+        '${platform.label}音乐'
         '${platform == active ? ' · 当前平台' : ''}';
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -197,9 +203,7 @@ class _MusicPlatformSwitchPageState
             key: const ValueKey('platform-switch-reauthenticate'),
             loading: _busy,
             onPressed: _busy ? null : () => _reauthenticate(_unreadableTarget!),
-            child: Text(
-              '重新登录${_unreadableTarget == MusicPlatform.netease ? '网易云' : '酷狗'}',
-            ),
+            child: Text('重新登录${_unreadableTarget?.label}'),
           ),
         ],
       ],

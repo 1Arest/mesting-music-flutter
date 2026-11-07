@@ -4,6 +4,7 @@ class AudioOrigin {
   const AudioOrigin(this.adapter, this.recordingId);
   final String adapter;
   final String recordingId;
+  static const qishui = '汽水官方';
   static const netease = '网易云官方';
   static const kugou = '酷狗概念版';
   bool get isNetease => adapter == netease;

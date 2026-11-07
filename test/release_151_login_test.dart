@@ -1,3 +1,4 @@
+// This historical fixture covers NetEase/Kugou; Soda is covered by qishui_* tests.
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +44,7 @@ class _Server implements MusicServer {
 /// opening. No test requests a real QR/SMS, signs in, or reads retained secrets.
 void main() {
   setUpAll(initialize151QA);
-  for (final active in MusicPlatform.values) {
+  for (final active in [MusicPlatform.kugou, MusicPlatform.netease]) {
     for (final back in ['header', 'system', 'left-edge', 'right-edge']) {
       testWidgets(
         'all login methods hide chrome and pop one real level active=$active back=$back',

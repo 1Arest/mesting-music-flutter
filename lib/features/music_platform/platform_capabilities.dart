@@ -17,7 +17,9 @@ enum PlatformFeature {
 bool supportsPlatformFeature(
   MusicPlatform? platform,
   PlatformFeature feature,
-) => platform != MusicPlatform.netease;
+) => platform == MusicPlatform.qishui
+    ? feature == PlatformFeature.effectsCatalog
+    : platform == MusicPlatform.kugou || platform == null;
 
 class PlatformFeatureGate extends ConsumerWidget {
   const PlatformFeatureGate({

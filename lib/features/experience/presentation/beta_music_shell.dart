@@ -1,3 +1,6 @@
+import '../../music_platform/qishui/qishui_providers.dart';
+import '../../music_platform/qishui/qishui_pages.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -229,7 +232,16 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     }
   }
 
+  bool _openingQishuiSearch = false;
   void _search(bool active) {
+    if (active && ref.read(qishuiNavigationProvider)) {
+      if (_openingQishuiSearch) return;
+      _openingQishuiSearch = true;
+      Navigator.of(context)
+          .push(betaContentRoute<void>(const QishuiSearchPage()))
+          .whenComplete(() => _openingQishuiSearch = false);
+      return;
+    }
     final page = _pageSearch;
     if (page != null && !_routedSearch) {
       _mini = false;
@@ -509,6 +521,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                 valueListenable: _compact,
                 builder: (context, compact, _) => BetaMusicBottomBar(
                   selectedIndex: selected,
+                  soda: ref.watch(qishuiNavigationProvider),
                   isSearchActive: compact || searching,
                   inline: compact && !searching,
                   accessory: hasTrack

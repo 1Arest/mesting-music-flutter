@@ -47,6 +47,7 @@ class SelectionHandler implements MestingAudioHandler {
     Track? returnToUpcoming,
     bool replaceUpcoming = false,
     bool discardRecommendations = false,
+    bool Function()? isCurrent,
   }) async {
     selected = track.id;
     replace = replaceUpcoming;

@@ -1,6 +1,7 @@
+import '../features/music_platform/qishui/qishui_effects.dart';
+import '../features/music_platform/qishui/qishui_providers.dart';
 import '../shared/widgets/beta_scroll_behavior.dart';
 import '../features/music_platform/domain/platform_session.dart';
-import '../features/music_platform/platform_backend_providers.dart';
 import '../features/music_platform/netease/netease_fallback.dart';
 import '../features/downloads/download_source_coordinator.dart';
 import '../features/music_platform/netease/netease_listening_reporter.dart';
@@ -65,6 +66,21 @@ class MestingMusicApp extends ConsumerWidget {
       final source = ref.watch(kugouMusicSourceProvider);
       audioHandler.configureTrackPlaybackResolver((track) async {
         if (track.hasLocalAudio) return track;
+        if (track.source == TrackSource.qishui) {
+          final identity = await ref.read(platformAccountProvider.future);
+          if (identity?.platform != MusicPlatform.qishui) {
+            throw const MusicPlatformException('请先切换到汽水账号播放这首歌');
+          }
+          final quality = ref.read(platformQualityProvider);
+          return ref
+              .read(qishuiRepositoryProvider)
+              .resolve(
+                track,
+                quality: quality.preferred,
+                requireQuality:
+                    quality.switching && quality.switchingTrackId == track.id,
+              );
+        }
         if (track.source == TrackSource.netease) {
           final identity = await ref.read(platformAccountProvider.future);
           if (identity?.platform != MusicPlatform.netease) {
@@ -83,12 +99,13 @@ class MestingMusicApp extends ConsumerWidget {
             track.source != TrackSource.kugou) {
           return track;
         }
-        if (ref.read(usesNeteaseProvider)) {
+        final activeKugou = await ref.read(platformAccountProvider.future);
+        if (activeKugou != null &&
+            activeKugou.platform != MusicPlatform.kugou) {
           throw const MusicPlatformException('请先切换到酷狗账号播放这首歌');
         }
         // Playback restored from disk must use the current platform account,
         // rather than a signed URL left over from a previous login/session.
-        await ref.read(platformAccountProvider.future);
         if (bookIdentity(track) != null) {
           return ref.read(audiobookRepositoryProvider).resolve(track);
         }
@@ -110,6 +127,7 @@ class MestingMusicApp extends ConsumerWidget {
       });
     }
     if (DistributionChannel.isBeta) {
+      ref.watch(qishuiEffectsProvider);
       ref.watch(musicEqualizerProvider);
       ref.watch(platformRecommendationBindingProvider);
       ref.watch(audiobookProgressBindingProvider);

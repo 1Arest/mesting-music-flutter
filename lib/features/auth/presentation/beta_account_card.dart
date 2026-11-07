@@ -1,3 +1,4 @@
+import '../../music_platform/qishui/qishui_providers.dart';
 import '../../music_platform/presentation/platform_login_options_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,7 +42,7 @@ class BetaAccountCard extends ConsumerWidget {
             children: [
               Semantics(
                 button: platform != null,
-                label: '编辑个人资料',
+                label: ref.watch(usesQishuiProvider) ? '查看账号资料' : '编辑个人资料',
                 child: GestureDetector(
                   key: const ValueKey('platform-profile-edit-entry'),
                   onTap: platform == null
@@ -107,7 +108,7 @@ class BetaAccountCard extends ConsumerWidget {
                 context,
                 rootNavigator: true,
               ).push(betaEntryRoute<void>(const PlatformProfileEditPage())),
-              child: const Text('编辑个人资料'),
+              child: Text(ref.watch(usesQishuiProvider) ? '查看账号资料' : '编辑个人资料'),
             ),
             const SizedBox(height: 10),
           ],

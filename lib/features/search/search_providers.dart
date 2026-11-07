@@ -1,3 +1,4 @@
+import '../music_platform/qishui/qishui_providers.dart';
 import '../../core/network/system_music_io_client.dart';
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/netease/netease_catalog_adapters.dart';
@@ -63,6 +64,17 @@ final musicSearchRepositoryProvider = Provider<MusicSearchRepository>((ref) {
 });
 
 final hotMusicRepositoryProvider = Provider<HotMusicRepository>((ref) {
+  if (DistributionChannel.isBeta && ref.watch(usesQishuiProvider)) {
+    final music = ref.watch(qishuiRepositoryProvider);
+    return HotMusicRepository(
+      rankingLoader: ({int limit = 9}) async =>
+          (await music.feed()).take(limit).toList(),
+      preferences: ref.watch(sharedPreferencesProvider),
+      localTracks: const [],
+      cacheNamespace: ':qishui:${music.credential}',
+      sourceLabel: '汽水推荐',
+    );
+  }
   final source = ref.watch(kugouMusicSourceProvider);
   final identity = ref.watch(platformAccountProvider).value;
   if (DistributionChannel.isBeta && ref.watch(usesNeteaseProvider)) {

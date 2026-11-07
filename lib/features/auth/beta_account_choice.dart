@@ -4,7 +4,7 @@ import '../../core/persistence/app_preferences.dart';
 
 /// Selection is separate from either credential format. A saved guest choice
 /// prevents an old credential from becoming active again after logout.
-enum BetaAccountChoice { guest, mesting, kugou, netease }
+enum BetaAccountChoice { guest, mesting, kugou, netease, qishui }
 
 final betaAccountChoiceProvider =
     NotifierProvider<BetaAccountChoiceController, BetaAccountChoice?>(

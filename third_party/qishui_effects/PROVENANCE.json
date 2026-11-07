@@ -1,0 +1,22 @@
+{
+  "source_apk_sha256": "b639e67c13e03377f0f9d8068c5e0419b1acd42c7d529362f11ae704b3838741",
+  "sample_version": "21.5.0/code100215040",
+  "libraries": [
+    {
+      "path": "lib/arm64-v8a/libaudio_effect_bridge.so",
+      "bytes": 34848,
+      "sha256": "d1721a8a9032b31e0857f692e15dedc8b5003486cfb070d519d9808a2100dbfd"
+    },
+    {
+      "path": "lib/arm64-v8a/libBYTE_AUDIO_TUNER_CAPI_LITE.so",
+      "bytes": 632728,
+      "sha256": "6809019c6e9436a1770873030fbec9fa94686802cd84ecfe52e5312e36bda36c"
+    },
+    {
+      "path": "lib/arm64-v8a/libc++_shared.so",
+      "bytes": 911696,
+      "sha256": "e8373ee43274541efd2d34fe0588d55bf953612e1417ad47cfd2c4bd1aa383d0"
+    }
+  ],
+  "scope": "Private local integration. No publisher/runtime/device validation; original binary bytes. Original proprietary rights retained; no open-source licence inferred."
+}

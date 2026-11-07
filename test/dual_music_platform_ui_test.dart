@@ -279,7 +279,8 @@ void main() {
           tester.getTopLeft(find.text('酷狗登录')).dy,
           lessThan(tester.getTopLeft(find.text('网易云登录')).dy),
         );
-        expect(find.byType(BetaGlassButton), findsNWidgets(3));
+        expect(find.text('汽水登录'), findsOneWidget);
+        expect(find.byType(BetaGlassButton), findsNWidgets(4));
         await capture(tester, 'welcome-$dark');
         await tester.tap(find.text('酷狗登录'));
         await tester.pumpAndSettle();

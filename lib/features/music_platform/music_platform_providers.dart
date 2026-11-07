@@ -1,3 +1,5 @@
+import 'qishui/qishui_providers.dart';
+import 'qishui/qishui_session.dart';
 import '../../core/network/music_network_diagnostics.dart';
 import 'dart:convert';
 import 'dart:async';
@@ -52,6 +54,11 @@ final musicPlatformApiProvider = Provider<MusicPlatformApi>((ref) {
   return MusicPlatformApi(
     server: ref.watch(musicServerProvider),
     client: client,
+    routeAllowed: (path) =>
+        ref.read(betaAccountChoiceProvider) != BetaAccountChoice.qishui ||
+        path.startsWith('/login/') ||
+        path.startsWith('/captcha/') ||
+        path.startsWith('/register/'),
   );
 });
 
@@ -83,9 +90,12 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     _failedRestorePlatform = null;
     // Kugou transports must never see a NetEase cookie or public projection.
     ref.read(musicPlatformApiProvider).session =
-        session?.platform == MusicPlatform.netease ? null : session;
+        session?.platform == MusicPlatform.kugou ? session : null;
     if (session?.platform != MusicPlatform.netease) {
       ref.read(neteaseApiProvider).configure(null);
+    }
+    if (session?.platform != MusicPlatform.qishui) {
+      ref.read(qishuiApiProvider).configure(null);
     }
     state = AsyncData(session);
   }
@@ -116,6 +126,16 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     final PlatformSession? session;
     final restoreWatch = Stopwatch()..start();
     try {
+      if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.qishui) {
+        final saved = await ref
+            .read(qishuiSessionStoreProvider)
+            .read()
+            .timeout(const Duration(seconds: 12));
+        ref.read(musicPlatformApiProvider).session = null;
+        ref.read(neteaseApiProvider).configure(null);
+        ref.read(qishuiApiProvider).configure(saved);
+        return saved?.identity;
+      }
       if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease) {
         final saved = await ref
             .read(neteaseSessionStoreProvider)
@@ -135,12 +155,16 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       _failedRestorePlatform =
           ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease
           ? MusicPlatform.netease
+          : ref.read(betaAccountChoiceProvider) == BetaAccountChoice.qishui
+          ? MusicPlatform.qishui
           : MusicPlatform.kugou;
       if (error is! CredentialStoreException) {
         MusicNetworkDiagnostics.shared.record(
           platform:
               ref.read(betaAccountChoiceProvider) == BetaAccountChoice.netease
               ? 'netease'
+              : ref.read(betaAccountChoiceProvider) == BetaAccountChoice.qishui
+              ? 'qishui'
               : 'kugou',
           operation: MusicNetworkOperation.restore,
           outcome: MusicNetworkOutcome.storage,
@@ -486,11 +510,109 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     if (!hadAccount) ref.read(betaEntryFlowProvider.notifier).authenticated();
   });
 
+  /// A verified Passport/Luna identity is durably stored before publication.
+  Future<void> persistQishuiRefresh(
+    QishuiSession expected,
+    QishuiSession updated,
+  ) => _serialize(() async {
+    final active = state.value;
+    if (active?.platform != MusicPlatform.qishui ||
+        active?.userId != expected.userId ||
+        active?.token != expected.credentialId) {
+      return;
+    }
+    if (updated.userId != expected.userId ||
+        updated.credentialId != expected.credentialId ||
+        !updated.complete) {
+      throw const MusicPlatformException('汽水登录资料更新异常，请重新登录');
+    }
+    await ref.read(qishuiSessionStoreProvider).write(updated);
+    ref.read(qishuiApiProvider).acknowledgeRefresh(expected, updated);
+    _publish(updated.identity);
+  });
+
+  /// A verified Passport/Luna identity is durably stored before publication.
+  /// Storage recovery writes an isolated overlay and preserves all old bytes.
+  Future<void> acceptQishui(
+    QishuiSession session, {
+    bool Function()? isCurrent,
+  }) => _serialize(() async {
+    await readyForInteractiveLogin();
+    void check() {
+      if (isCurrent != null && !isCurrent()) {
+        throw const MusicPlatformException('登录已取消');
+      }
+    }
+
+    check();
+    if (!session.complete) throw const MusicPlatformException('汽水登录凭据不完整');
+    if (ref.read(betaAccountChoiceProvider) == BetaAccountChoice.mesting) {
+      throw const MusicPlatformException('请先退出当前 Mesting 账号');
+    }
+    final store = ref.read(qishuiSessionStoreProvider);
+    final choice = ref.read(betaAccountChoiceProvider);
+    final previousClient = ref.read(qishuiApiProvider).session;
+    final hadAccount = state.value != null;
+    QishuiSession? previous;
+    CredentialRecoveryWrite? recovery;
+    var written = false;
+    try {
+      if (state.hasError &&
+          _failedRestorePlatform == MusicPlatform.qishui &&
+          _isStorageFailure(state.error!) &&
+          store is SecureQishuiSessionStore) {
+        recovery = await store.recover(session);
+      } else {
+        try {
+          previous = await store.read();
+          await store.write(session);
+          written = true;
+        } on Object catch (error) {
+          if (!_isStorageFailure(error) || store is! SecureQishuiSessionStore) {
+            rethrow;
+          }
+          recovery = await store.recover(session);
+        }
+      }
+      check();
+      await _prepare(session.identity.ownerId);
+      check();
+      await ref
+          .read(betaAccountChoiceProvider.notifier)
+          .select(BetaAccountChoice.qishui);
+      check();
+      ref.read(qishuiApiProvider).configure(session);
+      _publish(session.identity);
+    } on Object {
+      if (recovery != null) await recovery.rollback();
+      if (written) {
+        previous == null ? await store.clear() : await store.write(previous);
+      }
+      ref.read(qishuiApiProvider).configure(previousClient);
+      if (choice != null && ref.read(betaAccountChoiceProvider) != choice) {
+        await ref.read(betaAccountChoiceProvider.notifier).select(choice);
+      }
+      rethrow;
+    }
+    if (!hadAccount) ref.read(betaEntryFlowProvider.notifier).authenticated();
+  });
+
   /// Read the retained credential before changing anything visible. Selecting
   /// another platform never clears either store; logout alone erases a login.
   Future<void> switchPlatform(MusicPlatform platform) => _serialize(() async {
     await readyForInteractiveLogin();
     if (state.value?.platform == platform) return;
+    if (platform == MusicPlatform.qishui) {
+      final session = await ref.read(qishuiSessionStoreProvider).read();
+      if (session == null) throw const MusicPlatformException('请先登录汽水账号');
+      await _prepare(session.identity.ownerId);
+      await ref
+          .read(betaAccountChoiceProvider.notifier)
+          .select(BetaAccountChoice.qishui);
+      ref.read(qishuiApiProvider).configure(session);
+      _publish(session.identity);
+      return;
+    }
     final netease = platform == MusicPlatform.netease
         ? await ref.read(neteaseSessionStoreProvider).read()
         : null;
@@ -511,6 +633,13 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   });
 
   Future<PlatformSession?> retainedIdentity(MusicPlatform platform) async {
+    if (platform == MusicPlatform.qishui) {
+      return (await ref
+              .read(qishuiSessionStoreProvider)
+              .read()
+              .timeout(const Duration(seconds: 5)))
+          ?.identity;
+    }
     if (platform == MusicPlatform.kugou) {
       return ref
           .read(platformSessionStoreProvider)
@@ -536,7 +665,18 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
         current?.token != expected.token) {
       throw const MusicPlatformException('账号已变化，请返回后重新操作');
     }
-    if (current!.platform == MusicPlatform.netease) {
+    if (current!.platform == MusicPlatform.qishui) {
+      final saved = ref.read(qishuiApiProvider).session;
+      if (saved == null || saved.credentialId != current.token) {
+        throw const MusicPlatformException('账号已变化');
+      }
+      final updated = saved.withProfile(name: nickname, avatar: avatarUrl);
+      await ref.read(qishuiSessionStoreProvider).write(updated);
+      ref.read(qishuiApiProvider).configure(updated);
+      _publish(updated.identity);
+      return;
+    }
+    if (current.platform == MusicPlatform.netease) {
       final saved = await ref.read(neteaseSessionStoreProvider).read();
       if (saved == null ||
           saved.identity.ownerId != current.ownerId ||
@@ -600,7 +740,10 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     // Remove the credential before publishing guest state; failure remains
     // visible so the UI never falsely promises the credential was removed.
     await _prepare('local');
-    if (state.value?.platform == MusicPlatform.netease) {
+    if (state.value?.platform == MusicPlatform.qishui) {
+      await ref.read(qishuiSessionStoreProvider).clear();
+      ref.read(qishuiApiProvider).configure(null);
+    } else if (state.value?.platform == MusicPlatform.netease) {
       await ref.read(neteaseSessionStoreProvider).clear();
       ref.read(retainedNeteaseEpochProvider.notifier).advance();
       ref.read(neteaseApiProvider).configure(null);

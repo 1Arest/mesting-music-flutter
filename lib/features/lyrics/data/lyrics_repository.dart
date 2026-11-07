@@ -21,13 +21,15 @@ class LyricsRepository {
     LrcParser parser = const LrcParser(),
     LyricsJsonRequest? kugouRequest,
     LyricsJsonRequest? neteaseRequest,
+    Future<String> Function(String id)? qishuiRequest,
   }) : _client = client,
        _kugouApiBaseUrl = _normalizeBaseUrl(kugouApiBaseUrl),
        _neteaseApiBaseUrl = _normalizeBaseUrl(neteaseApiBaseUrl),
        _kugouPublicLyricsBaseUrl = _normalizeBaseUrl(kugouPublicLyricsBaseUrl),
        _parser = parser,
        _kugouRequest = kugouRequest,
-       _neteaseRequest = neteaseRequest;
+       _neteaseRequest = neteaseRequest,
+       _qishuiRequest = qishuiRequest;
 
   final http.Client _client;
   final String _kugouApiBaseUrl;
@@ -36,6 +38,7 @@ class LyricsRepository {
   final LrcParser _parser;
   final LyricsJsonRequest? _kugouRequest;
   final LyricsJsonRequest? _neteaseRequest;
+  final Future<String> Function(String id)? _qishuiRequest;
   final Map<String, LyricsDocument> _cache = {};
 
   Future<LyricsDocument> loadAsset(String assetPath) async {
@@ -57,6 +60,9 @@ class LyricsRepository {
     return switch (locator.host) {
       'kugou' => _loadKugouLyrics(locator),
       'netease' => _loadNeteaseLyrics(locator),
+      'qishui' =>
+        _qishuiRequest?.call(locator.pathSegments.firstOrNull ?? '') ??
+            Future.error(const LyricsUnavailableException('请先切换到汽水账号')),
       _ => throw LyricsUnavailableException('未知歌词来源：${locator.host}'),
     };
   }

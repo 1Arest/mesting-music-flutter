@@ -1,3 +1,5 @@
+import '../music_platform/qishui/qishui_library_repository.dart';
+import '../music_platform/qishui/qishui_providers.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -103,6 +105,15 @@ final libraryRepositoryProvider = Provider<LibraryRepository>((ref) {
         ref.watch(appDatabaseProvider),
         music: ref.watch(neteaseMusicRepositoryProvider),
         identity: platform!,
+      );
+      ref.onDispose(repository.dispose);
+      return repository;
+    }
+    if (platform?.platform == MusicPlatform.qishui) {
+      final repository = QishuiLibraryRepository(
+        ref.watch(appDatabaseProvider),
+        music: ref.watch(qishuiRepositoryProvider),
+        owner: platform!.ownerId,
       );
       ref.onDispose(repository.dispose);
       return repository;

@@ -51,6 +51,29 @@ const betaMusicTabs = [
   ),
 ];
 
+const qishuiMusicTabs = [
+  GlassTab(
+    label: '发现',
+    icon: Icon(CupertinoIcons.compass),
+    activeIcon: Icon(CupertinoIcons.compass_fill),
+  ),
+  GlassTab(
+    label: '音乐',
+    icon: Icon(CupertinoIcons.music_note_2),
+    activeIcon: Icon(CupertinoIcons.music_note_2),
+  ),
+  GlassTab(
+    label: '我的',
+    icon: Icon(CupertinoIcons.person),
+    activeIcon: Icon(CupertinoIcons.person_fill),
+  ),
+];
+
+/// Visual destinations are distinct from the four stable retained branches.
+/// This mapping is shared with tests so Mine can never select library by index.
+int qishuiVisualTab(int branch) => branch >= 2 ? 2 : branch;
+int qishuiBranchTab(int visual) => visual == 2 ? 3 : visual;
+
 class BetaMusicBottomBar extends StatelessWidget {
   const BetaMusicBottomBar({
     required this.selectedIndex,
@@ -60,12 +83,14 @@ class BetaMusicBottomBar extends StatelessWidget {
     this.inline = false,
     this.accessory,
     this.accessoryEnabled = true,
+    this.soda = false,
     super.key,
   });
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
   final GlassSearchBarConfig searchConfig;
   final bool isSearchActive, inline, accessoryEnabled;
+  final bool soda;
   final Widget? accessory;
 
   @override
@@ -77,9 +102,11 @@ class BetaMusicBottomBar extends StatelessWidget {
     );
     return GlassTabBar.searchable(
       key: const ValueKey('beta6-official-music-bar'),
-      tabs: betaMusicTabs,
-      selectedIndex: selectedIndex,
-      onTabSelected: onTabSelected,
+      tabs: soda ? qishuiMusicTabs : betaMusicTabs,
+      selectedIndex: soda ? qishuiVisualTab(selectedIndex) : selectedIndex,
+      onTabSelected: soda
+          ? (index) => onTabSelected(qishuiBranchTab(index))
+          : onTabSelected,
       isSearchActive: isSearchActive,
       // At narrow widths the two transport buttons already consume most of
       // an inline accessory. Keep the shared glass capsule expanded so large

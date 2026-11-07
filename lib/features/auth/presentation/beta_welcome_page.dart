@@ -154,6 +154,14 @@ class _BetaWelcomePageState extends ConsumerState<BetaWelcomePage> {
                                     : () => _platform(MusicPlatform.netease),
                                 child: const Text('网易云登录'),
                               ),
+                              const SizedBox(height: 14),
+                              BetaGlassButton(
+                                key: const ValueKey('welcome-qishui-login'),
+                                onPressed: _opening
+                                    ? null
+                                    : () => _platform(MusicPlatform.qishui),
+                                child: const Text('汽水登录'),
+                              ),
                               const SizedBox(height: 18),
                               BetaGlassButton(
                                 onPressed: _opening ? null : _guest,

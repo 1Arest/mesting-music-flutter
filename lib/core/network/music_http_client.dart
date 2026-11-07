@@ -31,7 +31,8 @@ class MusicHttpClient extends http.BaseClient {
       uri.scheme == 'https' &&
       uri.userInfo.isEmpty &&
       uri.port == 443 &&
-      (uri.host == 'music.163.com' ||
+      (uri.host == 'beta-luna.douyin.com' ||
+          uri.host == 'music.163.com' ||
           uri.host.endsWith('.music.163.com') ||
           uri.host == 'kugou.com' ||
           uri.host.endsWith('.kugou.com'));
