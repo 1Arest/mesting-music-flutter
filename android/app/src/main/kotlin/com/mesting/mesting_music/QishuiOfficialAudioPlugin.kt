@@ -15,14 +15,14 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** Engine-owned, private-cache-only bridge. No network, account or key store. */
 class QishuiOfficialAudioPlugin : FlutterPlugin {
     private var channel: MethodChannel? = null
-    private var root: File? = null
+    private var preparation: QishuiOfficialAudioPreparation? = null
     private var executor = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private val requests = ConcurrentHashMap<String, AtomicBoolean>()
     @Volatile private var attached = false
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        root = File(binding.applicationContext.cacheDir, "qishui_official_audio").canonicalFile
+        preparation = QishuiOfficialAudioPreparation(File(binding.applicationContext.cacheDir, "qishui_official_audio"))
         attached = true
         if (executor.isShutdown) executor = Executors.newSingleThreadExecutor()
         channel = MethodChannel(binding.binaryMessenger, "com.mesting.music/qishui_official_audio").also { ch ->
@@ -38,70 +38,53 @@ class QishuiOfficialAudioPlugin : FlutterPlugin {
                 }
                 val id = if (call.method == "prepare") call.argument<String>("id") else null
                 if (id != null && !ID.matches(id)) {
-                    result.error("format", "Invalid private media operation", null)
+                    result.error("format", "Invalid private media operation",
+                        QishuiAudioFailure(QishuiAudioStep.cachePath, QishuiAudioReason.operationInvalid, "format").details())
                     return@setMethodCallHandler
                 }
                 val cancelled = AtomicBoolean(false)
                 if (id != null && requests.putIfAbsent(id, cancelled) != null) {
-                    result.error("format", "Duplicate private media operation", null)
+                    result.error("format", "Duplicate private media operation",
+                        QishuiAudioFailure(QishuiAudioStep.cachePath, QishuiAudioReason.operationInvalid, "format").details())
                     return@setMethodCallHandler
                 }
                 executor.execute {
                     var output: File? = null
+                    var step = QishuiAudioStep.cachePath
                     try {
+                        val preparer = preparation ?: throw IllegalStateException("detached")
                         val value = if (call.method == "prepare") {
-                            require(id != null) { "operation_id" }
-                            val source = privateFile(call.argument<String>("source"), "$id.source")
-                            output = privateFile(call.argument<String>("output"), "$id.m4a", requireExists = false)
-                            require(!output!!.exists()) { "output_exists" }
-                            require(source.length() in 1..QishuiOfficialAudioDecrypt.MAX_FILE_BYTES.toLong()) { "media_size" }
-                            val encoded = source.readBytes()
-                            val plain = if (call.argument<Boolean>("encrypted") == true) {
-                                QishuiOfficialAudioDecrypt.decryptAudio(encoded, call.argument<String>("playAuth") ?: "") {
-                                    cancelled.get() || !attached
-                                }
-                            } else encoded
-                            if (cancelled.get() || !attached) throw CancellationException("cancelled")
-                            // The caller publishes only after a separate extractor
-                            // inspection and a final account/selection check.
-                            output!!.outputStream().use { it.write(plain); it.flush() }
-                            if (cancelled.get() || !attached) throw CancellationException("cancelled")
-                            mapOf("path" to output!!.path)
+                            val path = preparer.prepare(id, call.argument<String>("source"),
+                                call.argument<String>("output"), call.argument<Boolean>("encrypted") == true,
+                                call.argument<String>("playAuth") ?: "") { cancelled.get() || !attached }
+                            output = preparer.privateFile(path)
+                            mapOf("path" to path)
                         } else {
-                            inspect(privateFile(call.argument<String>("path")))
+                            val file = preparer.privateFile(call.argument<String>("path"))
+                            step = QishuiAudioStep.metadataRead
+                            inspect(file)
                         }
                         main.post {
                             if (cancelled.get() || !attached) {
-                                output?.delete()
+                                runCatching { output?.delete() }
                                 result.error("cancelled", "Private media operation cancelled", null)
                             } else result.success(value)
                         }
                     } catch (_: CancellationException) {
-                        output?.delete()
+                        runCatching { output?.delete() }
                         main.post { result.error("cancelled", "Private media operation cancelled", null) }
-                    } catch (_: Throwable) {
+                    } catch (error: Throwable) {
                         // Raw decoder/platform errors can contain paths or
                         // media authorization; expose a fixed category only.
-                        output?.delete()
-                        main.post { result.error("format", "Official media validation failed", null) }
+                        runCatching { output?.delete() }
+                        val failure = QishuiAudioFailure.classify(error, step)
+                        main.post { result.error("format", "Official media validation failed", failure.details()) }
                     } finally {
                         if (id != null) requests.remove(id, cancelled)
                     }
                 }
             }
         }
-    }
-
-    private fun privateFile(path: String?, exactName: String? = null, requireExists: Boolean = true): File {
-        require(path != null) { "path_missing" }
-        val file = File(path)
-        val parent = root ?: throw IllegalStateException("detached")
-        require(file.isAbsolute && file.canonicalFile.parentFile == parent && file.absoluteFile == file.canonicalFile) {
-            "path_outside_private_cache"
-        }
-        require(if (exactName == null) OUTPUT.matches(file.name) else file.name == exactName) { "path_name" }
-        if (requireExists) require(file.isFile) { "path_missing" }
-        return file
     }
 
     private fun inspect(file: File): Map<String, Any> {
@@ -145,6 +128,5 @@ class QishuiOfficialAudioPlugin : FlutterPlugin {
 
     private companion object {
         val ID = Regex("^[0-9a-f]{32}$")
-        val OUTPUT = Regex("^[0-9a-f]{32}\\.m4a$")
     }
 }

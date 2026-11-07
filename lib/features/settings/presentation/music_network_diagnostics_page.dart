@@ -1,13 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../../../core/network/music_diagnostic_clipboard.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
-import '../../../shared/widgets/music_notice.dart';
 
 /// Local, bounded evidence for intermittent failures on another user's device.
 /// Opening/copying this page never probes an account or submits a login/SMS.
-class MusicNetworkDiagnosticsPage extends StatelessWidget {
+class MusicNetworkDiagnosticsPage extends StatefulWidget {
   const MusicNetworkDiagnosticsPage({super.key});
+  @override
+  State<MusicNetworkDiagnosticsPage> createState() =>
+      _MusicNetworkDiagnosticsPageState();
+}
+
+class _MusicNetworkDiagnosticsPageState
+    extends State<MusicNetworkDiagnosticsPage> {
+  bool _copying = false;
+  String? _copyMessage;
+
+  Future<void> _copy({required bool compact}) async {
+    if (_copying) return;
+    // Freeze before crossing the platform channel. New playback events must
+    // not change the string against which the clipboard is verified.
+    final snapshot = compact
+        ? MusicNetworkDiagnostics.shared.exportCompact()
+        : MusicNetworkDiagnostics.shared.export();
+    setState(() {
+      _copying = true;
+      _copyMessage = '正在复制并核对剪贴板…';
+    });
+    final result = await MusicDiagnosticClipboard.copy(snapshot);
+    if (!mounted) return;
+    setState(() {
+      _copying = false;
+      _copyMessage = switch (result) {
+        MusicDiagnosticCopyResult.verified => '已复制并核对。粘贴后请确认内容末尾完整。',
+        MusicDiagnosticCopyResult.mismatch => '剪贴板内容核对不一致，请重试复制精简记录。',
+        MusicDiagnosticCopyResult.unavailable => '未能核对剪贴板内容，请重试复制精简记录。',
+      };
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('连接与播放诊断')),
@@ -15,27 +47,34 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
       listenable: MusicNetworkDiagnostics.shared,
       builder: (context, _) {
         final rows = MusicNetworkDiagnostics.shared.rows.reversed.toList();
+        final buttonHeight =
+            (MediaQuery.textScalerOf(context).scale(17) * 1.4 + 24).clamp(
+              52.0,
+              double.infinity,
+            );
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
           children: [
-            const Text('保留本次启动最近 80 条连接结果。失败后打开此页，可复制记录用于排查。'),
+            const Text('保留本次启动最近 80 条连接结果。失败后优先复制精简记录，包含最近一次故障及同平台前序阶段。'),
             const SizedBox(height: 16),
             BetaGlassButton(
-              onPressed: () async {
-                await Clipboard.setData(
-                  ClipboardData(text: MusicNetworkDiagnostics.shared.export()),
-                );
-                if (context.mounted) {
-                  showMusicNotice(
-                    context,
-                    icon: Icons.check_rounded,
-                    title: '诊断记录已复制',
-                    message: '',
-                  );
-                }
-              },
+              height: buttonHeight,
+              interactionEnabled: !_copying,
+              onPressed: () => _copy(compact: true),
+              child: const Text('复制精简记录'),
+            ),
+            const SizedBox(height: 12),
+            BetaGlassButton(
+              height: buttonHeight,
+              interactionEnabled: !_copying,
+              onPressed: () => _copy(compact: false),
               child: const Text('复制诊断记录'),
             ),
+            if (_copyMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Semantics(liveRegion: true, child: Text(_copyMessage!)),
+              ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: MusicNetworkDiagnostics.shared.clear,
@@ -54,6 +93,8 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
                   '${_outcome(row['outcome'])} · ${row['elapsedMs']} ms'
                   '${row['status'] == null ? '' : ' · ${row['status']}'}\n'
                   '${row['phase'] == null ? '' : '${_phase(row['phase'])}${row['family'] == null ? '' : ' · ${_family(row['family'])}'}\n'}'
+                  '${row['nativeStep'] == null ? '' : '${_nativeStep(row['nativeStep'])}\n'}'
+                  '${row['nativeReason'] == null ? '' : '${_nativeReason(row['nativeReason'])}\n'}'
                   '${row['at']}',
                   style: const TextStyle(height: 1.5),
                 ),
@@ -89,7 +130,39 @@ class MusicNetworkDiagnosticsPage extends StatelessWidget {
     'networkSend' => '请求与响应读取',
     'responseDecode' => '解析服务资料',
     'responseValidate' => '平台资料校验',
+    'playerInfoRead' => '播放资料读取',
+    'mediaModelParse' => '音频候选解析',
+    'mediaSelection' => '音频选择',
+    'audioRead' => '音频文件读取',
+    'audioDecode' => '本机音频准备',
+    'audioVerify' => '音频时长与格式校验',
     _ => '准备连接',
+  };
+  static String _nativeStep(Object? name) => switch (name) {
+    'cachePath' => '私有缓存路径校验',
+    'sourceRead' => '读取临时音频文件',
+    'authorization' => '解析音频播放授权',
+    'containerParse' => '解析音频容器与加密分段',
+    'sampleDecrypt' => '音频分段解密',
+    'cacheWrite' => '写入临时可播放文件',
+    'metadataRead' => '读取实际音频格式与时长',
+    _ => '本机音频处理',
+  };
+  static String _nativeReason(Object? name) => switch (name) {
+    'cachePathInvalid' => '缓存路径未通过校验',
+    'cacheFileMissing' => '临时音频文件不存在',
+    'cacheOutputExists' => '临时音频文件冲突',
+    'sourceReadFailed' => '临时音频文件读取未完成',
+    'authorizationInvalid' => '播放授权解析未通过',
+    'mediaStructureUnsupported' => '音频容器结构暂不受支持',
+    'encryptionUnsupported' => '音频加密格式暂不受支持',
+    'sampleTableInvalid' => '加密分段资料不完整或暂不受支持',
+    'sampleDecryptFailed' => '音频分段解密未通过',
+    'cacheWriteFailed' => '临时音频文件写入未完成',
+    'metadataUnsupported' => '实际音频格式或时长读取未通过',
+    'operationInvalid' => '音频准备操作无效',
+    'bridgeUnavailable' => '本机音频组件尚未就绪',
+    _ => '本机音频处理失败',
   };
   static String _family(Object? name) => switch (name) {
     'timeout' => '等待超时',

@@ -10,6 +10,7 @@ import '../../../core/network/music_network_diagnostics.dart';
 import '../netease/fallback/netease_audio_probe.dart';
 import 'qishui_api.dart';
 import 'qishui_models.dart';
+import 'qishui_native_audio_failure.dart';
 
 /// Temporary playback material, not a user download or a grant of download
 /// rights. The repository must first validate official ownership/entitlements.
@@ -118,6 +119,7 @@ class QishuiOfficialAudioCache {
     var published = false;
     var reservation = 0;
     var phase = MusicDiagnosticPhase.audioRead;
+    QishuiNativeAudioFailure? nativeFailure;
     void record(MusicNetworkOutcome outcome) =>
         MusicNetworkDiagnostics.shared.record(
           platform: 'qishui',
@@ -127,6 +129,9 @@ class QishuiOfficialAudioCache {
               ? 'dart'
               : 'nativeAudio',
           phase: phase,
+          family: nativeFailure?.family,
+          nativeStep: nativeFailure?.step,
+          nativeReason: nativeFailure?.reason,
         );
     try {
       await Future<void>.value();
@@ -259,16 +264,27 @@ class QishuiOfficialAudioCache {
       );
     } on PlatformException catch (error) {
       check();
+      if (error.code != 'cancelled') {
+        nativeFailure = QishuiNativeAudioFailure.from(error);
+      }
       record(
         error.code == 'cancelled'
             ? MusicNetworkOutcome.cancelled
             : MusicNetworkOutcome.format,
       );
       throw QishuiException(
-        error.code == 'cancelled' ? '操作已取消' : '汽水音频解码或完整性核验未通过',
+        error.code == 'cancelled' ? '操作已取消' : nativeFailure!.message,
         kind: error.code == 'cancelled'
             ? QishuiFailureKind.cancelled
             : QishuiFailureKind.format,
+      );
+    } on MissingPluginException catch (error) {
+      check();
+      nativeFailure = QishuiNativeAudioFailure.from(error);
+      record(MusicNetworkOutcome.format);
+      throw QishuiException(
+        nativeFailure.message,
+        kind: QishuiFailureKind.format,
       );
     } on Object {
       check();

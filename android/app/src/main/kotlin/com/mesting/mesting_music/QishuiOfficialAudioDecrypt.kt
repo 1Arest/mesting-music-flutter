@@ -26,12 +26,15 @@ object QishuiOfficialAudioDecrypt {
     fun decryptAudio(
         data: ByteArray,
         playAuth: String,
+        onStep: (QishuiAudioStep) -> Unit = {},
         cancelled: () -> Boolean = { false },
     ): ByteArray {
         require(data.isNotEmpty() && data.size <= MAX_FILE_BYTES) { "media_size" }
         checkCancelled(cancelled)
+        onStep(QishuiAudioStep.authorization)
         val key = authorizedKey(playAuth)
         try {
+            onStep(QishuiAudioStep.containerParse)
             val top = boxes(data, 0, data.size)
             require(top.none { it.type == "moof" }) { "fragmented_media" }
             require(top.count { it.type == "moov" } == 1 && top.count { it.type == "mdat" } == 1) {
@@ -84,6 +87,7 @@ object QishuiOfficialAudioDecrypt {
             var offset = mdat.dataStart
             val cipher = Cipher.getInstance("AES/CTR/NoPadding")
             val secret = SecretKeySpec(key, "AES")
+            onStep(QishuiAudioStep.sampleDecrypt)
             for (index in sizes.indices) {
                 checkCancelled(cancelled)
                 val sample = samples[index]

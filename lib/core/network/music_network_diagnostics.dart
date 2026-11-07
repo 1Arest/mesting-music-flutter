@@ -74,6 +74,35 @@ enum MusicFailureFamily {
   unknown,
 }
 
+/// Matches the native audio bridge's closed, credential-free vocabulary.
+/// Candidate eligibility is separate from successful native preparation.
+enum MusicNativeAudioStep {
+  cachePath,
+  sourceRead,
+  authorization,
+  containerParse,
+  sampleDecrypt,
+  cacheWrite,
+  metadataRead,
+}
+
+enum MusicNativeAudioReason {
+  cachePathInvalid,
+  cacheFileMissing,
+  cacheOutputExists,
+  sourceReadFailed,
+  authorizationInvalid,
+  mediaStructureUnsupported,
+  encryptionUnsupported,
+  sampleTableInvalid,
+  sampleDecryptFailed,
+  cacheWriteFailed,
+  metadataUnsupported,
+  operationInvalid,
+  bridgeUnavailable,
+  unknown,
+}
+
 /// Only fixed categories and numeric receipts enter the diagnostic buffer.
 /// URLs, cookies, account IDs, phone numbers and raw exceptions never enter it.
 class MusicNetworkDiagnostics extends ChangeNotifier {
@@ -94,6 +123,8 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     int? streamCandidates,
     int? decodableStreams,
     int? playerInfoUrls,
+    MusicNativeAudioStep? nativeStep,
+    MusicNativeAudioReason? nativeReason,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -118,6 +149,8 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
         if (status != null && status >= 0 && status <= 999999) 'status': status,
         if (phase != null) 'phase': phase.name,
         if (family != null) 'family': family.name,
+        if (nativeStep != null) 'nativeStep': nativeStep.name,
+        if (nativeReason != null) 'nativeReason': nativeReason.name,
         if (streamCandidates != null)
           'streamCandidates': streamCandidates.clamp(0, 1000),
         if (decodableStreams != null)
@@ -133,6 +166,39 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
   String export() => const JsonEncoder.withIndent(
     '  ',
   ).convert({'schema': 2, 'memoryOnly': true, 'events': _rows});
+
+  /// Copy a complete, small JSON snapshot centred on the latest failure.
+  /// Whole events are removed from the front to fit; text is never truncated
+  /// mid-string. This reduces damage from clipboard/sync size limits without
+  /// claiming that we control another app's eventual paste operation.
+  String exportCompact() {
+    final snapshot = List<Map<String, Object>>.of(_rows);
+    final failure = snapshot.lastIndexWhere(
+      (row) => !{'success', 'cancelled'}.contains(row['outcome']),
+    );
+    final end = failure < 0 ? snapshot.length - 1 : failure;
+    final platform = end < 0 ? null : snapshot[end]['platform'];
+    final rows = snapshot
+        .take(end + 1)
+        .where((row) => row['platform'] == platform)
+        .toList();
+    if (rows.length > 10) rows.removeRange(0, rows.length - 10);
+    String encode() => jsonEncode({
+      'schema': 2,
+      'memoryOnly': true,
+      'scope': failure < 0 ? 'recent' : 'latestFailure',
+      'eventCount': rows.length,
+      'events': rows,
+      'complete': true,
+    });
+    var result = encode();
+    while (result.length > 4096 && rows.length > 1) {
+      rows.removeAt(0);
+      result = encode();
+    }
+    return result;
+  }
+
   void clear() {
     _rows.clear();
     notifyListeners();

@@ -31,8 +31,8 @@ object QishuiOfficialAudioHostTest {
         val first = (inner[0].toInt() and 0xff) xor (inner[1].toInt() and 0xff) xor 48
         return Base64.getEncoder().encodeToString(byteArrayOf(first.toByte()) + inner)
     }
-    private data class Fixture(val encoded: ByteArray, val plain: ByteArray, val auth: String)
-    private fun fixture(ivSize: Int = 8, parts: Boolean = false, invalidCount: Boolean = false): Fixture {
+    internal data class Fixture(val encoded: ByteArray, val plain: ByteArray, val auth: String)
+    internal fun fixture(ivSize: Int = 8, parts: Boolean = false, invalidCount: Boolean = false): Fixture {
         val plain = ByteArray(87) { (it * 13 + 4).toByte() }
         val iv = ByteArray(ivSize) { (it * 3 + 1).toByte() }
         val cipher = Cipher.getInstance("AES/CTR/NoPadding")
