@@ -2,6 +2,7 @@ import 'qishui_api.dart';
 import 'qishui_models.dart';
 import 'qishui_session.dart';
 import 'qishui_auth_errors.dart';
+import 'qishui_phone_protocol.dart';
 
 class QishuiVerificationRequired extends QishuiException {
   const QishuiVerificationRequired(this.url, {super.code})
@@ -71,23 +72,8 @@ class QishuiLogin {
         authenticated: false,
         write: true,
         allowBusinessError: true,
-        query: const {
-          'passport-sdk-version': '60651',
-          'request_from_account_sdk': '1',
-          'is_from_ttaccountsdk': '1',
-        },
-        form: {
-          // SendCodeParam.toMap applies XOR5 before putting `mobile`, just as
-          // it does for type. A raw mobile together with mix_mode=1 is not the
-          // SDK's mixed Passport request. Normalize locally, mix exactly once
-          // at this wire boundary, and keep the raw number only for matching
-          // the later user-entered code with this same phone attempt.
-          'mobile': qishuiMix(number),
-          'type': qishuiMix('24'),
-          'mix_mode': '1',
-          'is_from_iesaccountsaas': '1',
-          'account_sdk_source': 'app',
-        },
+        query: QishuiPhoneProtocol.query,
+        form: QishuiPhoneProtocol.sendForm(number),
       );
     } on QishuiException catch (error) {
       // An SMS may arrive after a timeout. Let its owner submit that code
@@ -117,19 +103,8 @@ class QishuiLogin {
       authenticated: false,
       write: true,
       allowBusinessError: true,
-      query: const {
-        'passport-sdk-version': '60651',
-        'request_from_account_sdk': '1',
-        'is_from_ttaccountsdk': '1',
-      },
-      form: {
-        'mobile': qishuiMix(number),
-        'code': qishuiMix(code.trim()),
-        if (_smsCodeKey.isNotEmpty) 'sms_code_key': qishuiMix(_smsCodeKey),
-        'mix_mode': '1',
-        'is_from_iesaccountsaas': '1',
-        'account_sdk_source': 'app',
-      },
+      query: QishuiPhoneProtocol.query,
+      form: QishuiPhoneProtocol.loginForm(number, code.trim()),
     );
     if (_disposed) throw const QishuiException('登录已取消');
     _success(

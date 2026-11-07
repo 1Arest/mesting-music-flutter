@@ -15,6 +15,7 @@ import 'netease_song_metadata.dart';
 import '../domain/platform_search_user.dart';
 import 'netease_playback_log.dart';
 import 'netease_footprint.dart';
+import 'netease_preview.dart';
 
 /// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
 /// the same Track / catalogue models as Kugou, with provider-qualified IDs.
@@ -138,7 +139,7 @@ class NeteaseMusicRepository {
           .join(' / '),
       album: clean(album['name']),
       duration: Duration(
-        milliseconds: int.tryParse('${row['dt'] ?? row['duration'] ?? 0}') ?? 0,
+        milliseconds: neteaseMilliseconds(row['dt'] ?? row['duration']),
       ),
       audioAsset: 'mesting-platform://netease/$id',
       coverAsset: neteaseArtwork({
@@ -546,6 +547,31 @@ class NeteaseMusicRepository {
     };
   }
 
+  /// Sparse/restored rows can retain a preview's 30s duration. Playback needs
+  /// catalogue duration to distinguish that from a genuinely short recording.
+  /// Keep every other field and the original identity; failure is non-mutating
+  /// and the normal URL request still performs the account/access checks.
+  Future<Track> playbackCatalog(
+    Track value, {
+    Future<void>? abortTrigger,
+  }) async {
+    if (value.duration > const Duration(seconds: 90)) return value;
+    try {
+      final payload = await call('/song/detail', {
+        'ids': [songId(value.id)],
+      }, abortTrigger);
+      final row = rows(
+        payload['songs'],
+      ).where((row) => '${row['id']}' == songId(value.id)).firstOrNull;
+      final duration = neteaseMilliseconds(row?['dt'] ?? row?['duration']);
+      return duration > 0
+          ? value.copyWith(duration: Duration(milliseconds: duration))
+          : value;
+    } catch (_) {
+      return value;
+    }
+  }
+
   Future<Track> resolve(
     Track track,
     PlatformAudioQuality quality, {
@@ -573,12 +599,7 @@ class NeteaseMusicRepository {
     if (requireQuality && delivered != quality.code) {
       throw const MusicPlatformException('网易云未返回所选音质，已保留原音源');
     }
-    final deliveredMs = int.tryParse('${row['time']}') ?? 0;
-    final preview =
-        row['freeTrialInfo'] is Map ||
-        (deliveredMs > 0 &&
-            deliveredMs <= 90000 &&
-            track.duration.inMilliseconds > deliveredMs + 2000);
+    final preview = neteaseResponseIsPreview(row, track.duration);
     return track.copyWith(
       audioAsset: url,
       audioOrigin: AudioOrigin(AudioOrigin.netease, track.id),

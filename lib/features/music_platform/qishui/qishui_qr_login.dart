@@ -167,12 +167,20 @@ class QishuiQrLogin {
 
   static bool trustedScanUrl(String raw) {
     final uri = Uri.tryParse(raw);
+    // The PC Passport endpoint returns a BFF scan-confirmation URL. Keep its
+    // exact host/path and scan-auth purpose; accepting arbitrary qishui.com
+    // pages would turn a server-provided URL into an unrelated login prompt.
+    final bffScan =
+        uri?.host == 'bff-pc.qishui.com' &&
+        uri?.path == '/ucenter_web/app/sdk-next' &&
+        uri?.queryParameters['uc_sdk'] == 'scan-auth';
     return uri?.scheme == 'https' &&
         uri!.userInfo.isEmpty &&
         (!uri.hasPort || uri.port == 443) &&
         (uri.host == 'douyin.com' ||
             uri.host.endsWith('.douyin.com') ||
-            uri.host == host) &&
+            uri.host == host ||
+            bffScan) &&
         uri.queryParameters['token']?.isNotEmpty == true;
   }
 
@@ -244,15 +252,19 @@ class QishuiQrLogin {
       final code = qishuiAuthCode(result);
       final token = '${data['token'] ?? ''}';
       final url = '${data['qrcode_index_url'] ?? ''}';
-      if (result['message'] != 'success' ||
-          code != '0' && code.isNotEmpty ||
-          token.isEmpty ||
-          token.length > 4096 ||
-          !trustedScanUrl(url)) {
+      if (result['message'] != 'success' || code != '0' && code.isNotEmpty) {
         throw QishuiException(
           '汽水未生成可用的登录二维码${code.isEmpty ? '' : '（$code）'}',
           code: code,
         );
+      }
+      // A successful upstream response rejected by local validation is not a
+      // service business error "0". Report the failed local step separately.
+      if (token.isEmpty || token.length > 4096 || url.isEmpty) {
+        throw const QishuiException('汽水二维码响应不完整，请重新生成');
+      }
+      if (!trustedScanUrl(url)) {
+        throw const QishuiException('汽水返回的扫码地址未通过校验，请更新应用后重试');
       }
       // Preserve the URL exactly. Rewriting it to a different scan-login path
       // can leave the server stuck at "scanned" after the user confirms.

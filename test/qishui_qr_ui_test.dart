@@ -14,6 +14,10 @@ import 'support/release_152_qa.dart' show theme152;
 import 'support/release_147_qa.dart' show load147IconFonts;
 
 const captureQr164 = bool.fromEnvironment('CAPTURE_QR164');
+const qrCaptureDirectory = String.fromEnvironment(
+  'QR_CAPTURE_DIR',
+  defaultValue: '.codex-artifacts/2026-11-06-release164/ui',
+);
 const captureKey = ValueKey('qishui-qr164-capture');
 void main() {
   setUpAll(() async {
@@ -45,7 +49,7 @@ void main() {
     await tester.runAsync(() async {
       final image = await paint.toImage();
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      final file = File('.codex-artifacts/2026-11-06-release164/ui/$name.png');
+      final file = File('$qrCaptureDirectory/$name.png');
       await file.parent.create(recursive: true);
       await file.writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();

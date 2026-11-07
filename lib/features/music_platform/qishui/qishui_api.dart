@@ -340,7 +340,8 @@ class QishuiApi {
   }
 }
 
-/// SaaS uses XOR5 + lowercase hex, once, only on the fields its toMap mixes.
+/// Passport uses XOR5 + lowercase hex once at the selected contract's field
+/// boundary. Legacy and SaaS parameter objects do not mix the same fields.
 String qishuiMix(String value) => utf8
     .encode(value)
     .map((v) => (v ^ 5).toRadixString(16).padLeft(2, '0'))

@@ -135,12 +135,21 @@ void main() {
           expect(request.headers['x-helios'], isNull);
           if (request.url.path.endsWith('send_code/')) {
             expect(
+              request.url.queryParameters['passport-sdk-version'],
+              '601397',
+            );
+            expect(request.url.queryParameters['version_name'], '19.0.0');
+            expect(request.url.queryParameters['version_code'], '100190050');
+            expect(
               request.headers['content-type'],
               contains('application/x-www-form-urlencoded'),
             );
             final form = Uri.splitQueryString(request.body);
             expect(form['mobile'], '2e3d3334363d3535353535353535');
             expect(form['type'], '3731');
+            expect(form['unbind_exist'], qishuiMix('0'));
+            expect(form['auto_read'], '0');
+            expect(form.containsKey('is_from_iesaccountsaas'), false);
             return fixtureJson({
               'message': 'success',
               'data': {'sms_code_key': 'fixture-key'},
@@ -149,7 +158,8 @@ void main() {
           if (request.url.path.endsWith('sms_login/')) {
             final form = Uri.splitQueryString(request.body);
             expect(form['code'], '343736313033');
-            expect(form['sms_code_key'], qishuiMix('fixture-key'));
+            expect(form.containsKey('sms_code_key'), false);
+            expect(form.containsKey('is_from_iesaccountsaas'), false);
             expect(form['mobile'], qishuiMix('+8613800000000'));
             return fixtureJson(
               {

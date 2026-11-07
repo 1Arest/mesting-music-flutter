@@ -19,7 +19,7 @@ class FixtureQrGateway implements QishuiQrGateway {
       missingCookie = false;
   int closes = 0, verifications = 0;
   String scanUrl =
-      'https://sso.douyin.com/ucenter_web/app/sdk-next?token=fixture-qr&uc_sdk=scan-auth&next=%2F';
+      'https://bff-pc.qishui.com/ucenter_web/app/sdk-next?token=fixture-qr&uc_sdk=scan-auth&next=%2F';
   Map<String, dynamic> profile = {
     'my_info': {'id': 'fixture-qr-user', 'nickname': '测试汽水账号'},
   };
@@ -352,17 +352,42 @@ void main() {
     await first;
     await login.close();
   });
+  test('QR URLs reject lookalike domains, userinfo, plain HTTP and foreign ports', () {
+    for (final url in [
+      'https://sso.douyin.com.evil.test/x?token=a',
+      'https://u:p@sso.douyin.com/x?token=a',
+      'http://sso.douyin.com/x?token=a',
+      'https://sso.douyin.com:444/x?token=a',
+      'https://bff-pc.qishui.com.evil.test/ucenter_web/app/sdk-next?token=a&uc_sdk=scan-auth',
+      'https://u:p@bff-pc.qishui.com/ucenter_web/app/sdk-next?token=a&uc_sdk=scan-auth',
+      'https://bff-pc.qishui.com:444/ucenter_web/app/sdk-next?token=a&uc_sdk=scan-auth',
+      'https://bff-pc.qishui.com/elsewhere?token=a&uc_sdk=scan-auth',
+      'https://bff-pc.qishui.com/ucenter_web/app/sdk-next?token=a&uc_sdk=other',
+      'https://other.qishui.com/ucenter_web/app/sdk-next?token=a&uc_sdk=scan-auth',
+    ]) {
+      expect(QishuiQrLogin.trustedScanUrl(url), false);
+    }
+  });
   test(
-    'QR URLs reject lookalike domains, userinfo, plain HTTP and foreign ports',
-    () {
-      for (final url in [
-        'https://sso.douyin.com.evil.test/x?token=a',
-        'https://u:p@sso.douyin.com/x?token=a',
-        'http://sso.douyin.com/x?token=a',
-        'https://sso.douyin.com:444/x?token=a',
-      ]) {
-        expect(QishuiQrLogin.trustedScanUrl(url), false);
-      }
+    'local QR rejection does not present successful business code 0 as failure',
+    () async {
+      final gateway = FixtureQrGateway()
+        ..scanUrl = 'https://unrelated.test/?token=a';
+      final login = QishuiQrLogin(gateway);
+      await expectLater(
+        login.start(),
+        throwsA(
+          isA<QishuiException>()
+              .having(
+                (e) => e.message,
+                'local validation',
+                contains('扫码地址未通过校验'),
+              )
+              .having((e) => e.code, 'no business failure', isEmpty),
+        ),
+      );
+      expect(login.scanUrl, isEmpty);
+      await login.close();
     },
   );
   test('SMS business details remove phone OTP mixed secrets URLs and tokens', () {

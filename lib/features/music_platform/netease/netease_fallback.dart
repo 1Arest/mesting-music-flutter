@@ -16,6 +16,7 @@ import '../platform_backend_providers.dart';
 import '../retained_kugou_scope.dart';
 import 'fallback/netease_kugou_account_source.dart';
 import 'netease_music_repository.dart';
+import 'netease_preview.dart';
 import 'netease_playback_options.dart';
 import 'fallback/netease_fallback_source.dart';
 import 'fallback/netease_public_sources.dart';
@@ -124,10 +125,7 @@ class BugpkNeteaseFallback implements NeteaseExactIdSource {
         if (supplied == null) return null;
         final url = await _audioUrl(supplied, id);
         if (url == null) return null;
-        final duration = int.tryParse('${row['time']}') ?? 0;
-        if (duration > 0 &&
-            duration <= 90000 &&
-            candidate.duration.inMilliseconds > duration + 2000) {
+        if (neteaseResponseIsPreview(row, candidate.duration)) {
           throw const NeteaseSourceFailure('preview_rejected');
         }
         final delivered = switch ('${row['level']}') {
@@ -906,6 +904,10 @@ Future<Track> resolveNeteaseTrack({
   bool fallbackOnSelectedFailure = true,
   Future<void>? abortTrigger,
 }) async {
+  // This enrichment belongs to playback only. In particular a persisted 30s
+  // preview must not become the matching duration for every alternate source.
+  track = await music.playbackCatalog(track, abortTrigger: abortTrigger);
+  if (!current()) throw const MusicPlatformException('播放请求已取消或账号已变化');
   if (quality.neteaseOnly &&
       requireQuality &&
       selectedSource.adapter != null &&
@@ -932,12 +934,48 @@ Future<Track> resolveNeteaseTrack({
   Track? original;
   Object? failure;
   try {
-    original = await music.resolve(
+    final official = await music.resolve(
       track,
       quality,
       requireQuality: requireQuality,
       abortTrigger: abortTrigger,
     );
+    if (official.isPreview) {
+      original = official;
+    } else {
+      // Some official URLs omit freeTrialInfo/time, or report the catalogue
+      // duration for a short MP3. Inspect only a bounded public media prefix,
+      // using no platform credential, before allowing it to skip fallback.
+      // Downloads keep their separate official-first/manual-source policy.
+      final watch = Stopwatch()..start();
+      final probe = await inspectNeteaseAudio(
+        fallback.client,
+        official.audioAsset,
+        headers: official.audioHeaders,
+        expectedDuration: track.duration > Duration.zero
+            ? track.duration
+            : null,
+        prefixBytes: 64 * 1024,
+        abortTrigger: abortTrigger,
+      );
+      fallback.diagnostics?.record(
+        '网易云官方',
+        probe.reason,
+        watch.elapsedMilliseconds,
+        mediaBytes: probe.totalBytes,
+        mediaDurationMs: probe.duration?.inMilliseconds,
+      );
+      if (probe.reason == 'media_duration_too_short') {
+        original = official.copyWith(
+          isPreview: true,
+          availabilityMessage: '网易云试听片段',
+        );
+      } else if (probe.playable) {
+        original = official;
+      } else {
+        throw const MusicPlatformException('网易云音频暂不可用');
+      }
+    }
   } catch (error) {
     failure = error;
   }
