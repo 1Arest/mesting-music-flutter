@@ -323,6 +323,7 @@ class QishuiMedia {
       int? inheritedQuality,
       String inheritedAuth = '',
       String inheritedMethod = '',
+      bool playerModel = false,
     ]) {
       if (depth > 18 || --remainingNodes < 0) return;
       if (value is String) {
@@ -336,6 +337,7 @@ class QishuiMedia {
             inheritedQuality,
             inheritedAuth,
             inheritedMethod,
+            playerModel,
           );
         } on FormatException {
           /* Not JSON. */
@@ -352,6 +354,7 @@ class QishuiMedia {
             inheritedQuality,
             inheritedAuth,
             inheritedMethod,
+            playerModel,
           );
         }
         return;
@@ -404,6 +407,7 @@ class QishuiMedia {
       // Only a recognized player model/URL may supply seconds through this
       // generic key; never let a catalog duration make a preview appear full.
       final playerDuration =
+          playerModel ||
           row.containsKey('video_list') ||
           row.containsKey('audio_list') ||
           row.containsKey('PlayInfoList') ||
@@ -411,10 +415,12 @@ class QishuiMedia {
           row.containsKey('MainPlayUrl') ||
           row.containsKey('mainPlayUrl') ||
           row.containsKey('main_play_url') ||
+          row.containsKey('MainUrl') ||
+          row.containsKey('PlayURL') ||
           row.containsKey('play_url');
       final rawDuration =
           num.tryParse(
-            '${row['video_duration'] ?? (playerDuration ? row['Duration'] ?? row['duration'] : null) ?? 0}',
+            '${row['video_duration'] ?? (playerDuration ? row['Duration'] ?? row['duration'] ?? meta['duration'] ?? meta['Duration'] : null) ?? 0}',
           ) ??
           0;
       final duration = rawDuration.isFinite && rawDuration > 0
@@ -429,12 +435,20 @@ class QishuiMedia {
           'mainPlayUrl',
           'main_play_url',
           'play_url',
+          'MainUrl',
+          'PlayURL',
+          // Generic URL fields are accepted only within a player model. A
+          // catalog image/avatar URL must never become an audio candidate.
+          if (playerModel) ...['url', 'URL'],
         ]),
         field(row, [
           'BackupPlayUrl',
           'backup_play_url',
           'backup_url',
           'backup_url_1',
+          'BackupUrl',
+          'backup_url_2',
+          'backup_url_3',
         ]),
       ]) {
         final url = decodeUrl(rawUrl);
@@ -444,44 +458,56 @@ class QishuiMedia {
                 row['bit_rate'] ??
                 row['Bitrate'] ??
                 meta['bitrate'] ??
-                meta['real_bitrate'],
+                meta['real_bitrate'] ??
+                row['br'] ??
+                row['BR'] ??
+                row['BitRate'],
           );
           if (bitrate > 0 && bitrate < 1000) bitrate *= 1000;
-          result.putIfAbsent(
+          final candidate = QishuiMedia(
             url,
-            () => QishuiMedia(
-              url,
-              duration,
-              bitrate,
-              protected,
-              qualityCode: qualityCode,
-              playAuth: authorization,
-              format:
-                  (field(row, [
+            duration,
+            bitrate,
+            protected,
+            qualityCode: qualityCode,
+            playAuth: authorization,
+            format:
+                (field(row, [
+                          'Format',
+                          'format',
+                          'file_format',
+                          'vtype',
+                        ]).isEmpty
+                        ? field(meta, ['format', 'vtype'])
+                        : field(row, [
                             'Format',
                             'format',
                             'file_format',
                             'vtype',
-                          ]).isEmpty
-                          ? field(meta, ['format', 'vtype'])
-                          : field(row, [
-                              'Format',
-                              'format',
-                              'file_format',
-                              'vtype',
-                            ]))
-                      .toLowerCase(),
-              fileSize: sodaInt(
-                row['Size'] ?? row['size'] ?? row['file_size'] ?? meta['size'],
-              ),
-              encryptionMethod: method,
-              qualityName:
-                  (field(row, ['Quality', 'quality', 'definition']).isEmpty
-                          ? field(meta, ['quality', 'definition'])
-                          : field(row, ['Quality', 'quality', 'definition']))
-                      .toLowerCase(),
+                          ]))
+                    .toLowerCase(),
+            fileSize: sodaInt(
+              row['Size'] ?? row['size'] ?? row['file_size'] ?? meta['size'],
             ),
+            encryptionMethod: method,
+            qualityName:
+                (field(row, ['Quality', 'quality', 'definition']).isEmpty
+                        ? field(meta, ['quality', 'definition'])
+                        : field(row, ['Quality', 'quality', 'definition']))
+                    .toLowerCase(),
           );
+          final previous = result[url];
+          // Duplicate main/backup entries can carry stronger encryption facts
+          // later in a model. Never downgrade protected bytes to a clear URL.
+          if (previous == null ||
+              candidate.encrypted && !previous.encrypted ||
+              candidate.encrypted == previous.encrypted &&
+                  ((!previous.canDecodeOfficial &&
+                          candidate.canDecodeOfficial) ||
+                      previous.duration <= Duration.zero &&
+                          candidate.duration > Duration.zero)) {
+            result[url] = candidate;
+          }
         }
       }
       for (final key in [
@@ -506,9 +532,42 @@ class QishuiMedia {
         'Result',
         'Data',
         'videoModel',
+        'VideoList',
+        'AudioList',
+        'VideoInfo',
+        'videoInfo',
+        'play_info_list',
+        'playInfoList',
+        'play_info',
+        'playInfo',
       ]) {
         final child = row[key];
-        if (child is Map && ['video_list', 'audio_list'].contains(key)) {
+        final childModel =
+            playerModel ||
+            {
+              'video_model',
+              'VideoModel',
+              'videoModel',
+              'video_list',
+              'VideoList',
+              'audio_list',
+              'AudioList',
+              'PlayInfoList',
+              'PlayInfo',
+              'play_info_list',
+              'playInfoList',
+              'play_info',
+              'playInfo',
+              'player_info',
+              'player_models',
+            }.contains(key);
+        if (child is Map &&
+            [
+              'video_list',
+              'audio_list',
+              'VideoList',
+              'AudioList',
+            ].contains(key)) {
           for (final item in child.values) {
             visit(
               item,
@@ -518,6 +577,7 @@ class QishuiMedia {
               qualityCode,
               authorization,
               method,
+              childModel,
             );
           }
         } else {
@@ -529,6 +589,7 @@ class QishuiMedia {
             qualityCode,
             authorization,
             method,
+            childModel,
           );
         }
       }

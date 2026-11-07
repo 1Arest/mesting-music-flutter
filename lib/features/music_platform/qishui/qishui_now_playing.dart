@@ -7,6 +7,7 @@ import '../../../shared/widgets/track_artwork.dart';
 import '../presentation/platform_feedback.dart';
 import '../../queue/presentation/queue_page.dart';
 import 'qishui_player_navigation.dart';
+import 'qishui_playback_notice.dart';
 
 /// The music root reflects the one existing player rather than constructing a
 /// second preview player. Offscreen list work stays outside this subscription.
@@ -36,8 +37,7 @@ class QishuiNowPlaying extends ConsumerWidget {
       );
     }
     final handler = ref.read(audioHandlerProvider);
-    final track = handler.trackForId(item!.id);
-    if (track == null) return const SizedBox.shrink();
+    final track = ref.watch(currentTrackProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
       child: Column(
@@ -70,6 +70,7 @@ class QishuiNowPlaying extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(track.artist, textAlign: TextAlign.center),
+          QishuiPlaybackNotice(preview: track.isPreview),
           const SizedBox(height: 20),
           Wrap(
             spacing: 16,

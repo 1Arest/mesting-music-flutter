@@ -58,6 +58,8 @@ final song168 = Track(
 );
 
 class Player168 extends Fake implements MestingAudioHandler {
+  Player168({this.preview = false});
+  final bool preview;
   final seeks = <Duration>[];
   int plays = 0;
   @override
@@ -71,7 +73,8 @@ class Player168 extends Fake implements MestingAudioHandler {
   }
 
   @override
-  Track? trackForId(String id) => id == song168.id ? song168 : null;
+  Track? trackForId(String id) =>
+      id == song168.id ? song168.copyWith(isPreview: preview) : null;
 }
 
 class Music168 extends QishuiRepository {
@@ -128,6 +131,7 @@ void main() {
   Future<ProviderContainer> mount(
     WidgetTester tester, {
     bool music = false,
+    bool preview = false,
     Size size = const Size(390, 844),
     double scale = 1,
     bool dark = false,
@@ -154,9 +158,11 @@ void main() {
           store ?? MemorySignerStore168(),
         ),
         qishuiSignerProbeProvider.overrideWithValue(probe ?? (_, _) async {}),
-        audioHandlerProvider.overrideWithValue(Player168()),
+        audioHandlerProvider.overrideWithValue(Player168(preview: preview)),
         favoriteTrackIdsProvider.overrideWithValue(<String>{}),
-        currentTrackProvider.overrideWithValue(song168),
+        currentTrackProvider.overrideWithValue(
+          song168.copyWith(isPreview: preview),
+        ),
         currentMediaItemProvider.overrideWith(
           (_) => Stream.value(
             music
@@ -503,6 +509,43 @@ void main() {
       await shot(tester, 'settings-initial-unconfigured');
     },
   );
+  for (final narrow in [false, true]) {
+    testWidgets(
+      '170 official preview stays labeled in cover and lyrics narrow=$narrow',
+      (tester) async {
+        final container = await mount(
+          tester,
+          music: true,
+          preview: true,
+          size: narrow ? const Size(320, 760) : const Size(390, 844),
+          scale: narrow ? 1.8 : 1,
+          dark: narrow,
+        );
+        GoRouter.of(
+          tester.element(find.byType(FloatingPlaybackPill)),
+        ).go('/music');
+        await settle168(tester);
+        expect(
+          find.byKey(const ValueKey('qishui-official-preview-notice')),
+          findsOneWidget,
+        );
+        await shot(tester, narrow ? 'preview-cover-narrow' : 'preview-cover');
+        await tester.tap(find.byKey(const ValueKey('qishui-music-cover')));
+        await settle168(tester);
+        expect(
+          find.byKey(const ValueKey('qishui-inline-lyrics')),
+          findsOneWidget,
+        );
+        expect(find.text('官方试听'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await shot(tester, narrow ? 'preview-lyrics-narrow' : 'preview-lyrics');
+        expect(
+          container.read(currentTrackProvider).duration,
+          const Duration(minutes: 3),
+        );
+      },
+    );
+  }
   testWidgets(
     '169 rejected local settings show manual retry instead of a spinner',
     (tester) async {

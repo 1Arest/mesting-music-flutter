@@ -1,0 +1,10 @@
+{
+  "fixtureProvenance": "Sanitized shape from retained 1.0.67 anonymous official reply; no current account or live request. URLs have no real paths/query, authorization is synthetic.",
+  "track_info": {
+    "duration": 230000
+  },
+  "track_player": {
+    "url_player_info": "https://vod-luna.douyin.com/fixture-player",
+    "video_model": "{\"video_duration\":60,\"video_list\":[{\"main_url\":\"https://v3-luna.douyinvod.com/fixture-audio\",\"backup_url\":\"https://v5-ex-luna.douyinvod.com/fixture-audio\",\"video_meta\":{\"quality\":\"highest\",\"vtype\":\"m4a\",\"bitrate\":260465,\"size\":1953491,\"real_bitrate\":260465},\"encrypt_info\":{\"encrypt\":true,\"spade_a\":\"synthetic-authorization170\",\"encryption_method\":\"cenc-aes-ctr\"}},{\"main_url\":\"https://v3-luna.douyinvod.com/fixture-audio\",\"backup_url\":\"https://v5-ex-luna.douyinvod.com/fixture-audio\",\"video_meta\":{\"quality\":\"higher\",\"vtype\":\"m4a\",\"bitrate\":132432,\"size\":993247,\"real_bitrate\":132432},\"encrypt_info\":{\"encrypt\":true,\"spade_a\":\"synthetic-authorization170\",\"encryption_method\":\"cenc-aes-ctr\"}},{\"main_url\":\"https://v3-luna.douyinvod.com/fixture-audio\",\"backup_url\":\"https://v5-ex-luna.douyinvod.com/fixture-audio\",\"video_meta\":{\"quality\":\"medium\",\"vtype\":\"m4a\",\"bitrate\":68405,\"size\":513038,\"real_bitrate\":68405},\"encrypt_info\":{\"encrypt\":true,\"spade_a\":\"synthetic-authorization170\",\"encryption_method\":\"cenc-aes-ctr\"}}],\"volume\":{}}"
+  }
+}

@@ -5,9 +5,8 @@ import 'qishui_api.dart';
 import 'qishui_models.dart';
 import 'qishui_write_journal.dart';
 import 'qishui_official_audio_cache.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../../core/network/music_http_client.dart';
+import 'qishui_playback_media.dart';
+import 'qishui_player_info_loader.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 
 /// Typed feature adapter. Account ownership is captured at construction; a
@@ -419,67 +418,21 @@ class QishuiRepository {
         abortTrigger: abortTrigger,
       );
 
-  /// Some mobile media responses defer the video model to a signed public
-  /// player-info URL. Fetch it anonymously with a bounded body; credentials
-  /// belong only to the fixed Luna host, never to a CDN or signing service.
+  /// Media can be embedded or deferred to a signed first-party player-info
+  /// link. Keep this transport separate from account API calls and selection.
   Future<Map<String, dynamic>> _playbackData(
     String id,
-    Future<void>? abortTrigger,
-  ) async {
+    Future<void>? abortTrigger, {
+    Duration catalogDuration = Duration.zero,
+  }) async {
     abortTrigger = _abort(abortTrigger);
     final data = await media(id, abortTrigger: abortTrigger);
-    final urls = <String>{};
-    void visit(Object? value, int depth) {
-      if (depth > 12) return;
-      if (value is List) {
-        for (final v in value) {
-          visit(v, depth + 1);
-        }
-      }
-      if (value is Map) {
-        for (final entry in value.entries) {
-          if ({'url_player_info', 'urlPlayerInfo'}.contains(entry.key) &&
-              entry.value is String) {
-            urls.add(entry.value as String);
-          } else if (entry.value is Map || entry.value is List) {
-            visit(entry.value, depth + 1);
-          }
-        }
-      }
-    }
-
-    visit(data, 0);
-    final models = <Object>[];
-    for (final url in urls.take(3)) {
-      final uri = Uri.tryParse(url);
-      if (uri?.scheme != 'https' ||
-          uri!.userInfo.isNotEmpty ||
-          !(uri.host == 'open.bytedanceapi.com' ||
-              uri.host.endsWith('.volcvod.com') ||
-              uri.host.endsWith('.douyinvod.com') ||
-              uri.host.endsWith('.bytecdn.cn'))) {
-        continue;
-      }
-      final response = await sendMusicRequest(
-        client: api.client,
-        platform: 'qishui',
-        operation: MusicNetworkOperation.playbackUrl,
-        abortTrigger: abortTrigger,
-        maximumResponseBytes: 2 * 1024 * 1024,
-        build: (abort) =>
-            http.AbortableRequest('GET', uri, abortTrigger: abort)
-              ..followRedirects = false,
-      );
-      if (!current) throw const QishuiException('账号已变化，请重新播放');
-      if (response.statusCode == 200) {
-        try {
-          models.add(jsonDecode(utf8.decode(response.bodyBytes)) as Object);
-        } on FormatException {
-          throw const QishuiException('汽水播放资料无法读取');
-        }
-      }
-    }
-    return {'media': data, 'player_models': models};
+    return QishuiPlayerInfoLoader(api.client).load(
+      data,
+      catalogDuration: catalogDuration,
+      abort: abortTrigger,
+      current: () => current,
+    );
   }
 
   Future<Set<PlatformAudioQuality>> qualities(String id) async {
@@ -513,38 +466,33 @@ class QishuiRepository {
       throw const QishuiException('汽水未返回歌曲时长，暂不能确认完整版');
     }
     abortTrigger = _abort(abortTrigger);
-    final data = await _playbackData(track.platformSongId, abortTrigger);
-    final candidates =
-        QishuiMedia.parse(data).where((v) => v.canDecodeOfficial).toList()
-          ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
-    if (candidates.isEmpty) {
-      throw const QishuiException('汽水未提供可直接播放的音频，当前媒体授权或签名仍不可用');
-    }
-    final playable = candidates.where(
-      (v) =>
-          v.duration > Duration.zero &&
-          (track.duration == Duration.zero ||
-              v.duration.inSeconds + 5 >= track.duration.inSeconds),
+    final data = await _playbackData(
+      track.platformSongId,
+      abortTrigger,
+      catalogDuration: track.duration,
     );
-    if (playable.isEmpty) {
-      throw const QishuiException(
-        '汽水当前账号仅取得试听或歌曲受限，尚未提供完整音频',
-        kind: QishuiFailureKind.entitlement,
-      );
-    }
-    final matching = playable
-        .where(
-          (v) =>
-              quality == null ||
-              quality == PlatformAudioQuality.high && v.bitrate > 220000 ||
-              quality == PlatformAudioQuality.standard &&
-                  v.bitrate > 0 &&
-                  v.bitrate <= 220000,
-        )
-        .firstOrNull;
-    final candidate =
-        matching ?? (requireQuality ? null : playable.firstOrNull);
-    if (candidate == null) throw const QishuiException('汽水未提供所选音质');
+    final streams = QishuiMedia.parse(data);
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'qishui',
+      operation: MusicNetworkOperation.playbackUrl,
+      outcome: streams.isEmpty
+          ? MusicNetworkOutcome.format
+          : MusicNetworkOutcome.success,
+      transport: 'local',
+      phase: MusicDiagnosticPhase.mediaModelParse,
+      streamCandidates: streams.length,
+      decodableStreams: streams
+          .where((media) => media.canDecodeOfficial)
+          .length,
+    );
+    final selected = QishuiPlaybackSelection.choose(
+      streams,
+      catalogDuration: track.duration,
+      download: download,
+      quality: quality,
+      requireQuality: requireQuality,
+    );
+    final candidate = selected.media;
     if (download) {
       await _requireDownloadPermission(
         track.platformSongId,
@@ -564,12 +512,16 @@ class QishuiRepository {
     final probe = localPath != null
         ? await QishuiOfficialAudioCache.inspectFile(
             localPath,
-            expectedDuration: track.duration,
+            expectedDuration: selected.isPreview
+                ? candidate.duration
+                : track.duration,
           )
         : await inspectNeteaseAudio(
             api.client,
             candidate.url,
-            expectedDuration: track.duration,
+            expectedDuration: selected.isPreview
+                ? candidate.duration
+                : track.duration,
             abortTrigger: abortTrigger,
             prefixBytes: 65536,
           );
@@ -580,8 +532,25 @@ class QishuiRepository {
       );
     }
     if (!probe.playable || !{'mp3', 'm4a', 'flac'}.contains(probe.format)) {
-      throw const QishuiException('汽水音频完整性或格式核验未通过');
+      MusicNetworkDiagnostics.shared.record(
+        platform: 'qishui',
+        operation: MusicNetworkOperation.audio,
+        outcome: MusicNetworkOutcome.format,
+        transport: 'local',
+        phase: MusicDiagnosticPhase.audioVerify,
+      );
+      throw const QishuiException(
+        '汽水音频完整性或格式核验未通过',
+        kind: QishuiFailureKind.format,
+      );
     }
+    MusicNetworkDiagnostics.shared.record(
+      platform: 'qishui',
+      operation: MusicNetworkOperation.audio,
+      outcome: MusicNetworkOutcome.success,
+      transport: 'local',
+      phase: MusicDiagnosticPhase.audioVerify,
+    );
     final bitrate = probe.bitrate > 0 ? probe.bitrate : candidate.bitrate;
     final actual = bitrate <= 0
         ? null
@@ -595,7 +564,7 @@ class QishuiRepository {
       audioAsset: localPath == null
           ? candidate.url
           : Uri.file(localPath).toString(),
-      isPreview: false,
+      isPreview: selected.isPreview,
       playbackQuality: actual?.code ?? '',
       audioBitrate: bitrate,
       audioHeaders: const {},

@@ -15,6 +15,7 @@ import '../presentation/platform_feedback.dart';
 import '../presentation/song_actions_sheet.dart';
 import 'qishui_lyrics_content.dart';
 import 'qishui_player_navigation.dart';
+import 'qishui_playback_notice.dart';
 
 /// Structure follows the user's official Qishui screenshot; all artwork and
 /// metadata come from the existing player. This is an inline Music-tab view,
@@ -151,6 +152,9 @@ class QishuiLyricsPage extends ConsumerWidget {
                                       fontSize: MusicTypography.subheadlineSize,
                                       color: Colors.white60,
                                     ),
+                                  ),
+                                  QishuiPlaybackNotice(
+                                    preview: track.isPreview,
                                   ),
                                 ],
                               ),

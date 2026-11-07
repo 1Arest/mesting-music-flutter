@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/network/music_network_diagnostics.dart';
 import '../netease/fallback/netease_audio_probe.dart';
 import 'qishui_api.dart';
 import 'qishui_models.dart';
@@ -116,6 +117,17 @@ class QishuiOfficialAudioCache {
     IOSink? sink;
     var published = false;
     var reservation = 0;
+    var phase = MusicDiagnosticPhase.audioRead;
+    void record(MusicNetworkOutcome outcome) =>
+        MusicNetworkDiagnostics.shared.record(
+          platform: 'qishui',
+          operation: MusicNetworkOperation.audio,
+          outcome: outcome,
+          transport: phase == MusicDiagnosticPhase.audioRead
+              ? 'dart'
+              : 'nativeAudio',
+          phase: phase,
+        );
     try {
       await Future<void>.value();
       check();
@@ -201,6 +213,8 @@ class QishuiOfficialAudioCache {
           kind: QishuiFailureKind.format,
         );
       }
+      record(MusicNetworkOutcome.success);
+      phase = MusicDiagnosticPhase.audioDecode;
       final result = await _channel
           .invokeMapMethod<String, Object?>('prepare', {
             'id': id,
@@ -216,25 +230,40 @@ class QishuiOfficialAudioCache {
           kind: QishuiFailureKind.format,
         );
       }
+      record(MusicNetworkOutcome.success);
+      phase = MusicDiagnosticPhase.audioVerify;
       await inspectFile(
         output.path,
         expectedDuration: media.duration,
         channel: _channel,
       );
       check();
+      record(MusicNetworkOutcome.success);
       published = true;
       _recentPaths.add(output.absolute.path);
       if (_recentPaths.length > 16) _recentPaths.removeAt(0);
       return output.absolute.path;
-    } on QishuiException {
+    } on QishuiException catch (error) {
+      record(switch (error.kind) {
+        QishuiFailureKind.cancelled => MusicNetworkOutcome.cancelled,
+        QishuiFailureKind.timeout => MusicNetworkOutcome.timeout,
+        QishuiFailureKind.connection => MusicNetworkOutcome.connection,
+        _ => MusicNetworkOutcome.format,
+      });
       rethrow;
     } on TimeoutException {
+      record(MusicNetworkOutcome.timeout);
       throw const QishuiException(
         '汽水音频读取超时，请重试',
         kind: QishuiFailureKind.timeout,
       );
     } on PlatformException catch (error) {
       check();
+      record(
+        error.code == 'cancelled'
+            ? MusicNetworkOutcome.cancelled
+            : MusicNetworkOutcome.format,
+      );
       throw QishuiException(
         error.code == 'cancelled' ? '操作已取消' : '汽水音频解码或完整性核验未通过',
         kind: error.code == 'cancelled'
@@ -243,6 +272,7 @@ class QishuiOfficialAudioCache {
       );
     } on Object {
       check();
+      record(MusicNetworkOutcome.connection);
       throw const QishuiException(
         '汽水音频读取未完成，请重试',
         kind: QishuiFailureKind.connection,

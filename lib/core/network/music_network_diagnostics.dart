@@ -52,6 +52,14 @@ enum MusicDiagnosticPhase {
   networkSend,
   responseDecode,
   responseValidate,
+  // Playback stages remain closed names; exported diagnostics never contain
+  // a media URL, PlayAuth, signing headers or account credentials.
+  playerInfoRead,
+  mediaModelParse,
+  mediaSelection,
+  audioRead,
+  audioDecode,
+  audioVerify,
 }
 
 enum MusicFailureFamily {
@@ -83,6 +91,9 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     String transport = 'dart',
     MusicDiagnosticPhase? phase,
     MusicFailureFamily? family,
+    int? streamCandidates,
+    int? decodableStreams,
+    int? playerInfoUrls,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -107,6 +118,12 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
         if (status != null && status >= 0 && status <= 999999) 'status': status,
         if (phase != null) 'phase': phase.name,
         if (family != null) 'family': family.name,
+        if (streamCandidates != null)
+          'streamCandidates': streamCandidates.clamp(0, 1000),
+        if (decodableStreams != null)
+          'decodableStreams': decodableStreams.clamp(0, 1000),
+        if (playerInfoUrls != null)
+          'playerInfoUrls': playerInfoUrls.clamp(0, 1000),
       }),
     );
     if (_rows.length > 80) _rows.removeAt(0);

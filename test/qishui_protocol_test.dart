@@ -321,11 +321,8 @@ void main() {
       await api.request('/luna/me', get: true);
     },
   );
-  test('preview and encrypted models never become full playback', () async {
-    for (final data in [
-      mediaFixture(duration: 30),
-      mediaFixture(encrypted: true),
-    ]) {
+  test('unsupported encrypted models never enter audio transport', () async {
+    for (final data in [mediaFixture(encrypted: true)]) {
       var cdnCalls = 0;
       final api = QishuiApi(
         MockClient((request) async {
