@@ -56,6 +56,19 @@ void main() {
         buildNumber: '29',
         buildSignature: '',
       );
+      // Renderer metadata is a separate optional native boundary. Model its
+      // explicit "unknown" response instead of racing a missing host plugin
+      // against pumpAndSettle's no-scheduled-frame exit.
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      const rendererChannel = MethodChannel('com.mesting.music/system_media');
+      messenger.setMockMethodCallHandler(
+        rendererChannel,
+        (_) async => <String, Object>{},
+      );
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(rendererChannel, null),
+      );
       SharedPreferences.setMockInitialValues({});
       final preferences = await SharedPreferences.getInstance();
       var theme = buildMestingTheme(

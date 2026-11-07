@@ -48,14 +48,17 @@ class PlayerMoreMenu extends StatefulWidget {
   final double menuWidth;
   final PlayerMenuDisclosure? disclosure;
   @override
-  State<PlayerMoreMenu> createState() => _PlayerMoreMenuState();
+  State<PlayerMoreMenu> createState() => PlayerMoreMenuState();
 }
 
-class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
+class PlayerMoreMenuState extends State<PlayerMoreMenu> {
   final _anchor = GlobalKey();
   bool _opening = false;
 
-  Future<void> _open() async {
+  /// The trigger and fixed interaction sampler use the same guarded action.
+  Future<void> openMenu({
+    ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
+  }) async {
     if (_opening) return;
     final box = _anchor.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
@@ -73,6 +76,7 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
         label: '关闭更多菜单',
         fromInnerEdge: true,
         motion: BetaMenuMotion.player,
+        onRouteCreated: onRouteCreated,
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, update) => SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -219,7 +223,7 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
             key: _anchor,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             minimumSize: const Size(44, 44),
-            onPressed: _open,
+            onPressed: openMenu,
             child: DefaultTextStyle(
               style: Theme.of(context).textTheme.titleMedium!,
               child: widget.trigger!,
@@ -229,7 +233,7 @@ class _PlayerMoreMenuState extends State<PlayerMoreMenu> {
       : PlayerGlassButton(
           key: _anchor,
           label: widget.tooltip,
-          onPressed: _open,
+          onPressed: openMenu,
           icon: CupertinoIcons.ellipsis,
         );
 }

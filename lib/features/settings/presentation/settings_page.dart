@@ -126,9 +126,7 @@ class SettingsPage extends ConsumerWidget {
                       iconColor: const Color(0xFF527FD3),
                       title: '切换音乐平台',
                       subtitle: '分别保留各音乐平台的登录与播放记录',
-                      onTap: () => Navigator.of(context).push(
-                        betaEntryRoute<void>(const MusicPlatformSwitchPage()),
-                      ),
+                      onTap: () => openMusicPlatformSwitch(context),
                     ),
                     const _SettingsDivider(),
                     _SettingsTile(

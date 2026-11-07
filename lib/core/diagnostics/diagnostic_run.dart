@@ -245,6 +245,7 @@ class DiagnosticRunController extends ChangeNotifier {
     // This precedes the first platform switch/page build, including retries.
     setActive(true);
     checkpoint['status'] = 'running';
+    var cleanupFailed = false;
     try {
       await store.save(checkpoint);
       for (
@@ -359,6 +360,8 @@ class DiagnosticRunController extends ChangeNotifier {
           try {
             await driver.close().timeout(const Duration(seconds: 4));
           } on Object {
+            cleanupFailed = true;
+            checkpoint['isolationFailure'] = true;
             await _record(
               scenario,
               'close',
@@ -368,6 +371,10 @@ class DiagnosticRunController extends ChangeNotifier {
             );
           }
         }
+        // A failed page/overlay cleanup invalidates all later measurements.
+        // Preserve its failure and restore the original platform; do not keep
+        // navigating underneath a live modal and label those samples passes.
+        if (cleanupFailed) break;
         if (!stopRequested && checkpoint['nextScenario'] == si) {
           // A timed-out action invalidated its adapter. Continue at the next
           // page instead of letting its delayed continuation touch a new page.
@@ -376,7 +383,11 @@ class DiagnosticRunController extends ChangeNotifier {
           await store.save(checkpoint);
         }
       }
-      checkpoint['status'] = stopRequested ? 'stopped' : 'completed';
+      checkpoint['status'] = cleanupFailed
+          ? 'interrupted'
+          : stopRequested
+          ? 'stopped'
+          : 'completed';
     } on Object {
       checkpoint['status'] = 'interrupted';
       checkpoint['persistenceError'] = true;
@@ -466,6 +477,7 @@ Map<String, Object> diagnosticTimingMetrics(Map<String, Object> report) {
     for (final entry in {'build': build, 'raster': raster}.entries) ...{
       '${entry.key}P50Ms': percentile(entry.value, .5),
       '${entry.key}P90Ms': percentile(entry.value, .9),
+      '${entry.key}P95Ms': percentile(entry.value, .95),
       '${entry.key}P99Ms': percentile(entry.value, .99),
       '${entry.key}OverDisplayBudget': entry.value
           .where((v) => v > budget)

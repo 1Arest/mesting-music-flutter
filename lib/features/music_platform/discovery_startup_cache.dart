@@ -81,6 +81,7 @@ class DiscoveryStartupCache {
   static Future<DiscoveryStartupCache> prepare(
     ProviderContainer container, {
     ArtworkRefreshCoordinator? artwork,
+    bool includePlayback = true,
   }) async {
     final lease = DiscoveryStartupCache();
     final covers = <String>[];
@@ -185,9 +186,11 @@ class DiscoveryStartupCache {
       // that one saved cover locally too; do not predecode the whole queue or
       // start any audio/network work to obtain it.
       final owner = container.read(activeLibraryOwnerProvider);
-      final playback = await container
-          .read(appDatabaseProvider)
-          .loadPlaybackSession(owner);
+      final playback = !includePlayback
+          ? null
+          : await container
+                .read(appDatabaseProvider)
+                .loadPlaybackSession(owner);
       if (playback != null) {
         try {
           final queue = await decodeJsonText(playback.queueSnapshot) as List;

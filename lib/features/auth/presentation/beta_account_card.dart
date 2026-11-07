@@ -87,10 +87,7 @@ class BetaAccountCard extends ConsumerWidget {
           const SizedBox(height: 22),
           if (platform != null) ...[
             BetaGlassButton(
-              onPressed: () => Navigator.of(
-                context,
-                rootNavigator: true,
-              ).push(betaEntryRoute<void>(const MusicPlatformSwitchPage())),
+              onPressed: () => openMusicPlatformSwitch(context),
               child: const Text('切换音乐平台'),
             ),
             const SizedBox(height: 10),

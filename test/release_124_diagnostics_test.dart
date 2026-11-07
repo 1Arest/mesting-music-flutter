@@ -109,12 +109,12 @@ void main() {
   );
 
   test(
-    'page timeout and close failure do not prevent the next real scenario',
+    'isolated page timeout does not prevent the next real scenario',
     () async {
       final c = await controller();
       final delayed = Completer<void>();
       var lateActions = 0;
-      final d = _Driver([_first, _second])..closeFails = true;
+      final d = _Driver([_first, _second]);
       d.onOpen = (s, t) async {
         if (s == _first) {
           await delayed.future;
@@ -128,7 +128,7 @@ void main() {
       expect(d.opened, [_first.id, _second.id]);
       expect(lateActions, 0);
       expect(c.records.any((r) => r['reason'] == 'page_timeout'), true);
-      expect(c.records.any((r) => r['reason'] == 'page_close_failed'), true);
+      expect(c.records.any((r) => r['reason'] == 'page_close_failed'), false);
       expect(
         c.records.where(
           (r) => r['scenario'] == _second.id && r['status'] == 'passed',
@@ -137,6 +137,21 @@ void main() {
       );
       expect(d.restored, true);
       expect(c.checkpoint['status'], 'completed');
+    },
+  );
+
+  test(
+    'failed cleanup stops before opening another page and restores',
+    () async {
+      final c = await controller();
+      final d = _Driver([_first, _second])..closeFails = true;
+      await run(c, d);
+      expect(d.opened, [_first.id]);
+      expect(c.records.any((r) => r['reason'] == 'page_close_failed'), true);
+      expect(c.records.where((r) => r['scenario'] == _second.id), isEmpty);
+      expect(c.checkpoint['status'], 'interrupted');
+      expect(c.checkpoint['isolationFailure'], true);
+      expect(d.restored, true);
     },
   );
 

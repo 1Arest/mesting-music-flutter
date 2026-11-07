@@ -1,4 +1,5 @@
 import '../../music_platform/qishui/qishui_providers.dart';
+import '../../music_platform/presentation/platform_home_visit.dart';
 import '../../music_platform/qishui/qishui_pages.dart';
 import '../../music_platform/qishui/qishui_chrome_policy.dart';
 import '../../music_platform/qishui/qishui_appearance.dart';
@@ -103,6 +104,18 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     super.initState();
     // Retain the coordinator itself: WidgetRef is unsafe during unmount.
     _tabNavigation = ref.read(betaTabNavigationProvider);
+    ref.listenManual(platformHomeVisitProvider, (_, _) {
+      if (!mounted) return;
+      // A platform return is a new home visit, not a restored scroll position
+      // from the departed profile/settings page. Reset only presentation
+      // ownership; the account's content and player persistence stay separate.
+      _tabNavigation.cancel();
+      _endSearch();
+      _positions.clear();
+      _backHistory.clear();
+      _pageBackHistory.clear();
+      setState(() => _mini = false);
+    });
     _searchMotion.addStatusListener(_searchStatus);
     _pageSearchHost.addListener(_pageSearchChanged);
     if (_routedSearch) {

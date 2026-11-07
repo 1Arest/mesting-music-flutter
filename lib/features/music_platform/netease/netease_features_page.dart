@@ -14,6 +14,7 @@ import '../platform_browse_cache.dart';
 import '../platform_catalog_providers.dart';
 import '../platform_recommendation_providers.dart';
 import '../presentation/retained_platform_snapshot.dart';
+import '../presentation/platform_display_snapshots.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
@@ -115,9 +116,18 @@ class NeteaseHomeShelf extends ConsumerWidget {
     // A restored provider already has pixels/data. Route deferral is for live
     // work only; blanking a restored shelf until an animation settles causes a
     // second cold-start flash despite successfully restored disk snapshots.
-    final restored = ref.watch(neteaseFeedPreviewProvider(feed)).hasValue;
+    final restored =
+        ref.watch(neteaseFeedPreviewProvider(feed)).hasValue ||
+        ref
+                .read(platformDisplaySnapshotsProvider)
+                .read<NeteaseBatch>(
+                  platformDisplayOwner(ref.read(platformAccountProvider).value),
+                  'home-netease-${feed.name}',
+                ) !=
+            null;
     Widget contents(BuildContext context) => Consumer(
       builder: (context, ref, _) => RetainedPlatformSnapshot(
+        cacheKey: 'home-netease-${feed.name}',
         value: ref.watch(neteaseFeedPreviewProvider(feed)),
         artwork: (batch) => batch.items.map((item) => item.cover),
         loading: () => const PlatformFeedbackState(loading: true),

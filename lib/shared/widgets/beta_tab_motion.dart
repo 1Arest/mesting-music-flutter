@@ -14,6 +14,13 @@ class BetaTabMotion {
       entry.key: entry.value + (_to[entry.key]! - entry.value) * progress,
   };
 
+  /// Paint/hit-test queries need one scalar, not a fresh Map per endpoint on
+  /// every animation tick. The complete map remains useful for retargeting.
+  double position(int index, double progress) {
+    final start = _from[index];
+    return start == null ? 0 : start + (_to[index]! - start) * progress;
+  }
+
   void retarget(int next, double progress) {
     if (next == target) return;
     final current = positions(progress).entries.toList()

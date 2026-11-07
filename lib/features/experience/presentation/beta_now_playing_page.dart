@@ -22,7 +22,6 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../../shared/widgets/track_artwork.dart';
-import '../../../shared/widgets/artwork_reveal_boundary.dart';
 import '../../library/presentation/favorite_toggle_button.dart';
 import '../../player/player_visual_style.dart';
 import '../../player/presentation/player_visual_stages.dart';
@@ -375,17 +374,9 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                       child: PlayerContentTransition(
                                         direction: _direction,
                                         child: _queue
-                                            ? const ArtworkRevealBoundary(
+                                            ? const PlayerQueuePanel(
                                                 key: ValueKey(
-                                                  'player-queue-content',
-                                                ),
-                                                // Queue batches retain their
-                                                // existing readiness boundary;
-                                                // cover changes own theirs.
-                                                child: PlayerQueuePanel(
-                                                  key: ValueKey(
-                                                    'player-queue-panel',
-                                                  ),
+                                                  'player-queue-panel',
                                                 ),
                                               )
                                             : _lyrics

@@ -32,7 +32,11 @@ Future<T?> showLiquidGlassBottomSheet<T>({
   Color? barrierColor,
   ThemeData Function(BuildContext context)? themeBuilder,
   AnimationStyle? sheetAnimationStyle,
-}) {
+  bool waitForExit = false,
+  // Exposes only this installed route, allowing an owning operation to remove
+  // its own sheet after cancellation without popping an unrelated page.
+  ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
+}) async {
   assert(surfaceColor == null || surfaceColorBuilder == null);
   final dark = Theme.of(context).brightness == Brightness.dark;
   final viewportWidth = MediaQuery.sizeOf(context).width;
@@ -41,9 +45,29 @@ Future<T?> showLiquidGlassBottomSheet<T>({
           maxWidth: (viewportWidth - 48).clamp(0.0, 720.0).toDouble(),
         )
       : null;
-  return showModalBottomSheet<T>(
-    context: context,
-    useRootNavigator: useRootNavigator,
+  final style =
+      sheetAnimationStyle ??
+      const AnimationStyle(
+        duration: Duration(milliseconds: 320),
+        reverseDuration: Duration(milliseconds: 240),
+      );
+  // Actions that open another page can wait for this actual sheet's exit,
+  // avoiding two simultaneous full glass surfaces during the hand-off. Other
+  // callers retain showModalBottomSheet's established result timing.
+  final navigator = Navigator.of(context, rootNavigator: useRootNavigator);
+  final localizations = MaterialLocalizations.of(context);
+  // Keep the framework helper's captured themes, dismissal semantics and
+  // route-owned controller. The route reference also lets callers wait until
+  // the closing overlay has really been removed, including interrupted entry.
+  final route = ModalBottomSheetRoute<T>(
+    capturedThemes: InheritedTheme.capture(
+      from: context,
+      to: navigator.context,
+    ),
+    barrierLabel: localizations.scrimLabel,
+    barrierOnTapHint: localizations.scrimOnTapHint(
+      localizations.bottomSheetLabel,
+    ),
     isScrollControlled: isScrollControlled,
     useSafeArea: useSafeArea,
     isDismissible: isDismissible,
@@ -52,14 +76,9 @@ Future<T?> showLiquidGlassBottomSheet<T>({
     backgroundColor: Colors.transparent,
     elevation: 0,
     constraints: wideSheet,
-    barrierColor:
+    modalBarrierColor:
         barrierColor ?? Colors.black.withValues(alpha: dark ? 0.56 : 0.42),
-    sheetAnimationStyle:
-        sheetAnimationStyle ??
-        const AnimationStyle(
-          duration: Duration(milliseconds: 320),
-          reverseDuration: Duration(milliseconds: 240),
-        ),
+    sheetAnimationStyle: style,
     builder: (sheetContext) {
       final surface = LiquidGlassSurface(
         key: liquidGlassSheetSurfaceKey,
@@ -86,6 +105,11 @@ Future<T?> showLiquidGlassBottomSheet<T>({
           : Theme(data: themeBuilder(sheetContext), child: surface);
     },
   );
+  final pending = navigator.push(route);
+  onRouteCreated?.call(route);
+  final result = await pending;
+  if (waitForExit) await route.completed;
+  return result;
 }
 
 class LiquidGlassSurface extends StatelessWidget {

@@ -1,5 +1,6 @@
 import '../qishui/qishui_login_page.dart';
 import 'dart:async';
+import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,8 @@ import '../../../core/security/credential_failure.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
 import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
+import 'platform_display_snapshots.dart';
+import 'platform_home_visit.dart';
 import '../netease/netease_login.dart';
 import 'platform_account_page.dart';
 import '../../themes/music_typography.dart';
@@ -72,6 +75,15 @@ class PlatformLoginOptionsPage extends StatelessWidget {
 
 /// One explicit switch boundary; errors leave the current account selected.
 /// Reading a retained credential never publishes it or starts music playback.
+Future<void> openMusicPlatformSwitch(BuildContext context) async {
+  // This selection stays above the retained branches while the destination
+  // home is prepared. Moving to another branch must not abruptly unmount it.
+  await Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push<bool>(betaEntryRoute<bool>(const MusicPlatformSwitchPage()));
+}
+
 class MusicPlatformSwitchPage extends ConsumerStatefulWidget {
   const MusicPlatformSwitchPage({super.key});
   @override
@@ -95,6 +107,10 @@ class _MusicPlatformSwitchPageState
       _unreadableTarget = null;
     });
     try {
+      final snapshots = ref.read(platformDisplaySnapshotsProvider);
+      snapshots.captureArtwork(
+        platformDisplayOwner(ref.read(platformAccountProvider).value),
+      );
       final controller = ref.read(platformAccountProvider.notifier);
       final saved = await controller.retainedIdentity(platform);
       if (!mounted) return;
@@ -106,7 +122,7 @@ class _MusicPlatformSwitchPageState
       } else {
         await controller.switchPlatform(platform);
       }
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) await _enterHome();
     } on Object catch (error) {
       if (mounted) {
         setState(() {
@@ -127,6 +143,37 @@ class _MusicPlatformSwitchPageState
     }
   }
 
+  Future<void> _enterHome() async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final owner = platformDisplayOwner(
+      container.read(platformAccountProvider).value,
+    );
+    final lease = await container.read(platformHomePreparationProvider)(
+      container,
+    );
+    await container
+        .read(platformDisplaySnapshotsProvider)
+        .prepareHomeArtwork(owner);
+    if (!mounted ||
+        platformDisplayOwner(container.read(platformAccountProvider).value) !=
+            owner) {
+      lease.dispose();
+      return;
+    }
+    container.read(platformHomeVisitProvider.notifier).begin(lease);
+    // A single root navigation clears the departed platform's subpage stack.
+    // The destination surface owns the live entrance instead of cutting to a
+    // rebuilt profile underneath this selection route.
+    final router = GoRouter.of(context);
+    router.go('/music/recommend');
+    await WidgetsBinding.instance.endOfFrame;
+    // Keep the real selector visible until the cached destination is laid out.
+    // Its normal reversible route exit then reveals the prepared home.
+    if (mounted && ModalRoute.isCurrentOf(context) == true) {
+      Navigator.of(context).pop(true);
+    }
+  }
+
   Future<void> _reauthenticate(MusicPlatform platform) async {
     if (_busy) return;
     setState(() {
@@ -139,7 +186,7 @@ class _MusicPlatformSwitchPageState
       );
       // Cancelling the form leaves the selected account and both stores alone.
       // The existing controller owns authentication, durable save and publish.
-      if (mounted && success == true) Navigator.of(context).pop(true);
+      if (mounted && success == true) await _enterHome();
     } finally {
       if (mounted) setState(() => _busy = false);
     }

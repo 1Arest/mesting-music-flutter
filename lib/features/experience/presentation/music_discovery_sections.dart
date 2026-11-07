@@ -114,6 +114,7 @@ class _ModeCard extends ConsumerWidget {
     }
 
     return RetainedPlatformSnapshot(
+      cacheKey: 'home-highlight-${mode.name}',
       value: value,
       artwork: (tracks) => tracks.map((t) => t.coverAsset),
       loading: () => _ModeFallback(
@@ -240,6 +241,7 @@ class _RankCard extends ConsumerWidget {
   final double width, height;
   @override
   Widget build(BuildContext context, WidgetRef ref) => RetainedPlatformSnapshot(
+    cacheKey: 'home-rank-highlight',
     value: ref.watch(platformExploreProvider(PlatformExploreKind.rank)),
     artwork: (items) => items.map((i) => i.cover),
     loading: () => _fallback(context),
@@ -299,6 +301,7 @@ class MusicDiscoverySongGroups extends ConsumerWidget {
           ),
         ),
         RetainedPlatformSnapshot(
+          cacheKey: 'home-song-groups',
           value: ref.watch(provider),
           artwork: (tracks) => tracks.map((t) => t.coverAsset),
           loading: () => const PlatformFeedbackState(loading: true),
@@ -360,6 +363,7 @@ class KugouDiscoveryPlaylists extends ConsumerWidget {
             openMusicHomeCatalogue(context, PlatformExploreKind.playlist),
       ),
       RetainedPlatformSnapshot(
+        cacheKey: 'home-featured-playlists',
         value: ref.watch(platformFeaturedProvider),
         artwork: (rows) => rows.map(
           (r) => '${r['sizable_cover'] ?? r['imgurl'] ?? r['pic'] ?? ''}'

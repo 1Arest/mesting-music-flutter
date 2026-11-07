@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/media/artwork_refresh_coordinator.dart';
 import '../music_platform_providers.dart';
 import '../domain/platform_session.dart';
+import 'platform_display_snapshots.dart';
+import '../../../shared/widgets/beta_entrance_readiness.dart';
+import '../../../shared/widgets/beta_root_tab_viewport.dart';
 
 /// A discovery section keeps its last usable, same-account data during a
 /// refresh. This is a presentation fallback when disposable disk caching is
@@ -21,6 +23,7 @@ class RetainedPlatformSnapshot<T> extends ConsumerStatefulWidget {
     required this.error,
     required this.data,
     this.artwork,
+    this.cacheKey,
     super.key,
   });
 
@@ -30,6 +33,10 @@ class RetainedPlatformSnapshot<T> extends ConsumerStatefulWidget {
   final Widget Function(T value) data;
   final Iterable<String> Function(T value)? artwork;
 
+  /// Only stable, explicitly named page sections opt into cross-platform
+  /// retention. Unnamed detail/search instances cannot overwrite one another.
+  final String? cacheKey;
+
   @override
   ConsumerState<RetainedPlatformSnapshot<T>> createState() =>
       _RetainedPlatformSnapshotState<T>();
@@ -37,12 +44,26 @@ class RetainedPlatformSnapshot<T> extends ConsumerStatefulWidget {
 
 class _RetainedPlatformSnapshotState<T>
     extends ConsumerState<RetainedPlatformSnapshot<T>> {
-  Object? _owner;
+  PlatformDisplayOwner? _owner;
+  String? _slot;
   AsyncData<T>? _shown;
   T? _candidate;
   int _generation = 0;
 
-  Object _identity(AsyncValue<PlatformSession?> account) {
+  void _remember(T value) {
+    final key = widget.cacheKey;
+    if (key == null || value == null) return;
+    ref
+        .read(platformDisplaySnapshotsProvider)
+        .remember(
+          _owner!,
+          key,
+          value as Object,
+          widget.artwork?.call(value) ?? const <String>[],
+        );
+  }
+
+  PlatformDisplayOwner _identity(AsyncValue<PlatformSession?> account) {
     final session = account.value;
     // A refresh with the same retained credential is still the same owner.
     // Including isLoading discarded usable content during account revalidation
@@ -54,16 +75,15 @@ class _RetainedPlatformSnapshotState<T>
   Future<void> _prepare(
     T previous,
     T incoming,
-    Object owner,
+    PlatformDisplayOwner owner,
     int generation,
   ) async {
     final artwork = widget.artwork!;
     bool ready;
     try {
-      ready = await artworkRefreshCoordinator.prepareRefresh(
-        {'covers': artwork(previous).toList()},
-        {'covers': artwork(incoming).toList()},
-      );
+      ready = await ref
+          .read(platformDisplaySnapshotsProvider)
+          .prepareReplacement(artwork(previous), artwork(incoming));
     } on Object {
       ready = false;
     }
@@ -73,7 +93,10 @@ class _RetainedPlatformSnapshotState<T>
         _identity(ref.read(platformAccountProvider)) != owner) {
       return;
     }
-    if (ready) setState(() => _shown = AsyncData(incoming));
+    if (ready) {
+      _remember(incoming);
+      setState(() => _shown = AsyncData(incoming));
+    }
     // Keep the failed candidate's identity until a fresh provider response or
     // explicit retry arrives; rebuilding the parent must not loop downloads.
   }
@@ -81,13 +104,25 @@ class _RetainedPlatformSnapshotState<T>
   @override
   Widget build(BuildContext context) {
     final owner = _identity(ref.watch(platformAccountProvider));
-    if (_owner != owner) {
+    if (_owner != owner || _slot != widget.cacheKey) {
       _owner = owner;
-      _shown = null;
+      _slot = widget.cacheKey;
+      final key = widget.cacheKey;
+      final snapshots = ref.read(platformDisplaySnapshotsProvider);
+      final restored = key == null ? null : snapshots.read<T>(owner, key);
+      _shown = restored == null ? null : AsyncData(restored);
+      if (key != null && restored != null) snapshots.seedArtwork(owner, key);
       _candidate = null;
       _generation++;
     }
     final value = widget.value;
+    // A ready snapshot remains fully visible during root motion. Delay only
+    // replacement decoding/uploads until its actual destination has settled;
+    // hidden branches cannot compete with the foreground animation.
+    final canPrepare =
+        TickerMode.valuesOf(context).enabled &&
+        BetaEntranceReadiness.of(context) &&
+        BetaTabVisibility.settledOf(context);
     if (value.isLoading || value.hasError) {
       if (_candidate != null) {
         _candidate = null;
@@ -97,8 +132,10 @@ class _RetainedPlatformSnapshotState<T>
       final incoming = value.requireValue;
       if (_shown == null || widget.artwork == null) {
         _shown = AsyncData(incoming);
+        _remember(incoming);
       } else if (!identical(_shown!.value, incoming) &&
-          !identical(_candidate, incoming)) {
+          !identical(_candidate, incoming) &&
+          canPrepare) {
         _candidate = incoming;
         unawaited(_prepare(_shown!.value, incoming, owner, ++_generation));
       }

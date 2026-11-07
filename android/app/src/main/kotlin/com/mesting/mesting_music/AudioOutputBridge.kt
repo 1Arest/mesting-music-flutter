@@ -31,7 +31,9 @@ class AudioOutputBridge(private val activity: Activity, messenger: BinaryMesseng
     private val main = Handler(Looper.getMainLooper())
     // The Beta music player owns its AudioTrack. Stable keeps its established
     // system-controller path, independent of the custom Beta picker.
-    private val playerRoutes = if (activity.packageName.endsWith(".beta"))
+    // Daily Beta releases share com.mesting.music with Stable. Package suffixes
+    // describe isolated benchmarks only; the actual native flavor owns routing.
+    private val playerRoutes = if (BuildConfig.FLAVOR == "beta")
         MusicPlayerOutputRoutes(activity) { publish() } else null
     private var transferId: String? = null
     private var transferResult: MethodChannel.Result? = null

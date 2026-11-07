@@ -72,6 +72,7 @@ class MusicHomeCatalogueShelf extends ConsumerWidget {
           onTap: () => openMusicHomeCatalogue(context, kind),
         ),
         RetainedPlatformSnapshot(
+          cacheKey: 'home-catalogue-${kind.name}',
           value: value,
           artwork: (items) => items.map((item) => item.cover),
           loading: () => const PlatformFeedbackState(loading: true),

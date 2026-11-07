@@ -5,6 +5,7 @@ import '../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../shared/widgets/beta_page_route_observer.dart';
 import '../../shared/widgets/beta_tab_navigation.dart';
 import '../../shared/widgets/beta_page_motion.dart';
+import '../../features/music_platform/presentation/platform_home_visit.dart';
 
 /// Retained root branches live under the existing music Navigator. Query views
 /// (daily, favorites, etc.) are secondary pages, not another instance of the
@@ -16,16 +17,31 @@ List<RouteBase> betaTabShellRoutes(List<GoRoute> roots) {
     StatefulShellRoute(
       pageBuilder: (context, state, shell) =>
           BetaRootTransitionPage<void>(key: state.pageKey, child: shell),
-      navigatorContainerBuilder: (context, shell, children) =>
-          _BetaTabStackBinding(
-            index: shell.currentIndex,
-            observers: observers,
-            child: BetaRootTabViewport(
-              index: shell.currentIndex,
-              locations: roots.map((r) => r.path).toList(),
-              children: children,
-            ),
-          ),
+      navigatorContainerBuilder: (context, shell, children) => _BetaTabStackBinding(
+        index: shell.currentIndex,
+        observers: observers,
+        child:
+            context
+                    .findAncestorWidgetOfExactType<
+                      UncontrolledProviderScope
+                    >() ==
+                null
+            ? BetaRootTabViewport(
+                index: shell.currentIndex,
+                locations: roots.map((r) => r.path).toList(),
+                children: children,
+              )
+            : Consumer(
+                builder: (_, ref, _) => BetaRootTabViewport(
+                  // A platform visit starts at its home without simultaneously
+                  // sliding an old platform's retained Tab across that home.
+                  key: ValueKey(ref.watch(platformHomeVisitProvider)),
+                  index: shell.currentIndex,
+                  locations: roots.map((r) => r.path).toList(),
+                  children: children,
+                ),
+              ),
+      ),
       branches: [
         for (var i = 0; i < roots.length; i++)
           StatefulShellBranch(

@@ -22,6 +22,12 @@ import '../../experience/presentation/beta_bottom_bar.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
 import '../../experience/presentation/music_library_page.dart';
 import '../../experience/presentation/beta_now_playing_page.dart';
+import '../../experience/presentation/player_more_menu.dart';
+import '../../experience/presentation/apple_player_controls.dart';
+import '../../experience/presentation/player_queue_panel.dart';
+import '../../music_platform/presentation/beta_personal_profile.dart';
+import '../../../shared/widgets/beta_glass_popover.dart';
+import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../experience/presentation/music_home_catalogues.dart';
 import '../../experience/presentation/editorial_widgets.dart';
 import '../../history/presentation/listening_history_page.dart';
@@ -76,6 +82,9 @@ List<DiagnosticScenario> productionDiagnosticScenarios() => [
       'player',
       'lyrics',
       'queue',
+      'profile-menu',
+      'player-menu',
+      'queue-motion',
       'comments',
     ])
       DiagnosticScenario(
@@ -211,6 +220,9 @@ const _labels = {
   'player': '歌曲播放器',
   'lyrics': '歌词',
   'queue': '播放队列',
+  'profile-menu': '我的菜单开合',
+  'player-menu': '播放器更多菜单开合',
+  'queue-motion': '播放器待播列表开合',
   'recommend': '发现',
   'functions': '功能',
   'library': '音乐库',
@@ -296,6 +308,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   String? _expectedPlatform;
   Route<void>? _route;
   GlobalKey? _pageKey;
+  ModalRoute<dynamic>? _interactionOverlay;
   bool _closed = false;
   bool _qishuiLyricsOpened = false;
 
@@ -310,6 +323,9 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
                 'library',
                 'profile',
                 'tabs',
+                'profile-menu',
+                'player-menu',
+                'queue-motion',
                 'favorites',
                 'history',
                 'playlist',
@@ -360,6 +376,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       'functions': '/music',
       'library': '/music/library',
       'profile': '/profile',
+      'profile-menu': '/profile',
       'local': '/music/local',
       'search': '/music/search',
       'themes': '/music/themes',
@@ -460,7 +477,11 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   }
 
   Future<Widget> _page(String id, DiagnosticTicket ticket) async {
-    if (id == 'player' || id == 'lyrics' || id == 'queue') {
+    if (id == 'player' ||
+        id == 'lyrics' ||
+        id == 'queue' ||
+        id == 'player-menu' ||
+        id == 'queue-motion') {
       if (container.read(currentMediaItemProvider).value == null) {
         throw const DiagnosticSkip('no_current_song');
       }
@@ -469,7 +490,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
               _expectedPlatform) {
         throw const DiagnosticSkip('no_current_platform_song');
       }
-      if (id == 'queue' &&
+      if ((id == 'queue' || id == 'queue-motion') &&
           (container.read(queueProvider).value?.isEmpty ?? true)) {
         throw const DiagnosticSkip('queue_empty');
       }
@@ -665,8 +686,15 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
 
   /// Enumerate only active, painted production descendants. Offstage routes,
   /// PageView cache neighbours and covered Navigator pages cannot own actions.
-  List<Element> _visible({bool includeChrome = false}) {
-    var root = (_pageKey?.currentContext ?? navigator.context) as Element;
+  List<Element> _visible({
+    bool includeChrome = false,
+    bool rootOverlay = false,
+  }) {
+    var root =
+        (rootOverlay
+                ? Navigator.of(navigator.context, rootNavigator: true).context
+                : _pageKey?.currentContext ?? navigator.context)
+            as Element;
     if (includeChrome) {
       // The page Navigator lives BELOW its persistent shell. Searching only
       // its descendants cannot discover the real bottom bar and used to fail
@@ -680,19 +708,24 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       });
     }
     final result = <Element>[];
+    // Inspecting arbitrary framework Elements with ModalRoute.of/View.of
+    // registers inherited dependencies on those Elements. A later menu pop
+    // could then rebuild Navigator's internal IgnorePointer/Focus wrappers and
+    // reparent their global keys. Diagnostics must not alter the tree they time.
+    final view =
+        navigator.context.findAncestorWidgetOfExactType<View>()?.view ??
+        WidgetsBinding.instance.platformDispatcher.implicitView;
+    final screen = view == null
+        ? null
+        : Offset.zero & (view.physicalSize / view.devicePixelRatio);
     void walk(Element element) {
       final widget = element.widget;
       if (widget is Offstage && widget.offstage) return;
       if (widget is TickerMode && !widget.enabled) return;
-      final route = ModalRoute.of(element);
-      if (route != null && !route.isCurrent) return;
       final object = element.findRenderObject();
       if (object is RenderBox && object.attached && object.hasSize) {
         final bounds = object.localToGlobal(Offset.zero) & object.size;
-        final view = View.of(element);
-        final screen =
-            Offset.zero & (view.physicalSize / view.devicePixelRatio);
-        if (!bounds.overlaps(screen)) return;
+        if (screen != null && !bounds.overlaps(screen)) return;
       }
       result.add(element);
       element.visitChildren(walk);
@@ -755,6 +788,10 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     DiagnosticTicket ticket,
   ) async {
     ticket.check();
+    if (scenario.id.endsWith('-menu')) return _menus(scenario, phase, ticket);
+    if (scenario.id.endsWith('/queue-motion')) {
+      return _queueMotion(phase, ticket);
+    }
     if (scenario.id.endsWith('/tabs')) {
       if (phase != DiagnosticPhase.pages) {
         throw const DiagnosticSkip('dedicated_tab_stage');
@@ -905,6 +942,142 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     return {'scrollMotions': motions, 'directionReversed': true};
   }
 
+  /// Fixed production actions only: open the known menu and dismiss its own
+  /// route. Item selection, playback, authentication and cloud writes are never
+  /// part of a performance sample. Every open/close is checked on the live UI.
+  Future<Map<String, Object>> _menus(
+    DiagnosticScenario scenario,
+    DiagnosticPhase phase,
+    DiagnosticTicket ticket,
+  ) async {
+    if (phase == DiagnosticPhase.pages) {
+      throw const DiagnosticSkip('dedicated_menu_stage');
+    }
+    final profile = scenario.id.endsWith('/profile-menu');
+    final cycles = phase == DiagnosticPhase.fastReverse ? 6 : 3;
+    var observed = 0;
+    for (var i = 0; i < cycles; i++) {
+      final states = _visible().whereType<StatefulElement>().map(
+        (e) => e.state,
+      );
+      final Future<void> Function() open;
+      if (profile) {
+        final owners = states.whereType<BetaPersonalProfileState>().toList();
+        if (owners.length != 1) throw StateError('menu_trigger_missing');
+        open = () => owners.single.openAccountMenu(
+          onRouteCreated: (route) => _interactionOverlay = route,
+        );
+      } else {
+        final owners = states.whereType<PlayerMoreMenuState>().toList();
+        if (owners.isEmpty) throw StateError('menu_trigger_missing');
+        open = () => owners.last.openMenu(
+          onRouteCreated: (route) => _interactionOverlay = route,
+        );
+      }
+      ticket.check();
+      FrameTimingProbe.markTransition('menu_request_$i');
+      Object? failure;
+      final completed = open().then<void>(
+        (_) {},
+        onError: (Object error) {
+          failure = error;
+        },
+      );
+      try {
+        await Future<void>.delayed(
+          Duration(
+            milliseconds: phase == DiagnosticPhase.fastReverse ? 65 : 450,
+          ),
+        );
+        await WidgetsBinding.instance.endOfFrame;
+        final menus = _visible(rootOverlay: true)
+            .where(
+              (e) => profile
+                  ? e.widget is LiquidGlassSurface &&
+                        e.widget.key == liquidGlassSheetSurfaceKey
+                  : e.widget is BetaLiquidMenu,
+            )
+            .toList();
+        if (failure != null ||
+            menus.length != 1 ||
+            _interactionOverlay == null ||
+            ModalRoute.of(menus.single) != _interactionOverlay) {
+          throw StateError('menu_open_not_observed');
+        }
+        ticket.check();
+        FrameTimingProbe.markTransition('menu_visible_$i');
+        await _dismissInteractionOverlay();
+        await completed;
+        ticket.check();
+        if (_visible(rootOverlay: true).any(
+          (e) => profile
+              ? e.widget is LiquidGlassSurface &&
+                    e.widget.key == liquidGlassSheetSurfaceKey
+              : e.widget is BetaLiquidMenu,
+        )) {
+          throw StateError('menu_close_not_observed');
+        }
+        FrameTimingProbe.markTransition('menu_closed_$i');
+        observed++;
+      } finally {
+        // Visibility can fail, the ticket can be cancelled and a stage can
+        // time out. The installed root route is leased before its first paint,
+        // so every exit still removes exactly the menu this operation opened.
+        await _dismissInteractionOverlay();
+        await completed;
+      }
+    }
+    return {
+      'menuCycles': observed,
+      'observedOpenAndClose': true,
+      'interruptedOpening': phase == DiagnosticPhase.fastReverse,
+      'actionsSelected': 0,
+    };
+  }
+
+  Future<Map<String, Object>> _queueMotion(
+    DiagnosticPhase phase,
+    DiagnosticTicket ticket,
+  ) async {
+    if (phase == DiagnosticPhase.pages) {
+      throw const DiagnosticSkip('dedicated_queue_stage');
+    }
+    final cycles = phase == DiagnosticPhase.fastReverse ? 6 : 3;
+    for (var i = 0; i < cycles; i++) {
+      for (final opening in [true, false]) {
+        final controls = _visible()
+            .map((e) => e.widget)
+            .whereType<ApplePlayerControls>()
+            .toList();
+        if (controls.length != 1) throw StateError('queue_trigger_missing');
+        FrameTimingProbe.markTransition(
+          'queue_${opening ? 'open' : 'close'}_$i',
+        );
+        controls.single.onToggleQueue?.call();
+        await Future<void>.delayed(
+          Duration(
+            milliseconds: phase == DiagnosticPhase.fastReverse ? 65 : 450,
+          ),
+        );
+        await WidgetsBinding.instance.endOfFrame;
+        ticket.check();
+        if (phase != DiagnosticPhase.fastReverse &&
+            _visible().any((e) => e.widget is PlayerQueuePanel) != opening) {
+          throw StateError('queue_surface_mismatch');
+        }
+      }
+    }
+    await _settle(ticket);
+    if (_visible().any((e) => e.widget is PlayerQueuePanel)) {
+      throw StateError('queue_close_not_observed');
+    }
+    return {
+      'queueCycles': cycles,
+      'finalQueueClosed': true,
+      'playbackCommands': 0,
+    };
+  }
+
   Future<Map<String, Object>> _pages(DiagnosticTicket ticket) async {
     final states = _visible()
         .whereType<StatefulElement>()
@@ -951,6 +1124,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    await _dismissInteractionOverlay();
     if (_qishuiLyricsOpened) {
       _qishuiLyricsOpened = false;
       container.read(qishuiMusicLyricsProvider.notifier).showCover();
@@ -971,6 +1145,23 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       }
       if (route is TransitionRoute<void>) await route.completed;
     }
+  }
+
+  Future<void> _dismissInteractionOverlay() async {
+    final overlay = _interactionOverlay;
+    if (overlay == null) return;
+    if (overlay.isActive) {
+      final owner = overlay.navigator;
+      if (owner == null) throw StateError('menu_owner_missing');
+      if (overlay.isCurrent) {
+        owner.pop();
+      } else {
+        owner.removeRoute(overlay);
+      }
+    }
+    await overlay.completed;
+    if (overlay.isActive) throw StateError('menu_did_not_exit');
+    if (identical(_interactionOverlay, overlay)) _interactionOverlay = null;
   }
 
   @override

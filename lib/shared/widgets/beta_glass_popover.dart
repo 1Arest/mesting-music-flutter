@@ -235,6 +235,7 @@ class _RenderLiquidMenu extends RenderBox
   BetaMenuMotion motion;
   double? _cachedProgress;
   List<Rect>? _cachedBounds;
+  List<Matrix4>? _cachedTransforms;
   void update(
     Animation<double> next,
     BetaMenuLayout nextLayout,
@@ -251,6 +252,7 @@ class _RenderLiquidMenu extends RenderBox
     reduced = nextReduced;
     motion = nextMotion;
     _cachedBounds = null;
+    _cachedTransforms = null;
     markNeedsPaint();
   }
 
@@ -276,6 +278,7 @@ class _RenderLiquidMenu extends RenderBox
   @override
   void performLayout() {
     _cachedBounds = null;
+    _cachedTransforms = null;
     size = constraints.biggest;
     var index = 0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
@@ -294,6 +297,7 @@ class _RenderLiquidMenu extends RenderBox
       return _cachedBounds!;
     }
     _cachedProgress = progress;
+    _cachedTransforms = null;
     final menuSize = firstChild!.size;
     final target = _menuLayout.getPositionForChild(size, menuSize) & menuSize;
     final start = _menuLayout.sourceBounds(size, menuSize);
@@ -340,15 +344,25 @@ class _RenderLiquidMenu extends RenderBox
     for (var node = firstChild; node != child; node = childAfter(node!)) {
       index++;
     }
-    final rect = _bounds()[index];
-    return Matrix4.identity()
-      ..translateByDouble(rect.left, rect.top, 0, 1)
-      ..scaleByDouble(
-        rect.width / child.size.width,
-        rect.height / child.size.height,
-        1,
-        1,
-      );
+    final bounds = _bounds();
+    // Glass geometry, painting and hit-testing query these same transforms
+    // repeatedly in one frame. Reuse exact matrices until progress/layout
+    // changes; no rounded geometry, sampled backdrop or lower quality involved.
+    return (_cachedTransforms ??= [
+      for (
+        var node = firstChild, i = 0;
+        node != null;
+        node = childAfter(node), i++
+      )
+        Matrix4.identity()
+          ..translateByDouble(bounds[i].left, bounds[i].top, 0, 1)
+          ..scaleByDouble(
+            bounds[i].width / node.size.width,
+            bounds[i].height / node.size.height,
+            1,
+            1,
+          ),
+    ])[index];
   }
 
   @override
@@ -531,6 +545,9 @@ Future<T?> showBetaGlassPopover<T>({
   bool fromInnerEdge = false,
   bool requestFocus = true,
   BetaMenuMotion motion = BetaMenuMotion.standard,
+  // The caller may lease this exact installed route for cancellation/cleanup.
+  // It must not infer the owner from a nested page's Navigator or visible text.
+  ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
 }) async {
   appHaptic(context, AppHapticEvent.impact);
   final media = MediaQuery.of(context);
@@ -555,7 +572,9 @@ Future<T?> showBetaGlassPopover<T>({
       ),
     ),
   );
-  final value = await Navigator.of(context, rootNavigator: true).push<T>(route);
+  final pending = Navigator.of(context, rootNavigator: true).push<T>(route);
+  onRouteCreated?.call(route);
+  final value = await pending;
   await route.completed;
   return value;
 }

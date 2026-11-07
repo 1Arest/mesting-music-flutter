@@ -147,6 +147,8 @@ class PlatformRecommendedSection extends ConsumerWidget {
             ),
           ),
         RetainedPlatformSnapshot(
+          cacheKey:
+              'home-recommend-${newSongs ? 'new' : kind?.name ?? 'daily'}',
           value: value,
           artwork: (tracks) => tracks.map((track) => track.coverAsset),
           loading: () => const PlatformFeedbackState(loading: true),

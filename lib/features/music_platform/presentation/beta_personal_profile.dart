@@ -43,61 +43,81 @@ class BetaPersonalProfile extends ConsumerStatefulWidget {
   const BetaPersonalProfile({super.key});
   @override
   ConsumerState<BetaPersonalProfile> createState() =>
-      _BetaPersonalProfileState();
+      BetaPersonalProfileState();
 }
 
-class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
+class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
+  bool _menuOpen = false;
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
   Future<void> _sign() async => _open(const UnifiedRewardPage());
 
-  Future<void> _account() async {
-    final action = await showLiquidGlassBottomSheet<String>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (sheet) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final entry in [
-              ('edit', '编辑个人资料', CupertinoIcons.person_crop_circle),
-              ('switch', '切换音乐平台', CupertinoIcons.arrow_2_circlepath),
-              ('kugouAccounts', '切换酷狗账号', CupertinoIcons.person_2),
-              if (ref.read(platformAccountProvider).value?.platform ==
-                  MusicPlatform.kugou)
-                ('authorizeKugou', '验证酷狗官方功能', CupertinoIcons.checkmark_shield),
-              (
-                'account',
-                '管理当前账号',
-                CupertinoIcons.person_crop_circle_badge_checkmark,
-              ),
-            ])
-              ListTile(
-                leading: Icon(entry.$3),
-                title: Text(entry.$2),
-                onTap: () => Navigator.pop(sheet, entry.$1),
-              ),
-          ],
+  /// Shared by the real button and the fixed interaction diagnostic. Never
+  /// enqueue duplicate sheets when two taps arrive before the barrier paints.
+  Future<void> openAccountMenu({
+    ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
+  }) async {
+    if (_menuOpen) return;
+    _menuOpen = true;
+    try {
+      final action = await showLiquidGlassBottomSheet<String>(
+        context: context,
+        useRootNavigator: true,
+        useSafeArea: true,
+        waitForExit: true,
+        onRouteCreated: onRouteCreated,
+        builder: (sheet) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final entry in [
+                ('edit', '编辑个人资料', CupertinoIcons.person_crop_circle),
+                ('switch', '切换音乐平台', CupertinoIcons.arrow_2_circlepath),
+                ('kugouAccounts', '切换酷狗账号', CupertinoIcons.person_2),
+                if (ref.read(platformAccountProvider).value?.platform ==
+                    MusicPlatform.kugou)
+                  (
+                    'authorizeKugou',
+                    '验证酷狗官方功能',
+                    CupertinoIcons.checkmark_shield,
+                  ),
+                (
+                  'account',
+                  '管理当前账号',
+                  CupertinoIcons.person_crop_circle_badge_checkmark,
+                ),
+              ])
+                ListTile(
+                  leading: Icon(entry.$3),
+                  title: Text(entry.$2),
+                  onTap: () => Navigator.pop(sheet, entry.$1),
+                ),
+            ],
+          ),
         ),
-      ),
-    );
-    if (!mounted) return;
-    if (action == 'edit') _open(const PlatformProfileEditPage());
-    if (action == 'switch') _open(const MusicPlatformSwitchPage());
-    if (action == 'kugouAccounts') _open(const KugouAccountsPage());
-    if (action == 'authorizeKugou') {
-      final session = ref.read(platformAccountProvider).value;
-      if (session?.platform == MusicPlatform.kugou) {
-        await openKugouStandardAuthorization(context, session!);
+      );
+      if (!mounted) return;
+      if (action == 'edit') _open(const PlatformProfileEditPage());
+      if (action == 'switch') {
+        await openMusicPlatformSwitch(context);
+        return;
       }
-    }
-    if (action == 'account') {
-      final session = ref.read(platformAccountProvider).value;
-      if (session != null) {
-        _open(PlatformAccountPage(platform: session.platform));
+      if (action == 'kugouAccounts') _open(const KugouAccountsPage());
+      if (action == 'authorizeKugou') {
+        final session = ref.read(platformAccountProvider).value;
+        if (session?.platform == MusicPlatform.kugou) {
+          await openKugouStandardAuthorization(context, session!);
+        }
       }
+      if (action == 'account') {
+        final session = ref.read(platformAccountProvider).value;
+        if (session != null) {
+          _open(PlatformAccountPage(platform: session.platform));
+        }
+      }
+    } finally {
+      _menuOpen = false;
     }
   }
 
@@ -115,7 +135,7 @@ class _BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
             key: const ValueKey('profile-heading-sliver'),
             child: _PersonalHeading(
               signedIn: session != null,
-              onAccount: _account,
+              onAccount: openAccountMenu,
             ),
           ),
           _ProfilePart(

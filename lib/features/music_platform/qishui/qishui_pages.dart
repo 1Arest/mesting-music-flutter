@@ -16,6 +16,8 @@ import 'qishui_account_page.dart';
 import 'qishui_playlist_page.dart';
 import 'qishui_playlist_dialogs.dart';
 import '../presentation/platform_feedback.dart';
+import '../presentation/platform_display_snapshots.dart';
+import '../presentation/platform_home_visit.dart';
 import 'qishui_effects_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +28,8 @@ import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
+import '../../../shared/widgets/beta_entrance_readiness.dart';
+import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/track_artwork.dart';
 import '../music_platform_providers.dart';
@@ -54,9 +58,15 @@ class QishuiRootSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final account = ref.watch(platformAccountProvider);
-    if (ref.watch(usesQishuiProvider)) return QishuiRootPage(root);
+    final visit = ref.watch(platformHomeVisitProvider);
+    Widget surface(Widget child) => PlatformRootSurface(
+      key: ValueKey((platformDisplayOwner(account.value), visit, root)),
+      home: root == QishuiRoot.discover,
+      child: child,
+    );
+    if (ref.watch(usesQishuiProvider)) return surface(QishuiRootPage(root));
     if (ref.watch(betaAccountChoiceProvider) != BetaAccountChoice.qishui) {
-      return child;
+      return surface(child);
     }
     // A pending/broken Soda restore must not mount legacy providers, flash
     // another platform's catalog or silently create a guest Kugou transport.
@@ -89,9 +99,7 @@ class QishuiRootSwitch extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   BetaGlassButton(
-                    onPressed: () => Navigator.of(context).push(
-                      betaContentRoute<void>(const MusicPlatformSwitchPage()),
-                    ),
+                    onPressed: () => openMusicPlatformSwitch(context),
                     child: const Text('切换音乐平台'),
                   ),
                 ],
@@ -133,6 +141,71 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   late final QishuiRepository _music = ref.read(qishuiRepositoryProvider);
   late Future<Object> _content = _load();
   Object? _lastContent;
+  late final _displayOwner = platformDisplayOwner(
+    ref.read(platformAccountProvider).value,
+  );
+  late final _snapshots = ref.read(platformDisplaySnapshotsProvider);
+  Object? _homeCandidate;
+  int _homeGeneration = 0;
+
+  Iterable<String> _homeCovers(Object value) => value is List<QishuiPlaylist>
+      ? value.map((v) => v.cover)
+      : value is List<Track>
+      ? value.map((v) => v.coverAsset)
+      : const <String>[];
+
+  void _rememberHome(Object value) => _snapshots.remember(
+    _displayOwner,
+    'qishui-home',
+    value,
+    _homeCovers(value),
+  );
+
+  Object? _homeValue(Object? incoming) {
+    if (incoming == null) return _lastContent;
+    if (_lastContent == null) {
+      _lastContent = incoming;
+      _rememberHome(incoming);
+    } else if (!identical(_lastContent, incoming) &&
+        !identical(_homeCandidate, incoming) &&
+        TickerMode.valuesOf(context).enabled &&
+        BetaEntranceReadiness.of(context) &&
+        BetaTabVisibility.settledOf(context)) {
+      _homeCandidate = incoming;
+      unawaited(_prepareHome(incoming, ++_homeGeneration));
+    }
+    return _lastContent;
+  }
+
+  Future<void> _prepareHome(Object incoming, int generation) async {
+    bool ready;
+    try {
+      ready = await _snapshots.prepareReplacement(
+        _homeCovers(_lastContent!),
+        _homeCovers(incoming),
+      );
+    } on Object {
+      ready = false;
+    }
+    if (!mounted ||
+        !_music.current ||
+        generation != _homeGeneration ||
+        !ready) {
+      return;
+    }
+    _rememberHome(incoming);
+    setState(() => _lastContent = incoming);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.root == QishuiRoot.discover) {
+      _lastContent = _snapshots.read<Object>(_displayOwner, 'qishui-home');
+      _snapshots.seedArtwork(_displayOwner, 'qishui-home');
+    }
+  }
+
   QishuiMineTab _mineTab = QishuiMineTab.playlists;
   late Future<Object> _profile = ref.read(
     qishuiBrowseProvider('profile').future,
@@ -150,6 +223,7 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
       : ref.read(qishuiBrowseProvider(_browsePage).future);
   @override
   void dispose() {
+    _homeGeneration++;
     if (!_abort.isCompleted) _abort.complete();
     super.dispose();
   }
@@ -273,7 +347,7 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
               onAccount: () => _open(const QishuiAccountPage()),
               onMembership: () => _open(const QishuiWelfarePage()),
               onEffects: () => _open(const QishuiEffectsPage()),
-              onSwitchPlatform: () => _open(const MusicPlatformSwitchPage()),
+              onSwitchPlatform: () => openMusicPlatformSwitch(context),
               onSettings: () => context.push('/music/settings'),
             ),
           ),
@@ -423,7 +497,10 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                     final currentValue = cached.isReloading
                         ? null
                         : cached.value;
-                    final value = currentValue ?? snapshot.data ?? _lastContent;
+                    final incoming = currentValue ?? snapshot.data;
+                    final value = widget.root == QishuiRoot.discover
+                        ? _homeValue(incoming)
+                        : incoming ?? _lastContent;
                     // The startup Future may have completed with a disk miss
                     // before the same provider starts its normal live read.
                     // Only the provider's current error is authoritative;
@@ -434,7 +511,9 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                             cached.error is BrowseSnapshotUnavailable
                         ? null
                         : cached.error;
-                    if (value != null) _lastContent = value;
+                    if (value != null && widget.root != QishuiRoot.discover) {
+                      _lastContent = value;
+                    }
                     if (value == null) {
                       if (error != null) {
                         return SliverToBoxAdapter(

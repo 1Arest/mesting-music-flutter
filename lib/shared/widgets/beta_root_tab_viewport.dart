@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'beta_page_route_observer.dart';
 import 'beta_swipe_pages.dart';
 import 'beta_tab_motion.dart';
@@ -129,10 +130,12 @@ class BetaRootTabViewportState extends State<BetaRootTabViewport>
                   key: ValueKey(i),
                   child: Offstage(
                     offstage: !endpoints.contains(i),
-                    child: AnimatedBuilder(
+                    child: _TabPaintMotion(
                       animation: endpoints.contains(i)
                           ? _controller
                           : kAlwaysCompleteAnimation,
+                      geometry: _geometry,
+                      index: i,
                       // Keep the actual page below a stable paint boundary.
                       // Motion changes its transform, not its widget/layout tree.
                       child: RepaintBoundary(
@@ -143,14 +146,6 @@ class BetaRootTabViewportState extends State<BetaRootTabViewport>
                           child: widget.children[i],
                         ),
                       ),
-                      builder: (_, child) => Transform.translate(
-                        offset: Offset(
-                          (_geometry.positions(_progress)[i] ?? 0) *
-                              constraints.maxWidth,
-                          0,
-                        ),
-                        child: child,
-                      ),
                     ),
                   ),
                 ),
@@ -159,6 +154,93 @@ class BetaRootTabViewportState extends State<BetaRootTabViewport>
       ),
     );
   }
+}
+
+/// Transform changes belong to painting. Updating Transform widgets through
+/// AnimatedBuilder also ran two element update paths per tick; keeping the
+/// matrix here preserves live glass's applyPaintTransform queries and hit tests
+/// without rebuilding or laying out either retained page during motion.
+class _TabPaintMotion extends SingleChildRenderObjectWidget {
+  const _TabPaintMotion({
+    required this.animation,
+    required this.geometry,
+    required this.index,
+    required super.child,
+  });
+  final Animation<double> animation;
+  final BetaTabMotion geometry;
+  final int index;
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderTabPaintMotion(animation, geometry, index);
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderTabPaintMotion renderObject,
+  ) => renderObject.update(animation, geometry, index);
+}
+
+class _RenderTabPaintMotion extends RenderProxyBox {
+  _RenderTabPaintMotion(this.animation, this.geometry, this.index);
+  Animation<double> animation;
+  BetaTabMotion geometry;
+  int index;
+  double get _dx =>
+      geometry.position(
+        index,
+        Curves.easeInOutCubic.transform(animation.value),
+      ) *
+      size.width;
+  void _changed() {
+    markNeedsPaint();
+    markNeedsSemanticsUpdate();
+  }
+
+  void update(Animation<double> next, BetaTabMotion motion, int tab) {
+    if (animation != next) {
+      if (attached) animation.removeListener(_changed);
+      animation = next;
+      if (attached) animation.addListener(_changed);
+    }
+    geometry = motion;
+    index = tab;
+    _changed();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    animation.addListener(_changed);
+  }
+
+  @override
+  void detach() {
+    animation.removeListener(_changed);
+    super.detach();
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) =>
+      transform.translateByDouble(_dx, 0, 0, 1);
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+    context.pushTransform(
+      needsCompositing,
+      offset,
+      Matrix4.translationValues(_dx, 0, 0),
+      (context, offset) => context.paintChild(child!, offset),
+    );
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      child != null &&
+      result.addWithPaintOffset(
+        offset: Offset(_dx, 0),
+        position: position,
+        hitTest: (result, local) => child!.hitTest(result, position: local),
+      );
 }
 
 class _RetainedTab extends StatefulWidget {
