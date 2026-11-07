@@ -33,6 +33,8 @@ Future<NeteaseAudioProbe> inspectNeteaseAudio(
   Map<String, String> headers = const {},
   bool requireLossless = false,
   Duration? expectedDuration,
+  int prefixBytes = 1024,
+  Future<void>? abortTrigger,
 }) async {
   final uri = Uri.tryParse(url);
   if (uri == null ||
@@ -43,10 +45,10 @@ Future<NeteaseAudioProbe> inspectNeteaseAudio(
   }
   final response = await client
       .send(
-        http.Request('GET', uri)
+        http.AbortableRequest('GET', uri, abortTrigger: abortTrigger)
           ..headers.addAll({
             ...publicAudioHeaders(headers),
-            'Range': 'bytes=0-1023',
+            'Range': 'bytes=0-${prefixBytes - 1}',
           }),
       )
       .timeout(const Duration(seconds: 8));
@@ -68,9 +70,9 @@ Future<NeteaseAudioProbe> inspectNeteaseAudio(
       return NeteaseAudioProbe('media_too_short', totalBytes: total);
     }
     final prefix = <int>[];
-    while (prefix.length < 1024 &&
+    while (prefix.length < prefixBytes &&
         await iterator.moveNext().timeout(const Duration(seconds: 8))) {
-      prefix.addAll(iterator.current.take(1024 - prefix.length));
+      prefix.addAll(iterator.current.take(prefixBytes - prefix.length));
     }
     if (prefix.isEmpty) return const NeteaseAudioProbe('media_empty');
     final opening = utf8

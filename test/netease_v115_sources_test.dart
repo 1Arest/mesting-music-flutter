@@ -186,6 +186,7 @@ void main() {
       c.invalidate(neteasePlaybackOptionsProvider);
       expect(c.read(neteasePlaybackOptionsProvider).toJson(), options.toJson());
       final invalid = NeteasePlaybackOptions.fromJson({
+        'lxSourcesVersion': 1,
         'sources': ['youtube', 'gdstudio', 'kuwo'],
         'minimumBitrate': -5,
       });

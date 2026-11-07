@@ -24,6 +24,17 @@ class NeteaseSourceClient extends http.BaseClient {
   final Set<Completer<void>> _pending = {};
   bool _closed = false;
   bool get isClosed => _closed;
+  final _closeListeners = <void Function()>[];
+
+  /// Native/script adapters share this attempt's cancellation without owning
+  /// or closing the resolver's shared HTTP pool.
+  void onClose(void Function() callback) {
+    if (_closed) {
+      callback();
+    } else {
+      _closeListeners.add(callback);
+    }
+  }
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
@@ -92,6 +103,10 @@ class NeteaseSourceClient extends http.BaseClient {
   void close() {
     if (_closed) return;
     _closed = true;
+    for (final callback in _closeListeners) {
+      callback();
+    }
+    _closeListeners.clear();
     for (final abort in _pending.toList()) {
       if (!abort.isCompleted) abort.complete();
     }

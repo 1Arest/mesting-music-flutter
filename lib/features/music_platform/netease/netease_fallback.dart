@@ -22,6 +22,8 @@ import 'fallback/netease_public_sources.dart';
 import 'fallback/netease_kuwo_source.dart';
 import 'fallback/netease_audio_probe.dart';
 import 'fallback/netease_source_transport.dart';
+import 'fallback/lx_netease_source.dart';
+import 'fallback/lx_script_engine.dart';
 export 'fallback/netease_fallback_source.dart';
 export 'fallback/netease_audio_probe.dart';
 export 'fallback/netease_source_transport.dart';
@@ -323,6 +325,7 @@ class NeteaseFallbackResolver {
     this.diagnostics,
     this.sourceTimeout = const Duration(seconds: 10),
     this.groupTimeout = const Duration(seconds: 20),
+    this.orderedParallelism = 1,
     this.sourceFactories = const [],
     this.sessionCurrent,
   });
@@ -331,13 +334,18 @@ class NeteaseFallbackResolver {
   final NeteasePlaybackOptions options;
   final NeteaseFallbackDiagnostics? diagnostics;
   final Duration sourceTimeout, groupTimeout;
+  final int orderedParallelism;
   final List<NeteaseSourceFactory> sourceFactories;
   final bool Function()? sessionCurrent;
   final Map<String, ({Track track, DateTime until})> _cache = {};
   bool _disposed = false;
+  final _activeCancellations = <void Function()>{};
   void clearCache() => _cache.clear();
   void invalidate() {
     _disposed = true;
+    for (final cancel in _activeCancellations.toList()) {
+      cancel();
+    }
     clearCache();
   }
 
@@ -346,6 +354,7 @@ class NeteaseFallbackResolver {
     required bool Function() current,
     String? requiredQuality,
     String? onlySource,
+    Set<String> excludedSources = const {},
     String? requiredRecordingId,
     Future<void>? abortTrigger,
   }) async {
@@ -364,6 +373,7 @@ class NeteaseFallbackResolver {
       }
     }
 
+    _activeCancellations.add(cancel);
     if (abortTrigger != null) unawaited(abortTrigger.then((_) => cancel()));
     try {
       return await _resolve(
@@ -376,12 +386,17 @@ class NeteaseFallbackResolver {
         requiredQuality: requiredQuality,
         requiredRecordingId: requiredRecordingId,
         activeSources: [...sources, ...clients.keys]
-            .where((source) => onlySource == null || source.label == onlySource)
+            .where(
+              (source) =>
+                  !excludedSources.contains(source.label) &&
+                  (onlySource == null || source.label == onlySource),
+            )
             .toList(),
         clients: clients,
         cacheProbeClient: cacheProbe,
       );
     } finally {
+      _activeCancellations.remove(cancel);
       cancel();
     }
   }
@@ -540,12 +555,38 @@ class NeteaseFallbackResolver {
                 ? (original.duration.inSeconds * bitrate / 8 * .4).round()
                 : 0,
             expectedDuration: original.duration,
+            prefixBytes: source is LxNeteaseSource ? 64 * 1024 : 1024,
           );
           if (!media!.playable) {
             outcome = media!.reason;
             continue;
           }
-          if (source is AccountKugouFallback) {
+          if (source is LxNeteaseSource) {
+            final measuredDuration =
+                media!.duration ??
+                (media!.bitrate > 0 && media!.totalBytes != null
+                    ? Duration(
+                        milliseconds:
+                            (media!.totalBytes! * 8000 / media!.bitrate)
+                                .round(),
+                      )
+                    : null);
+            if (measuredDuration == null ||
+                original.duration <= Duration.zero) {
+              outcome = 'media_duration_unknown';
+              continue;
+            }
+            final tolerance = Duration(
+              milliseconds: (original.duration.inMilliseconds * .015)
+                  .round()
+                  .clamp(3000, 5000),
+            );
+            if ((measuredDuration - original.duration).abs() > tolerance) {
+              outcome = 'recording_duration_mismatch';
+              continue;
+            }
+          }
+          if (source is AccountKugouFallback || source is LxNeteaseSource) {
             // Account adapters may echo the requested tier. Measured MP3
             // frames and FLAC STREAMINFO, rather than that label, own the badge.
             bitrate = media!.bitrate > 0
@@ -555,9 +596,10 @@ class NeteaseFallbackResolver {
             bitrate = media!.bitrate;
           }
           final delivered =
-              source is AccountKugouFallback && media!.format == 'flac'
+              (source is AccountKugouFallback || source is LxNeteaseSource) &&
+                  media!.format == 'flac'
               ? (media!.hiRes ? 'high' : 'flac')
-              : source is AccountKugouFallback
+              : source is AccountKugouFallback || source is LxNeteaseSource
               ? (media!.bitrate > 0
                     ? (media!.bitrate > 220000 ? '320' : '128')
                     : '')
@@ -653,8 +695,14 @@ class NeteaseFallbackResolver {
         .toList();
     Track? result = accountResult;
     if (result == null && options.strategy == NeteaseSourceStrategy.ordered) {
-      for (final source in newer) {
-        result = await attempt(source);
+      for (
+        var index = 0;
+        index < newer.length;
+        index += orderedParallelism.clamp(1, 2)
+      ) {
+        final batch = newer.skip(index).take(orderedParallelism.clamp(1, 2));
+        final ready = await Future.wait(batch.map(attempt));
+        result = ready.whereType<Track>().firstOrNull;
         if (result != null || !current()) break;
       }
     } else if (result == null) {
@@ -713,6 +761,7 @@ final neteaseFallbackResolverProvider = Provider<NeteaseFallbackResolver>((
   ref.onDispose(client.close);
   final server = ref.watch(musicServerProvider);
   final bugpkGate = BugpkRequestGate();
+  final lxPool = productionLxEnginePool;
   final account = ref.watch(retainedKugouScopeProvider);
   final resolver = NeteaseFallbackResolver(
     const [],
@@ -755,11 +804,22 @@ final neteaseFallbackResolverProvider = Provider<NeteaseFallbackResolver>((
         NeteaseSourceFactory(BilibiliAudioSource.new),
       if (options.enabledSources.contains(NeteasePublicSource.bilivideo))
         NeteaseSourceFactory(BilibiliVideoSource.new),
+      for (final source
+          in options.enabledSources.toList()
+            ..sort((a, b) => a.index.compareTo(b.index)))
+        if (source.lx != null)
+          NeteaseSourceFactory(
+            (scoped) => LxNeteaseSource(source.lx!, scoped, pool: lxPool),
+          ),
       NeteaseSourceFactory(
         (scoped) => BugpkNeteaseFallback(scoped, gate: bugpkGate),
       ),
     ],
     options: options,
+    // More adapters need a fair, bounded opportunity. Probe pairs preserve
+    // source preference order while keeping only two workers active.
+    orderedParallelism: 2,
+    groupTimeout: const Duration(seconds: 90),
     diagnostics: ref.watch(neteaseFallbackDiagnosticsProvider),
   );
   ref.onDispose(resolver.invalidate);
@@ -843,12 +903,17 @@ Future<Track> resolveNeteaseTrack({
   required PlatformAudioQuality quality,
   bool requireQuality = false,
   NeteaseTrackSource selectedSource = NeteaseTrackSource.automatic,
+  bool fallbackOnSelectedFailure = true,
   Future<void>? abortTrigger,
 }) async {
-  if (quality.neteaseOnly && requireQuality && selectedSource.adapter != null) {
+  if (quality.neteaseOnly &&
+      requireQuality &&
+      selectedSource.adapter != null &&
+      !fallbackOnSelectedFailure) {
     throw const MusicPlatformException('此档位仅由网易云官方音源提供，请选择自动或网易云官方');
   }
-  if (selectedSource.adapter != null) {
+  if (selectedSource.adapter != null &&
+      !(quality.neteaseOnly && requireQuality)) {
     final selected = await fallback.resolve(
       track.copyWith(playbackQuality: quality.code),
       current: current,
@@ -857,12 +922,12 @@ Future<Track> resolveNeteaseTrack({
       abortTrigger: abortTrigger,
     );
     if (!current()) throw const MusicPlatformException('播放请求已取消或账号已变化');
-    if (selected == null) {
+    if (selected == null && !fallbackOnSelectedFailure) {
       throw MusicPlatformException(
         '${selectedSource.label}暂未提供这首歌的完整版本，请重新检测或选择自动',
       );
     }
-    return selected;
+    if (selected != null) return selected;
   }
   Track? original;
   Object? failure;
@@ -885,7 +950,8 @@ Future<Track> resolveNeteaseTrack({
       {'301', '302', '415', '405', '460'}.contains(failure.code)) {
     throw failure;
   }
-  if (selectedSource == NeteaseTrackSource.official) {
+  if (selectedSource == NeteaseTrackSource.official &&
+      !fallbackOnSelectedFailure) {
     if (original != null && !original.isPreview) return original;
     throw failure ?? const MusicPlatformException('网易云官方当前未提供完整音频');
   }
@@ -894,6 +960,9 @@ Future<Track> resolveNeteaseTrack({
       track.copyWith(playbackQuality: quality.code),
       current: current,
       requiredQuality: requireQuality ? quality.code : null,
+      excludedSources: {
+        if (selectedSource.adapter != null) selectedSource.adapter!,
+      },
       abortTrigger: abortTrigger,
     );
     if (resolved != null) return resolved;

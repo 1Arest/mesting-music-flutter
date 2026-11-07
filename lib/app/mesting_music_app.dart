@@ -2,6 +2,7 @@ import '../shared/widgets/beta_scroll_behavior.dart';
 import '../features/music_platform/domain/platform_session.dart';
 import '../features/music_platform/platform_backend_providers.dart';
 import '../features/music_platform/netease/netease_fallback.dart';
+import '../features/downloads/download_source_coordinator.dart';
 import '../features/music_platform/netease/netease_listening_reporter.dart';
 import '../features/music_platform/netease/together/netease_together_controller.dart';
 import 'dart:async';
@@ -173,9 +174,13 @@ class MestingMusicApp extends ConsumerWidget {
               child: AppUpdateCoordinator(
                 navigatorKey: appRootNavigatorKey,
                 child: SocialAttentionCoordinator(
-                  child: LyricsOverlayCoordinator(
-                    child: SongListToolsHost(
-                      child: child ?? const SizedBox.shrink(),
+                  child: DownloadSourceCoordinator(
+                    navigatorKey: appRootNavigatorKey,
+                    enabled: DistributionChannel.isBeta,
+                    child: LyricsOverlayCoordinator(
+                      child: SongListToolsHost(
+                        child: child ?? const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),

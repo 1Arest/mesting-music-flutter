@@ -8,6 +8,7 @@ import '../music_platform/data/platform_quality_catalog.dart';
 import '../music_platform/domain/platform_audio_quality.dart';
 import '../music_platform/music_platform_providers.dart';
 import '../music_platform/platform_backend_providers.dart';
+import '../music_platform/netease/netease_fallback.dart';
 
 /// Unlike playback's local-SVIP attempt list, download choices come only from
 /// this recording's actual resource metadata. Entitlement/address resolution is
@@ -70,7 +71,24 @@ class _DownloadQualitySheetState extends ConsumerState<_DownloadQualitySheet> {
         final provider = downloadSongQualitiesProvider(track.id);
         final subscription = ref.listenManual(provider, (_, _) {});
         try {
-          final options = await ref.read(provider.future);
+          Set<PlatformAudioQuality> options;
+          try {
+            options = await ref.read(provider.future);
+          } catch (_) {
+            if (track.source != TrackSource.netease ||
+                !ref.read(neteaseFallbackEnabledProvider)) {
+              rethrow;
+            }
+            options = {};
+          }
+          // Official metadata may advertise only preview/no tiers. These four
+          // are selectable requests for alternate sources, not a promise of
+          // entitlement or actual availability. The queue still tries official
+          // first and requires a user choice before using any other resolver.
+          if (track.source == TrackSource.netease &&
+              ref.read(neteaseFallbackEnabledProvider)) {
+            options = {...options, ...PlatformAudioQuality.values.take(4)};
+          }
           common = common == null
               ? {...options}
               : common!.intersection(options);
@@ -161,7 +179,7 @@ class _DownloadQualitySheetState extends ConsumerState<_DownloadQualitySheet> {
                         ),
                       ),
                     const Text(
-                      '下载仍需平台授权；未返回所选音质时会提示失败，可重新选择。',
+                      '优先下载官方完整版；官方不可用时可手动选择其他下载音源。实际格式与音质将再次核验。',
                       style: TextStyle(fontSize: 12),
                     ),
                   ],

@@ -1,8 +1,0 @@
-Stopping: com.mesting.music.beta
-Starting: Intent { cmp=com.mesting.music.beta/com.mesting.music.CoralLauncher }
-Status: ok
-LaunchState: COLD
-Activity: com.mesting.music.beta/com.mesting.music.CoralBrandActivity
-TotalTime: 749
-WaitTime: 768
-Complete

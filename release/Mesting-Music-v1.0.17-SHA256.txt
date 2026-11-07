@@ -1,2 +1,0 @@
-4bef196989f427680e37e1f671dab9da3b4574ae3af91629f9f8f9c82e1a3fe0  release/Mesting-Music-v1.0.17.apk
-c5872c28755c539dbdde3650edd85f89a3d8bf050e45769189149151a6a0756c  Mesting-Music-v1.0.17-source.zip

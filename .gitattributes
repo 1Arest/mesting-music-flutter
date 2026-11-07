@@ -1,8 +1,0 @@
-# Engine patch hashes and Linux entry points must survive a Windows checkout.
-/third_party/flutter_engine/release-opengles.patch text eol=lf
-/third_party/flutter_engine/android-release/engine-manifest.json text eol=lf
-/third_party/flutter_engine/android-release/*.jar -text
-/third_party/flutter_engine/android-release/assets/LICENSE.flutter-engine.txt -text
-/tool/build_flutter_engine_release.sh text eol=lf
-/tool/check_flutter_engine_selector.py text eol=lf
-/tool/export_flutter_engine_release.py text eol=lf

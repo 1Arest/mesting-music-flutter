@@ -18,9 +18,9 @@ import '../music_platform/music_platform_providers.dart';
 import '../music_platform/platform_backend_providers.dart';
 import '../music_platform/platform_quality_providers.dart';
 import '../music_platform/domain/platform_audio_quality.dart';
-import '../music_platform/netease/netease_music_repository.dart';
 import '../music_platform/netease/netease_fallback.dart';
 import '../search/search_providers.dart';
+import 'netease_download_resolver.dart';
 
 enum AudioDownloadPhase {
   queued,
@@ -31,6 +31,7 @@ enum AudioDownloadPhase {
   failed,
   cancelled,
   paused,
+  awaitingSource,
 }
 
 class AudioDownloadTask {
@@ -45,12 +46,17 @@ class AudioDownloadTask {
     this.error = '',
     this.requestedQuality,
     this.validator = '',
+    this.downloadSource,
   });
   final String id, owner, uri, error;
   final String validator;
   final Track track;
   // Immutable per task; playback preferences may change while it is queued.
   final PlatformAudioQuality? requestedQuality;
+
+  /// Explicit download-only choice; null means official first. Never inherit
+  /// the per-song playback selection or persist a temporary signed URL here.
+  final NeteaseTrackSource? downloadSource;
   final AudioDownloadPhase phase;
   final int received, total;
   AudioDownloadTask copy({
@@ -61,11 +67,13 @@ class AudioDownloadTask {
     String? uri,
     String? error,
     String? validator,
+    NeteaseTrackSource? downloadSource,
   }) => AudioDownloadTask(
     id: id,
     owner: owner,
     track: track ?? this.track,
     requestedQuality: requestedQuality,
+    downloadSource: downloadSource ?? this.downloadSource,
     phase: phase ?? this.phase,
     received: received ?? this.received,
     total: total ?? this.total,
@@ -84,6 +92,7 @@ class AudioDownloadTask {
     'error': error,
     'requestedQuality': requestedQuality?.code,
     'validator': validator,
+    'downloadSource': downloadSource?.name,
   };
 }
 
@@ -109,6 +118,8 @@ typedef ResolveDownload = Future<String> Function(Track track);
 typedef ResolveDownloadMedia = Future<Track> Function(Track track);
 typedef ResolveRequestedDownloadMedia =
     Future<Track> Function(Track track, PlatformAudioQuality? quality);
+typedef ResolveDownloadTaskMedia =
+    Future<Track> Function(AudioDownloadTask task, Future<void> abortTrigger);
 typedef PublishDownload =
     Future<String> Function(
       File file,
@@ -125,6 +136,7 @@ class AudioDownloadManager extends ChangeNotifier {
     this.resolve,
     this.resolveMedia,
     this.resolveRequestedMedia,
+    this.resolveTaskMedia,
     required this.publish,
     required this.currentOwner,
     required this.directory,
@@ -135,6 +147,7 @@ class AudioDownloadManager extends ChangeNotifier {
                resolve,
                resolveMedia,
                resolveRequestedMedia,
+               resolveTaskMedia,
              ].where((r) => r != null).length ==
              1,
        ),
@@ -149,6 +162,7 @@ class AudioDownloadManager extends ChangeNotifier {
   final ResolveDownload? resolve;
   final ResolveDownloadMedia? resolveMedia;
   final ResolveRequestedDownloadMedia? resolveRequestedMedia;
+  final ResolveDownloadTaskMedia? resolveTaskMedia;
   final PublishDownload publish;
   final String? Function() currentOwner;
   final Future<Directory> Function() directory;
@@ -290,6 +304,7 @@ class AudioDownloadManager extends ChangeNotifier {
               AudioDownloadPhase.downloading,
               AudioDownloadPhase.saving,
               AudioDownloadPhase.paused,
+              AudioDownloadPhase.awaitingSource,
             }.contains(t.phase))
           (t.track.id, t.requestedQuality),
     };
@@ -396,7 +411,8 @@ class AudioDownloadManager extends ChangeNotifier {
       for (final task in List<AudioDownloadTask>.of(_tasks)) {
         if (task.phase == AudioDownloadPhase.queued ||
             task.phase == AudioDownloadPhase.resolving ||
-            task.phase == AudioDownloadPhase.downloading) {
+            task.phase == AudioDownloadPhase.downloading ||
+            task.phase == AudioDownloadPhase.awaitingSource) {
           cancel(task.id);
         } else if (task.phase == AudioDownloadPhase.saving) {
           // An account token can change without changing ownerId. Invalidate a
@@ -444,6 +460,31 @@ class AudioDownloadManager extends ChangeNotifier {
     unawaited(_pump());
   }
 
+  /// Re-enter the queue only after a visible, explicit user choice. Discard
+  /// any old partial: bytes from two source identities cannot be concatenated.
+  void selectDownloadSource(String id, NeteaseTrackSource source) {
+    final task = taskById(id);
+    if (task == null ||
+        task.owner != currentOwner() ||
+        _disposed ||
+        task.phase != AudioDownloadPhase.awaitingSource ||
+        source == NeteaseTrackSource.automatic) {
+      return;
+    }
+    _resume.remove(id);
+    _replace(
+      task.copy(
+        phase: AudioDownloadPhase.queued,
+        received: 0,
+        total: 0,
+        error: '',
+        validator: '',
+        downloadSource: source,
+      ),
+    );
+    unawaited(_pump());
+  }
+
   bool _current(AudioDownloadTask task, int attempt) =>
       _attempts[task.id] == attempt &&
       !_disposed &&
@@ -481,7 +522,9 @@ class AudioDownloadManager extends ChangeNotifier {
     try {
       _replace(task.copy(phase: AudioDownloadPhase.resolving));
       final resolving = () async {
-        return resolveRequestedMedia != null
+        return resolveTaskMedia != null
+            ? await resolveTaskMedia!(task, _abort!.future)
+            : resolveRequestedMedia != null
             ? await resolveRequestedMedia!(task.track, task.requestedQuality)
             : resolveMedia != null
             ? await resolveMedia!(task.track)
@@ -500,19 +543,26 @@ class AudioDownloadManager extends ChangeNotifier {
       ]);
       final url = Uri.parse(media.audioAsset);
       if (!_current(task, attempt)) return;
-      if (media.isPreview) throw const MusicPlatformException('平台只返回试听片段，未下载');
+      if (media.isPreview) throw _sourceError(task, '平台只返回试听片段，未下载');
       if (task.requestedQuality != null &&
           media.playbackQuality != task.requestedQuality!.code) {
-        throw const MusicPlatformException('平台未返回所选下载音质，请重选音质后下载');
+        throw _sourceError(task, '平台未返回所选下载音质，请重选音质后下载');
       }
       if (!{'https', 'http'}.contains(url.scheme) ||
           url.host.isEmpty ||
           url.userInfo.isNotEmpty) {
-        throw const FormatException('无效音频地址');
+        throw _sourceError(task, '无效音频地址');
       }
       // Resolving may outlive cancellation or an account switch. Recheck before
       // opening a network stream; cancelled jobs must never be resurrected.
       if (!_current(task, attempt)) return;
+      task = task.copy(
+        track: task.track.copyWith(
+          audioOrigin: media.audioOrigin,
+          playbackQuality: media.playbackQuality,
+          audioBitrate: media.audioBitrate,
+        ),
+      );
       _replace(task.copy(phase: AudioDownloadPhase.downloading));
       final root = await directory();
       await root.create(recursive: true);
@@ -542,7 +592,7 @@ class AudioDownloadManager extends ChangeNotifier {
           .timeout(const Duration(seconds: 20));
       if (offset == 0 && response.statusCode != 200) {
         await response.stream.take(1).drain<void>();
-        throw const MusicPlatformException('下载地址已失效，请重试');
+        throw _sourceError(task, '下载地址已失效，请重试');
       }
       if (!_current(task, attempt)) {
         await response.stream.take(1).drain<void>();
@@ -633,10 +683,10 @@ class AudioDownloadManager extends ChangeNotifier {
       }
       if (!_current(task, attempt)) return;
       if (received == 0 || (total > 0 && received != total)) {
-        throw const MusicPlatformException('文件下载不完整，请重试');
+        throw _sourceError(task, '文件下载不完整，请重试');
       }
       final format = identifyAudio(prefix);
-      if (format == null) throw const MusicPlatformException('返回内容不是受支持的音频文件');
+      if (format == null) throw _sourceError(task, '返回内容不是受支持的音频文件');
       _resume.remove(task.id);
       _replace(
         task.copy(
@@ -658,6 +708,7 @@ class AudioDownloadManager extends ChangeNotifier {
         task.copy(
           phase: AudioDownloadPhase.completed,
           track: task.track.copyWith(
+            audioOrigin: media.audioOrigin,
             playbackQuality: media.playbackQuality,
             audioBitrate: media.audioBitrate,
           ),
@@ -668,10 +719,24 @@ class AudioDownloadManager extends ChangeNotifier {
       );
     } catch (error) {
       if (_current(task, attempt)) {
+        final chooseSource =
+            error is DownloadSourceSelectionRequired ||
+            (task.track.source == TrackSource.netease &&
+                taskById(task.id)?.phase == AudioDownloadPhase.downloading &&
+                (error is http.ClientException ||
+                    error is TimeoutException ||
+                    error is HttpException));
         _replace(
           _tasks
               .firstWhere((t) => t.id == task.id)
-              .copy(phase: AudioDownloadPhase.failed, error: error.toString()),
+              .copy(
+                phase: chooseSource
+                    ? AudioDownloadPhase.awaitingSource
+                    : AudioDownloadPhase.failed,
+                error: chooseSource && error is! DownloadSourceSelectionRequired
+                    ? const DownloadSourceSelectionRequired().toString()
+                    : error.toString(),
+              ),
         );
       }
     } finally {
@@ -694,6 +759,11 @@ class AudioDownloadManager extends ChangeNotifier {
       _abort = null;
     }
   }
+
+  Exception _sourceError(AudioDownloadTask task, String message) =>
+      task.track.source == TrackSource.netease
+      ? DownloadSourceSelectionRequired(message)
+      : MusicPlatformException(message);
 
   @override
   void dispose() {
@@ -742,14 +812,22 @@ List<AudioDownloadTask> _decodeDownloadSnapshot(String raw) {
           phase:
               phase == AudioDownloadPhase.completed ||
                   phase == AudioDownloadPhase.cancelled ||
-                  phase == AudioDownloadPhase.paused
+                  phase == AudioDownloadPhase.paused ||
+                  phase == AudioDownloadPhase.awaitingSource
               ? phase
               : AudioDownloadPhase.failed,
           received: row['received'] as int? ?? 0,
           total: row['total'] as int? ?? 0,
           uri: '${row['uri'] ?? ''}',
           validator: '${row['validator'] ?? ''}',
-          error: phase == AudioDownloadPhase.completed ? '' : '上次下载已中断，可点击重试',
+          downloadSource: NeteaseTrackSource.values
+              .where((s) => s.name == row['downloadSource'])
+              .firstOrNull,
+          error: phase == AudioDownloadPhase.completed
+              ? ''
+              : phase == AudioDownloadPhase.awaitingSource
+              ? '请为此任务选择下载音源'
+              : '上次下载已中断，可点击重试',
         ),
       );
     }
@@ -786,8 +864,9 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
   final restored = largeSnapshot
       ? <AudioDownloadTask>[]
       : _decodeDownloadSnapshot(raw);
+  final downloadClient = SystemMusicIoClient();
   final manager = AudioDownloadManager(
-    client: SystemMusicIoClient(),
+    client: downloadClient,
     restored: restored,
     currentOwner: () => ref.read(platformAccountProvider).value?.ownerId,
     directory: () async =>
@@ -800,73 +879,45 @@ final audioDownloadManagerProvider = Provider<AudioDownloadManager>((ref) {
         throw const MusicPlatformException('下载记录未保存');
       }
     },
-    resolveRequestedMedia: (track, requested) async {
+    resolveTaskMedia: (task, abortTrigger) async {
+      final track = task.track;
+      final requested = task.requestedQuality;
       final quality = requested ?? ref.read(platformQualityProvider).preferred;
       if (track.source == TrackSource.netease &&
           ref.read(usesNeteaseProvider)) {
         final music = ref.read(neteaseMusicRepositoryProvider);
-        final selected =
-            ref.read(neteaseTrackSourcesProvider)[track.id] ??
-            NeteaseTrackSource.automatic;
-        if (selected != NeteaseTrackSource.automatic) {
-          final credential = music.credential;
-          return resolveNeteaseTrack(
-            music: music,
-            fallback: ref.read(neteaseFallbackResolverProvider),
-            allowFallback: true,
-            current: () =>
-                ref.mounted &&
-                ref.read(usesNeteaseProvider) &&
-                ref.read(neteaseMusicRepositoryProvider).credential ==
-                    credential,
-            track: track,
-            quality: quality,
-            selectedSource: selected,
-            requireQuality: requested != null,
-          );
-        }
-        Object? failure;
-        Map<String, dynamic> row = {};
-        try {
-          final payload = await music.call('/song/download/url/v1', {
-            'id': NeteaseMusicRepository.songId(track.id),
-            'level': quality.neteaseLevel,
-          });
-          row = NeteaseMusicRepository.object(payload['data']);
-        } catch (error) {
-          if (error is MusicPlatformException &&
-              {'301', '302', '415', '405', '460'}.contains(error.code)) {
-            rethrow;
-          }
-          failure = error;
-        }
-        if ('${row['url'] ?? ''}'.startsWith('http') &&
-            row['freeTrialInfo'] == null) {
-          return track.copyWith(
-            audioAsset: '${row['url']}',
-            audioHeaders: const {},
-            playbackQuality:
-                PlatformAudioQuality.fromNeteaseLevel(row['level'])?.code ?? '',
-            audioBitrate: int.tryParse('${row['br']}') ?? 0,
-            isPreview: false,
-          );
-        }
-        if (ref.read(neteaseFallbackEnabledProvider)) {
-          final credential = music.credential;
-          final fallback = await ref
+        final credential = music.credential;
+        var cancelled = false;
+        unawaited(abortTrigger.then((_) => cancelled = true));
+        bool current() =>
+            !cancelled &&
+            ref.mounted &&
+            ref.read(usesNeteaseProvider) &&
+            ref.read(neteaseMusicRepositoryProvider).credential == credential;
+        return resolveNeteaseDownload(
+          track: track,
+          quality: quality,
+          current: current,
+          selectedSource: task.downloadSource,
+          requireQuality: requested != null,
+          allowAlternative: ref.read(neteaseFallbackEnabledProvider),
+          official: (song, tier) => lookupOfficialNeteaseDownload(
+            music,
+            song,
+            tier,
+            client: downloadClient,
+            abortTrigger: abortTrigger,
+          ),
+          alternative: (song, tier, source) => ref
               .read(neteaseFallbackResolverProvider)
               .resolve(
-                track.copyWith(playbackQuality: quality.code),
-                current: () =>
-                    ref.mounted &&
-                    ref.read(usesNeteaseProvider) &&
-                    ref.read(neteaseMusicRepositoryProvider).credential ==
-                        credential,
+                song.copyWith(playbackQuality: tier.code),
+                current: current,
+                onlySource: source.adapter,
                 requiredQuality: requested?.code,
-              );
-          if (fallback != null) return fallback;
-        }
-        throw failure ?? const MusicPlatformException('网易云未返回完整下载地址');
+                abortTrigger: abortTrigger,
+              ),
+        );
       }
       if (track.source == TrackSource.kugou &&
           ref.read(platformAccountProvider).value?.platform ==

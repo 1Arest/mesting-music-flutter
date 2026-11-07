@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mesting_music/features/downloads/audio_downloads.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_track_sources.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_audio_quality.dart';
 import 'package:mesting_music/features/music_platform/netease/messages/netease_emojis.dart';
 import 'package:mesting_music/features/music_platform/netease/messages/netease_messages_repository.dart';
@@ -184,7 +185,7 @@ void main() {
           () => manager.tasks.every(
             (t) =>
                 t.phase == AudioDownloadPhase.completed ||
-                t.phase == AudioDownloadPhase.failed,
+                t.phase == AudioDownloadPhase.awaitingSource,
           ),
         );
         expect(requested, [
@@ -197,12 +198,17 @@ void main() {
         );
         expect(
           manager.tasks.first.phase,
-          mismatch ? AudioDownloadPhase.failed : AudioDownloadPhase.completed,
+          mismatch
+              ? AudioDownloadPhase.awaitingSource
+              : AudioDownloadPhase.completed,
         );
         expect(fetched, mismatch ? 1 : 2);
         expect(published, fetched);
         if (mismatch) {
-          manager.retry(manager.tasks.first.id);
+          manager.selectDownloadSource(
+            manager.tasks.first.id,
+            NeteaseTrackSource.lxFish,
+          );
           await until(() => requested.length == 3);
           expect(requested.last, PlatformAudioQuality.lossless);
         }
@@ -229,7 +235,9 @@ void main() {
     );
     addTearDown(manager.dispose);
     manager.enqueue(recording());
-    await until(() => manager.tasks.single.phase == AudioDownloadPhase.failed);
+    await until(
+      () => manager.tasks.single.phase == AudioDownloadPhase.awaitingSource,
+    );
     expect(manager.tasks.single.error, contains('试听'));
   });
 }

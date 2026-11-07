@@ -4,6 +4,7 @@ import '../../../core/persistence/app_preferences.dart';
 import '../data/music_platform_api.dart';
 import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
+import 'fallback/lx_source_catalog.dart';
 
 enum NeteaseSourceStrategy { ordered, highestQuality }
 
@@ -16,19 +17,33 @@ enum NeteasePublicSource {
   bilibili('B站音频', true),
   bilivideo('B站视频音轨', true),
   bodian('波点', false),
-  youtube('YouTube', false);
+  youtube('YouTube', false),
+  lxChangqing('长青 · changqing', true, LxMusicSource.changqing),
+  lxFish('Fish · fish', true, LxMusicSource.fish),
+  lxHelloworld('HelloWorld · helloworld', true, LxMusicSource.helloworld),
+  lxHuanyin('幻音 · huanyin', true, LxMusicSource.huanyin),
+  lxHuibq('Huibq · huibq', true, LxMusicSource.huibq),
+  lxHyw('HYW · hyw', true, LxMusicSource.hyw),
+  lxJiexiang('杰翔 · jiexiang', true, LxMusicSource.jiexiang),
+  lxLx('LX · lx', true, LxMusicSource.lx),
+  lxQdy('全豆要 · qdy', true, LxMusicSource.qdy),
+  lxXinghai('星海 · xinghai', true, LxMusicSource.xinghai),
+  lxYuningxi('玉宁熙 · yuningxi', true, LxMusicSource.yuningxi);
 
-  const NeteasePublicSource(this.label, this.available);
+  const NeteasePublicSource(this.label, this.available, [this.lx]);
   final String label;
   final bool available;
-  String get note => switch (this) {
-    NeteasePublicSource.gdstudio => '平台暂不支持：服务当前不接受网易云来源',
-    NeteasePublicSource.bilibili ||
-    NeteasePublicSource.bilivideo => '匿名访问，匹配不足或地区限制时跳过',
-    NeteasePublicSource.bodian => '平台暂不支持：匿名完整播放链路尚未验证',
-    NeteasePublicSource.youtube => '平台暂不支持：地区及动态解析条件尚未验证',
-    _ => '匿名获取，不发送网易云账号凭据',
-  };
+  final LxMusicSource? lx;
+  String get note => lx != null
+      ? '按歌曲检测完整音频；仅传歌曲信息，不发送账号凭据'
+      : switch (this) {
+          NeteasePublicSource.gdstudio => '平台暂不支持：服务当前不接受网易云来源',
+          NeteasePublicSource.bilibili ||
+          NeteasePublicSource.bilivideo => '匿名访问，匹配不足或地区限制时跳过',
+          NeteasePublicSource.bodian => '平台暂不支持：匿名完整播放链路尚未验证',
+          NeteasePublicSource.youtube => '平台暂不支持：地区及动态解析条件尚未验证',
+          _ => '匿名获取，不发送网易云账号凭据',
+        };
 }
 
 class NeteasePlaybackOptions {
@@ -43,6 +58,17 @@ class NeteasePlaybackOptions {
       NeteasePublicSource.kuwo,
       NeteasePublicSource.bilibili,
       NeteasePublicSource.bilivideo,
+      NeteasePublicSource.lxChangqing,
+      NeteasePublicSource.lxFish,
+      NeteasePublicSource.lxHelloworld,
+      NeteasePublicSource.lxHuanyin,
+      NeteasePublicSource.lxHuibq,
+      NeteasePublicSource.lxHyw,
+      NeteasePublicSource.lxJiexiang,
+      NeteasePublicSource.lxLx,
+      NeteasePublicSource.lxQdy,
+      NeteasePublicSource.lxXinghai,
+      NeteasePublicSource.lxYuningxi,
     },
   });
   final NeteaseSourceStrategy strategy;
@@ -70,6 +96,8 @@ class NeteasePlaybackOptions {
     'minimumBitrate': minimumBitrate,
     'cache': cache,
     'diagnostics': diagnostics,
+    // Migrate defaults once; preserve later explicit disabling on restart.
+    'lxSourcesVersion': 1,
     'sources': enabledSources.map((s) => s.name).toList(),
   };
   factory NeteasePlaybackOptions.fromJson(Map<String, dynamic> value) {
@@ -93,7 +121,10 @@ class NeteasePlaybackOptions {
       enabledSources: sources is List
           ? Set.unmodifiable(
               NeteasePublicSource.values.where(
-                (s) => s.available && sources.contains(s.name),
+                (s) =>
+                    s.available &&
+                    (sources.contains(s.name) ||
+                        (value['lxSourcesVersion'] != 1 && s.lx != null)),
               ),
             )
           : defaults.enabledSources,

@@ -1,8 +1,0 @@
-Mesting Music 1.0.5 / code 26
-
-同包名 com.mesting.music.beta，原签名，ARM32/ARM64。
-SHA-256: 48F99ABCFB2381EE1E499EC1E0E935449D498D8233BEC8F95BE7D0EB4798FDF1
-
-从 GitHub Release 下载本版 APK，交由用户在手机上确认覆盖安装。保留数据升级、系统来源许可和实际设备行为仍需用户验收；不要把旧 APK 当作可直接降级并保留数据的保证。
-music 后台仍是 1.0.4 / 25，本版后台上传发布待完成。GitHub Release 不等于 music 已更新。
-用户自行测试，本轮没有访问手机或执行安装。

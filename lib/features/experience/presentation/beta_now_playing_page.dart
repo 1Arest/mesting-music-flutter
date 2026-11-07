@@ -457,6 +457,28 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                             ),
                                           ),
                                   ),
+                                  if (track.source == TrackSource.netease &&
+                                      track.audioOrigin != null)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 26,
+                                        vertical: 3,
+                                      ),
+                                      child: Text(
+                                        '音源：${track.audioOrigin!.adapter}${track.isPreview ? ' · 试听' : ''}',
+                                        key: const ValueKey(
+                                          'netease-actual-audio-source',
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: classic
+                                              ? const Color(0xFF565B66)
+                                              : Colors.white70,
+                                        ),
+                                      ),
+                                    ),
                                   ApplePlayerControls(
                                     lyricsActive: _lyrics && !_queue,
                                     queueActive: _queue,

@@ -259,7 +259,7 @@ void main() {
       addTearDown(manager.dispose);
       manager.enqueue(recording());
       await until(
-        () => manager.tasks.single.phase == AudioDownloadPhase.failed,
+        () => manager.tasks.single.phase == AudioDownloadPhase.awaitingSource,
       );
       expect(exports, 0);
     });

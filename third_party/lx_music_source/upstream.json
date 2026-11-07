@@ -1,0 +1,75 @@
+{
+  "repository": "https://github.com/pdone/lx-music-source",
+  "commit": "000578ddca4a676012cf735abdc3489efdc67c74",
+  "statusSnapshot": "2026-11-05 01:09 Asia/Shanghai",
+  "statusMeaning": "upstream HTTP host probe; not proof of full-track playback or download",
+  "automaticUpdates": false,
+  "sources": [
+    {
+      "id": "changqing",
+      "path": "scripts/changqing.js",
+      "bytes": 27645,
+      "sha256": "6a942987c1e111a113376fbf8ff9fb677c487058f16ce792779c72f69c4ed6de"
+    },
+    {
+      "id": "fish",
+      "path": "scripts/fish.js",
+      "bytes": 639619,
+      "sha256": "a711e152c4f28c32fd46b38839a70f476e0b669905773a90e2ce63246136af47"
+    },
+    {
+      "id": "helloworld",
+      "path": "scripts/helloworld.js",
+      "bytes": 21421,
+      "sha256": "12d7a289647b4f4ff8b94d4b27d06a55b7ca9b9be6ac89c602cac2052eced723"
+    },
+    {
+      "id": "huanyin",
+      "path": "scripts/huanyin.js",
+      "bytes": 7316,
+      "sha256": "4a81129240ecae3ebf6b42f28c73e2d37bbcb6fccac9a73a401d90cdd36bee5f"
+    },
+    {
+      "id": "huibq",
+      "path": "scripts/huibq.js",
+      "bytes": 2727,
+      "sha256": "a9adeb456690b523008038224091cee31977606302d79082eb06adb3c75c9146"
+    },
+    {
+      "id": "hyw",
+      "path": "scripts/hyw.js",
+      "bytes": 12082,
+      "sha256": "0f48bdab4205e4423397f970b926565085a5af4f3b8a8a19f4cdc0e755647cd5"
+    },
+    {
+      "id": "jiexiang",
+      "path": "scripts/jiexiang.js",
+      "bytes": 91493,
+      "sha256": "a4f25710ea8c993e20626df2345fb933607eb4b91b794bd323f954e7085b94df"
+    },
+    {
+      "id": "lx",
+      "path": "scripts/lx.js",
+      "bytes": 64094,
+      "sha256": "79a5c4703e060eaff6f8ffaac05d2fadf5e22b7729f6fe151d1cca2fa3935171"
+    },
+    {
+      "id": "qdy",
+      "path": "scripts/qdy.js",
+      "bytes": 31090,
+      "sha256": "213f73232562b528826dd97601e74212b517014e06fd614b28d8d8aa0dda400c"
+    },
+    {
+      "id": "xinghai",
+      "path": "scripts/xinghai.js",
+      "bytes": 38858,
+      "sha256": "807d6157e4fd7cdd05b8727efd73778b54a3b05a0b5e4c6bb28dedc0668e94e9"
+    },
+    {
+      "id": "yuningxi",
+      "path": "scripts/yuningxi.js",
+      "bytes": 147347,
+      "sha256": "9ddcc32f55ba1981166f16bf55c03c43165b098932208a5fb4c9c64192650f0c"
+    }
+  ]
+}

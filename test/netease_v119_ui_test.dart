@@ -289,7 +289,7 @@ void main() {
     },
   );
   testWidgets(
-    'download picker shows actual supported tiers and returns choice without playing',
+    'download picker offers official tiers and alternate requests without playing',
     (tester) async {
       PlatformAudioQuality? choice;
       await mount(
@@ -309,7 +309,7 @@ void main() {
       for (final label in ['标准', '较高', '极高', '无损']) {
         expect(find.text(label), findsOneWidget);
       }
-      expect(find.text('Hi-Res'), findsNothing);
+      expect(find.text('Hi-Res'), findsOneWidget);
       await capture(tester, 'download-quality');
       await tester.tap(find.text('无损'));
       await tester.pump();

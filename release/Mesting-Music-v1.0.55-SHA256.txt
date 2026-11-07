@@ -1,3 +1,0 @@
-# SHA256; paths are relative to D:/AnLi
-33964c2df6cfa59bff832ad77361a809f1147f8a73f87bc2334314a18a0d78d9  release/Mesting-Music-v1.0.55.apk
-34df40358d45c3f054c3d2768d448a486fae245fcf7e2af378b95375781e6bc0  Mesting-Music-v1.0.55-source.zip

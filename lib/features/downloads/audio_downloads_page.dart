@@ -20,6 +20,7 @@ import '../player/presentation/beta_playback_actions.dart';
 import 'audio_downloads.dart';
 import 'audio_download_quality.dart';
 import 'audio_download_storage.dart';
+import 'netease_download_source_picker.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/music_list_footer.dart';
 
@@ -329,6 +330,7 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                 AudioDownloadPhase.downloading,
               }.contains(task.phase);
               final label = switch (task.phase) {
+                AudioDownloadPhase.awaitingSource => '等待选择下载音源',
                 AudioDownloadPhase.queued => '等待下载',
                 AudioDownloadPhase.resolving => '正在解析音源',
                 AudioDownloadPhase.downloading => '正在下载',
@@ -370,7 +372,7 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        '${task.track.artist}\n${task.requestedQuality == null ? '' : '${task.track.source == TrackSource.netease ? task.requestedQuality!.neteaseLabel : task.requestedQuality!.label} · '}$label',
+                        '${task.track.artist}\n${task.track.audioOrigin == null ? '' : '${task.track.audioOrigin!.adapter} · '}${task.requestedQuality == null ? '' : '${task.track.source == TrackSource.netease ? task.requestedQuality!.neteaseLabel : task.requestedQuality!.label} · '}$label',
                       ),
                       isThreeLine: true,
                       trailing: done
@@ -378,6 +380,36 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
                               tooltip: '下载文件操作',
                               icon: const Icon(Icons.more_vert_rounded),
                               onPressed: _busy ? null : () => _menu(task),
+                            )
+                          : task.phase == AudioDownloadPhase.awaitingSource
+                          ? IconButton(
+                              tooltip: '选择下载音源',
+                              icon: const Icon(Icons.library_music_rounded),
+                              onPressed: () async {
+                                final owner = ref
+                                    .read(platformAccountProvider)
+                                    .value;
+                                final choice =
+                                    await chooseNeteaseDownloadSource(
+                                      context,
+                                      task,
+                                    );
+                                if (!mounted ||
+                                    choice == null ||
+                                    ref
+                                            .read(platformAccountProvider)
+                                            .value
+                                            ?.ownerId !=
+                                        owner?.ownerId ||
+                                    ref
+                                            .read(platformAccountProvider)
+                                            .value
+                                            ?.token !=
+                                        owner?.token) {
+                                  return;
+                                }
+                                manager.selectDownloadSource(task.id, choice);
+                              },
                             )
                           : task.phase == AudioDownloadPhase.paused
                           ? IconButton(

@@ -1,7 +1,0 @@
-The first code44 candidate Mesting-Music-v1.0.23.apk (SHA256 b8852cf8bf49a22517f33e5fa5c47860450d5f5e2ac6a674688654a40298952f) failed real-device backend acceptance: the upstream Release engine still selected Vulkan. Keep these bytes as rejected-candidate evidence; do not publish this APK as the crash fix.
-
-The user selected building the pinned custom Release engine to keep the complete glass effects. A replacement is not accepted until its actual OpenGLES backend and UI are verified on the device. Consult docs/validation-2026-10-31-v1.0.23.json for current status.
-
-Update: Mesting-Music-v1.0.23-r2.apk is now the verified original-signed replacement. Both ARM Release engines, unchanged glass shaders, signature and alignment checks passed. It was installed with user approval, its installed APK hash matches, and its actual startup log says Impeller OpenGLES. SHA256: 306f66d8ec2426de98bf52f251220d56a57cd907fd028eb27d100b223c9b56b5. Short real-device route tests completed; this is not a permanent driver fix claim. Further phone tests are paused at the user's request. New automatic diagnostics, unified cross-platform sign-in and account-based Kugou fallback requirements are not included in R2.
-
-Next-session directive (2026-10-31): complete the five new requirement groups as version 1.0.24 / code45, superseding the proposed 1.0.23-r3. See HANDOFF-SESSION-2026-10-31-v1.0.24-TO-NEW-CHAT.md. This is a future build target, not an existing APK; retain R2 unchanged. Phone testing remains paused; no Git or backend publication was authorized.

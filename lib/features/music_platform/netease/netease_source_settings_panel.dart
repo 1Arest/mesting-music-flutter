@@ -68,7 +68,11 @@ class _NeteaseSourceSettingsPanelState
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
-        const Text('$neteaseAutomaticSourceOrder。以下选择策略用于其他备用音源，官方完整音频始终优先。'),
+        const Text(
+          '$neteaseAutomaticSourceOrder。自动模式优先官方完整音频；手动选源失败后自动补源，并显示实际来源。',
+        ),
+        const SizedBox(height: 6),
+        const Text('下载独立于播放选源：优先官方完整版，官方不可用时由你选择其他可下载音源。'),
         const SizedBox(height: 12),
         const NeteaseAccountSourceInfo(),
         const SizedBox(height: 12),

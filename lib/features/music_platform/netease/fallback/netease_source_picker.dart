@@ -34,6 +34,8 @@ final neteaseSourceAvailabilityProvider = Provider<NeteaseSourceAvailability>(
       track: track,
       quality: ref.read(platformQualityProvider).preferred,
       selectedSource: source,
+      // A successful automatic rescue is not proof that this source works.
+      fallbackOnSelectedFailure: false,
       abortTrigger: abort,
     );
     return song.isPlayable && !song.isPreview;
