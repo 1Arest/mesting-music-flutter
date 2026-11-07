@@ -42,6 +42,8 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
   ImageInfo? _frame;
   ImageStream? _stream;
   ImageStreamListener? _listener;
+  ImageProvider<Object>? _resolvedImage;
+  ImageConfiguration? _configuration;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -63,27 +65,45 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
         oldWidget.owner != widget.owner ||
         oldWidget.uri != widget.uri ||
         oldWidget.retryRevision != widget.retryRevision ||
+        oldWidget.width != widget.width ||
+        oldWidget.height != widget.height ||
         oldWidget.image != widget.image) {
-      _resolve();
+      _resolve(force: true);
     }
   }
 
-  void _resolve() {
+  void _resolve({bool force = false}) {
+    // Insets, text scaling, theme and the retained-tab visibility signals can
+    // notify this element without changing its decoder configuration. Keep
+    // the existing stream/listener in that case: re-attaching an already ready
+    // image clones pixels, reports readiness and queues disposal every time.
+    // Hidden tabs detach their listener but retain the last painted pixels.
+    if (!TickerMode.valuesOf(context).enabled) {
+      _detach();
+      return;
+    }
+    final configuration = createLocalImageConfiguration(
+      context,
+      size: widget.width != null && widget.height != null
+          ? Size(widget.width!, widget.height!)
+          : null,
+    );
+    if (!force &&
+        _stream != null &&
+        _resolvedImage == widget.image &&
+        _configuration == configuration) {
+      return;
+    }
     _detach();
     final prepared = artworkRefreshCoordinator.take(
       widget.uri,
       scope: widget.scope,
     );
     if (prepared != null) _replace(prepared, rebuild: false);
-    if (widget.image == null || !TickerMode.valuesOf(context).enabled) return;
-    final stream = widget.image!.resolve(
-      createLocalImageConfiguration(
-        context,
-        size: widget.width != null && widget.height != null
-            ? Size(widget.width!, widget.height!)
-            : null,
-      ),
-    );
+    if (widget.image == null) return;
+    _configuration = configuration;
+    _resolvedImage = widget.image;
+    final stream = widget.image!.resolve(configuration);
     _stream = stream;
     _listener = ImageStreamListener(
       (info, sync) {
@@ -120,6 +140,8 @@ class _RetainedArtworkFrameState extends State<RetainedArtworkFrame> {
     if (_listener != null) _stream?.removeListener(_listener!);
     _stream = null;
     _listener = null;
+    _resolvedImage = null;
+    _configuration = null;
   }
 
   @override

@@ -201,7 +201,7 @@ class BrowseResponseCache {
       final encodedBody = await encodeJsonValue(body);
       if (json['version'] != 1 ||
           json['id'] != id ||
-          json['hash'] != _hash(encodedBody)) {
+          json['hash'] != await digestJsonText(encodedBody)) {
         throw const FormatException('Invalid disposable snapshot');
       }
       _files[id] = (
@@ -311,7 +311,7 @@ class BrowseResponseCache {
               'version': 1,
               'id': id,
               'route': _routes[id],
-              'hash': _hash(encoded),
+              'hash': await digestJsonText(encoded),
               'body': body,
             });
             if (bytes.length <= maxEntryBytes) {

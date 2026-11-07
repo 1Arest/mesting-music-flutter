@@ -12,11 +12,15 @@ import 'package:http/testing.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
+import 'package:mesting_music/core/cache/browse_response_cache.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/experience/presentation/beta_bottom_bar.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_api.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_models.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_browse_providers.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_repository.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_login_page.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_pages.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_providers.dart';
@@ -90,6 +94,9 @@ void main() {
     bool refuse = false,
     bool smsRefuse = false,
     bool pushed = false,
+    bool startupHydrationMiss = false,
+    Future<Object> Function(Ref)? discoverForTest,
+    void Function(ProviderContainer)? onReady,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -150,11 +157,21 @@ void main() {
       }),
       context: fixtureContext,
     )..configure(sodaSession());
+    var hydrationReads = 0;
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
         platformAccountProvider.overrideWith(FixtureAccount.new),
         qishuiApiProvider.overrideWithValue(api),
+        if (discoverForTest != null)
+          qishuiBrowseProvider('discover').overrideWith(discoverForTest),
+        if (startupHydrationMiss)
+          qishuiBrowseProvider('discover').overrideWith((_) async {
+            if (hydrationReads++ == 0) {
+              throw const BrowseSnapshotUnavailable();
+            }
+            return QishuiRepository(api).discover();
+          }),
         qishuiQrLoginFactoryProvider.overrideWithValue(
           () => QishuiQrLogin(FixtureQrGateway()),
         ),
@@ -240,11 +257,64 @@ void main() {
       navigator.currentState!.push(betaContentRoute<void>(page));
       await tester.pump();
     }
+    if (startupHydrationMiss) {
+      // Reproduce the real startup sequence: restore-only miss, then a normal
+      // provider generation while the page keeps its initial completed Future.
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(find.byType(QishuiError), findsNothing);
+      container.invalidate(qishuiBrowseProvider('discover'));
+    }
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 150));
     }
+    onReady?.call(container);
     return requests;
   }
+
+  testWidgets('startup disk miss disappears when the live catalog arrives', (
+    tester,
+  ) async {
+    await mount(
+      tester,
+      const QishuiRootPage(QishuiRoot.discover),
+      startupHydrationMiss: true,
+    );
+    expect(find.text('午后片刻 · 测试歌单'), findsOneWidget);
+    expect(find.byType(QishuiError), findsNothing);
+    expect(find.textContaining('BrowseSnapshotUnavailable'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'another owner never sees the previous owner catalog during reload',
+    (tester) async {
+      final next = Completer<Object>();
+      late ProviderContainer ownerContainer;
+      await mount(
+        tester,
+        const QishuiRootPage(QishuiRoot.discover),
+        onReady: (value) => ownerContainer = value,
+        discoverForTest: (ref) async {
+          final owner = ref.watch(platformAccountProvider).value?.userId;
+          if (owner == 'fixture-user') {
+            return const [QishuiPlaylist('1', '旧账号专属歌单', '')];
+          }
+          return next.future;
+        },
+      );
+      expect(find.text('旧账号专属歌单'), findsOneWidget);
+      (ownerContainer.read(platformAccountProvider.notifier) as FixtureAccount)
+          .changeForTest(sodaSession('another-owner').identity);
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(find.text('旧账号专属歌单'), findsNothing);
+      next.complete(const [QishuiPlaylist('2', '新账号专属歌单', '')]);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 150));
+      }
+      expect(find.text('新账号专属歌单'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   test('three visual tabs retain the old four-branch routing contract', () {
     expect(qishuiMusicTabs.map((t) => t.label), ['发现', '音乐', '我的']);

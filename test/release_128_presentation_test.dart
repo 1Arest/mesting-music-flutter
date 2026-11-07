@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mesting_music/app/router/beta_tab_shell.dart';
 import 'package:mesting_music/core/cache/browse_response_cache.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_browse_cache.dart';
 import 'package:mesting_music/shared/media/artwork_refresh_coordinator.dart';
 import 'package:mesting_music/shared/media/persistent_network_image_cache.dart';
 import 'package:mesting_music/shared/widgets/beta_bottom_search.dart';
@@ -69,109 +70,133 @@ void main() {
     blue = await _png(Colors.blue);
   });
 
-  for (final outcome in ['ready', 'failed', 'account changed']) {
-    test(
-      'response stays durable and visible until decoded image is ready: $outcome',
-      () async {
-        final directory = await Directory.systemTemp.createTemp(
-          'mesting-128-ready-',
-        );
-        final response = Completer<http.Response>();
-        final started = Completer<void>();
-        final images = PersistentNetworkImageCache(
-          directoryProvider: () async => directory,
-          client: MockClient((request) async {
-            if (request.url.path == '/old.png') {
-              return http.Response.bytes(red, 200);
-            }
-            if (!started.isCompleted) started.complete();
-            return response.future;
-          }),
-        );
-        final coordinator = ArtworkRefreshCoordinator(cache: images);
-        final cache = BrowseResponseCache(
-          directory: () async => directory,
-          initializeOnRead: true,
-        );
-        final preparation = Completer<bool>();
-        cache.prepareCached = coordinator.prepareCached;
-        cache.prepareRefresh = (previous, incoming) async {
-          final ready = await coordinator.prepareRefresh(previous, incoming);
-          if (!preparation.isCompleted) preparation.complete(ready);
-          return ready;
-        };
-        var generation = 0, notices = 0;
-        var body = <String, dynamic>{
-          'code': 200,
-          'title': 'old',
-          'picUrl': 'https://image.example/old.png',
-        };
-        final watch = BrowseCacheWatch(() => notices++, forceRefresh: true);
-        Future<Map<String, dynamic>> read() => watch.run(
-          () => cache.read(
-            scope: 'netease:fixture',
-            route: 'browse',
-            query: {},
-            requestIdentity: 'synthetic',
-            checkCurrent: () {
-              if (generation != 0) throw StateError('account changed');
-            },
-            load: () async => body,
-          ),
-        );
-        await read();
-        await images.resolve(
-          cacheKey: 'public-artwork-v1',
-          url: body['picUrl'] as String,
-        );
-        body = {
-          'code': 200,
-          'title': 'new',
-          'picUrl': 'https://image.example/new.png',
-        };
-        final cached = await read();
-        await started.future;
-        expect(cached['title'], 'old');
-        expect(notices, 0);
-        final file = Directory(
-          '${directory.path}/mesting_browse_cache_v1',
-        ).listSync().whereType<File>().single;
-        expect(
-          (jsonDecode(await file.readAsString())['body'] as Map)['title'],
-          'old',
-        );
-        if (outcome == 'account changed') generation++;
-        response.complete(
-          http.Response.bytes(blue, outcome == 'failed' ? 503 : 200),
-        );
-        await preparation.future;
-        await Future<void>.delayed(const Duration(milliseconds: 15));
-        if (outcome == 'ready') {
-          final deadline = DateTime.now().add(const Duration(seconds: 3));
-          while (notices == 0 && DateTime.now().isBefore(deadline)) {
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
-          expect(notices, 1);
-          final ready = coordinator.take('https://image.example/new.png');
-          expect(ready, isNotNull);
-          expect(ready!.image.width, 2);
-          ready.dispose();
-          expect(
-            (jsonDecode(await file.readAsString())['body'] as Map)['title'],
-            'new',
+  for (final projected in [false, true]) {
+    for (final outcome in ['ready', 'failed', 'account changed']) {
+      test(
+        'response stays durable and visible until decoded image is ready: $outcome projected=$projected',
+        () async {
+          final directory = await Directory.systemTemp.createTemp(
+            'mesting-128-ready-',
           );
-        } else {
+          final response = Completer<http.Response>();
+          final started = Completer<void>();
+          final images = PersistentNetworkImageCache(
+            directoryProvider: () async => directory,
+            client: MockClient((request) async {
+              if (request.url.path == '/old.png') {
+                return http.Response.bytes(red, 200);
+              }
+              if (!started.isCompleted) started.complete();
+              return response.future;
+            }),
+          );
+          final coordinator = ArtworkRefreshCoordinator(cache: images);
+          final cache = BrowseResponseCache(
+            directory: () async => directory,
+            initializeOnRead: true,
+          );
+          final preparation = Completer<bool>();
+          cache.prepareCached = coordinator.prepareCached;
+          cache.prepareRefresh = (previous, incoming) async {
+            final ready = await coordinator.prepareRefresh(previous, incoming);
+            if (!preparation.isCompleted) preparation.complete(ready);
+            return ready;
+          };
+          var generation = 0, notices = 0;
+          var body = <String, dynamic>{
+            'code': 200,
+            'title': 'old',
+            'picUrl': 'https://image.example/old.png',
+          };
+          if (projected) {
+            body = QishuiBrowseCachePolicy.display({
+              'code': 200,
+              'title': 'old',
+              'url_cover': {
+                'uri': 'old.png',
+                'urls': ['https://image.example/', 'https://unused.example/'],
+              },
+            });
+          }
+          final watch = BrowseCacheWatch(() => notices++, forceRefresh: true);
+          Future<Map<String, dynamic>> read() => watch.run(
+            () => cache.read(
+              scope: 'netease:fixture',
+              route: 'browse',
+              query: {},
+              requestIdentity: 'synthetic',
+              checkCurrent: () {
+                if (generation != 0) throw StateError('account changed');
+              },
+              load: () async => body,
+            ),
+          );
+          await read();
+          await images.resolve(
+            cacheKey: 'public-artwork-v1',
+            url: projected
+                ? 'https://image.example/old.png'
+                : body['picUrl'] as String,
+          );
+          body = {
+            'code': 200,
+            'title': 'new',
+            'picUrl': 'https://image.example/new.png',
+          };
+          if (projected) {
+            body = QishuiBrowseCachePolicy.display({
+              'code': 200,
+              'title': 'new',
+              'url_cover': {
+                'uri': 'new.png',
+                'urls': ['https://image.example/', 'https://unused.example/'],
+              },
+            });
+          }
+          final cached = await read();
+          await started.future.timeout(const Duration(seconds: 3));
+          expect(cached['title'], 'old');
           expect(notices, 0);
+          final file = Directory(
+            '${directory.path}/mesting_browse_cache_v1',
+          ).listSync().whereType<File>().single;
           expect(
             (jsonDecode(await file.readAsString())['body'] as Map)['title'],
             'old',
           );
-        }
-        watch.dispose();
-        coordinator.dispose();
-        await directory.delete(recursive: true);
-      },
-    );
+          if (outcome == 'account changed') generation++;
+          response.complete(
+            http.Response.bytes(blue, outcome == 'failed' ? 503 : 200),
+          );
+          await preparation.future;
+          await Future<void>.delayed(const Duration(milliseconds: 15));
+          if (outcome == 'ready') {
+            final deadline = DateTime.now().add(const Duration(seconds: 3));
+            while (notices == 0 && DateTime.now().isBefore(deadline)) {
+              await Future<void>.delayed(const Duration(milliseconds: 5));
+            }
+            expect(notices, 1);
+            final ready = coordinator.take('https://image.example/new.png');
+            expect(ready, isNotNull);
+            expect(ready!.image.width, 2);
+            ready.dispose();
+            expect(
+              (jsonDecode(await file.readAsString())['body'] as Map)['title'],
+              'new',
+            );
+          } else {
+            expect(notices, 0);
+            expect(
+              (jsonDecode(await file.readAsString())['body'] as Map)['title'],
+              'old',
+            );
+          }
+          watch.dispose();
+          coordinator.dispose();
+          await directory.delete(recursive: true);
+        },
+      );
+    }
   }
 
   test(

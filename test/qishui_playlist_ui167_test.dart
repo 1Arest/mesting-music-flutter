@@ -12,6 +12,7 @@ import 'package:http/testing.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
+import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_api.dart';
@@ -21,6 +22,7 @@ import 'package:mesting_music/features/music_platform/qishui/qishui_playlist_pag
 import 'package:mesting_music/features/music_platform/qishui/qishui_providers.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_repository.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_session.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_search_catalog.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_pages.dart';
 import 'package:mesting_music/features/experience/presentation/beta_bottom_bar.dart';
 import 'package:mesting_music/shared/models/track.dart';
@@ -56,8 +58,8 @@ const _playlist = QishuiPlaylist(
   shareCount: 3,
 );
 
-List<Track> _songs() => List.generate(
-  18,
+List<Track> _songs({int count = 18}) => List.generate(
+  count,
   (index) => Track(
     id: 'qishui_fixture-$index',
     platformSongId: 'fixture-$index',
@@ -84,6 +86,9 @@ class _PlaylistFixture extends QishuiRepository {
   _PlaylistFixture(super.api);
   final writes = <String>[];
   var values = _songs();
+  bool paged = false;
+  int fullReads = 0;
+  final pageReads = <String>[];
   Completer<void>? pendingOrder;
 
   @override
@@ -96,7 +101,28 @@ class _PlaylistFixture extends QishuiRepository {
     String id, {
     String cursor = '',
     Future<void>? abortTrigger,
-  }) async => List.of(values);
+  }) async {
+    fullReads++;
+    return List.of(values);
+  }
+
+  @override
+  Future<QishuiCatalogPage<Track>> playlistPage(
+    String id, {
+    String cursor = '',
+    int count = 100,
+    Future<void>? abortTrigger,
+  }) async {
+    pageReads.add(cursor);
+    final start = paged ? int.tryParse(cursor) ?? 0 : 0;
+    final end = paged ? (start + count).clamp(0, values.length) : values.length;
+    return QishuiCatalogPage(
+      items: values.sublist(start, end),
+      cursor: cursor,
+      hasMore: end < values.length,
+      nextCursor: end < values.length ? '$end' : null,
+    );
+  }
 
   @override
   Future<List<QishuiPlaylist>> playlists({Future<void>? abortTrigger}) async =>
@@ -131,6 +157,22 @@ class _PlaylistFixture extends QishuiRepository {
   }
 }
 
+class _PlaylistPlayer174 extends Fake implements MestingAudioHandler {
+  List<Track> queued = const [];
+
+  @override
+  Future<void> replaceQueue(
+    List<Track> tracks, {
+    int initialIndex = 0,
+    Duration initialPosition = Duration.zero,
+    bool autoplay = true,
+    bool recommendationContext = false,
+    bool Function()? togetherGuard,
+  }) async {
+    if (togetherGuard?.call() != false) queued = List.of(tracks);
+  }
+}
+
 void main() {
   setUpAll(() async {
     await LiquidGlassWidgets.initialize();
@@ -157,6 +199,8 @@ void main() {
     Size size = const Size(390, 844),
     double scale = 1,
     bool pushed = false,
+    bool paged = false,
+    _PlaylistPlayer174? player,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -169,7 +213,8 @@ void main() {
       'beta_active_account_v2': 'qishui',
     });
     final preferences = await SharedPreferences.getInstance();
-    final repository = _PlaylistFixture(api);
+    final repository = _PlaylistFixture(api)..paged = paged;
+    if (paged) repository.values = _songs(count: 150);
     final container = ProviderContainer(
       overrides: [
         platformAccountProvider.overrideWith(_Account.new),
@@ -179,6 +224,7 @@ void main() {
         currentMediaItemProvider.overrideWith(
           (_) => Stream<MediaItem?>.value(null),
         ),
+        if (player != null) audioHandlerProvider.overrideWithValue(player),
       ],
     );
     addTearDown(container.dispose);
@@ -438,6 +484,80 @@ void main() {
     expect(repository.writes, isEmpty);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('paged playlist requests the next batch only near the viewport', (
+    tester,
+  ) async {
+    final (_, repository) = await mount(
+      tester,
+      const QishuiPlaylistPage(playlist: _playlist, owned: true),
+      paged: true,
+    );
+    expect(repository.pageReads, ['']);
+    expect(repository.fullReads, 0);
+    final scroll = tester
+        .state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(QishuiPlaylistPage),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        )
+        .position;
+    scroll.jumpTo(scroll.maxScrollExtent - scroll.viewportDimension * .5);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(repository.pageReads, ['', '100']);
+    expect(repository.fullReads, 0);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+    'Play All explicitly obtains the complete playlist before replacing queue',
+    (tester) async {
+      final player = _PlaylistPlayer174();
+      final (_, repository) = await mount(
+        tester,
+        const QishuiPlaylistPage(playlist: _playlist, owned: true),
+        paged: true,
+        player: player,
+      );
+      expect(repository.pageReads, ['']);
+      expect(repository.fullReads, 0);
+      await tester.ensureVisible(find.text('播放全部'));
+      await tester.tap(find.text('播放全部'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(repository.fullReads, 1);
+      expect(player.queued.length, 150);
+      expect(player.queued.last.platformSongId, 'fixture-149');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'batch management explicitly obtains every page before selecting tracks',
+    (tester) async {
+      final (_, repository) = await mount(
+        tester,
+        const QishuiPlaylistPage(playlist: _playlist, owned: true),
+        paged: true,
+      );
+      expect(repository.fullReads, 0);
+      await tester.tap(find.byTooltip('批量管理'));
+      await tester.pumpAndSettle();
+      final batch = tester.widget<QishuiPlaylistBatchPage>(
+        find.byType(QishuiPlaylistBatchPage),
+      );
+      expect(repository.fullReads, 1);
+      expect(batch.tracks.length, 150);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets('Mine opens favorites with Mine still selected', (tester) async {
     await mount(tester, const QishuiRootPage(QishuiRoot.mine));

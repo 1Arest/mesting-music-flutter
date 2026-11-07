@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 
 import '../utils/media_uri.dart';
 import 'persistent_network_image_cache.dart';
+import '../../core/cache/browse_artwork_projection.dart';
 
 /// Identifies image content independently of a CDN thumbnail or expiring URL.
 /// Semantic ID/version parameters remain part of the identity.
@@ -261,6 +262,21 @@ class ArtworkRefreshCoordinator {
   }
 
   Map<String, String> _pictures(Object? body, {bool includeEmpty = false}) {
+    final projection = body is Map ? body[browseArtworkProjectionKey] : null;
+    if (projection is Map && projection.length <= 8192) {
+      // Protocol adapters resolve their own picture DTOs. Only the preferred
+      // rendered URI participates in readiness; raw base URLs and unused CDN
+      // alternatives must never allow an unprepared page to be published.
+      return {
+        for (final entry in projection.entries)
+          if (entry.key is String &&
+              entry.value is String &&
+              (includeEmpty && entry.value == '' ||
+                  entry.value.length < 8192 &&
+                      RegExp(r'^https?://').hasMatch(entry.value)))
+            entry.key as String: entry.value as String,
+      };
+    }
     final found = <String, String>{};
     final stack = <({Object? value, String path, int depth, bool image})>[
       (value: body, path: '', depth: 0, image: false),

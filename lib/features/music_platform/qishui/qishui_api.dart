@@ -10,6 +10,8 @@ import 'qishui_session.dart';
 import 'qishui_web_routes.dart';
 import 'qishui_request_signer.dart';
 import 'qishui_playback_failures.dart';
+import '../../../core/cache/browse_response_cache.dart';
+import 'qishui_browse_cache.dart';
 
 /// Stable, credential-free categories shared by the transport and status HUD.
 /// A malformed media reply must never be presented as a broken user network.
@@ -72,11 +74,19 @@ class QishuiApi {
     QishuiContext? context,
     this.persistRefresh,
     this.signer,
-  }) : context = context ?? qishuiAndroidContext;
+    BrowseResponseCache? browseCache,
+  }) : context = context ?? qishuiAndroidContext,
+       browseCache = browseCache ?? browseResponseCache;
   static const host = 'beta-luna.douyin.com';
   final http.Client client;
   final QishuiContext context;
   final QishuiRequestSigner? signer;
+  final BrowseResponseCache browseCache;
+  final _browseAbortOwners = Expando<int>('soda-browse-cancellation-owner');
+  int _nextBrowseAbortOwner = 0;
+  String? get browseScope => _session == null
+      ? null
+      : '${QishuiBrowseCachePolicy.schema}:${_session!.protocol.name}:${_session!.userId}';
   final Future<void> Function(QishuiSession expected, QishuiSession updated)?
   persistRefresh;
   QishuiSession? _session;
@@ -228,7 +238,81 @@ class QishuiApi {
   String _cookieHeader(Uri uri) =>
       _eligibleCookies(uri).map((c) => '${c['name']}=${c['value']}').join('; ');
 
+  /// Pages explicitly opt in through BrowseCacheWatch/CachedBrowseLoader.
+  /// Mutation readback and playback do not inherit stale presentation data.
   Future<Map<String, dynamic>> request(
+    String path, {
+    Map<String, Object?> body = const {},
+    Map<String, String> query = const {},
+    Map<String, String>? form,
+    bool get = false,
+    bool write = false,
+    bool authenticated = true,
+    String? expectedCredential,
+    Future<void>? abortTrigger,
+    bool allowBusinessError = false,
+  }) async {
+    final epoch = _epoch;
+    final scope = browseScope;
+    var cancelled = false;
+    if (abortTrigger != null) {
+      unawaited(abortTrigger.then((_) => cancelled = true));
+    }
+    Future<Map<String, dynamic>> load() => _request(
+      path,
+      body: body,
+      query: query,
+      form: form,
+      get: get,
+      write: write,
+      authenticated: authenticated,
+      expectedCredential: expectedCredential,
+      abortTrigger: abortTrigger,
+      allowBusinessError: allowBusinessError,
+    );
+    void current() {
+      if (cancelled ||
+          epoch != _epoch ||
+          expectedCredential != null && expectedCredential != credential) {
+        throw const QishuiException(
+          '账号已变化，操作已取消',
+          kind: QishuiFailureKind.cancelled,
+        );
+      }
+    }
+
+    if (scope == null ||
+        !authenticated ||
+        write ||
+        form != null ||
+        allowBusinessError ||
+        !QishuiBrowseCachePolicy.allows(path) ||
+        !BrowseResponseCache.observing) {
+      final result = await load();
+      if (write && scope != null) {
+        await browseCache.invalidateScope(
+          scope,
+          preserveRoute: (route) =>
+              !QishuiBrowseCachePolicy.affectedBy(path, route),
+        );
+      }
+      return result;
+    }
+    return browseCache.read(
+      scope: scope,
+      route: path,
+      query: QishuiBrowseCachePolicy.query(body, query),
+      // Disk/decoded data is shared by account and query. A live request may
+      // only be coalesced within the same cancellation owner: leaving one
+      // page or reloading its generation must not cancel a different page.
+      requestIdentity:
+          '$epoch:$credential:${abortTrigger == null ? 0 : (_browseAbortOwners[abortTrigger] ??= ++_nextBrowseAbortOwner)}',
+      load: () async => QishuiBrowseCachePolicy.display(await load()),
+      checkCurrent: current,
+    );
+  }
+
+  Future<Map<String, dynamic>> _request(
     String path, {
     Map<String, Object?> body = const {},
     Map<String, String> query = const {},

@@ -100,6 +100,7 @@ class QishuiCatalogAccumulator<T> {
   final String Function(T item) keyOf;
   final _rows = <String, T>{};
   final _visited = <String>{};
+  final _pages = <String, QishuiCatalogPage<T>>{};
   String nextCursor = '0';
   String searchId;
   bool hasMore = true;
@@ -112,6 +113,7 @@ class QishuiCatalogAccumulator<T> {
       throw const QishuiException('搜索列表已变化，请重新搜索');
     }
     _visited.add(page.cursor);
+    _pages[page.cursor] = page;
     for (final item in page.items) {
       final key = keyOf(item);
       if (key.isNotEmpty) _rows[key] = item;
@@ -130,6 +132,39 @@ class QishuiCatalogAccumulator<T> {
       continuationProblem = '本次列表已达到读取上限，请缩小关键词后重试。';
     }
     if (hasMore) nextCursor = next!;
+  }
+
+  /// Replace a revalidated loaded page without losing later rows or scroll.
+  /// An altered continuation boundary cannot be stitched onto older pages;
+  /// retain that coherent displayed list until the user starts a fresh read.
+  bool replace(QishuiCatalogPage<T> page) {
+    final cursors = _pages.keys.toList();
+    final index = cursors.indexOf(page.cursor);
+    if (index < 0) return false;
+    if (index + 1 < cursors.length &&
+        (!page.hasMore || page.nextCursor != cursors[index + 1])) {
+      return false;
+    }
+    _pages[page.cursor] = page;
+    _rows.clear();
+    for (final loaded in _pages.values) {
+      for (final item in loaded.items) {
+        if (keyOf(item).isNotEmpty) _rows[keyOf(item)] = item;
+      }
+    }
+    if (page.searchId.isNotEmpty) searchId = page.searchId;
+    if (index == cursors.length - 1) {
+      continuationProblem = page.continuationProblem;
+      hasMore = page.hasMore && continuationProblem == null;
+      final next = page.nextCursor;
+      if (hasMore &&
+          (next == null || next.isEmpty || _visited.contains(next))) {
+        hasMore = false;
+        continuationProblem = '汽水返回的续载位置异常，请重新搜索或刷新。';
+      }
+      if (hasMore) nextCursor = next!;
+    }
+    return true;
   }
 }
 

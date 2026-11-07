@@ -177,7 +177,7 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                 ),
                 children: [
                   Text(
-                    '双平台连续巡检',
+                    '三平台连续巡检',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 12),
@@ -186,7 +186,7 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    '一键运行网易云、酷狗与公共页面的正常滚动、超快速反向滚动、页面左右滑动及主 Tab 快速切换。使用真实页面和本机已有数据，未登录或缺少数据会记录跳过；单页失败后继续。',
+                    '一键运行网易云、酷狗、汽水与公共页面的正常滚动、超快速反向滚动、页面左右滑动及主 Tab 快速切换。使用真实页面和本机已有数据，未登录或缺少数据会记录跳过；单页失败后继续。',
                   ),
                   const SizedBox(height: 12),
                   const Text(

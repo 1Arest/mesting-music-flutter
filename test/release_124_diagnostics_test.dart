@@ -255,6 +255,18 @@ void main() {
       expect(scenarios.any((s) => s.id == 'common/downloads@1'), true);
       expect(scenarios.any((s) => s.id == 'kugou/effects@2'), true);
       expect(scenarios.any((s) => s.id == 'excluded/commerce'), true);
+      final soda = scenarios.where((s) => s.platform == 'qishui').toList();
+      expect(soda.map((s) => s.id), [
+        'qishui/recommend',
+        'qishui/music',
+        'qishui/profile',
+        'qishui/history',
+        'qishui/playlist',
+        'qishui/search',
+        'qishui/lyrics',
+        'qishui/tabs',
+      ]);
+      expect(scenarios.last.id, 'qishui/tabs');
     },
   );
 

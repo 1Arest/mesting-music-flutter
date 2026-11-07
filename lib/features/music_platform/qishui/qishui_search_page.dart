@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/cache/cached_browse_loader.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,7 @@ class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
     with QishuiOwnedPage<QishuiSearchPage> {
   final _query = TextEditingController();
   final _scroll = ScrollController();
+  final _browse = CachedBrowseLoader();
   late final _catalog = ref.read(qishuiSearchCatalogProvider);
   QishuiSearchKind _kind = QishuiSearchKind.tracks;
   QishuiCatalogAccumulator<Track>? _tracks;
@@ -59,6 +61,7 @@ class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
   void dispose() {
     ++_generation;
     _cancelRead();
+    _browse.dispose();
     _query.dispose();
     _scroll.dispose();
     super.dispose();
@@ -66,6 +69,7 @@ class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
 
   void _submit(String text) {
     _cancelRead();
+    _browse.reset();
     ++_generation;
     final keyword = text.trim();
     final searchId = QishuiSearchCatalog.newSearchId();
@@ -112,21 +116,35 @@ class _QishuiSearchPageState extends ConsumerState<QishuiSearchPage>
     try {
       if (kind == QishuiSearchKind.tracks) {
         final values = _tracks!;
-        final page = await _catalog.searchTracks(
-          keyword,
-          cursor: values.nextCursor,
-          searchId: values.searchId,
-          abortTrigger: cancellation,
+        final cursor = values.nextCursor, searchId = values.searchId;
+        final page = await _browse.load<QishuiCatalogPage<Track>>(
+          key: (kind, cursor),
+          request: () => _catalog.searchTracks(
+            keyword,
+            cursor: cursor,
+            searchId: searchId,
+            abortTrigger: cancellation,
+          ),
+          onUpdate: (_, next) {
+            if (current()) setState(() => values.replace(next));
+          },
         );
         if (!current()) return;
         setState(() => values.accept(page));
       } else {
         final values = _artists!;
-        final page = await _catalog.searchArtists(
-          keyword,
-          cursor: values.nextCursor,
-          searchId: values.searchId,
-          abortTrigger: cancellation,
+        final cursor = values.nextCursor, searchId = values.searchId;
+        final page = await _browse.load<QishuiCatalogPage<QishuiArtist>>(
+          key: (kind, cursor),
+          request: () => _catalog.searchArtists(
+            keyword,
+            cursor: cursor,
+            searchId: searchId,
+            abortTrigger: cancellation,
+          ),
+          onUpdate: (_, next) {
+            if (current()) setState(() => values.replace(next));
+          },
         );
         if (!current()) return;
         setState(() => values.accept(page));

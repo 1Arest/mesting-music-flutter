@@ -44,6 +44,10 @@ import '../../music_platform/presentation/platform_catalog_detail_page.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
 import '../../music_platform/presentation/platform_search_landing.dart';
 import '../../music_platform/presentation/unified_reward_page.dart';
+import '../../music_platform/qishui/qishui_mine_widgets.dart';
+import '../../music_platform/qishui/qishui_pages.dart';
+import '../../music_platform/qishui/qishui_player_navigation.dart';
+import '../../music_platform/qishui/qishui_playlist_page.dart';
 import 'music_equalizer_page.dart';
 import 'haptic_settings_page.dart';
 
@@ -165,6 +169,19 @@ List<DiagnosticScenario> productionDiagnosticScenarios() => [
   const DiagnosticScenario('common/comments', '当前歌曲评论（只读）', null),
   for (final id in _excludedScreens.keys)
     DiagnosticScenario('excluded/$id', _excludedScreens[id]!, null),
+  // Preserve all previous scenarios' order and active platform for paired
+  // measurements. Soda appends its real roots and read-only secondary pages.
+  for (final entry in const {
+    'recommend': '发现',
+    'music': '音乐',
+    'profile': '我的',
+    'history': '历史播放',
+    'playlist': '歌单',
+    'search': '搜索',
+    'lyrics': '歌词',
+    'tabs': '主 Tab 快速切换',
+  }.entries)
+    DiagnosticScenario('qishui/${entry.key}', '汽水 · ${entry.value}', 'qishui'),
 ];
 
 const _entityLabels = {
@@ -276,6 +293,7 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   Route<void>? _route;
   GlobalKey? _pageKey;
   bool _closed = false;
+  bool _qishuiLyricsOpened = false;
 
   @override
   List<DiagnosticScenario> get scenarios => productionDiagnosticScenarios();
@@ -305,6 +323,11 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     }
     final variant = scenario.id.split('/').last.split('@');
     final id = variant.first;
+    if (scenario.platform == 'qishui') {
+      await _openQishui(id, ticket);
+      await _ready(ticket);
+      return;
+    }
     const rootPaths = {
       'recommend': '/music/recommend',
       'functions': '/music',
@@ -347,6 +370,63 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
     if (variant.length > 1) {
       await _selectPage(int.parse(variant.last), ticket);
       await _ready(ticket);
+    }
+  }
+
+  /// Navigate through Soda's actual roots and existing page callbacks. No
+  /// playback, signer tests, cloud writes or synthetic song seeds are used.
+  Future<void> _openQishui(String id, DiagnosticTicket ticket) async {
+    final path = switch (id) {
+      'recommend' || 'search' || 'tabs' => '/music/recommend',
+      'music' || 'lyrics' => '/music',
+      _ => '/profile',
+    };
+    router.go(path);
+    await _settle(ticket);
+    if (id == 'profile' || id == 'playlist') {
+      // The preceding history scenario keeps this retained branch alive.
+      // Select its real playlist tab before collecting a playlist seed; an
+      // active history tab is not evidence that the account has no playlists.
+      final tabs = _visible().map((e) => e.widget).whereType<QishuiMineTabs>();
+      if (tabs.isEmpty) throw StateError('production_soda_mine_tabs_missing');
+      tabs.last.onSelected(QishuiMineTab.playlists);
+      await _settle(ticket);
+    }
+    await _ready(ticket);
+    if (id == 'lyrics') {
+      if (container.read(currentMediaItemProvider).value == null ||
+          container.read(currentTrackProvider).source.name != 'qishui') {
+        throw const DiagnosticSkip('no_current_platform_song');
+      }
+      container.read(qishuiMusicLyricsProvider.notifier).showLyrics();
+      _qishuiLyricsOpened = true;
+      await _settle(ticket);
+    } else if (id == 'history') {
+      final tabs = _visible().map((e) => e.widget).whereType<QishuiMineTabs>();
+      if (tabs.isEmpty) throw StateError('production_soda_tabs_missing');
+      tabs.last.onSelected(QishuiMineTab.history);
+      await _settle(ticket);
+    } else if (id == 'search' || id == 'playlist') {
+      Widget page = const QishuiSearchPage();
+      if (id == 'playlist') {
+        final lists = _visible()
+            .map((e) => e.widget)
+            .whereType<QishuiMinePlaylistList>();
+        if (lists.isEmpty || lists.last.playlists.isEmpty) {
+          throw const DiagnosticSkip('no_real_detail_seed');
+        }
+        page = QishuiPlaylistPage(
+          playlist: lists.last.playlists.first,
+          navigationIndex: 3,
+        );
+      }
+      final key = _pageKey = GlobalKey();
+      _route = betaContentRoute<void>(KeyedSubtree(key: key, child: page));
+      unawaited(navigator.push(_route!));
+      await _settle(ticket);
+      if (key.currentContext == null || _route?.isCurrent != true) {
+        throw StateError('page_not_visible');
+      }
     }
   }
 
@@ -511,6 +591,12 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
         .where(
           (s) =>
               s.context.findAncestorWidgetOfExactType<PageView>() != null &&
+              // Root tabs are selected by their production callback. Driving
+              // the root PageController directly can show another branch
+              // while leaving route/back/search ownership on the old tab.
+              // Their dedicated /tabs scenario exercises the real callback.
+              s.context.findAncestorWidgetOfExactType<PageView>()!.key !=
+                  const ValueKey('beta-root-tab-viewport') &&
               s.position.axis == Axis.horizontal,
         );
     if (pagers.isEmpty) throw const DiagnosticSkip('no_paged_navigation');
@@ -591,6 +677,11 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       if (visible.any((e) => e.widget is ErrorWidget)) {
         throw StateError('page_build_failed');
       }
+      // A settled Soda refusal is a failed load, not a smooth catalog sample.
+      // Do not count its retry/empty surface as a successful music page.
+      if (visible.any((e) => e.widget is QishuiError)) {
+        throw StateError('page_load_failed');
+      }
       final busy =
           feedback.any((e) => e.loading) ||
           visible.any(
@@ -616,7 +707,12 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
       if (phase != DiagnosticPhase.pages) {
         throw const DiagnosticSkip('dedicated_tab_stage');
       }
-      for (final index in [0, 1, 2, 3, 2, 1, 0, 3, 0, 2, 1, 3]) {
+      // Soda exposes three destinations over the existing retained branches;
+      // never send its hidden library branch as a visual fourth destination.
+      final destinations = scenario.platform == 'qishui'
+          ? [0, 1, 3, 1, 0, 3, 1, 0, 3, 0, 1, 3]
+          : [0, 1, 2, 3, 2, 1, 0, 3, 0, 2, 1, 3];
+      for (final index in destinations) {
         ticket.check();
         final bars = _visible()
             .map((e) => e.widget)
@@ -749,6 +845,10 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    if (_qishuiLyricsOpened) {
+      _qishuiLyricsOpened = false;
+      container.read(qishuiMusicLyricsProvider.notifier).showCover();
+    }
     final route = _route;
     _route = null;
     _pageKey = null;

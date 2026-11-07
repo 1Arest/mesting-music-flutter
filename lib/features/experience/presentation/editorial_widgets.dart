@@ -47,6 +47,28 @@ class EditorialScroll extends StatelessWidget {
   final List<Widget> children;
   final Future<void> Function()? onRefresh;
   final Widget footer;
+
+  /// Box sections must share a lazy delegate. One SliverToBoxAdapter per shelf
+  /// still lays out every shelf to discover its extent, mounting offscreen
+  /// provider subscriptions and image requests during the first frame. Keep
+  /// genuine sliver sections in order, and lazily build each intervening run
+  /// of ordinary boxes using the viewport's bounded cache extent.
+  Iterable<Widget> _slivers() sync* {
+    var boxes = <Widget>[];
+    for (final child in [...children, footer]) {
+      if (child is EditorialSliver) {
+        if (boxes.isNotEmpty) {
+          yield SliverList.list(children: boxes);
+          boxes = <Widget>[];
+        }
+        yield child;
+      } else {
+        boxes.add(child);
+      }
+    }
+    if (boxes.isNotEmpty) yield SliverList.list(children: boxes);
+  }
+
   @override
   Widget build(BuildContext context) {
     final scroll = CustomScrollView(
@@ -63,14 +85,7 @@ class EditorialScroll extends StatelessWidget {
             ),
           ),
           sliver: SliverMainAxisGroup(
-            slivers: [
-              for (final child in children)
-                if (child is EditorialSliver)
-                  child
-                else
-                  SliverToBoxAdapter(child: child),
-              SliverToBoxAdapter(child: footer),
-            ],
+            slivers: _slivers().toList(growable: false),
           ),
         ),
       ],

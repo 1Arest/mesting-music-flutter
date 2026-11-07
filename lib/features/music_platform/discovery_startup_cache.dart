@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 
 import '../../core/cache/browse_response_cache.dart';
+import '../../core/performance/background_json.dart';
 import '../../shared/media/artwork_refresh_coordinator.dart';
 import '../../shared/models/track.dart';
 import '../history/listening_history_providers.dart';
@@ -16,7 +16,9 @@ import 'netease/netease_features_repository.dart';
 import 'platform_backend_providers.dart';
 import 'platform_catalog_providers.dart';
 import 'platform_explore_providers.dart';
-import 'platform_recommendation_providers.dart';
+import 'qishui/qishui_browse_providers.dart';
+import 'qishui/qishui_models.dart';
+import 'qishui/qishui_providers.dart';
 
 /// Keeps the very same provider elements alive from disk hydration to the
 /// routed app. A second ProviderScope would discard their AsyncData and expose
@@ -97,6 +99,21 @@ class DiscoveryStartupCache {
       );
       final netease = container.read(usesNeteaseProvider);
       await BrowseResponseCache.restoreOnly(() async {
+        if (container.read(usesQishuiProvider)) {
+          // Soda is a third protocol, not the former Kugou fallback. Restore
+          // only its default entry's disk snapshot; no feed/media resolution
+          // or invisible platform providers are started by cold hydration.
+          final provider = qishuiBrowseProvider('discover');
+          final value = await lease._prime(
+            container,
+            provider,
+            () => container.invalidate(provider),
+          );
+          if (value is List<QishuiPlaylist>) {
+            covers.addAll(value.take(6).map((list) => list.cover));
+          }
+          return;
+        }
         Future<void> tracks(
           ProviderListenable<AsyncValue<List<Track>>> provider,
           void Function() refresh,
@@ -107,17 +124,11 @@ class DiscoveryStartupCache {
           );
         }
 
-        // Restore lower shelves first, then pin the actual first-screen covers
-        // together. Warming every cover in a long library would evict that
-        // first screen and undo the very guarantee startup needs to provide.
-        final kinds = netease
-            ? [PlatformExploreKind.rank]
-            : [
-                PlatformExploreKind.rank,
-                PlatformExploreKind.album,
-                PlatformExploreKind.theme,
-                PlatformExploreKind.scene,
-              ];
+        // Only first-screen/nearby modules hold startup leases. Lower shelves
+        // restore their own snapshots when the lazy viewport mounts them;
+        // pinning all providers here would immediately start their network
+        // refreshes after launch, defeating the viewport's deferred loading.
+        final kinds = [PlatformExploreKind.rank];
         for (final kind in kinds) {
           final provider = platformExploreProvider(kind);
           await lease._prime(
@@ -127,13 +138,7 @@ class DiscoveryStartupCache {
           );
         }
         if (netease) {
-          for (final feed in [
-            NeteaseFeed.recommended,
-            NeteaseFeed.premium,
-            NeteaseFeed.albums,
-            NeteaseFeed.artists,
-            NeteaseFeed.mvs,
-          ]) {
+          for (final feed in [NeteaseFeed.recommended]) {
             final provider = neteaseFeedPreviewProvider(feed);
             await lease._prime(
               container,
@@ -146,10 +151,6 @@ class DiscoveryStartupCache {
             container,
             platformFeaturedProvider,
             () => container.invalidate(platformFeaturedProvider),
-          );
-          await tracks(
-            platformDiscoveryProvider,
-            () => container.invalidate(platformDiscoveryProvider),
           );
           // Local history is also on the discovery screen. Its first SQLite
           // emission must arrive before the screen becomes visible.
@@ -171,10 +172,6 @@ class DiscoveryStartupCache {
             localCovers.add(favorites!.first.coverAsset);
           }
         }
-        await tracks(
-          platformNewSongsProvider,
-          () => container.invalidate(platformNewSongsProvider),
-        );
         // Top modules go last, so their decoded pixels are available when the
         // native startup surface yields to the routed discovery screen.
         covers.clear();
@@ -183,12 +180,6 @@ class DiscoveryStartupCache {
           () => container.invalidate(platformDailyProvider),
         );
         covers.addAll(localCovers);
-        if (container.read(platformAccountProvider).value != null) {
-          await tracks(
-            platformFmProvider,
-            () => container.invalidate(platformFmProvider),
-          );
-        }
       });
       // Restored playback mounts its capsule after the first app frame. Warm
       // that one saved cover locally too; do not predecode the whole queue or
@@ -199,7 +190,7 @@ class DiscoveryStartupCache {
           .loadPlaybackSession(owner);
       if (playback != null) {
         try {
-          final queue = jsonDecode(playback.queueSnapshot) as List;
+          final queue = await decodeJsonText(playback.queueSnapshot) as List;
           if (queue.isNotEmpty) {
             final track = Track.fromJson(
               Map<String, Object?>.from(

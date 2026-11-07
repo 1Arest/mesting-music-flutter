@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/audio/playback_providers.dart';
+import '../../../core/cache/browse_response_cache.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -34,6 +35,7 @@ import 'qishui_models.dart';
 import 'qishui_providers.dart';
 import 'qishui_repository.dart';
 import 'qishui_history_providers.dart';
+import 'qishui_browse_providers.dart';
 import 'qishui_welfare_page.dart';
 import 'qishui_search_page.dart';
 
@@ -132,17 +134,20 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   late Future<Object> _content = _load();
   Object? _lastContent;
   QishuiMineTab _mineTab = QishuiMineTab.playlists;
-  late Future<Map<String, dynamic>> _profile = _music.profile();
+  late Future<Object> _profile = ref.read(
+    qishuiBrowseProvider('profile').future,
+  );
   List<QishuiPlaylist> _mineLists = const [];
-  Future<Object> _load() => switch (widget.root) {
-    QishuiRoot.discover => _music.discover(abortTrigger: _abort.future),
-    QishuiRoot.music => ref.read(qishuiFeedScopeProvider).load(),
-    QishuiRoot.mine => switch (_mineTab) {
-      QishuiMineTab.history => _music.recent(abortTrigger: _abort.future),
-      QishuiMineTab.downloads => Future.value(_mineLists),
-      QishuiMineTab.playlists => _music.playlists(abortTrigger: _abort.future),
-    },
+  String get _browsePage => switch (widget.root) {
+    QishuiRoot.discover => 'discover',
+    QishuiRoot.music => 'music',
+    QishuiRoot.mine =>
+      _mineTab == QishuiMineTab.history ? 'history' : 'playlists',
   };
+  Future<Object> _load() =>
+      _mineTab == QishuiMineTab.downloads && widget.root == QishuiRoot.mine
+      ? Future.value(_mineLists)
+      : ref.read(qishuiBrowseProvider(_browsePage).future);
   @override
   void dispose() {
     if (!_abort.isCompleted) _abort.complete();
@@ -150,10 +155,18 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   }
 
   Future<void> _refresh() async {
+    final scope = _music.api.browseScope;
+    if (scope != null) _music.api.browseCache.revalidateScope(scope);
+    ref.invalidate(qishuiBrowseProvider(_browsePage));
+    if (widget.root == QishuiRoot.mine) {
+      ref.invalidate(qishuiBrowseProvider('profile'));
+    }
     final next = _load();
     setState(() {
       _content = next;
-      if (widget.root == QishuiRoot.mine) _profile = _music.profile();
+      if (widget.root == QishuiRoot.mine) {
+        _profile = ref.read(qishuiBrowseProvider('profile').future);
+      }
     });
     try {
       await next;
@@ -230,11 +243,18 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
 
-  Widget _mineHeader() => FutureBuilder<Map<String, dynamic>>(
+  Widget _mineHeader() => FutureBuilder<Object>(
     future: _profile,
     builder: (context, profile) {
       final account = ref.watch(platformAccountProvider).value;
-      final user = sodaMap(profile.data?['my_info']);
+      final profileState = ref.watch(qishuiBrowseProvider('profile'));
+      // Dependency reloads can retain an older owner's AsyncData internally.
+      // This page has a fresh owner key; do not unwrap that previous payload.
+      final cachedProfile = profileState.isReloading
+          ? null
+          : profileState.value;
+      final profileError = profileState.isReloading ? null : profileState.error;
+      final user = sodaMap(sodaMap(cachedProfile ?? profile.data)['my_info']);
       final name = '${user['nickname'] ?? account?.nickname ?? ''}';
       final picture = sodaPicture(
         user['larger_avatar_url'] ?? user['medium_avatar_url'],
@@ -257,12 +277,14 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
               onSettings: () => context.push('/music/settings'),
             ),
           ),
-          if (profile.hasError)
+          if (profileError != null &&
+              profileError is! BrowseSnapshotUnavailable)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: TextButton(
                 onPressed: () {
-                  final next = _music.profile();
+                  ref.invalidate(qishuiBrowseProvider('profile'));
+                  final next = ref.read(qishuiBrowseProvider('profile').future);
                   setState(() {
                     _profile = next;
                   });
@@ -385,18 +407,40 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                 const QishuiMineDownloads()
               else
                 FutureBuilder<Object>(
+                  key: ValueKey('qishui-browse-$_browsePage'),
                   future: _content,
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) _lastContent = snapshot.data;
-                    final value = snapshot.data ?? _lastContent;
+                    // Read the same hydrated provider used during startup.
+                    // Riverpod keeps its previous value while revalidating;
+                    // the completed FutureBuilder must not paint older data
+                    // over a newly published cache snapshot.
+                    final cached = ref.watch(qishuiBrowseProvider(_browsePage));
+                    // Reloading a dependency (notifying a different identity)
+                    // retains AsyncData in Riverpod. The new keyed page may
+                    // only use its own Future/local snapshot until it finishes.
+                    // Same-owner cache invalidations are refreshes and continue
+                    // showing their existing content while work is pending.
+                    final currentValue = cached.isReloading
+                        ? null
+                        : cached.value;
+                    final value = currentValue ?? snapshot.data ?? _lastContent;
+                    // The startup Future may have completed with a disk miss
+                    // before the same provider starts its normal live read.
+                    // Only the provider's current error is authoritative;
+                    // a restore-only miss is internal control flow, not a
+                    // server refusal or a persistent banner over fresh data.
+                    final error =
+                        cached.isReloading ||
+                            cached.error is BrowseSnapshotUnavailable
+                        ? null
+                        : cached.error;
+                    if (value != null) _lastContent = value;
                     if (value == null) {
-                      if (snapshot.hasError) {
+                      if (error != null) {
                         return SliverToBoxAdapter(
                           child: QishuiError(
-                            error: snapshot.error!,
-                            retry: () => setState(() {
-                              _content = _load();
-                            }),
+                            error: error,
+                            retry: () => unawaited(_refresh()),
                           ),
                         );
                       }
@@ -408,15 +452,13 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
                       );
                     }
                     final body = _dataSliver(value);
-                    if (snapshot.hasError) {
+                    if (error != null) {
                       return SliverMainAxisGroup(
                         slivers: [
                           SliverToBoxAdapter(
                             child: QishuiError(
-                              error: snapshot.error!,
-                              retry: () => setState(() {
-                                _content = _load();
-                              }),
+                              error: error,
+                              retry: () => unawaited(_refresh()),
                             ),
                           ),
                           body,

@@ -381,6 +381,62 @@ class QishuiRepository {
             abortTrigger: abortTrigger,
           ))
           .items;
+
+  /// One presentation page. Merely opening a collection must not enumerate
+  /// every offscreen track. Full-list mutations and explicit bulk actions keep
+  /// using [playlist], whose completeness/loop guards remain independent.
+  Future<QishuiCatalogPage<Track>> playlistPage(
+    String id, {
+    String cursor = '',
+    int count = 100,
+    Future<void>? abortTrigger,
+  }) async {
+    if (id.isEmpty ||
+        id.length > 256 ||
+        cursor.length > 4096 ||
+        RegExp(r'[\x00-\x1f\x7f]').hasMatch('$id$cursor') ||
+        count < 1 ||
+        count > 100) {
+      throw const QishuiException('汽水歌单或读取位置无效');
+    }
+    final response = await call(
+      '/luna/playlist/detail',
+      body: {'playlist_id': id, 'cursor': cursor, 'count': count},
+      abortTrigger: abortTrigger,
+    );
+    final nested = sodaMap(response['data']);
+    final data = nested.isNotEmpty ? nested : response;
+    final returnedId = '${sodaMap(data['playlist'])['id'] ?? ''}';
+    if (returnedId.isNotEmpty && returnedId != id) {
+      throw const QishuiException('汽水返回的歌单不匹配');
+    }
+    final marker = data['has_more'] ?? response['has_more'];
+    if (marker != null &&
+        marker != true &&
+        marker != false &&
+        marker != 0 &&
+        marker != 1 &&
+        marker != '0' &&
+        marker != '1') {
+      throw const QishuiException('汽水歌单续载状态无效');
+    }
+    final more = marker == true || marker == 1 || marker == '1';
+    final nextValue = data['next_cursor'] ?? response['next_cursor'];
+    final next = nextValue is String || nextValue is num ? '$nextValue' : '';
+    final validNext =
+        next.isNotEmpty &&
+        next.length <= 4096 &&
+        next != cursor &&
+        !RegExp(r'[\x00-\x1f\x7f]').hasMatch(next);
+    return QishuiCatalogPage(
+      items: sodaTracks(data),
+      cursor: cursor,
+      nextCursor: more && validNext ? next : null,
+      hasMore: more,
+      continuationProblem: more && !validNext ? '歌单续载位置异常，请重新读取' : null,
+    );
+  }
+
   Future<List<Track>> playlist(
     String id, {
     String cursor = '',
@@ -389,21 +445,19 @@ class QishuiRepository {
     final result = <String, Track>{};
     final cursors = <String>{};
     for (var page = 0; page < 1000; page++) {
-      final data = await call(
-        '/luna/playlist/detail',
-        body: {'playlist_id': id, 'cursor': cursor, 'count': 100},
+      final batch = await playlistPage(
+        id,
+        cursor: cursor,
         abortTrigger: abortTrigger,
       );
-      final returnedId = '${sodaMap(data['playlist'])['id'] ?? ''}';
-      if (returnedId.isNotEmpty && returnedId != id) {
-        throw const QishuiException('汽水返回的歌单不匹配');
-      }
-      for (final track in sodaTracks(data)) {
+      for (final track in batch.items) {
         result[track.id] = track;
       }
-      if (data['has_more'] != true) return List.unmodifiable(result.values);
-      final next = '${data['next_cursor'] ?? ''}';
-      if (next.isEmpty || next == cursor || !cursors.add(next)) {
+      if (!batch.hasMore) return List.unmodifiable(result.values);
+      final next = batch.nextCursor;
+      if (batch.continuationProblem != null ||
+          next == null ||
+          !cursors.add(next)) {
         throw const QishuiException('歌单续载位置异常，请重新读取');
       }
       cursor = next;

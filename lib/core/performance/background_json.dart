@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:crypto/crypto.dart';
 
 /// Large snapshots leave the UI isolate before UTF-8/JSON work begins. Workers
 /// receive JSON values only, with no providers, clients or platform channels.
@@ -18,6 +19,16 @@ Future<Object?> decodeJsonText(String text) =>
     text.length < backgroundJsonThreshold
     ? Future.value(_decodeText(text))
     : compute(_decodeText, text, debugLabel: 'music-snapshot-decode');
+
+String _textDigest(String text) => sha256.convert(utf8.encode(text)).toString();
+
+/// Integrity checks are part of snapshot decoding too. Encoding megabytes
+/// again merely to hash them on the UI isolate defeats background JSON work.
+/// Small keys remain synchronous; large payloads use the same bounded rule.
+Future<String> digestJsonText(String text) =>
+    text.length * 2 < backgroundJsonThreshold
+    ? Future.value(_textDigest(text))
+    : compute(_textDigest, text, debugLabel: 'music-snapshot-integrity');
 
 /// Stop estimation at a fixed budget: fully encoding on the UI isolate to
 /// decide whether work is large would perform the very work being deferred.

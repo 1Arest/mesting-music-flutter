@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../../../core/cache/cached_browse_loader.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,7 @@ class QishuiArtistPage extends ConsumerStatefulWidget {
 class _QishuiArtistPageState extends ConsumerState<QishuiArtistPage>
     with QishuiOwnedPage<QishuiArtistPage> {
   late final _catalog = ref.read(qishuiSearchCatalogProvider);
+  final _browse = CachedBrowseLoader();
   late QishuiArtist _artist = widget.artist;
   QishuiCatalogAccumulator<Track> _tracks = QishuiCatalogAccumulator(
     keyOf: (t) => t.id,
@@ -50,9 +52,13 @@ class _QishuiArtistPageState extends ConsumerState<QishuiArtistPage>
       _profileError = null;
     });
     try {
-      final result = await _catalog.artistDetail(
-        _artist.id,
-        abortTrigger: pageAbort,
+      final result = await _browse.load<QishuiArtist>(
+        key: 'profile',
+        request: () =>
+            _catalog.artistDetail(_artist.id, abortTrigger: pageAbort),
+        onUpdate: (_, next) {
+          if (ownerCurrent) setState(() => _artist = _artist.merge(next));
+        },
       );
       if (ownerCurrent) setState(() => _artist = _artist.merge(result));
     } on Object catch (error) {
@@ -69,10 +75,20 @@ class _QishuiArtistPageState extends ConsumerState<QishuiArtistPage>
       _error = null;
     });
     try {
-      final page = await _catalog.artistTracks(
-        _artist.id,
-        cursor: _tracks.nextCursor,
-        abortTrigger: pageAbort,
+      final cursor = _tracks.nextCursor;
+      final rows = _tracks;
+      final page = await _browse.load<QishuiCatalogPage<Track>>(
+        key: ('works', cursor),
+        request: () => _catalog.artistTracks(
+          _artist.id,
+          cursor: cursor,
+          abortTrigger: pageAbort,
+        ),
+        onUpdate: (_, next) {
+          if (ownerCurrent && identical(rows, _tracks)) {
+            setState(() => rows.replace(next));
+          }
+        },
       );
       if (ownerCurrent) setState(() => _tracks.accept(page));
     } on Object catch (error) {
@@ -84,8 +100,16 @@ class _QishuiArtistPageState extends ConsumerState<QishuiArtistPage>
 
   Future<void> _refresh() async {
     if (_loading || !ownerCurrent) return;
+    _browse.reset();
     setState(() => _tracks = QishuiCatalogAccumulator(keyOf: (t) => t.id));
     await Future.wait([_loadProfile(), _loadTracks()]);
+  }
+
+  @override
+  void dispose() {
+    ++_playIntent;
+    _browse.dispose();
+    super.dispose();
   }
 
   Future<void> _playLoaded() async {

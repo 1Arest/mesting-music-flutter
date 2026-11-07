@@ -84,6 +84,9 @@ class _ArtworkImageState extends State<ArtworkImage> {
   ImageProvider<Object>? _directNetworkProvider;
   File? _persistentNetworkFile;
   String? _persistentNetworkIdentity;
+  Object? _persistentRequest;
+  String? _persistentRequestIdentity;
+  PersistentNetworkImageCache? _persistentRequestCache;
   bool _persistentNetworkFailed = false;
   bool _handlingBrokenFile = false;
   ArtworkRevealEntry? _reveal;
@@ -303,7 +306,15 @@ class _ArtworkImageState extends State<ArtworkImage> {
       if (DistributionChannel.isBeta) {
         final registration = _registration ??= artworkRefreshCoordinator
             .register(() {
-              if (!mounted) return false;
+              // A retained tab's own vertical viewport can still report this
+              // box inside its bounds while the entire tab is hidden. Such a
+              // cover must not join another visible page's refresh batch, nor
+              // query its render object during lazy-element deactivation.
+              if (!mounted ||
+                  !_active ||
+                  !TickerMode.valuesOf(context).enabled) {
+                return false;
+              }
               final box = context.findRenderObject();
               if (box is! RenderBox || !box.attached || !box.hasSize) {
                 return false;
@@ -545,12 +556,33 @@ class _ArtworkImageState extends State<ArtworkImage> {
     final config = _persistentNetworkConfig;
     if (identity == null || config == null) return;
     if (!TickerMode.valuesOf(context).enabled) return;
+    // Dependency changes may ask the same visible thumbnail to resolve again
+    // before its first file arrives. The cache coalesces HTTP, but each extra
+    // caller still used to attach another callback, rebuild and retry chain.
+    // One owned request handles this identity; newer identities invalidate old
+    // completions even if a rapid A -> B -> A switch returns to the same URL.
+    if (_persistentRequest != null &&
+        _persistentRequestIdentity == identity &&
+        identical(_persistentRequestCache, config.cache)) {
+      return;
+    }
+    final request = Object();
+    _persistentRequest = request;
+    _persistentRequestIdentity = identity;
+    _persistentRequestCache = config.cache;
     _startDeadline();
 
     config.cache.resolve(cacheKey: config.cacheKey, url: config.uri).then((
       file,
     ) {
-      if (!mounted || identity != _persistentNetworkIdentity) return;
+      if (!mounted ||
+          request != _persistentRequest ||
+          identity != _persistentNetworkIdentity) {
+        return;
+      }
+      _persistentRequest = null;
+      _persistentRequestIdentity = null;
+      _persistentRequestCache = null;
       if (file != null) {
         setState(() {
           _persistentNetworkFile = file;

@@ -39,6 +39,10 @@ import 'support/release_152_qa.dart' show theme152;
 import 'support/release_147_qa.dart' show load147IconFonts;
 
 const capture173 = bool.fromEnvironment('CAPTURE_173');
+const capture173Directory = String.fromEnvironment(
+  'UI_CAPTURE_173_DIR',
+  defaultValue: '.codex-artifacts/2026-11-07-release173/ui',
+);
 void main() {
   setUpAll(() async {
     await LiquidGlassWidgets.initialize();
@@ -296,7 +300,7 @@ void main() {
             final image = await boundary.toImage();
             final data = await image.toByteData(format: ui.ImageByteFormat.png);
             final file = File(
-              '.codex-artifacts/2026-11-07-release173/ui/$surface-${dark ? 'dark' : 'light'}-large.png',
+              '$capture173Directory/$surface-${dark ? 'dark' : 'light'}-large.png',
             );
             await file.parent.create(recursive: true);
             await file.writeAsBytes(data!.buffer.asUint8List());

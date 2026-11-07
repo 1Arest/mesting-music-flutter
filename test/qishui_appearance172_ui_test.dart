@@ -32,6 +32,7 @@ import 'package:mesting_music/features/lyrics/domain/lyrics_document.dart';
 import 'package:mesting_music/features/lyrics/lyrics_providers.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_search_catalog.dart';
 import 'package:mesting_music/features/music_platform/platform_profile_provider.dart';
 import 'package:mesting_music/features/music_platform/platform_rewards_provider.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_account_page.dart';
@@ -162,6 +163,14 @@ class AuditMusic172 extends QishuiRepository {
     String cursor = '',
     Future<void>? abortTrigger,
   }) async => songs172;
+
+  @override
+  Future<QishuiCatalogPage<Track>> playlistPage(
+    String id, {
+    String cursor = '',
+    int count = 100,
+    Future<void>? abortTrigger,
+  }) async => QishuiCatalogPage(items: songs172, cursor: cursor);
   @override
   Future<List<Track>> search(
     String text, {

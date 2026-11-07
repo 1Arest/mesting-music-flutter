@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../core/security/avatar_image_validator.dart';
 import '../../core/diagnostics/local_music_diagnostics.dart';
 import '../utils/media_uri.dart';
+import '../../core/performance/background_json.dart';
 
 typedef PersistentNetworkImageDirectoryProvider = Future<Directory> Function();
 
@@ -62,7 +63,7 @@ class PersistentNetworkImageCache {
       final index = File('${root.path}/content-index-v1.json');
       try {
         if (await index.exists() && await index.length() <= 1024 * 1024) {
-          final saved = jsonDecode(await index.readAsString()) as Map;
+          final saved = await decodeJsonText(await index.readAsString()) as Map;
           for (final item in saved.entries.take(maxFiles)) {
             final value = item.value;
             final file = value is Map ? value['file'] : value;
@@ -211,13 +212,17 @@ class PersistentNetworkImageCache {
   Future<void> flush() {
     if (!_contentIndexDirty) return _maintenance;
     _contentIndexDirty = false;
-    final encoded = jsonEncode({
+    // Capture owned primitive entries before yielding, then serialize large
+    // indices off the UI isolate. A successful cover resolve still awaits
+    // this exact snapshot's atomic write, including concurrent later flushes.
+    final snapshot = {
       for (final entry in _contentFiles.entries)
         entry.key: {'file': entry.value, 'edge': _contentEdges[entry.key] ?? 0},
-    });
+    };
     final write = _maintenance.then((_) async {
       final root = _root;
       if (root == null) return;
+      final encoded = await encodeJsonValue(snapshot);
       final target = File('${root.path}/content-index-v1.json');
       final temp = File('${target.path}.tmp');
       try {

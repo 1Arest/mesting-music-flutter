@@ -44,7 +44,11 @@ class _RetainedPlatformSnapshotState<T>
 
   Object _identity(AsyncValue<PlatformSession?> account) {
     final session = account.value;
-    return (session?.ownerId, session?.token, account.isLoading);
+    // A refresh with the same retained credential is still the same owner.
+    // Including isLoading discarded usable content during account revalidation
+    // even though neither owner nor credential changed. Missing/new identities
+    // still invalidate immediately, including logout and cross-platform users.
+    return (session?.ownerId, session?.token);
   }
 
   Future<void> _prepare(
