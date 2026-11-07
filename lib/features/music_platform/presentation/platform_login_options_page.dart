@@ -32,7 +32,7 @@ class PlatformLoginOptionsPage extends StatelessWidget {
       if (platform == MusicPlatform.qishui)
         BetaGlassButton(
           onPressed: () => _open(context, const QishuiLoginPage()),
-          child: const Text('手机号登录'),
+          child: const Text('汽水音乐扫码登录'),
         )
       else if (platform == MusicPlatform.kugou)
         for (final item in const [

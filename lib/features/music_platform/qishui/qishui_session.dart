@@ -20,6 +20,8 @@ class QishuiSession {
     this.avatarUrl = '',
     this.passportUserId = '',
     this.protocol = QishuiSessionProtocol.mobile,
+    this.webDeviceId = '',
+    this.webInstallId = '',
     String? loginId,
   }) : cookies = List.unmodifiable(
          cookies.map(Map<String, String>.unmodifiable),
@@ -32,6 +34,10 @@ class QishuiSession {
   final Map<String, String> tokens;
   final String passportUserId;
   final QishuiSessionProtocol protocol;
+
+  /// Non-secret PC/Web identifiers remain encrypted with their own account.
+  /// Empty fields preserve compatibility with older stored sessions.
+  final String webDeviceId, webInstallId;
   final String? _loginId;
   bool get complete =>
       userId.isNotEmpty &&
@@ -64,6 +70,8 @@ class QishuiSession {
     avatarUrl: avatar ?? avatarUrl,
     passportUserId: passportUserId,
     protocol: protocol,
+    webDeviceId: webDeviceId,
+    webInstallId: webInstallId,
     loginId: credentialId,
   );
   Map<String, Object?> toJson() => {
@@ -74,12 +82,20 @@ class QishuiSession {
     'avatarUrl': avatarUrl,
     'passportUserId': passportUserId,
     'protocol': protocol.name,
+    'webDeviceId': webDeviceId,
+    'webInstallId': webInstallId,
     'loginId': credentialId,
   };
   factory QishuiSession.fromJson(Map<String, dynamic> value) {
     final rawProtocol = value['protocol'] ?? 'mobile';
     if (rawProtocol != 'mobile' && rawProtocol != 'web') {
       throw const FormatException('未知的汽水登录协议');
+    }
+    final webDevice = '${value['webDeviceId'] ?? ''}';
+    final webInstall = '${value['webInstallId'] ?? ''}';
+    if (webDevice.isNotEmpty && !RegExp(r'^\d{16}$').hasMatch(webDevice) ||
+        webInstall.isNotEmpty && !RegExp(r'^\d{15}$').hasMatch(webInstall)) {
+      throw const FormatException('汽水扫码会话信息无效');
     }
     final session = QishuiSession(
       userId: '${value['userId'] ?? ''}',
@@ -93,6 +109,8 @@ class QishuiSession {
       protocol: rawProtocol == 'web'
           ? QishuiSessionProtocol.web
           : QishuiSessionProtocol.mobile,
+      webDeviceId: webDevice,
+      webInstallId: webInstall,
       loginId:
           value['loginId'] is String &&
               RegExp(r'^[a-f0-9]{64}$').hasMatch(value['loginId'] as String)

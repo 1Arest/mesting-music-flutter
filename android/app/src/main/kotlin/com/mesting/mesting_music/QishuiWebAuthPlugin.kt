@@ -2,6 +2,8 @@ package com.mesting.music
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.app.Dialog
 import android.os.Handler
 import android.os.Looper
@@ -53,7 +55,10 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
                     if (!Regex("^[a-f0-9]{32}$").matches(id)) {
                         result.error("invalid_flow", "汽水登录会话无效", null)
                     } else if (call.method == "begin") {
-                        begin(id, result)
+                        val nonce = call.argument<String>("msToken").orEmpty()
+                        if (!Regex("^[A-Za-z0-9_-]{118}==$" ).matches(nonce)) {
+                            result.error("invalid_context", "汽水扫码会话初始化无效", null)
+                        } else begin(id, nonce, result)
                     } else {
                         val current = flow
                         if (current == null || current.id != id) {
@@ -63,6 +68,18 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
                         } else when (call.method) {
                             "close" -> { close(); result.success(null) }
                             "cookies" -> result.success(cookieRows())
+                            "openScanner" -> {
+                                // Bind this user action to the genuine app's
+                                // package; no other app receives the scan route.
+                                val scanner = Intent(Intent.ACTION_VIEW,
+                                    Uri.parse("luna://luna.com/scan_qr_code"))
+                                    .setPackage("com.luna.music")
+                                val opened = runCatching {
+                                    val owner = activity ?: return@runCatching false
+                                    owner.startActivity(scanner); true
+                                }.getOrDefault(false)
+                                result.success(opened)
+                            }
                             "request" -> request(current, call.argument<String>("method").orEmpty(),
                                 call.argument<String>("url").orEmpty(),
                                 call.argument<Map<String, String>>("headers") ?: emptyMap(),
@@ -88,7 +105,7 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
         CookieManager.getInstance().setAcceptCookie(true)
-        CookieManager.getInstance().setAcceptThirdPartyCookies(view, false)
+        CookieManager.getInstance().setAcceptThirdPartyCookies(view, true)
         view.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(v: WebView, r: WebResourceRequest): Boolean = !firstParty(r.url.toString())
             override fun shouldInterceptRequest(v: WebView, r: WebResourceRequest): WebResourceResponse? {
@@ -114,7 +131,7 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
              u.host == "auth.zijieapi.com")
     }
 
-    private fun begin(id: String, result: MethodChannel.Result) {
+    private fun begin(id: String, nonce: String, result: MethodChannel.Result) {
         close()
         val owner = activity ?: run { result.error("foreground", "请回到应用内再打开汽水登录", null); return }
         val view = WebView(owner)
@@ -151,12 +168,12 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
                 current.begin = null; close(); return@clearQishuiCookies
             }
             view.loadDataWithBaseURL(origin, html, "text/html", "UTF-8", null)
-            waitReady(current, System.currentTimeMillis() + 30_000)
+            waitReady(current, nonce, System.currentTimeMillis() + 30_000)
         }
         handler.postDelayed({ if (flow === current && current.begin != null) close() }, 35_000)
     }
 
-    private fun waitReady(current: Flow, deadline: Long) {
+    private fun waitReady(current: Flow, nonce: String, deadline: Long) {
         if (flow !== current || current.begin == null) return
         if (System.currentTimeMillis() > deadline) {
             current.begin?.error("sdk_timeout", "汽水安全组件加载超时，请重试", null)
@@ -165,10 +182,27 @@ class QishuiWebAuthPlugin : FlutterPlugin, ActivityAware {
         current.view.evaluateJavascript("(window.bdms && window.__qishuiRequest) ? 'ready' : 'loading'") { raw ->
             if (flow !== current) return@evaluateJavascript
             if (raw == "\"ready\"") {
-                // Storage was reset before SDK initialization, preserving
-                // the SDK's freshly created browser security context.
-                current.ready = true; current.begin?.success(null); current.begin = null
-            } else handler.postDelayed({ waitReady(current, deadline) }, 200)
+                // Align with myMusic: isolate this QR after bootstrap, then
+                // seed the same provisional web nonce used in Passport query.
+                // Later requests must retain the SDK's evolving runtime state.
+                // Cleanup stays limited to Qishui; other platform jars survive.
+                clearQishuiCookies {
+                    if (flow !== current || current.begin == null) return@clearQishuiCookies
+                    val seed = "(function(){try{localStorage.clear();" +
+                        "localStorage.setItem('xmst',${JSONObject.quote(nonce)});" +
+                        "localStorage.setItem('xmsty',${JSONObject.quote(nonce)});return 'ready';}" +
+                        "catch(e){return 'failed';}})()"
+                    current.view.evaluateJavascript(seed) seedDone@{ value ->
+                        if (flow !== current || current.begin == null) return@seedDone
+                        if (value != "\"ready\"") {
+                            current.begin?.error("isolation", "汽水扫码会话初始化未完成", null)
+                            current.begin = null; close()
+                        } else {
+                            current.ready = true; current.begin?.success(null); current.begin = null
+                        }
+                    }
+                }
+            } else handler.postDelayed({ waitReady(current, nonce, deadline) }, 200)
         }
     }
 

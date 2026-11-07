@@ -57,7 +57,7 @@ class _QishuiAccountPageState extends ConsumerState<QishuiAccountPage>
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
-          const Text('手机号登录 · 汽水音乐'),
+          const Text('扫码登录 · 汽水音乐'),
           const SizedBox(height: 28),
           BetaGlassButton(
             onPressed: _busy

@@ -17,7 +17,9 @@ class FixtureQrGateway implements QishuiQrGateway {
       stale = false,
       wrongDomain = false,
       missingCookie = false;
-  int closes = 0, verifications = 0;
+  int closes = 0, verifications = 0, scannerOpens = 0;
+  String? beginNonce;
+  final headersSeen = <Map<String, String>>[];
   String scanUrl =
       'https://bff-pc.qishui.com/ucenter_web/app/sdk-next?token=fixture-qr&uc_sdk=scan-auth&next=%2F';
   Map<String, dynamic> profile = {
@@ -25,7 +27,8 @@ class FixtureQrGateway implements QishuiQrGateway {
   };
   Completer<void>? beginGate, profileGate, pollGate;
   @override
-  Future<void> begin(String flowId) async {
+  Future<void> begin(String flowId, String msToken) async {
+    beginNonce = msToken;
     await beginGate?.future;
   }
 
@@ -38,6 +41,7 @@ class FixtureQrGateway implements QishuiQrGateway {
     String? body,
   ) async {
     requests.add(uri);
+    headersSeen.add(headers);
     bodies.add(body);
     if (uri.path.endsWith('get_qrcode/')) {
       return {
@@ -92,6 +96,12 @@ class FixtureQrGateway implements QishuiQrGateway {
     Map<String, String> params,
   ) async {
     verifications++;
+    return true;
+  }
+
+  @override
+  Future<bool> openScanner(String flowId) async {
+    scannerOpens++;
     return true;
   }
 
@@ -175,9 +185,14 @@ void main() {
       expect(gateway.requests.single.host, 'api.qishui.com');
       final query = gateway.requests.single.queryParameters;
       expect(query['aid'], '386088');
-      for (final field in ['iid', 'device_id', 'install_id', 'did']) {
-        expect(query.containsKey(field), false);
-      }
+      // These are disposable web-session fields under aid 386088. Their
+      // absence was an old assumption, not mobile-registration isolation.
+      expect(query['device_platform'], 'PC');
+      expect(query['device_id'], matches(RegExp(r'^\d{16}$')));
+      expect(query['install_id'], matches(RegExp(r'^\d{15}$')));
+      expect(query['did'], query['device_id']);
+      expect(query['iid'], query['install_id']);
+      expect(query['app_name'], isNull);
       await login.close();
     },
   );
@@ -505,7 +520,7 @@ void main() {
             .setMockMethodCallHandler(channel, null),
       );
       await expectLater(
-        const AndroidQishuiQrGateway().begin('a' * 32),
+        const AndroidQishuiQrGateway().begin('a' * 32, '${'b' * 118}=='),
         throwsA(
           isA<QishuiException>().having(
             (e) => e.message,

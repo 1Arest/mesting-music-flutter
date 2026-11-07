@@ -13,7 +13,7 @@ final qishuiQrLoginFactoryProvider = Provider<QishuiQrLogin Function()>(
       () => QishuiQrLogin(const AndroidQishuiQrGateway()),
 );
 
-/// UI owns the transaction's lifetime, not its protocol. Switching to Douyin
+/// UI owns the transaction's lifetime, not its protocol. Switching to Qishui
 /// pauses polling without cancelling the QR; leaving this route cancels it.
 class QishuiQrLoginPage extends ConsumerStatefulWidget {
   const QishuiQrLoginPage({super.key});
@@ -75,7 +75,7 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
       if (!mounted || generation != _generation) return;
       setState(() {
         _loading = false;
-        _status = const QishuiQrStatus(QishuiQrPhase.waiting, '等待抖音扫码');
+        _status = const QishuiQrStatus(QishuiQrPhase.waiting, '等待汽水音乐扫码');
       });
       _schedule();
     } on Object catch (error) {
@@ -90,6 +90,26 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
 
   String _message(Object error) =>
       error is QishuiException ? error.message : '扫码登录未完成，请重试；原账号已保留';
+
+  Future<void> _openScanner() async {
+    final login = _login;
+    if (login == null || _loading || _busy) return;
+    try {
+      final opened = await login.openScanner();
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('未找到可用的汽水扫一扫，请安装或更新汽水音乐官方App')),
+        );
+      }
+    } on Object catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_message(error))));
+      }
+    }
+  }
+
   void _schedule() {
     _timer?.cancel();
     if (!mounted ||
@@ -158,7 +178,7 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            '抖音扫码登录',
+                            '汽水扫码登录',
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ),
@@ -176,13 +196,13 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
                           const SizedBox(height: 12),
-                          const Text('请使用已关联该汽水账号的抖音扫一扫，并在抖音中确认登录。'),
+                          const Text('请使用已登录原有账号的「汽水音乐官方App」扫一扫，并在汽水音乐中确认登录。'),
                           const SizedBox(height: 24),
                           Center(
                             child: Semantics(
                               label: expired
                                   ? '汽水登录二维码已过期'
-                                  : '汽水登录二维码，请使用抖音扫一扫',
+                                  : '汽水登录二维码，请使用汽水音乐扫一扫',
                               child: ExcludeSemantics(
                                 child: Container(
                                   constraints: const BoxConstraints(
@@ -220,7 +240,7 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
                             child: Text(
                               _loading
                                   ? '正在生成登录二维码…'
-                                  : _error ?? _status?.message ?? '等待抖音扫码',
+                                  : _error ?? _status?.message ?? '等待汽水音乐扫码',
                               textAlign: TextAlign.center,
                               style: _error == null
                                   ? null
@@ -253,17 +273,25 @@ class _QishuiQrLoginPageState extends ConsumerState<QishuiQrLoginPage>
                             ),
                             const SizedBox(height: 12),
                           ],
+                          if (url.isNotEmpty && !expired) ...[
+                            const Text('同一部手机请先截图保存二维码，再打开汽水扫一扫，从相册选择截图。'),
+                            const SizedBox(height: 12),
+                            BetaGlassButton(
+                              key: const ValueKey('qishui-qr-open-scanner'),
+                              onPressed: _busy ? null : _openScanner,
+                              child: const Text('打开汽水扫一扫'),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           BetaGlassButton(
                             key: const ValueKey('qishui-qr-refresh'),
                             onPressed: _loading || _busy ? null : _start,
                             child: const Text('重新生成二维码'),
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            '在同一部手机上使用时，可先截图，再到抖音扫一扫中选择相册图片。请勿将登录二维码发给他人。',
-                          ),
+                          const Text('请勿将登录二维码发送给他人。'),
                           const SizedBox(height: 12),
-                          const Text('部分汽水功能尚未适配扫码会话，会在操作时说明。你也可以返回使用手机号登录。'),
+                          const Text('部分汽水功能尚未适配扫码会话，会在操作时说明。'),
                         ],
                       ),
                     ),

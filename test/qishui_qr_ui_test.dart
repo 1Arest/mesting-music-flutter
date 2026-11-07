@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_qr_login.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_qr_login_page.dart';
 import 'qishui_qr_protocol_test.dart' show FixtureQrGateway;
@@ -68,6 +70,8 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
     final theme = theme152(dark).copyWith(
       textTheme: theme152(
         dark,
@@ -76,6 +80,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
           qishuiQrLoginFactoryProvider.overrideWithValue(
             () => QishuiQrLogin(gateway, now: now),
           ),
@@ -117,7 +122,7 @@ void main() {
         scale: variant.$2,
         dark: variant.$3,
       );
-      expect(find.text('等待抖音扫码'), findsOneWidget);
+      expect(find.text('等待汽水音乐扫码'), findsOneWidget);
       expect(find.text('登录原有汽水账号'), findsOneWidget);
       expect(gateway.requests, hasLength(1));
       expect(tester.takeException(), isNull);
@@ -127,6 +132,26 @@ void main() {
       expect(gateway.closes, 1);
     });
   }
+  testWidgets('opening official scanner retains the displayed QR transaction', (
+    tester,
+  ) async {
+    final gateway = FixtureQrGateway();
+    await mount(tester, gateway);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('qishui-qr-open-scanner')),
+    );
+    await tester.tap(find.byKey(const ValueKey('qishui-qr-open-scanner')));
+    await tester.pump();
+    expect(gateway.scannerOpens, 1);
+    expect(gateway.requests, hasLength(1));
+    expect(gateway.authenticated, false);
+    expect(find.text('手机号'), findsNothing);
+    expect(find.textContaining('抖音'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(gateway.closes, 1);
+  });
+
   testWidgets('QR security verification is explicit and stops polling', (
     tester,
   ) async {

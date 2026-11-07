@@ -85,6 +85,8 @@ class QishuiApi {
     avatarUrl: avatar,
     passportUserId: passportUserId ?? _session?.passportUserId ?? '',
     protocol: _session?.protocol ?? QishuiSessionProtocol.mobile,
+    webDeviceId: _session?.webDeviceId ?? '',
+    webInstallId: _session?.webInstallId ?? '',
     loginId: _session?.userId == uid ? _session?.credentialId : null,
   );
 
@@ -236,6 +238,14 @@ class QishuiApi {
             'app_name': 'luna_pc',
             'device_platform': 'web',
             'channel': 'pc_web',
+            if (_session!.webDeviceId.isNotEmpty) ...{
+              'device_id': _session!.webDeviceId,
+              'did': _session!.webDeviceId,
+            },
+            if (_session!.webInstallId.isNotEmpty) ...{
+              'install_id': _session!.webInstallId,
+              'iid': _session!.webInstallId,
+            },
           },
           ...device,
           '_rticket': '${DateTime.now().millisecondsSinceEpoch}',

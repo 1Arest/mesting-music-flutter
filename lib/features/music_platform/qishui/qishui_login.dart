@@ -10,6 +10,8 @@ class QishuiVerificationRequired extends QishuiException {
   final String url;
 }
 
+/// Retired phone protocol retained for historical regression and migration.
+/// No production login route imports this library since QR-only 1.0.66.
 /// This client has its own ephemeral cookie jar. Merely sending a code never
 /// changes the selected music account or writes a persistent credential.
 class QishuiLogin {

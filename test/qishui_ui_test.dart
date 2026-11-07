@@ -21,6 +21,9 @@ import 'package:mesting_music/features/music_platform/qishui/qishui_login_page.d
 import 'package:mesting_music/features/music_platform/qishui/qishui_pages.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_providers.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_welfare_page.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_qr_login_page.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_qr_login.dart';
+import 'qishui_qr_protocol_test.dart' show FixtureQrGateway;
 import 'qishui_protocol_test.dart'
     show sodaSession, fixtureContext, fixtureJson, sodaRecording;
 import 'support/release_152_qa.dart' show theme152;
@@ -152,6 +155,9 @@ void main() {
         sharedPreferencesProvider.overrideWithValue(preferences),
         platformAccountProvider.overrideWith(FixtureAccount.new),
         qishuiApiProvider.overrideWithValue(api),
+        qishuiQrLoginFactoryProvider.overrideWithValue(
+          () => QishuiQrLogin(FixtureQrGateway()),
+        ),
         currentMediaItemProvider.overrideWith(
           (_) => Stream<MediaItem?>.value(null),
         ),
@@ -252,7 +258,7 @@ void main() {
     (const Size(320, 740), 1.8, true),
   ]) {
     testWidgets(
-      'phone form ${variant.$1.width} scale ${variant.$2} starts no network request',
+      'QR-only entry ${variant.$1.width} scale ${variant.$2} sends no phone request',
       (tester) async {
         final requests = await mount(
           tester,
@@ -262,10 +268,10 @@ void main() {
           dark: variant.$3,
         );
         expect(requests, isEmpty);
-        expect(find.text('手机号'), findsOneWidget);
-        // Phone remains the default and opening it starts neither SMS nor QR.
-        // The newly approved fallback is offered only as an explicit action.
-        expect(find.text('使用抖音扫码登录'), findsOneWidget);
+        expect(find.text('手机号'), findsNothing);
+        expect(find.byType(TextField), findsNothing);
+        expect(find.text('汽水扫码登录'), findsOneWidget);
+        expect(find.text('打开汽水扫一扫'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await shot(tester, 'login-${variant.$1.width.toInt()}-${variant.$2}');
         await tester.pumpWidget(const SizedBox.shrink());
@@ -325,29 +331,25 @@ void main() {
     expect(tester.takeException(), isNull);
     await shot(tester, 'mine-320-large-dark');
   });
-  testWidgets(
-    'SMS refusal identifies the send stage and never starts a success countdown',
-    (tester) async {
-      final requests = await mount(
-        tester,
-        const QishuiLoginPage(),
-        smsRefuse: true,
-      );
-      await tester.enterText(
-        find.widgetWithText(TextField, '手机号'),
-        '13800000000',
-      );
-      await tester.tap(find.byKey(const ValueKey('qishui-send-code')));
-      for (var i = 0; i < 8; i++) {
-        await tester.pump(const Duration(milliseconds: 150));
-      }
-      expect(requests, ['/passport/mobile/send_code/']);
-      expect(find.text('汽水未接受发送验证码请求（2156）'), findsOneWidget);
-      expect(find.text('获取验证码'), findsOneWidget);
-      expect(find.textContaining('s 后重新获取'), findsNothing);
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('QR-only route never exposes or dispatches SMS login', (
+    tester,
+  ) async {
+    final requests = await mount(
+      tester,
+      const QishuiLoginPage(),
+      smsRefuse: true,
+    );
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
+    expect(find.text('手机号'), findsNothing);
+    expect(find.text('获取验证码'), findsNothing);
+    expect(find.text('短信验证码'), findsNothing);
+    expect(find.text('汽水扫码登录'), findsOneWidget);
+    expect(requests.where((p) => p.contains('/passport/mobile/')), isEmpty);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'business refusal is visible and offers retry instead of fake catalog rows',
     (tester) async {

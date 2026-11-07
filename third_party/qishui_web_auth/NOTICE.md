@@ -5,6 +5,13 @@ Pinned reference: mytv-android/myMusic commit
 sodahub-org/libresoda commit `5edd2ff3b825f0a16b1e281204822ee06842df9c`.
 Exact downloaded assets, URLs and SHA256 values are in PROVENANCE.json.
 
+The 1.0.66 QR-only adapter also follows the complete per-QR web parameters and
+storage nonce initialization in mytv-android/myMusic commit
+`9c0f1f0ccb1b1046306f61c50998e327c040a6bc`, SodaQrLogin.kt / SodaQrSigner.kt.
+The pinned libresoda dependency remains `5edd2ff3b825f0a16b1e281204822ee06842df9c`.
+All four security host/SDK/verification assets were checked byte-identical to
+that Android reference; they have not been modified.
+
 - security_host.html is libresoda's AGPL-3.0 security host; soda_verify.html is
   myMusic's AGPL-3.0 Android adaptation. The copied files remain unchanged.
 - sdk-glue.js and bdms.js are the upstream-bundled official Soda Music web

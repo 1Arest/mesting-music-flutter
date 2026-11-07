@@ -69,7 +69,7 @@ class QishuiRootSwitch extends ConsumerWidget {
                     onPressed: () => Navigator.of(
                       context,
                     ).push(betaContentRoute<bool>(const QishuiLoginPage())),
-                    child: const Text('手机号登录'),
+                    child: const Text('汽水音乐扫码登录'),
                   ),
                   const SizedBox(height: 12),
                   BetaGlassButton(

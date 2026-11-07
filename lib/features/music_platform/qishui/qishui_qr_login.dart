@@ -5,12 +5,14 @@ import 'package:flutter/services.dart';
 import 'qishui_api.dart';
 import 'qishui_auth_errors.dart';
 import 'qishui_models.dart';
+import 'qishui_qr_context.dart';
 import 'qishui_session.dart';
 
 /// Gateway is deliberately independent of widgets, persistent accounts and
 /// mobile Passport. A fake gateway tests the transaction without a phone.
 abstract interface class QishuiQrGateway {
-  Future<void> begin(String flowId);
+  Future<void> begin(String flowId, String msToken);
+  Future<bool> openScanner(String flowId);
   Future<Map<String, dynamic>> request(
     String flowId,
     String method,
@@ -52,9 +54,13 @@ class AndroidQishuiQrGateway implements QishuiQrGateway {
   }
 
   @override
-  Future<void> begin(String flowId) async {
-    await _invoke<void>('begin', flowId);
+  Future<void> begin(String flowId, String msToken) async {
+    await _invoke<void>('begin', flowId, {'msToken': msToken});
   }
+
+  @override
+  Future<bool> openScanner(String flowId) async =>
+      await _invoke<bool>('openScanner', flowId) == true;
 
   @override
   Future<Map<String, dynamic>> request(
@@ -78,7 +84,7 @@ class AndroidQishuiQrGateway implements QishuiQrGateway {
     if (QishuiQrLogin.trustedRedirect(uri)) return const {};
     final responseUri = Uri.tryParse('${result['responseURL'] ?? ''}');
     if (uri.path.startsWith('/passport/web/') &&
-        (responseUri?.queryParameters['a_bogus']?.isNotEmpty != true)) {
+        ((responseUri?.queryParameters['a_bogus']?.length ?? 0) < 40)) {
       throw const QishuiException('汽水安全组件尚未完成签名，请重新生成二维码');
     }
     final value = jsonDecode('${result['body'] ?? ''}');
@@ -138,6 +144,7 @@ class QishuiQrLogin {
   final QishuiQrGateway gateway;
   final DateTime Function() now;
   final String flowId;
+  final _context = QishuiQrContext();
   static const host = 'api.qishui.com';
   static String randomHex(int bytes) {
     final random = Random.secure();
@@ -153,14 +160,11 @@ class QishuiQrLogin {
   bool _closed = false, _busy = false;
   DateTime? _expires, _nextPoll;
   Map<String, dynamic>? _decision;
-  QishuiQrStatus _last = const QishuiQrStatus(QishuiQrPhase.waiting, '等待抖音扫码');
-  Map<String, String> get _params => {
-    'aid': '386088',
-    'passport_jssdk_version': '2.4.13',
-    'passport_jssdk_type': 'normal',
-    'is_from_ttaccountsdk': '1',
-    'biz_trace_id': randomHex(4),
-  };
+  QishuiQrStatus _last = const QishuiQrStatus(
+    QishuiQrPhase.waiting,
+    '等待汽水音乐扫码',
+  );
+  Map<String, String> get _params => _context.parameters(randomHex(4));
   void _alive() {
     if (_closed) throw const QishuiException('汽水登录已取消');
   }
@@ -200,16 +204,23 @@ class QishuiQrLogin {
     Map<String, String>? form,
   }) async {
     _alive();
-    final body = form?.entries
-        .map(
+    final entries = form?.entries.toList()
+      ?..sort((a, b) => a.key.compareTo(b.key));
+    final body = entries
+        ?.map(
           (e) =>
               '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
         )
         .join('&');
+    final traceId = randomHex(4);
+    final params = {..._context.parameters(traceId), ...query};
+    final sortedParams = Map.fromEntries(
+      params.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+    );
     final headers = {
       'Accept': 'application/json, text/javascript',
       'x-tt-passport-verify-portrait': _portrait,
-      'x-tt-passport-trace-id': randomHex(4),
+      'x-tt-passport-trace-id': traceId,
       if (body != null) 'Content-Type': 'application/x-www-form-urlencoded',
       if (body != null)
         'x-ss-stub': md5.convert(utf8.encode(body)).toString().toUpperCase(),
@@ -217,7 +228,7 @@ class QishuiQrLogin {
     final result = await gateway.request(
       flowId,
       form == null ? 'GET' : 'POST',
-      Uri.https(host, path, {..._params, ...query}),
+      Uri.https(host, path, sortedParams),
       headers,
       body,
     );
@@ -232,7 +243,7 @@ class QishuiQrLogin {
     }
     _busy = true;
     try {
-      await gateway.begin(flowId);
+      await gateway.begin(flowId, _context.msToken);
       _alive();
       final old = await gateway.cookies(flowId);
       _alive();
@@ -345,7 +356,16 @@ class QishuiQrLogin {
       );
     }
     if (code.isNotEmpty && code != '0') {
-      final detail = qishuiAuthDescription(result, secrets: [_token, flowId]);
+      final detail = qishuiAuthDescription(
+        result,
+        secrets: [
+          _token,
+          flowId,
+          _context.msToken,
+          _context.deviceId,
+          _context.installId,
+        ],
+      );
       throw QishuiException(
         '汽水扫码确认未完成（$code）${detail.isEmpty ? '' : '：$detail'}',
         code: code,
@@ -358,11 +378,11 @@ class QishuiQrLogin {
     if ({'2', 'scanned'}.contains(status)) {
       return _last = const QishuiQrStatus(
         QishuiQrPhase.scanned,
-        '已扫码，请在抖音中确认登录',
+        '已扫码，请在汽水音乐中确认登录',
       );
     }
     if ({'1', 'new', 'waiting', 'pending'}.contains(status)) {
-      return _last = const QishuiQrStatus(QishuiQrPhase.waiting, '等待抖音扫码');
+      return _last = const QishuiQrStatus(QishuiQrPhase.waiting, '等待汽水音乐扫码');
     }
     throw const QishuiException('汽水返回未知扫码状态，请重新生成二维码');
   }
@@ -384,6 +404,14 @@ class QishuiQrLogin {
     } finally {
       _busy = false;
     }
+  }
+
+  /// Opening the official scanner does not create another QR transaction.
+  /// The user confirms there; returning to this route resumes the same poll.
+  Future<bool> openScanner() async {
+    _alive();
+    if (_token.isEmpty) return false;
+    return gateway.openScanner(flowId);
   }
 
   static Map<String, String> bizParams(Object? value) {
@@ -458,6 +486,8 @@ class QishuiQrLogin {
       userId: uid,
       cookies: cookies,
       protocol: QishuiSessionProtocol.web,
+      webDeviceId: _context.deviceId,
+      webInstallId: _context.installId,
       nickname: '${me['nickname'] ?? me['name'] ?? ''}',
       avatarUrl: sodaPicture(
         me['larger_avatar_url'] ?? me['avatar'] ?? me['url_avatar'],

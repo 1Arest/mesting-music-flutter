@@ -17,7 +17,7 @@ class QishuiWebRoute {
     bool write,
   ) {
     if (write) {
-      throw const QishuiException('当前扫码会话暂不支持此写入操作，请使用手机号会话或在汽水App中操作');
+      throw const QishuiException('当前扫码会话暂不支持此写入操作，请在汽水音乐App中操作');
     }
     final params = {...query};
     void copyFields(Iterable<String> keys) {
@@ -72,6 +72,6 @@ class QishuiWebRoute {
           }
         }
     }
-    throw const QishuiException('当前扫码会话尚未接通此汽水接口，请使用手机号会话；原账号已保留');
+    throw const QishuiException('当前扫码会话尚未接通此汽水接口，请在汽水音乐App中操作；原账号已保留');
   }
 }
