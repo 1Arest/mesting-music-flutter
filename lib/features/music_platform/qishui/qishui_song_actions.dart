@@ -7,6 +7,7 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../library/library_providers.dart';
 import '../music_platform_providers.dart';
+import '../presentation/platform_feedback.dart';
 
 /// Soda has no path into SongMenuDetailsRepository's two legacy backends.
 /// Every intent rechecks ownership after its sheet closes.
@@ -21,6 +22,7 @@ Future<void> showQishuiSongActions(
   final action = await showLiquidGlassBottomSheet<String>(
     context: context,
     useSafeArea: true,
+    useRootNavigator: true,
     builder: (sheet) => SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -88,9 +90,7 @@ Future<void> showQishuiSongActions(
     }
   } on Object catch (error) {
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$error')));
+      showPlatformFailure(context, error);
     }
   }
 }

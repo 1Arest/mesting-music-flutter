@@ -1,4 +1,5 @@
 import '../music_platform/qishui/qishui_providers.dart';
+import '../music_platform/qishui/qishui_official_audio_cache.dart';
 import '../../core/network/system_music_io_client.dart';
 import '../music_platform/netease/netease_track_sources.dart';
 import 'dart:async';
@@ -549,9 +550,17 @@ class AudioDownloadManager extends ChangeNotifier {
           media.playbackQuality != task.requestedQuality!.code) {
         throw _sourceError(task, '平台未返回所选下载音质，请重选音质后下载');
       }
-      if (!{'https', 'http'}.contains(url.scheme) ||
-          url.host.isEmpty ||
-          url.userInfo.isNotEmpty) {
+      final decodedQishui =
+          task.track.source == TrackSource.qishui &&
+          media.source == TrackSource.qishui &&
+          media.audioOrigin?.adapter == AudioOrigin.qishui &&
+          url.scheme == 'file' &&
+          url.host.isEmpty &&
+          await QishuiOfficialAudioCache.isPrivateCachePath(url.toFilePath());
+      if (!decodedQishui &&
+          (!{'https', 'http'}.contains(url.scheme) ||
+              url.host.isEmpty ||
+              url.userInfo.isNotEmpty)) {
         throw _sourceError(task, '无效音频地址');
       }
       // Resolving may outlive cancellation or an account switch. Recheck before
@@ -585,12 +594,20 @@ class AudioDownloadManager extends ChangeNotifier {
         headers['Range'] = 'bytes=$offset-';
         if (task.validator.isNotEmpty) headers['If-Range'] = task.validator;
       }
-      final response = await client
-          .send(
-            http.AbortableRequest('GET', url, abortTrigger: _abort!.future)
-              ..headers.addAll(headers),
-          )
-          .timeout(const Duration(seconds: 20));
+      // A verified Soda CENC stream has already been downloaded and decoded in
+      // the private playback cache. Reuse the established integrity/publish
+      // pipeline instead of downloading encrypted bytes into the public file.
+      final response = decodedQishui
+          ? await _decodedQishuiResponse(url, offset)
+          : await client
+                .send(
+                  http.AbortableRequest(
+                    'GET',
+                    url,
+                    abortTrigger: _abort!.future,
+                  )..headers.addAll(headers),
+                )
+                .timeout(const Duration(seconds: 20));
       if (offset == 0 && response.statusCode != 200) {
         await response.stream.take(1).drain<void>();
         throw _sourceError(task, '下载地址已失效，请重试');
@@ -759,6 +776,35 @@ class AudioDownloadManager extends ChangeNotifier {
       _active = null;
       _abort = null;
     }
+  }
+
+  Future<http.StreamedResponse> _decodedQishuiResponse(
+    Uri uri,
+    int offset,
+  ) async {
+    final file = File.fromUri(uri);
+    final total = await file.length();
+    if (total <= 0 || total > 128 * 1024 * 1024 || offset > total) {
+      throw const MusicPlatformException('汽水临时音频已失效，请重新下载');
+    }
+    final modified = (await file.lastModified()).millisecondsSinceEpoch;
+    return http.StreamedResponse(
+      offset == total ? const Stream<List<int>>.empty() : file.openRead(offset),
+      offset == total
+          ? 416
+          : offset > 0
+          ? 206
+          : 200,
+      contentLength: total - offset,
+      headers: {
+        'content-type': 'audio/mp4',
+        'etag': '"qishui-$total-$modified"',
+        if (offset > 0)
+          'content-range': offset == total
+              ? 'bytes */$total'
+              : 'bytes $offset-${total - 1}/$total',
+      },
+    );
   }
 
   Exception _sourceError(AudioDownloadTask task, String message) =>

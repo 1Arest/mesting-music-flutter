@@ -16,8 +16,22 @@ class QishuiWebRoute {
     Map<String, String> query,
     bool write,
   ) {
+    // Explicit pinned PC contracts; every mutation is signed over its final
+    // bytes. Never guess a '/pc' prefix (playlist ordering is an exception).
     if (write) {
-      throw const QishuiException('当前扫码会话暂不支持此写入操作，请在汽水音乐App中操作');
+      final target = switch (path) {
+        '/luna/me/playlist' => '/luna/pc/me/playlist',
+        '/luna/me/playlist/update' => '/luna/pc/me/playlist/update',
+        '/luna/me/playlist/media/append' => '/luna/pc/me/playlist/media/append',
+        '/luna/me/playlist/media/delete' => '/luna/pc/me/playlist/media/delete',
+        '/luna/me/playlist/media/sort' => '/luna/me/playlist/media/sort',
+        '/luna/me/collection/media' => '/luna/pc/me/collection/media',
+        '/luna/me/collection/media/delete' =>
+          '/luna/pc/me/collection/media/delete',
+        _ => null,
+      };
+      if (target == null) throw const QishuiException('此汽水写入操作尚未完成适配');
+      return QishuiWebRoute(target, false, body, query);
     }
     final params = {...query};
     void copyFields(Iterable<String> keys) {
@@ -51,6 +65,7 @@ class QishuiWebRoute {
       case '/luna/feed/song-tab':
         return QishuiWebRoute('/luna/pc/feed/song-tab', false, body, params);
       case '/luna/me/recently-played-media':
+        copyFields(['cursor', 'count']);
         return QishuiWebRoute(
           '/luna/pc/me/recently-played-media',
           true,
@@ -58,19 +73,24 @@ class QishuiWebRoute {
           params,
         );
       case '/luna/media_v2':
+        // Full-track resolution below uses the signed PC application contract.
         final items = body['media'];
         if (items is List && items.length == 1 && items.single is Map) {
           final row = items.single as Map;
           final id = '${row['id'] ?? ''}';
           if (id.isNotEmpty) {
-            return QishuiWebRoute('/luna/pc/track_v2', true, const {}, {
-              ...params,
+            return QishuiWebRoute('/luna/pc/track_v2', false, {
               'track_id': id,
               'media_type': 'track',
-              'queue_type': '',
-            });
+              'queue_type': 'favorite_track_playlist',
+              'scene_name': 'library',
+            }, params);
           }
         }
+      case '/luna/commerce/v2/check_download':
+        // Verified 19.0.0 read DTO, also served by api.qishui.com. This check
+        // never consumes quota; a required debit is a separate user operation.
+        return QishuiWebRoute(path, false, body, params);
     }
     throw const QishuiException('当前扫码会话尚未接通此汽水接口，请在汽水音乐App中操作；原账号已保留');
   }

@@ -87,7 +87,7 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     _rows.add(
       Map.unmodifiable({
         'at': DateTime.now().toUtc().toIso8601String(),
-        'platform': {'netease', 'kugou', 'audio'}.contains(platform)
+        'platform': {'netease', 'kugou', 'qishui', 'audio'}.contains(platform)
             ? platform
             : 'other',
         'operation': operation.name,

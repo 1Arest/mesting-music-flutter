@@ -23,19 +23,30 @@ import 'keyboard_visibility_builder.dart';
 /// instead of the former search-only bar with an opaque reserved bottom box.
 /// Audio ownership remains in the existing application providers.
 class BetaSecondaryMusicLayout extends ConsumerStatefulWidget {
-  const BetaSecondaryMusicLayout({required this.child, this.search, super.key});
+  const BetaSecondaryMusicLayout({
+    required this.child,
+    this.search,
+    this.selectedIndex = 1,
+    super.key,
+  });
   final Widget child;
   final BetaPageSearchController? search;
+
+  /// The owning retained branch, using betaMusicRoutes' stable indices.
+  /// Root-Navigator pages must carry their origin instead of always highlighting
+  /// Music. Existing callers keep the historical default.
+  final int selectedIndex;
 
   static Widget wrap(
     BuildContext context,
     Widget child, {
     bool enabled = true,
+    int selectedIndex = 1,
   }) =>
       enabled &&
           DistributionChannel.isBeta &&
           BetaBottomSearchScope.maybeOf(context) == null
-      ? BetaSecondaryMusicLayout(child: child)
+      ? BetaSecondaryMusicLayout(selectedIndex: selectedIndex, child: child)
       : child;
 
   @override
@@ -169,7 +180,7 @@ class _SecondaryLayoutState extends ConsumerState<BetaSecondaryMusicLayout> {
                         type: MaterialType.transparency,
                         child: BetaMusicBottomBar(
                           soda: ref.watch(qishuiNavigationProvider),
-                          selectedIndex: 1,
+                          selectedIndex: widget.selectedIndex,
                           isSearchActive: search.active || _compact,
                           inline: _compact && !search.active,
                           accessory: hasTrack

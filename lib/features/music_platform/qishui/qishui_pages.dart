@@ -5,7 +5,13 @@ import 'qishui_playlist_grid.dart';
 import '../../auth/beta_account_choice.dart';
 import 'qishui_login_page.dart';
 import 'qishui_now_playing.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
+import 'qishui_feed_mode_menu.dart';
+import 'qishui_mine_widgets.dart';
+import 'qishui_mine_downloads.dart';
+import 'qishui_account_page.dart';
+import 'qishui_playlist_page.dart';
+import 'qishui_playlist_dialogs.dart';
+import '../presentation/platform_feedback.dart';
 import 'qishui_effects_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +23,6 @@ import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../../shared/widgets/track_artwork.dart';
-import '../../downloads/audio_downloads_page.dart';
 import '../music_platform_providers.dart';
 import '../presentation/platform_login_options_page.dart';
 import '../presentation/song_actions_sheet.dart';
@@ -117,10 +122,17 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   late final QishuiRepository _music = ref.read(qishuiRepositoryProvider);
   late Future<Object> _content = _load();
   Object? _lastContent;
+  QishuiMineTab _mineTab = QishuiMineTab.playlists;
+  late Future<Map<String, dynamic>> _profile = _music.profile();
+  List<QishuiPlaylist> _mineLists = const [];
   Future<Object> _load() => switch (widget.root) {
     QishuiRoot.discover => _music.discover(abortTrigger: _abort.future),
     QishuiRoot.music => ref.read(qishuiFeedScopeProvider).load(),
-    QishuiRoot.mine => _music.playlists(abortTrigger: _abort.future),
+    QishuiRoot.mine => switch (_mineTab) {
+      QishuiMineTab.history => _music.recent(abortTrigger: _abort.future),
+      QishuiMineTab.downloads => Future.value(_mineLists),
+      QishuiMineTab.playlists => _music.playlists(abortTrigger: _abort.future),
+    },
   };
   @override
   void dispose() {
@@ -130,7 +142,10 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
 
   Future<void> _refresh() async {
     final next = _load();
-    setState(() => _content = next);
+    setState(() {
+      _content = next;
+      if (widget.root == QishuiRoot.mine) _profile = _music.profile();
+    });
     try {
       await next;
     } on Object {
@@ -155,6 +170,10 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
       );
     }
     final lists = value as List<QishuiPlaylist>;
+    if (widget.root == QishuiRoot.mine) {
+      _mineLists = lists;
+      return QishuiMinePlaylistList(playlists: lists, open: _openPlaylist);
+    }
     if (lists.isEmpty) {
       return const SliverToBoxAdapter(
         child: Padding(
@@ -163,67 +182,91 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
         ),
       );
     }
-    return QishuiPlaylistGrid(
-      lists: lists,
-      open: (list) => _open(
-        QishuiTrackPage(
-          title: list.name,
-          load: (abort) => _music.playlist(list.id, abortTrigger: abort),
+    return QishuiPlaylistGrid(lists: lists, open: _openPlaylist);
+  }
+
+  Future<void> _openPlaylist(QishuiPlaylist list) async {
+    await Navigator.of(context).push(
+      betaContentRoute<void>(
+        QishuiPlaylistPage(
+          playlist: list,
+          owned: list.kind == 1 || list.ownerId == _music.api.session?.userId,
+          navigationIndex: widget.root == QishuiRoot.mine ? 3 : 0,
         ),
       ),
     );
+    if (mounted && _music.current && widget.root == QishuiRoot.mine) {
+      await _refresh();
+    }
   }
 
-  Future<void> _chooseMode() async {
-    final modes = _music.modes();
-    final selected = await showLiquidGlassBottomSheet<QishuiFeedMode>(
-      context: context,
-      useSafeArea: true,
-      builder: (sheet) => FutureBuilder<List<QishuiFeedMode>>(
-        future: modes,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text('${snapshot.error}'),
-            );
-          }
-          if (!snapshot.hasData) {
-            return const Padding(
-              padding: EdgeInsets.all(32),
-              child: MusicActivityIndicator(),
-            );
-          }
-          return ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(sheet).height * .7,
-            ),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(20),
-              children: [
-                Text('听歌模式', style: Theme.of(sheet).textTheme.titleLarge),
-                for (final mode in snapshot.data!)
-                  ListTile(
-                    title: Text(mode.name),
-                    onTap: () => Navigator.of(sheet).pop(mode),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-    if (selected == null || !mounted || !_music.current) return;
+  void _selectMode(QishuiFeedMode selected) {
+    if (!_music.current) return;
     ref.read(qishuiModeProvider.notifier).select(selected);
-    setState(() => _content = _load());
+    final next = _load();
+    setState(() {
+      _content = next;
+    });
+  }
+
+  void _selectMineTab(QishuiMineTab tab) {
+    if (_mineTab == tab) return;
+    setState(() {
+      _mineTab = tab;
+      _lastContent = null;
+      _content = _load();
+    });
   }
 
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
+
+  Widget _mineHeader() => FutureBuilder<Map<String, dynamic>>(
+    future: _profile,
+    builder: (context, profile) {
+      final account = ref.watch(platformAccountProvider).value;
+      final user = sodaMap(profile.data?['my_info']);
+      final name = '${user['nickname'] ?? account?.nickname ?? ''}';
+      final picture = sodaPicture(
+        user['larger_avatar_url'] ?? user['medium_avatar_url'],
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FutureBuilder<Object>(
+            future: _content,
+            builder: (context, content) => QishuiMineHeader(
+              nickname: name,
+              avatar: picture.isEmpty ? account?.avatarUrl ?? '' : picture,
+              playlists: content.data is List<QishuiPlaylist>
+                  ? content.data! as List<QishuiPlaylist>
+                  : _mineLists,
+              onAccount: () => _open(const QishuiAccountPage()),
+              onMembership: () => _open(const QishuiWelfarePage()),
+              onEffects: () => _open(const QishuiEffectsPage()),
+              onSwitchPlatform: () => _open(const MusicPlatformSwitchPage()),
+              onSettings: () => context.push('/music/settings'),
+            ),
+          ),
+          if (profile.hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: TextButton(
+                onPressed: () {
+                  final next = _music.profile();
+                  setState(() {
+                    _profile = next;
+                  });
+                },
+                child: const Text('资料暂未更新，点击重试'),
+              ),
+            ),
+        ],
+      );
+    },
+  );
   @override
   Widget build(BuildContext context) {
-    final account = ref.watch(platformAccountProvider).value;
     final title = switch (widget.root) {
       QishuiRoot.discover => '发现',
       QishuiRoot.music => '音乐',
@@ -238,152 +281,120 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
           child: CustomScrollView(
             key: PageStorageKey('qishui-${widget.root.name}'),
             slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: Theme.of(context).textTheme.headlineLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: '搜索汽水音乐',
-                        onPressed: () => _open(const QishuiSearchPage()),
-                        icon: const Icon(Icons.search),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (widget.root == QishuiRoot.music) ...[
+              if (widget.root != QishuiRoot.mine)
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
                   sliver: SliverToBoxAdapter(
-                    child: BetaGlassButton(
-                      onPressed: _chooseMode,
-                      child: Text(
-                        ref.watch(qishuiModeProvider)?.name ?? '选择听歌模式',
-                      ),
-                    ),
-                  ),
-                ),
-                const SliverToBoxAdapter(child: QishuiNowPlaying()),
-              ],
-              if (widget.root == QishuiRoot.mine)
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: Row(
                       children: [
-                        Text(
-                          account?.nickname.isNotEmpty == true
-                              ? account!.nickname
-                              : '汽水账号',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('汽水音乐'),
-                        const SizedBox(height: 20),
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            BetaGlassButton(
-                              onPressed: () => _open(const QishuiEffectsPage()),
-                              child: const Text('官版音效'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () => _open(
-                                QishuiTrackPage(
-                                  title: '我喜欢的音乐',
-                                  load: (abort) =>
-                                      _music.favorites(abortTrigger: abort),
-                                ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Text(
+                                title,
+                                style: Theme.of(context).textTheme.headlineLarge
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              child: const Text('我喜欢的音乐'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () => _open(const QishuiWelfarePage()),
-                              child: const Text('免费听与权益'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () =>
-                                  _open(const AudioDownloadsPage()),
-                              child: const Text('已下载'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () => _open(
-                                QishuiTrackPage(
-                                  title: '播放历史',
-                                  load: (abort) =>
-                                      _music.recent(abortTrigger: abort),
+                              if (widget.root == QishuiRoot.music) ...[
+                                const SizedBox(width: 14),
+                                Flexible(
+                                  child: QishuiFeedModeMenu(
+                                    load: _music.modes,
+                                    selected: ref.watch(qishuiModeProvider),
+                                    isCurrent: () => mounted && _music.current,
+                                    onSelected: _selectMode,
+                                  ),
                                 ),
-                              ),
-                              child: const Text('播放历史'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () =>
-                                  _open(const MusicPlatformSwitchPage()),
-                              child: const Text('切换平台'),
-                            ),
-                            BetaGlassButton(
-                              onPressed: () => context.push('/music/settings'),
-                              child: const Text('设置'),
-                            ),
-                          ],
+                              ],
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          '我的歌单',
-                          style: Theme.of(context).textTheme.titleLarge,
+                        IconButton(
+                          tooltip: '搜索汽水音乐',
+                          onPressed: () => _open(const QishuiSearchPage()),
+                          icon: const Icon(Icons.search),
                         ),
                       ],
                     ),
                   ),
                 ),
-              FutureBuilder<Object>(
-                future: _content,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) _lastContent = snapshot.data;
-                  final value = snapshot.data ?? _lastContent;
-                  if (value == null) {
-                    if (snapshot.hasError) {
-                      return SliverToBoxAdapter(
-                        child: QishuiError(
-                          error: snapshot.error!,
-                          retry: () => setState(() => _content = _load()),
-                        ),
-                      );
-                    }
-                    return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(48),
-                        child: Center(child: MusicActivityIndicator()),
+              if (widget.root == QishuiRoot.music) ...[
+                const SliverToBoxAdapter(child: QishuiNowPlaying()),
+              ],
+              if (widget.root == QishuiRoot.mine) ...[
+                SliverToBoxAdapter(child: _mineHeader()),
+                SliverToBoxAdapter(
+                  child: QishuiMineTabs(
+                    selected: _mineTab,
+                    onSelected: _selectMineTab,
+                  ),
+                ),
+                if (_mineTab == QishuiMineTab.playlists)
+                  SliverToBoxAdapter(
+                    child: QishuiMinePlaylistToolbar(
+                      onCreate: () async {
+                        await showQishuiCreatePlaylist(context, ref);
+                        if (mounted && _music.current) await _refresh();
+                      },
+                      onImport: () async {
+                        await showQishuiImportPlaylist(context, ref);
+                        if (mounted && _music.current) await _refresh();
+                      },
+                    ),
+                  ),
+                if (_mineTab == QishuiMineTab.history)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+                      child: Text(
+                        '历史播放',
+                        style: Theme.of(context).textTheme.titleSmall,
                       ),
-                    );
-                  }
-                  final body = _dataSliver(value);
-                  if (snapshot.hasError) {
-                    return SliverMainAxisGroup(
-                      slivers: [
-                        SliverToBoxAdapter(
+                    ),
+                  ),
+              ],
+              if (widget.root == QishuiRoot.mine &&
+                  _mineTab == QishuiMineTab.downloads)
+                const QishuiMineDownloads()
+              else
+                FutureBuilder<Object>(
+                  future: _content,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) _lastContent = snapshot.data;
+                    final value = snapshot.data ?? _lastContent;
+                    if (value == null) {
+                      if (snapshot.hasError) {
+                        return SliverToBoxAdapter(
                           child: QishuiError(
                             error: snapshot.error!,
                             retry: () => setState(() => _content = _load()),
                           ),
+                        );
+                      }
+                      return const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(48),
+                          child: Center(child: MusicActivityIndicator()),
                         ),
-                        body,
-                      ],
-                    );
-                  }
-                  return body;
-                },
-              ),
+                      );
+                    }
+                    final body = _dataSliver(value);
+                    if (snapshot.hasError) {
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: QishuiError(
+                              error: snapshot.error!,
+                              retry: () => setState(() => _content = _load()),
+                            ),
+                          ),
+                          body,
+                        ],
+                      );
+                    }
+                    return body;
+                  },
+                ),
               SliverToBoxAdapter(
                 child: SizedBox(
                   height: BetaContentInsets.musicBottomOf(context),
@@ -432,9 +443,7 @@ class QishuiTrackTile extends ConsumerWidget {
             );
       } on Object catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('$e')));
+          showPlatformFailure(context, e);
         }
       }
     },

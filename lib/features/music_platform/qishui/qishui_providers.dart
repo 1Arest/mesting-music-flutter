@@ -9,6 +9,8 @@ import 'qishui_api.dart';
 import 'qishui_repository.dart';
 import 'qishui_session.dart';
 import 'qishui_models.dart';
+import 'qishui_request_signer.dart';
+import 'qishui_write_journal.dart';
 
 final qishuiSessionStoreProvider = Provider<QishuiSessionStore>(
   (ref) => const SecureQishuiSessionStore(),
@@ -17,6 +19,7 @@ final qishuiApiProvider = Provider<QishuiApi>((ref) {
   final client = MusicHttpClient();
   final api = QishuiApi(
     client,
+    signer: SodaMRequestSigner(client),
     persistRefresh: (expected, updated) => ref
         .read(platformAccountProvider.notifier)
         .persistQishuiRefresh(expected, updated),
@@ -41,7 +44,10 @@ final qishuiRepositoryProvider = Provider<QishuiRepository>((ref) {
   ref.watch(
     platformAccountProvider.select((s) => (s.value?.ownerId, s.value?.token)),
   );
-  return QishuiRepository(ref.watch(qishuiApiProvider));
+  return QishuiRepository(
+    ref.watch(qishuiApiProvider),
+    writeJournal: QishuiWriteJournal(persistent: true),
+  );
 });
 
 class QishuiModeController extends Notifier<QishuiFeedMode?> {

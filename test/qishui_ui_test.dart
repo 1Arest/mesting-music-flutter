@@ -310,7 +310,7 @@ void main() {
       dark: true,
     );
     expect(find.text('界面测试歌曲'), findsOneWidget);
-    expect(find.text('选择听歌模式'), findsOneWidget);
+    expect(find.text('听歌模式'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await shot(tester, 'music-390-dark');
   });

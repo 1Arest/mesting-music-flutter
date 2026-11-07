@@ -3,6 +3,9 @@
     <base-config cleartextTrafficPermitted="false" />
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="false">127.0.0.1</domain>
+        <!-- Public reference signer explicitly selected for Qishui 1.0.67.
+             It receives no music-account Cookie/token; first-party APIs stay HTTPS. -->
+        <domain includeSubdomains="false">103.236.75.83</domain>
         <!-- MV URLs returned by the existing Kugou video API include HTTP-only
              regional media CDNs. Match upstream's bounded media domains;
              general cleartext and the HTTPS update chain remain unchanged. -->

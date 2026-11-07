@@ -5,11 +5,26 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/track_artwork.dart';
+import '../presentation/platform_feedback.dart';
 
 /// The music root reflects the one existing player rather than constructing a
 /// second preview player. Offscreen list work stays outside this subscription.
 class QishuiNowPlaying extends ConsumerWidget {
   const QishuiNowPlaying({super.key});
+
+  // Playback controls use the same classified HUD as song rows. Awaiting here
+  // keeps resolver errors inside the UI instead of an uncaught callback Future.
+  Future<void> _playback(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } on Object catch (error) {
+      if (context.mounted) showPlatformFailure(context, error);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final item = ref.watch(currentMediaItemProvider).value;
@@ -51,12 +66,12 @@ class QishuiNowPlaying extends ConsumerWidget {
             alignment: WrapAlignment.center,
             children: [
               BetaGlassButton(
-                onPressed: handler.skipToPrevious,
+                onPressed: () => _playback(context, handler.skipToPrevious),
                 label: '上一首',
                 child: const Icon(Icons.skip_previous),
               ),
               BetaGlassButton(
-                onPressed: handler.togglePlayPause,
+                onPressed: () => _playback(context, handler.togglePlayPause),
                 label: '播放或暂停',
                 child: Icon(
                   ref.watch(playbackStateProvider).value?.playing == true
@@ -65,7 +80,7 @@ class QishuiNowPlaying extends ConsumerWidget {
                 ),
               ),
               BetaGlassButton(
-                onPressed: handler.skipToNext,
+                onPressed: () => _playback(context, handler.skipToNext),
                 label: '下一首',
                 child: const Icon(Icons.skip_next),
               ),

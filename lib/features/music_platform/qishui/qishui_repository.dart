@@ -3,6 +3,8 @@ import '../domain/platform_audio_quality.dart';
 import '../netease/fallback/netease_audio_probe.dart';
 import 'qishui_api.dart';
 import 'qishui_models.dart';
+import 'qishui_write_journal.dart';
+import 'qishui_official_audio_cache.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../core/network/music_http_client.dart';
@@ -11,10 +13,234 @@ import '../../../core/network/music_network_diagnostics.dart';
 /// Typed feature adapter. Account ownership is captured at construction; a
 /// delayed old repository can never send through a newly configured identity.
 class QishuiRepository {
-  QishuiRepository(this.api)
-    : credential = api.credential,
-      _ownerAbort = api.identityAbort;
+  QishuiRepository(
+    this.api, {
+    QishuiWriteJournal? writeJournal,
+    QishuiOfficialAudioCache? audioCache,
+  }) : credential = api.credential,
+       _audioCache = audioCache ?? QishuiOfficialAudioCache(api.client),
+       _journal = writeJournal ?? QishuiWriteJournal(),
+       _ownerAbort = api.identityAbort;
   final QishuiApi api;
+  final QishuiWriteJournal _journal;
+  final QishuiOfficialAudioCache _audioCache;
+  Future<void> _writeTail = Future.value();
+
+  /// Serialize mutations separately from catalog reads. The journal is written
+  /// before remote dispatch, and is cleared only on a definite rejection or
+  /// confirmed official readback. No automatic retry of an unknown write.
+  Future<T> _serialize<T>(Future<T> Function() operation) {
+    final result = _writeTail.then((_) {
+      if (!current) throw const QishuiException('账号已变化，请重新操作');
+      return operation();
+    });
+    _writeTail = result.then<void>((_) {}, onError: (Object _) {});
+    return result;
+  }
+
+  Future<void> _confirmedWrite(
+    String operation,
+    Future<void> Function() submit,
+    Future<bool> Function() confirmed,
+  ) async {
+    final key = _journal.key(api.session!.userId, operation);
+    if (await confirmed()) {
+      await _journal.finish(key);
+      return;
+    }
+    if (await _journal.pending(key)) {
+      throw const QishuiException(
+        '上次汽水操作结果仍未确认，请先在官方App核对；本次没有重复提交',
+        unknownWrite: true,
+        kind: QishuiFailureKind.uncertainWrite,
+      );
+    }
+    await _journal.begin(key);
+    try {
+      await submit();
+    } on QishuiException catch (error) {
+      if (!error.unknownWrite) await _journal.finish(key);
+      rethrow;
+    }
+    try {
+      if (await confirmed()) {
+        await _journal.finish(key);
+        return;
+      }
+    } on Object {
+      /* Preserve pending state after an unreadable readback. */
+    }
+    throw const QishuiException(
+      '汽水已接收提交，但当前状态尚未核对成功，请刷新核对；不会自动重发',
+      unknownWrite: true,
+      kind: QishuiFailureKind.uncertainWrite,
+    );
+  }
+
+  Future<QishuiPlaylist> _ownedPlaylist(String id) async {
+    final list = (await playlists()).where((p) => p.id == id).firstOrNull;
+    if (list == null ||
+        (list.kind != 1 && list.ownerId != api.session?.userId)) {
+      throw const QishuiException('只有自己的汽水歌单可以修改，请刷新账号与歌单');
+    }
+    return list;
+  }
+
+  List<Map<String, String>> _mediaRows(List<Track> tracks) {
+    if (tracks.isEmpty ||
+        tracks.length > 10000 ||
+        tracks.any(
+          (t) => t.source != TrackSource.qishui || t.platformSongId.isEmpty,
+        )) {
+      throw const QishuiException('请选择有效的汽水歌曲');
+    }
+    return [
+      for (final id in tracks.map((t) => t.platformSongId).toSet())
+        {'id': id, 'type': 'track'},
+    ];
+  }
+
+  Future<void> addPlaylistTracks(String id, List<Track> tracks) => _serialize(
+    () async {
+      await _ownedPlaylist(id);
+      final rows = _mediaRows(tracks);
+      await _confirmedWrite(
+        'append:$id:${rows.map((r) => r['id']).join(',')}',
+        () async {
+          await call(
+            '/luna/me/playlist/media/append',
+            body: {'playlist_id': id, 'media': rows},
+            write: true,
+          );
+        },
+        () async {
+          final ids = (await playlist(id)).map((t) => t.platformSongId).toSet();
+          return rows.every((r) => ids.contains(r['id']));
+        },
+      );
+    },
+  );
+
+  Future<void> removePlaylistTracks(String id, List<Track> tracks) =>
+      _serialize(() async {
+        await _ownedPlaylist(id);
+        final rows = _mediaRows(tracks);
+        await _confirmedWrite(
+          'delete:$id:${rows.map((r) => r['id']).join(',')}',
+          () async {
+            await call(
+              '/luna/me/playlist/media/delete',
+              body: {'playlist_id': id, 'media': rows},
+              write: true,
+            );
+          },
+          () async {
+            final ids = (await playlist(
+              id,
+            )).map((t) => t.platformSongId).toSet();
+            return rows.every((r) => !ids.contains(r['id']));
+          },
+        );
+      });
+
+  Future<void> reorderPlaylist(String id, List<Track> ordered) =>
+      _serialize(() async {
+        await _ownedPlaylist(id);
+        final rows = _mediaRows(ordered);
+        final old = await playlist(id);
+        final ids = rows.map((r) => r['id']!).toList();
+        if (ids.length != ordered.length ||
+            old.length != ids.length ||
+            !old.map((t) => t.platformSongId).toSet().containsAll(ids)) {
+          throw const QishuiException('汽水歌单内容已变化，请刷新后再排序');
+        }
+        await _confirmedWrite(
+          'sort:$id:${ids.join(',')}',
+          () async {
+            await call(
+              '/luna/me/playlist/media/sort',
+              body: {'playlist_id': id, 'media': rows},
+              write: true,
+            );
+          },
+          () async =>
+              (await playlist(id)).map((t) => t.platformSongId).join(',') ==
+              ids.join(','),
+        );
+      });
+
+  Future<void> setPlaylistPrivate(String id, bool value) =>
+      _serialize(() async {
+        await _ownedPlaylist(id);
+        await _confirmedWrite(
+          'privacy:$id:$value',
+          () async {
+            await call(
+              '/luna/me/playlist/update',
+              body: {'playlist_id': id, 'is_private': value},
+              write: true,
+            );
+          },
+          () async => (await _ownedPlaylist(id)).isPrivate == value,
+        );
+      });
+
+  Future<QishuiPlaylist> createPlaylist(String name) => _serialize(() async {
+    name = name.trim();
+    if (name.isEmpty || name.runes.length > 30) {
+      throw const QishuiException('汽水歌单名称需要1至30个字符');
+    }
+    final key = _journal.key(api.session!.userId, 'create:$name');
+    final existing = (await playlists())
+        .where((p) => p.name == name && p.ownerId == api.session?.userId)
+        .toList();
+    if (await _journal.pending(key)) {
+      if (existing.length == 1) {
+        await _journal.finish(key);
+        return existing.single;
+      }
+      throw const QishuiException(
+        '上次创建结果尚未确认，请在官方App核对，不要重复创建',
+        unknownWrite: true,
+      );
+    }
+    if (existing.isNotEmpty) throw const QishuiException('已有同名汽水歌单，请使用其他名称');
+    await _journal.begin(key);
+    Map<String, dynamic> response;
+    try {
+      response = await call(
+        '/luna/me/playlist',
+        body: {'name': name, 'is_private': false},
+        write: true,
+      );
+    } on QishuiException catch (e) {
+      if (!e.unknownWrite) await _journal.finish(key);
+      rethrow;
+    }
+    final data = sodaMap(response['data']);
+    final id =
+        '${response['playlist_id'] ?? sodaMap(response['playlist'])['id'] ?? data['playlist_id'] ?? sodaMap(data['playlist'])['id'] ?? ''}';
+    try {
+      final lists = await playlists();
+      final created = lists
+          .where(
+            (p) =>
+                p.ownerId == api.session?.userId &&
+                (id.isNotEmpty ? p.id == id : p.name == name),
+          )
+          .toList();
+      if (created.length == 1) {
+        await _journal.finish(key);
+        return created.single;
+      }
+    } on Object {
+      /* Never turn an uncertain create into another create. */
+    }
+    throw const QishuiException(
+      '汽水歌单创建结果尚未确认，请刷新核对，不要重复创建',
+      unknownWrite: true,
+    );
+  });
   final Future<void> _ownerAbort;
   Future<void> _abort(Future<void>? caller) =>
       caller == null ? _ownerAbort : Future.any([_ownerAbort, caller]);
@@ -261,7 +487,9 @@ class QishuiRepository {
       await _playbackData(id.replaceFirst('qishui_', ''), null),
     );
     return {
-      for (final value in values.where((v) => !v.encrypted && v.bitrate > 0))
+      for (final value in values.where(
+        (v) => v.canDecodeOfficial && v.bitrate > 0,
+      ))
         value.bitrate > 220000
             ? PlatformAudioQuality.high
             : PlatformAudioQuality.standard,
@@ -274,8 +502,11 @@ class QishuiRepository {
     PlatformAudioQuality? quality,
     bool requireQuality = true,
     Future<void>? abortTrigger,
+    bool Function()? stillCurrent,
   }) async {
-    if (track.source != TrackSource.qishui || !current) {
+    if (track.source != TrackSource.qishui ||
+        !current ||
+        stillCurrent?.call() == false) {
       throw const QishuiException('请先切换到汽水账号');
     }
     if (track.duration <= Duration.zero) {
@@ -284,7 +515,7 @@ class QishuiRepository {
     abortTrigger = _abort(abortTrigger);
     final data = await _playbackData(track.platformSongId, abortTrigger);
     final candidates =
-        QishuiMedia.parse(data).where((v) => !v.encrypted).toList()
+        QishuiMedia.parse(data).where((v) => v.canDecodeOfficial).toList()
           ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
     if (candidates.isEmpty) {
       throw const QishuiException('汽水未提供可直接播放的音频，当前媒体授权或签名仍不可用');
@@ -295,7 +526,12 @@ class QishuiRepository {
           (track.duration == Duration.zero ||
               v.duration.inSeconds + 5 >= track.duration.inSeconds),
     );
-    if (playable.isEmpty) throw const QishuiException('汽水当前仅提供试听，未取得完整歌曲');
+    if (playable.isEmpty) {
+      throw const QishuiException(
+        '汽水当前账号仅取得试听或歌曲受限，尚未提供完整音频',
+        kind: QishuiFailureKind.entitlement,
+      );
+    }
     final matching = playable
         .where(
           (v) =>
@@ -316,18 +552,37 @@ class QishuiRepository {
         abortTrigger,
       );
     }
-    final probe = await inspectNeteaseAudio(
-      api.client,
-      candidate.url,
-      expectedDuration: track.duration,
-      abortTrigger: abortTrigger,
-      prefixBytes: 65536,
-    );
-    if (!current) throw const QishuiException('账号已变化，请重新播放');
+    final localPath = candidate.encrypted
+        ? await _audioCache.resolve(
+            candidate,
+            ownerKey: credential!,
+            trackId: track.platformSongId,
+            abort: abortTrigger,
+            current: () => current && stillCurrent?.call() != false,
+          )
+        : null;
+    final probe = localPath != null
+        ? await QishuiOfficialAudioCache.inspectFile(
+            localPath,
+            expectedDuration: track.duration,
+          )
+        : await inspectNeteaseAudio(
+            api.client,
+            candidate.url,
+            expectedDuration: track.duration,
+            abortTrigger: abortTrigger,
+            prefixBytes: 65536,
+          );
+    if (!current || stillCurrent?.call() == false) {
+      throw const QishuiException(
+        '账号或播放选择已变化，请重新播放',
+        kind: QishuiFailureKind.cancelled,
+      );
+    }
     if (!probe.playable || !{'mp3', 'm4a', 'flac'}.contains(probe.format)) {
       throw const QishuiException('汽水音频完整性或格式核验未通过');
     }
-    final bitrate = probe.bitrate;
+    final bitrate = probe.bitrate > 0 ? probe.bitrate : candidate.bitrate;
     final actual = bitrate <= 0
         ? null
         : bitrate > 220000
@@ -337,7 +592,9 @@ class QishuiRepository {
       throw const QishuiException('汽水未提供所选音质');
     }
     return track.copyWith(
-      audioAsset: candidate.url,
+      audioAsset: localPath == null
+          ? candidate.url
+          : Uri.file(localPath).toString(),
       isPreview: false,
       playbackQuality: actual?.code ?? '',
       audioBitrate: bitrate,
@@ -351,7 +608,19 @@ class QishuiRepository {
     QishuiMedia media,
     Future<void>? abort,
   ) async {
-    final quality = media.qualityCode;
+    // Values are Quality.getValue(), not the enum ordinal. Verified against
+    // the installed official 19.0.0 DEX; serverKey/definition is the wire name.
+    const officialQualities = {
+      'medium': 1,
+      'higher': 2,
+      'higherer': 3,
+      'highest': 4,
+      'lossless': 5,
+      'spatial': 6,
+      'hi_res': 7,
+      'original': 8,
+    };
+    final quality = media.qualityCode ?? officialQualities[media.qualityName];
     if (quality == null) throw const QishuiException('汽水未返回本音质的下载资格参数，暂不能保存');
     final result = await call(
       '/luna/commerce/v2/check_download',
@@ -368,7 +637,10 @@ class QishuiRepository {
     if (rows.length != 1 || rows.single['need_download_quota'] != false) {
       // Quota consumption is a distinct write contract. Never silently spend
       // quota, synthesize a grant or infer downloads from a playable URL.
-      throw const QishuiException('汽水未确认无需额外扣额的下载资格，暂不能保存');
+      throw const QishuiException(
+        '汽水未确认本音质无需额外扣额的下载资格，暂不能保存',
+        kind: QishuiFailureKind.entitlement,
+      );
     }
   }
 

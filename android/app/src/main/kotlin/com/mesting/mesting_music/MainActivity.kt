@@ -119,6 +119,9 @@ open class MainActivity : AudioServiceActivity() {
         if (!flutterEngine.plugins.has(QishuiWebAuthPlugin::class.java)) {
             flutterEngine.plugins.add(QishuiWebAuthPlugin())
         }
+        if (!flutterEngine.plugins.has(QishuiOfficialAudioPlugin::class.java)) {
+            flutterEngine.plugins.add(QishuiOfficialAudioPlugin())
+        }
         if (!flutterEngine.plugins.has(MusicHttpPlugin::class.java)) {
             flutterEngine.plugins.add(MusicHttpPlugin())
         }

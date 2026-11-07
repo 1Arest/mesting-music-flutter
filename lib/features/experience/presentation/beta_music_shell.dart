@@ -1,5 +1,6 @@
 import '../../music_platform/qishui/qishui_providers.dart';
 import '../../music_platform/qishui/qishui_pages.dart';
+import '../../music_platform/qishui/qishui_chrome_policy.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -397,6 +398,11 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
     final hasTrack = ref.watch(
       currentMediaItemProvider.select((s) => s.value != null),
     );
+    final hideQishuiAccessory = qishuiMusicRootHidesMiniPlayer(
+      qishui: ref.watch(qishuiNavigationProvider),
+      location: widget.location,
+      hasSecondaryPage: _tabNavigation.hasSecondaryPages(1),
+    );
     final inset = MediaQuery.viewInsetsOf(context).bottom;
     final backDestination = betaMusicBackDestination(
       widget.location,
@@ -524,7 +530,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
                   soda: ref.watch(qishuiNavigationProvider),
                   isSearchActive: compact || searching,
                   inline: compact && !searching,
-                  accessory: hasTrack
+                  accessory: hasTrack && !hideQishuiAccessory
                       ? FloatingPlaybackPill(compact: compact && !searching)
                       : null,
                   accessoryEnabled: inset == 0 && !_searchFocused,
@@ -634,7 +640,7 @@ class _BetaMusicShellState extends ConsumerState<BetaMusicShell>
           builder: (context, compact, child) => BetaContentInsets(
             bottom: !widget.chromeVisible
                 ? 0
-                : compact && !_anySearch
+                : (compact && !_anySearch) || hideQishuiAccessory
                 ? BetaContentInsets.compactMusicBottomOf(context)
                 : BetaContentInsets.musicChromeBottomOf(context),
             child: child!,

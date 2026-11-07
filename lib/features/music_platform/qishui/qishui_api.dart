@@ -3,26 +3,56 @@ import 'dart:convert';
 import 'dart:io' show Cookie;
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:crypto/crypto.dart';
 import '../../../core/network/music_http_client.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_session.dart';
 import 'qishui_web_routes.dart';
+import 'qishui_request_signer.dart';
+
+/// Stable, credential-free categories shared by the transport and status HUD.
+/// A malformed media reply must never be presented as a broken user network.
+enum QishuiFailureKind {
+  operation,
+  connection,
+  timeout,
+  authentication,
+  refused,
+  entitlement,
+  format,
+  cancelled,
+  uncertainWrite,
+}
 
 class QishuiException implements Exception {
   const QishuiException(
     this.message, {
     this.code = '',
     this.unknownWrite = false,
+    this.kind = QishuiFailureKind.operation,
   });
   final String message, code;
   final bool unknownWrite;
+  final QishuiFailureKind kind;
+  String get title => unknownWrite
+      ? '请核对操作结果'
+      : switch (kind) {
+          QishuiFailureKind.authentication => '汽水登录需要更新',
+          QishuiFailureKind.refused => '汽水暂未接受请求',
+          QishuiFailureKind.entitlement => '汽水播放或下载受限',
+          QishuiFailureKind.format => '汽水资料读取未完成',
+          QishuiFailureKind.timeout => '汽水服务响应超时',
+          QishuiFailureKind.connection => '汽水连接未完成',
+          QishuiFailureKind.cancelled => '操作已取消',
+          _ => '操作未完成',
+        };
   @override
   String toString() => message;
 }
 
 /// Device fields are read from Android, not fabricated installation identities.
-/// No iid/device_id or native security factor is synthesized. A service refusal
-/// is returned to the caller; the adapter never falls back to a public signer.
+/// No native installation identity or security factor is synthesized here.
+/// The separately injected desktop signer is used only for its explicit routes.
 Future<Map<String, String>> qishuiAndroidContext() async {
   const bridge = MethodChannel('com.mesting.music/qishui');
   final value = await bridge.invokeMapMethod<String, String>('context');
@@ -33,13 +63,19 @@ Future<Map<String, String>> qishuiAndroidContext() async {
 typedef QishuiContext = Future<Map<String, String>> Function();
 
 /// Each credential remains bound to its first-party protocol/host. There is
-/// no configurable signer/proxy and no cross-domain credential transplant.
+/// Signatures are requested anonymously before first-party credentials are
+/// attached; the signer cannot redirect an authenticated request to another host.
 class QishuiApi {
-  QishuiApi(this.client, {QishuiContext? context, this.persistRefresh})
-    : context = context ?? qishuiAndroidContext;
+  QishuiApi(
+    this.client, {
+    QishuiContext? context,
+    this.persistRefresh,
+    this.signer,
+  }) : context = context ?? qishuiAndroidContext;
   static const host = 'beta-luna.douyin.com';
   final http.Client client;
   final QishuiContext context;
+  final QishuiRequestSigner? signer;
   final Future<void> Function(QishuiSession expected, QishuiSession updated)?
   persistRefresh;
   QishuiSession? _session;
@@ -217,45 +253,105 @@ class QishuiApi {
       final route = web
           ? QishuiWebRoute.resolve(path, body, query, write)
           : null;
-      final device = web ? const <String, String>{} : await context();
+      final signedPc =
+          web &&
+          (route!.path == '/luna/pc/track_v2' ||
+              route.path == '/luna/commerce/v2/check_download' ||
+              write);
+      if (signedPc && signer == null) {
+        throw const QishuiException('汽水应用签名服务尚未就绪，请稍后重试', code: 'signer');
+      }
+      final device = signedPc
+          ? await signer!.identity(abort.future)
+          : web
+          ? const <String, String>{}
+          : await context();
       if (epoch != _epoch || abort.isCompleted) {
         throw const QishuiException('操作已取消');
       }
-      final uri = Uri.https(
-        web ? 'api.qishui.com' : host,
-        route?.path ?? path,
-        {
-          // These are protocol constants from the pinned 21.5.0 contract, not
-          // claims about Mesting's installed package/version or registered iid.
-          if (!web) ...{
-            'aid': '8478',
-            'app_name': 'luna',
-            'version_name': '21.5.0',
-            'version_code': '100215040',
-            'device_platform': 'android',
-          } else ...{
-            'aid': '386088',
-            'app_name': 'luna_pc',
-            'device_platform': 'web',
-            'channel': 'pc_web',
-            if (_session!.webDeviceId.isNotEmpty) ...{
-              'device_id': _session!.webDeviceId,
-              'did': _session!.webDeviceId,
-            },
-            if (_session!.webInstallId.isNotEmpty) ...{
-              'install_id': _session!.webInstallId,
-              'iid': _session!.webInstallId,
-            },
+      var uri = Uri.https(web ? 'api.qishui.com' : host, route?.path ?? path, {
+        // These are protocol constants from the pinned 21.5.0 contract, not
+        // claims about Mesting's installed package/version or registered iid.
+        if (!web) ...{
+          'aid': '8478',
+          'app_name': 'luna',
+          'version_name': '21.5.0',
+          'version_code': '100215040',
+          'device_platform': 'android',
+        } else if (signedPc) ...{
+          'aid': '386088',
+          'app_name': 'luna_pc',
+          'region': 'cn',
+          'geo_region': 'cn',
+          'os_region': 'cn',
+          'sim_region': '',
+          'cdid': '',
+          'version_name': '3.3.0',
+          'version_code': '30030000',
+          'channel': 'official',
+          'build_mode': 'master',
+          'network_carrier': '',
+          'ac': 'wifi',
+          'tz_name': 'Asia/Shanghai',
+          'resolution': '',
+          'device_platform': 'windows',
+          'device_type': 'Windows',
+          'os_version': 'Windows 11',
+        } else ...{
+          'aid': '386088',
+          'app_name': 'luna_pc',
+          'device_platform': 'web',
+          'channel': 'pc_web',
+          if (_session!.webDeviceId.isNotEmpty) ...{
+            'device_id': _session!.webDeviceId,
+            'did': _session!.webDeviceId,
           },
-          ...device,
-          '_rticket': '${DateTime.now().millisecondsSinceEpoch}',
-          ...(route?.query ?? query),
+          if (_session!.webInstallId.isNotEmpty) ...{
+            'install_id': _session!.webInstallId,
+            'iid': _session!.webInstallId,
+          },
         },
-      );
+        ...device,
+        '_rticket': '${DateTime.now().millisecondsSinceEpoch}',
+        ...(route?.query ?? query),
+      });
       final headers = <String, String>{
         'accept': 'application/json',
-        'user-agent': 'MestingMusic/1.0 (Android; Soda mobile adapter)',
+        'user-agent': signedPc
+            ? SodaMRequestSigner.userAgent
+            : 'MestingMusic/1.0 (Android; Soda mobile adapter)',
       };
+      final method = (route?.get ?? get) ? 'GET' : 'POST';
+      // Encode once; do not re-encode a Map after a signature has been issued.
+      final encodedBody = method == 'GET'
+          ? ''
+          : jsonEncode(route?.body ?? body);
+      if (signedPc) {
+        headers.addAll({
+          'content-type': 'application/json; charset=utf-8',
+          'x-ss-stub': md5
+              .convert(utf8.encode(encodedBody))
+              .toString()
+              .toUpperCase(),
+          'x-luna-background-type': 'foreground',
+          'x-luna-is-background-req': '0',
+          'x-luna-is-local-user': '0',
+        });
+        final signed = await signer!.sign(
+          uri,
+          method,
+          encodedBody,
+          headers,
+          abort.future,
+        );
+        if (epoch != _epoch || abort.isCompleted) {
+          throw const QishuiException('操作已取消');
+        }
+        uri = signed.uri;
+        headers.addAll(signed.headers);
+      }
+      // Attach credentials only after the anonymous signing operation, and
+      // only to the fixed original first-party host. No signer-supplied auth.
       final cookie = _cookieHeader(uri);
       if (cookie.isNotEmpty) headers['cookie'] = cookie;
       headers.addAll(_tokens);
@@ -268,17 +364,15 @@ class QishuiApi {
         platform: 'qishui',
         operation: path.startsWith('/passport/')
             ? MusicNetworkOperation.login
+            : path == '/luna/media_v2'
+            ? MusicNetworkOperation.playbackUrl
             : MusicNetworkOperation.read,
         abortTrigger: abort.future,
         retryRead: false,
         maximumResponseBytes: 8 * 1024 * 1024,
         build: (cancel) {
           final request =
-              http.AbortableRequest(
-                  (route?.get ?? get) ? 'GET' : 'POST',
-                  uri,
-                  abortTrigger: cancel,
-                )
+              http.AbortableRequest(method, uri, abortTrigger: cancel)
                 ..followRedirects = false
                 ..headers.addAll(headers);
           if (!(route?.get ?? get)) {
@@ -287,7 +381,7 @@ class QishuiApi {
             } else {
               request.headers['content-type'] =
                   'application/json; charset=utf-8';
-              request.body = jsonEncode(route?.body ?? body);
+              request.body = encodedBody;
             }
           }
           dispatched = true;
@@ -300,7 +394,18 @@ class QishuiApi {
       if (response.statusCode != 200) {
         throw QishuiException(
           '汽水请求未完成（HTTP ${response.statusCode}）',
+          kind: response.statusCode == 401
+              ? QishuiFailureKind.authentication
+              : QishuiFailureKind.refused,
           unknownWrite: write && response.statusCode >= 500,
+        );
+      }
+      if (response.bodyBytes.isEmpty) {
+        if (signedPc) signer?.invalidateIdentity();
+        throw QishuiException(
+          signedPc ? '汽水未接受本次应用签名，请稍后重试' : '汽水服务返回空响应，请稍后重试',
+          kind: QishuiFailureKind.refused,
+          unknownWrite: write && dispatched,
         );
       }
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
@@ -308,8 +413,9 @@ class QishuiApi {
         throw const QishuiException('汽水返回了空数据，请稍后重试');
       }
       final data = decoded['data'];
+      final statusInfo = decoded['status_info'];
       final rawCode =
-          '${decoded['status_code'] ?? decoded['error_code'] ?? (data is Map ? data['error_code'] : null) ?? 0}';
+          '${decoded['status_code'] ?? decoded['error_code'] ?? (statusInfo is Map ? statusInfo['code'] ?? statusInfo['status_code'] : null) ?? (data is Map ? data['error_code'] : null) ?? 0}';
       // Business codes are numeric. Never display arbitrary response strings
       // that could contain identifiers, credentials or untrusted instructions.
       final code = RegExp(r'^-?\d{1,12}$').hasMatch(rawCode)
@@ -319,6 +425,7 @@ class QishuiApi {
         throw QishuiException(
           code == '1000062' ? '汽水暂未接受当前客户端请求（1000062）' : '汽水拒绝了请求（$code）',
           code: code,
+          kind: QishuiFailureKind.refused,
         );
       }
       _capture(response, uri);
@@ -337,11 +444,49 @@ class QishuiApi {
       }
       return decoded;
     } on QishuiException {
+      // Aborting a dispatched mutation only stops our local wait. The server
+      // may already have committed it, so keep the journal across account
+      // changes and restarts instead of treating cancellation as rejection.
+      if (write && dispatched && (epoch != _epoch || abort.isCompleted)) {
+        throw const QishuiException(
+          '提交结果尚未确认，请先核对歌单，不要重复提交',
+          kind: QishuiFailureKind.uncertainWrite,
+          unknownWrite: true,
+        );
+      }
       rethrow;
-    } on Object {
-      // Never surface raw URLs/JSON/headers, which may contain OTP or tokens.
+    } on FormatException {
       throw QishuiException(
-        write && dispatched ? '请求结果尚未确认，请先核对状态，不要重复提交' : '汽水请求未完成，请检查网络后重试',
+        write && dispatched
+            ? '提交后的汽水回执无法读取，请先刷新核对，不要重复提交'
+            : '汽水返回的数据格式异常，请稍后重试',
+        kind: QishuiFailureKind.format,
+        unknownWrite: write && dispatched,
+      );
+    } on Object catch (error) {
+      // Never surface raw URLs/JSON/headers, which may contain OTP or tokens.
+      final outcome = classifyMusicNetworkError(error);
+      final cancelled =
+          outcome == MusicNetworkOutcome.cancelled ||
+          epoch != _epoch ||
+          abort.isCompleted;
+      throw QishuiException(
+        write && dispatched
+            ? '请求结果尚未确认，请先核对状态，不要重复提交'
+            : cancelled
+            ? '操作已取消'
+            : error is MusicTransportException ||
+                  error is http.ClientException ||
+                  error is TimeoutException
+            ? musicNetworkMessage(outcome)
+            : '汽水请求处理未完成，请重试；可在连接诊断中核对失败阶段',
+        kind: cancelled
+            ? QishuiFailureKind.cancelled
+            : outcome == MusicNetworkOutcome.timeout
+            ? QishuiFailureKind.timeout
+            : error is MusicTransportException || error is http.ClientException
+            ? QishuiFailureKind.connection
+            : QishuiFailureKind.operation,
         unknownWrite: write && dispatched,
       );
     } finally {

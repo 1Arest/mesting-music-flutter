@@ -6,13 +6,16 @@ import '../../downloads/audio_download_storage.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../core/audio/mesting_audio_handler.dart';
 import '../data/music_platform_api.dart';
+import '../qishui/qishui_api.dart';
 
 void showPlatformFailure(BuildContext context, Object error) {
   showMusicNotice(
     context,
     icon: Icons.error_outline_rounded,
-    title: '操作未完成',
-    message: error is MusicPlatformException
+    title: error is QishuiException ? error.title : '操作未完成',
+    message: error is QishuiException
+        ? error.message
+        : error is MusicPlatformException
         ? error.message
         : error is PlaybackContinuationException
         ? error.message

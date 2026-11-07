@@ -1,5 +1,7 @@
 import '../features/music_platform/qishui/qishui_effects.dart';
 import '../features/music_platform/qishui/qishui_providers.dart';
+import '../features/music_platform/qishui/qishui_download_playback.dart';
+import '../features/downloads/audio_downloads.dart';
 import '../shared/widgets/beta_scroll_behavior.dart';
 import '../features/music_platform/domain/platform_session.dart';
 import '../features/music_platform/netease/netease_fallback.dart';
@@ -65,21 +67,36 @@ class MestingMusicApp extends ConsumerWidget {
           .preparePlatformSwitch;
       final source = ref.watch(kugouMusicSourceProvider);
       audioHandler.configureTrackPlaybackResolver((track) async {
-        if (track.hasLocalAudio) return track;
+        // Soda's decoded temporary file belongs to a specific credential.
+        // A restored media item must revalidate the active official account.
+        if (track.hasLocalAudio && track.source != TrackSource.qishui) {
+          return track;
+        }
         if (track.source == TrackSource.qishui) {
           final identity = await ref.read(platformAccountProvider.future);
-          if (identity?.platform != MusicPlatform.qishui) {
+          if (identity == null || identity.platform != MusicPlatform.qishui) {
             throw const MusicPlatformException('请先切换到汽水账号播放这首歌');
           }
           final quality = ref.read(platformQualityProvider);
-          return ref
-              .read(qishuiRepositoryProvider)
-              .resolve(
-                track,
-                quality: quality.preferred,
-                requireQuality:
-                    quality.switching && quality.switchingTrackId == track.id,
-              );
+          final intent = audioHandler.transportRevision;
+          final downloads = track.hasLocalAudio
+              ? ref.read(audioDownloadManagerProvider)
+              : null;
+          return resolveQishuiPlaybackSource(
+            track: track,
+            owner: identity.ownerId,
+            downloads: downloads?.tasks ?? const [],
+            restoringDownloads: downloads?.restoring ?? false,
+            official: () => ref
+                .read(qishuiRepositoryProvider)
+                .resolve(
+                  track,
+                  quality: quality.preferred,
+                  requireQuality:
+                      quality.switching && quality.switchingTrackId == track.id,
+                  stillCurrent: () => intent == audioHandler.transportRevision,
+                ),
+          );
         }
         if (track.source == TrackSource.netease) {
           final identity = await ref.read(platformAccountProvider.future);

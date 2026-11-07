@@ -76,6 +76,7 @@ Track? sodaTrack(Map<String, dynamic> row) {
   final wrapper = sodaMap(row['track_wrapper'] ?? row['trackWrapper']);
   if (wrapper.isNotEmpty) return sodaTrack(sodaMap(wrapper['track']));
   if (row['track'] is Map) return sodaTrack(sodaMap(row['track']));
+  if (row['track_info'] is Map) return sodaTrack(sodaMap(row['track_info']));
   final id = '${row['id'] ?? row['track_id'] ?? ''}';
   final name = '${row['name'] ?? row['title'] ?? ''}';
   if (id.isEmpty ||
@@ -138,6 +139,8 @@ List<Track> sodaTracks(Object? value) {
       'entities',
       'track_wrapper',
       'track',
+      'track_info',
+      'seo_track',
       'results',
       'result',
       'resources',
@@ -158,10 +161,21 @@ class QishuiPlaylist {
     this.cover, {
     this.count = 0,
     this.kind = 0,
+    this.ownerId = '',
+    this.ownerName = '',
+    this.description = '',
+    this.isPrivate,
+    this.likeCount,
+    this.commentCount,
+    this.shareCount,
+    this.collected,
   });
   final String id, name, cover;
   final int count;
   final int kind;
+  final String ownerId, ownerName, description;
+  final bool? isPrivate, collected;
+  final int? likeCount, commentCount, shareCount;
   static List<QishuiPlaylist> parse(Object? value) {
     final lists = <String, QishuiPlaylist>{};
     void visit(Object? value, int depth) {
@@ -184,6 +198,12 @@ class QishuiPlaylist {
               row.containsKey('track_count') ||
               row.containsKey('count_tracks') ||
               row.containsKey('playlist_id'))) {
+        final owner = sodaMap(row['owner']);
+        final stats = sodaMap(row['stats']);
+        final state = sodaMap(row['state']);
+        int? counter(Object? value) =>
+            value == null ? null : int.tryParse('$value');
+        bool? flag(Object? value) => value is bool ? value : null;
         lists[id] = QishuiPlaylist(
           id,
           name,
@@ -194,6 +214,14 @@ class QishuiPlaylist {
             row['count_tracks'] ?? row['track_count'] ?? row['media_count'],
           ),
           kind: sodaInt(row['type']),
+          ownerId: '${owner['id'] ?? ''}',
+          ownerName: '${owner['nickname'] ?? owner['public_name'] ?? ''}',
+          description: '${row['desc'] ?? ''}',
+          isPrivate: flag(row['is_private']),
+          likeCount: counter(stats['count_collected']),
+          commentCount: counter(stats['count_commented']),
+          shareCount: counter(stats['count_shared']),
+          collected: flag(state['is_collected']),
         );
       }
       for (final key in [
@@ -226,6 +254,11 @@ class QishuiMedia {
     this.bitrate,
     this.encrypted, {
     this.qualityCode,
+    this.playAuth = '',
+    this.format = '',
+    this.fileSize = 0,
+    this.encryptionMethod = '',
+    this.qualityName = '',
   });
   final String url;
   final Duration duration;
@@ -233,17 +266,67 @@ class QishuiMedia {
   final bool encrypted;
   final int? qualityCode;
 
+  /// Ephemeral official response authorization. Never persist this in Track,
+  /// diagnostics, a download manifest, filenames or an external signing call.
+  final String playAuth;
+  final String format;
+  final int fileSize;
+  final String encryptionMethod;
+  final String qualityName;
+
+  /// Unknown encryption is not equivalent to a clear stream. The native
+  /// decoder only handles the CENC AES-CTR variant used by the pinned source.
+  bool get canDecodeOfficial =>
+      !encrypted ||
+      (playAuth.isNotEmpty &&
+          (encryptionMethod.isEmpty || encryptionMethod == 'cenc-aes-ctr'));
+  bool get canDecodeAuthorized => canDecodeOfficial;
+
   static List<QishuiMedia> parse(Object? value) {
-    final result = <QishuiMedia>[];
+    final result = <String, QishuiMedia>{};
+    var remainingNodes = 12000;
+    String field(Map<String, dynamic> row, Iterable<String> keys) {
+      for (final key in keys) {
+        final value = row[key];
+        if (value is String && value.trim().isNotEmpty) return value.trim();
+      }
+      return '';
+    }
+
+    bool marked(Object? value) =>
+        value != null && !{'', '0', 'false', 'null'}.contains('$value');
+
+    String decodeUrl(String input) {
+      var url = input;
+      if (!url.startsWith('https://')) {
+        try {
+          url = utf8.decode(base64.decode(base64.normalize(input)));
+        } on Object {
+          return '';
+        }
+      }
+      final uri = Uri.tryParse(url);
+      return uri != null &&
+              uri.scheme == 'https' &&
+              uri.host.isNotEmpty &&
+              uri.userInfo.isEmpty &&
+              uri.port == 443
+          ? url
+          : '';
+    }
+
     void visit(
       Object? value,
       int depth,
       Duration inherited, [
       bool encrypted = false,
       int? inheritedQuality,
+      String inheritedAuth = '',
+      String inheritedMethod = '',
     ]) {
-      if (depth > 14) return;
+      if (depth > 18 || --remainingNodes < 0) return;
       if (value is String) {
+        if (value.length > 4 * 1024 * 1024) return;
         try {
           visit(
             jsonDecode(value),
@@ -251,6 +334,8 @@ class QishuiMedia {
             inherited,
             encrypted,
             inheritedQuality,
+            inheritedAuth,
+            inheritedMethod,
           );
         } on FormatException {
           /* Not JSON. */
@@ -259,21 +344,62 @@ class QishuiMedia {
       }
       if (value is List) {
         for (final row in value) {
-          visit(row, depth + 1, inherited, encrypted, inheritedQuality);
+          visit(
+            row,
+            depth + 1,
+            inherited,
+            encrypted,
+            inheritedQuality,
+            inheritedAuth,
+            inheritedMethod,
+          );
         }
         return;
       }
       if (value is! Map) return;
       final row = sodaMap(value);
+      final meta = sodaMap(row['video_meta'] ?? row['VideoMeta']);
+      final encryptInfo = sodaMap(
+        row['encrypt_info'] ?? row['EncryptInfo'] ?? row['encryptInfo'],
+      );
+      final auth = field(row, ['play_auth', 'PlayAuth', 'spade_a', 'SpadeA']);
+      final nestedAuth = field(encryptInfo, [
+        'spade_a',
+        'SpadeA',
+        'spadeA',
+        'play_auth',
+        'PlayAuth',
+      ]);
+      final authorization = auth.isNotEmpty
+          ? auth
+          : nestedAuth.isNotEmpty
+          ? nestedAuth
+          : inheritedAuth;
+      var ownMethod = field(row, [
+        'EncryptionMethod',
+        'encryption_method',
+        'encryptionMethod',
+      ]).toLowerCase();
+      if (ownMethod.isEmpty) {
+        ownMethod = field(encryptInfo, [
+          'encryption_method',
+          'EncryptionMethod',
+        ]).toLowerCase();
+      }
+      final method = ownMethod.isEmpty ? inheritedMethod : ownMethod;
       final protected =
           encrypted ||
-          sodaInt(row['encrypted'] ?? row['encrypt']) != 0 ||
-          ['sp', 'play_auth', 'encrypt_key'].any(
-            (key) =>
-                row[key] != null && !{'', '0', 'false'}.contains('${row[key]}'),
-          );
+          marked(row['encrypted'] ?? row['encrypt']) ||
+          marked(encryptInfo['encrypt']) ||
+          marked(row['sp']) ||
+          marked(row['encrypt_key']) ||
+          authorization.isNotEmpty ||
+          method.isNotEmpty;
       final qualityCode =
-          int.tryParse('${row['quality'] ?? ''}') ?? inheritedQuality;
+          int.tryParse(
+            '${row['quality'] ?? row['Quality'] ?? meta['quality'] ?? ''}',
+          ) ??
+          inheritedQuality;
       // The surrounding track DTO also has a `duration`, in milliseconds.
       // Only a recognized player model/URL may supply seconds through this
       // generic key; never let a catalog duration make a preview appear full.
@@ -284,44 +410,76 @@ class QishuiMedia {
           row.containsKey('main_url') ||
           row.containsKey('MainPlayUrl') ||
           row.containsKey('mainPlayUrl') ||
+          row.containsKey('main_play_url') ||
           row.containsKey('play_url');
       final rawDuration =
           num.tryParse(
-            '${row['video_duration'] ?? (playerDuration ? row['duration'] : null) ?? 0}',
+            '${row['video_duration'] ?? (playerDuration ? row['Duration'] ?? row['duration'] : null) ?? 0}',
           ) ??
           0;
-      final duration = rawDuration > 0
+      final duration = rawDuration.isFinite && rawDuration > 0
           ? Duration(microseconds: (rawDuration * 1000000).round())
           : inherited;
-      final rawUrl =
-          row['main_url'] ??
-          row['MainPlayUrl'] ??
-          row['mainPlayUrl'] ??
-          row['play_url'];
-      if (rawUrl is String && rawUrl.isNotEmpty) {
-        var url = rawUrl;
-        if (!url.startsWith('http')) {
-          try {
-            url = utf8.decode(base64.decode(base64.normalize(url)));
-          } on Object {
-            url = '';
-          }
-        }
-        final uri = Uri.tryParse(url);
-        if (uri?.scheme == 'https' &&
-            uri!.host.isNotEmpty &&
-            uri.userInfo.isEmpty) {
+      // Only explicit media URL fields count. A cover/account URL elsewhere
+      // in a DTO must never become an audio candidate.
+      for (final rawUrl in [
+        field(row, [
+          'main_url',
+          'MainPlayUrl',
+          'mainPlayUrl',
+          'main_play_url',
+          'play_url',
+        ]),
+        field(row, [
+          'BackupPlayUrl',
+          'backup_play_url',
+          'backup_url',
+          'backup_url_1',
+        ]),
+      ]) {
+        final url = decodeUrl(rawUrl);
+        if (url.isNotEmpty) {
           var bitrate = sodaInt(
-            row['bitrate'] ?? row['bit_rate'] ?? row['Bitrate'],
+            row['bitrate'] ??
+                row['bit_rate'] ??
+                row['Bitrate'] ??
+                meta['bitrate'] ??
+                meta['real_bitrate'],
           );
           if (bitrate > 0 && bitrate < 1000) bitrate *= 1000;
-          result.add(
-            QishuiMedia(
+          result.putIfAbsent(
+            url,
+            () => QishuiMedia(
               url,
               duration,
               bitrate,
               protected,
               qualityCode: qualityCode,
+              playAuth: authorization,
+              format:
+                  (field(row, [
+                            'Format',
+                            'format',
+                            'file_format',
+                            'vtype',
+                          ]).isEmpty
+                          ? field(meta, ['format', 'vtype'])
+                          : field(row, [
+                              'Format',
+                              'format',
+                              'file_format',
+                              'vtype',
+                            ]))
+                      .toLowerCase(),
+              fileSize: sodaInt(
+                row['Size'] ?? row['size'] ?? row['file_size'] ?? meta['size'],
+              ),
+              encryptionMethod: method,
+              qualityName:
+                  (field(row, ['Quality', 'quality', 'definition']).isEmpty
+                          ? field(meta, ['quality', 'definition'])
+                          : field(row, ['Quality', 'quality', 'definition']))
+                      .toLowerCase(),
             ),
           );
         }
@@ -341,24 +499,42 @@ class QishuiMedia {
         'entity',
         'track_wrapper',
         'track',
+        'track_info',
+        'track_player',
+        'trackPlayer',
         'player_models',
         'Result',
         'Data',
         'videoModel',
-        'PlayInfoList',
       ]) {
         final child = row[key];
         if (child is Map && ['video_list', 'audio_list'].contains(key)) {
           for (final item in child.values) {
-            visit(item, depth + 1, duration, protected, qualityCode);
+            visit(
+              item,
+              depth + 1,
+              duration,
+              protected,
+              qualityCode,
+              authorization,
+              method,
+            );
           }
         } else {
-          visit(child, depth + 1, duration, protected, qualityCode);
+          visit(
+            child,
+            depth + 1,
+            duration,
+            protected,
+            qualityCode,
+            authorization,
+            method,
+          );
         }
       }
     }
 
     visit(value, 0, Duration.zero);
-    return result;
+    return List.unmodifiable(result.values);
   }
 }
