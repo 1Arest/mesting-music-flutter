@@ -8,6 +8,7 @@ import '../netease_free_listen_entry.dart';
 import '../netease_music_repository.dart';
 import '../netease_request_exception.dart';
 import '../netease_reward_requests.dart';
+import 'netease_ad_probe_context.dart';
 import 'netease_ad_probe_report.dart';
 
 abstract interface class NeteaseAdProbeService {
@@ -56,16 +57,20 @@ class NeteaseAdProbeRepository implements NeteaseAdProbeService {
     var identity = NeteaseRewardRequests.identity(music.api);
     var stage = NeteaseAdProbeStage.entry;
     MusicRewardDiagnostic? entryDiagnostic;
+    NeteaseAdProbeRequestInfo? requestInfo;
     NeteaseAdProbeReport stop(
       NeteaseAdProbeOutcome outcome, {
       int? httpStatus,
       int? businessCode,
       MusicNetworkOutcome? networkOutcome,
+      Map<String, dynamic>? response,
     }) => NeteaseAdProbeReport.stopped(
       outcome: outcome,
       stage: stage,
       identity: identity,
       entry: entryDiagnostic,
+      requestInfo: requestInfo,
+      response: response,
       httpStatus: httpStatus,
       businessCode: businessCode,
       networkOutcome: networkOutcome,
@@ -133,22 +138,32 @@ class NeteaseAdProbeRepository implements NeteaseAdProbeService {
       // Official 9.6.15 utils.k.j0(int,String) joins the exact issued values.
       // No hardcoded advertising slot or resource is used as a fallback.
       final slot = '${position}_$resource';
+      final context = NeteaseAdProbeContext.fromEntry(entry!, entryDiagnostic);
+      if (context == null) return stop(NeteaseAdProbeOutcome.invalidContext);
       stage = NeteaseAdProbeStage.adData;
       if (invalid() case final reason?) return stop(reason);
       // A legitimate Set-Cookie on the entry read may update the isolated jar.
       // Report the identity actually used for this next request, not the one
       // captured before the previous response, without overriding either jar.
       identity = NeteaseRewardRequests.identity(music.api);
+      requestInfo = context.info;
       final response = await read(adPath, {
         'type_ids': jsonEncode([slot]),
+        'adextjson': context.adextjson,
       });
       if (invalid() case final reason?) return stop(reason);
       final adCode = NeteaseRewardRequests.code(response);
-      if (adCode == null) return stop(NeteaseAdProbeOutcome.receiptIncomplete);
+      if (adCode == null) {
+        return stop(
+          NeteaseAdProbeOutcome.receiptIncomplete,
+          response: response,
+        );
+      }
       if (adCode != 200) {
         return stop(
           NeteaseAdProbeOutcome.businessRejected,
           businessCode: adCode,
+          response: response,
         );
       }
       return NeteaseAdProbeReport.observe(
@@ -156,6 +171,7 @@ class NeteaseAdProbeRepository implements NeteaseAdProbeService {
         requestedSlot: slot,
         identity: identity,
         entry: entryDiagnostic,
+        requestInfo: requestInfo,
       );
     } on Object catch (error) {
       if (invalid() case final reason?) return stop(reason);
