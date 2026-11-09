@@ -11,6 +11,7 @@ import 'qishui_api.dart';
 import 'qishui_diagnostics.dart';
 import 'qishui_http_diagnostics.dart';
 import 'qishui_models.dart';
+import 'qishui_music_wall_request.dart';
 
 /// The music-wall DTO stores seconds. This is independent of the millisecond
 /// duration used by playback reporting. Missing fields remain unknown, not 0.
@@ -207,7 +208,7 @@ class QishuiListeningRepository {
     _guard(feature: QishuiDiagnosticFeature.officialListening);
     final response = await api.request(
       '/luna/me/music_wall',
-      body: const {'feed_music_wall_extra': <String, Object>{}, 'ab_param': ''},
+      body: QishuiMusicWallRequest.body,
       expectedCredential: credential,
       abortTrigger: _cancel(abortTrigger),
     );

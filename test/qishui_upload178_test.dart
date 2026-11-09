@@ -67,11 +67,12 @@ void main() {
       );
       const prefix =
           'AWS4-HMAC-SHA256 Credential=AKTEST178/'
-          '20261108//imagex/aws4_request, '
-          'SignedHeaders=x-amz-date;x-amz-security-token, Signature=';
+          '20261108/sdwdmwlll/imagex/aws4_request,'
+          'SignedHeaders=x-amz-date;x-amz-security-token,Signature=';
       // These constants come from a separate Python implementation against the
-      // retained official BDAuthHelper/AWSV4Auth/native path contract. They are
-      // intentionally not calculated with the Dart implementation under test.
+      // retained official BDAuthHelper/AWSV4Auth/native path contract, extended
+      // in 179 with the native region default. They are intentionally not
+      // calculated with the Dart implementation under test.
       expect(
         QishuiImageSignature.headers(
           method: 'GET',
@@ -80,7 +81,7 @@ void main() {
           grant: grant,
           now: _time,
         )['authorization'],
-        '${prefix}723ca6684f45e1b745ea452a65c49218dc72709d066ab6b558babf82a886dd05',
+        '${prefix}df9ad51a6e3e04cf9fe2f80da615e795abf8e0aeaa6ff91c899f45c639e3c9cf',
       );
       expect(
         QishuiImageSignature.headers(
@@ -91,7 +92,7 @@ void main() {
           grant: grant,
           now: _time,
         )['authorization'],
-        '${prefix}a684304deeabd451fd7af2460bc6abcb9e6cfb068fa2cd819cda4507f9868cc3',
+        '${prefix}ac5d10f6313a2fa3d63d571129b2b7478a39955d54847011a2b66936cd0eb97a',
       );
       expect(
         () => QishuiImageSignature.headers(
@@ -147,6 +148,11 @@ void main() {
             // controlled server. Success here is a protocol regression result,
             // not evidence of an upload to the real official account service.
             if (r.url.path != '/top/v1') return http.Response('{}', 400);
+            expect(
+              r.headers['authorization'],
+              contains('/sdwdmwlll/imagex/aws4_request,SignedHeaders='),
+            );
+            expect(r.headers['authorization'], isNot(contains(', ')));
             return reply(_apply());
           }
           if (r.url.host == 'upload.byteimg.com') {
@@ -159,6 +165,11 @@ void main() {
           stages.add('commit');
           expect(r.url.path, '/top/v1');
           expect(r.url.queryParameters['Action'], 'CommitImageUpload');
+          expect(
+            r.headers['authorization'],
+            contains('/sdwdmwlll/imagex/aws4_request,SignedHeaders='),
+          );
+          expect(r.headers['authorization'], isNot(contains(', ')));
           return reply({
             'Result': {
               'Results': [

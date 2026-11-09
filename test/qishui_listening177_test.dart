@@ -130,7 +130,8 @@ void main() {
           expect(request.method, 'POST');
           expect(jsonDecode(request.body), {
             'feed_music_wall_extra': <String, Object>{},
-            'ab_param': '',
+            'ab_param':
+                '{"enable_new_music_wall":1,"enable_fav_artists":false,"enable_fav_playables":false}',
           });
           expect(request.headers['cookie'], 'sessionid=music-private177');
           expect(request.headers['x-helios'], 'fixture-helios177');

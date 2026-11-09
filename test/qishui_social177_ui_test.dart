@@ -260,6 +260,51 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+  for (final kind in QishuiFollowListKind.values) {
+    testWidgets(
+      '${kind.name} shows sparse empty group and retains Douyin rows',
+      (tester) async {
+        final scenes = <String>[];
+        await mount(
+          tester,
+          QishuiFollowListPage(kind: kind),
+          list: (_, query) async {
+            scenes.add(query['scene']!);
+            if (query['scene'] == '2') {
+              return {
+                'status_info': <String, Object>{},
+                'status_code': 0,
+                'next_cursor': '',
+              };
+            }
+            return {
+              'follow_items': [
+                {
+                  'item_type': 'user',
+                  'user': {'id': '17902', 'nickname': '抖音分组用户'},
+                },
+              ],
+              'has_more': false,
+            };
+          },
+        );
+        expect(find.text('汽水暂无可显示的记录'), findsOneWidget);
+        expect(find.text('重试'), findsNothing);
+        await tester.tap(find.text('抖音'));
+        await pump(tester);
+        expect(find.text('抖音分组用户'), findsOneWidget);
+        expect(find.text('汽水暂无可显示的记录'), findsNothing);
+        await tester.tap(find.text('汽水'));
+        await pump(tester);
+        expect(find.text('汽水暂无可显示的记录'), findsOneWidget);
+        expect(find.text('抖音分组用户'), findsNothing);
+        expect(find.text('重试'), findsNothing);
+        expect(scenes, ['2', '1', '2']);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
   testWidgets('user detail follows then unfollows with official readback', (
     tester,
   ) async {

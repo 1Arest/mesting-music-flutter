@@ -11,6 +11,7 @@ import 'qishui_api.dart';
 import 'qishui_models.dart';
 import 'qishui_diagnostics.dart';
 import 'qishui_http_diagnostics.dart';
+import 'qishui_image_upload_contract.dart';
 
 /// The application API issues an ephemeral ImageX grant. Only that grant goes
 /// to the vendor upload service; music Cookies, CSRF and NAS tokens stay in
@@ -19,7 +20,7 @@ class QishuiImageGrant {
   // The shipped Soda uploader uses this private ImageX gateway for BOTH its
   // HTTP request and AWSV4 canonical URI. Signing/requesting '/' is a different
   // operation even when the host, temporary credentials and query are equal.
-  static const apiPath = '/top/v1';
+  static const apiPath = QishuiImageUploadContract.apiPath;
   QishuiImageGrant._(
     this.endpoint,
     this.serviceId,
@@ -90,9 +91,9 @@ bool qishuiImageUploadUriAllowed(Uri uri) {
 }
 
 /// Matches the shipped AWSV4Auth/BDAuthHelper canonical algorithm and private
-/// gateway path. The retained empty-region/ImageX scope remains a compatibility
-/// assumption; it is not a proven SDK region default. Do not log canonical
-/// requests, temporary credentials or signatures.
+/// gateway path and native default region. The static contract is shared with
+/// diagnostic metadata, which contains only fixed public protocol constants.
+/// Do not log canonical requests, temporary credentials or signatures.
 class QishuiImageSignature {
   static Map<String, String> headers({
     required String method,
@@ -137,8 +138,8 @@ class QishuiImageSignature {
       names.join(';'),
       hash(body),
     ].join('\n');
-    const region = '';
-    const service = 'imagex';
+    const region = QishuiImageUploadContract.region;
+    const service = QishuiImageUploadContract.service;
     final scope = '$date/$region/$service/aws4_request';
     List<int> hmac(List<int> key, String data) =>
         Hmac(sha256, key).convert(utf8.encode(data)).bytes;
@@ -153,8 +154,8 @@ class QishuiImageSignature {
     return {
       ...headers,
       'authorization':
-          'AWS4-HMAC-SHA256 Credential=${grant.accessKey}/$scope, '
-          'SignedHeaders=${names.join(';')}, Signature=$signature',
+          'AWS4-HMAC-SHA256 Credential=${grant.accessKey}/$scope,'
+          'SignedHeaders=${names.join(';')},Signature=$signature',
     };
   }
 

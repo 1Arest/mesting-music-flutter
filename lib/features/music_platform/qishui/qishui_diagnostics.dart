@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+import 'qishui_image_upload_contract.dart';
+
 /// Closed names keep the diagnostic boundary separate from server text. A
 /// caller cannot accidentally export a URL, account ID or exception message.
 enum QishuiDiagnosticFeature {
@@ -186,18 +188,19 @@ class QishuiDiagnostics extends ChangeNotifier {
     bool compact = false,
   }) => {
     'schema': 178,
-    'appVersion': '1.0.78',
-    'appVersionCode': 99,
+    'appVersion': '1.0.79',
+    'appVersionCode': 100,
     'platform': 'qishui',
     'memoryOnly': true,
     'group': group.name,
     if (group == QishuiDiagnosticGroup.all ||
         group == QishuiDiagnosticGroup.cover)
       'imageUploadContract': {
-        'gatewayPath': '/top/v1',
+        'gatewayPath': QishuiImageUploadContract.apiPath,
         'signature': 'AWS4-HMAC-SHA256',
-        'service': 'imagex',
-        'regionMode': 'emptyUnverified',
+        'service': QishuiImageUploadContract.service,
+        'regionMode': 'officialSdkDefault',
+        'region': QishuiImageUploadContract.region,
       },
     'compact': compact,
     'eventCount': rows.length,

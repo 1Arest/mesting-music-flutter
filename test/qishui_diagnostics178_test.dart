@@ -64,8 +64,8 @@ void main() {
         expect(text, isNot(contains(private)));
       }
       final root = jsonDecode(text) as Map;
-      expect(root['appVersion'], '1.0.78');
-      expect(root['appVersionCode'], 99);
+      expect(root['appVersion'], '1.0.79');
+      expect(root['appVersionCode'], 100);
       expect(root['platform'], 'qishui');
       expect(root['memoryOnly'], isTrue);
       expect(root['complete'], isTrue);
@@ -248,7 +248,8 @@ void main() {
           'gatewayPath': '/top/v1',
           'signature': 'AWS4-HMAC-SHA256',
           'service': 'imagex',
-          'regionMode': 'emptyUnverified',
+          'regionMode': 'officialSdkDefault',
+          'region': 'sdwdmwlll',
         });
       }
       final listening =

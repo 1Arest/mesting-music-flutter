@@ -194,7 +194,14 @@ class QishuiSocialPage {
 
   static QishuiSocialPage parse(Map<String, dynamic> response, String cursor) {
     final root = qishuiSocialPayload(response);
-    final rows = root['follow_items'];
+    // The shipped response constructor initializes an empty ArrayList and
+    // BasePageResponse defaults hasMore to false. The official service omits
+    // those fields for an empty source group (confirmed by the user's 178
+    // receipt). Accept only that acknowledged empty envelope; a different
+    // payload, an explicit null/wrong list, or a continuation is still an error.
+    final rows = _confirmedEmptyFollowPage(response, root)
+        ? const <Object>[]
+        : root['follow_items'];
     if (rows is! List || rows.length > 200) {
       throw const QishuiException('汽水关注列表格式异常，请刷新重试');
     }
@@ -218,6 +225,60 @@ class QishuiSocialPage {
       continuationProblem: more && !validNext ? '汽水未返回有效续载位置，请下拉刷新。' : null,
     );
   }
+}
+
+bool _confirmedEmptyFollowPage(
+  Map<String, dynamic> response,
+  Map<String, dynamic> root,
+) {
+  if (root.containsKey('follow_items')) return false;
+  const envelopeKeys = {
+    'status_info',
+    'status_code',
+    'error_code',
+    'code',
+    'next_cursor',
+    'has_more',
+  };
+  for (final envelope in [response, root]) {
+    final outerWrapper =
+        identical(envelope, response) && !identical(root, response);
+    if (envelope.keys.any(
+      (key) => !envelopeKeys.contains(key) && !(outerWrapper && key == 'data'),
+    )) {
+      return false;
+    }
+    if (envelope.containsKey('status_info') &&
+        envelope['status_info'] is! Map) {
+      return false;
+    }
+    if (envelope.containsKey('has_more') &&
+        _bool(envelope['has_more']) != false) {
+      return false;
+    }
+    final next = envelope['next_cursor'];
+    if (next != null && (next is! String || !qishuiSocialCursorValid(next))) {
+      return false;
+    }
+  }
+  final status = sodaMap(root['status_info']);
+  final outerStatus = sodaMap(response['status_info']);
+  final codes = [
+    response['status_code'],
+    response['error_code'],
+    response['code'],
+    root['status_code'],
+    root['error_code'],
+    root['code'],
+    status['code'],
+    status['status_code'],
+    outerStatus['code'],
+    outerStatus['status_code'],
+  ].where((code) => code != null).toList();
+  // A blank/unknown JSON object must never masquerade as an empty official
+  // follow list. A concrete successful business receipt is required here.
+  return codes.isNotEmpty &&
+      codes.every((code) => qishuiSocialCount(code) == 0);
 }
 
 Map<String, dynamic> qishuiSocialPayload(Map<String, dynamic> response) =>
