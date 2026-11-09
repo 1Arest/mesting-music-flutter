@@ -284,6 +284,7 @@ open class MainActivity : AudioServiceActivity() {
             when (call.method) {
                 "shareDiagnosticJson" -> DiagnosticReportShare.share(this, call, result)
                 "shareQishuiDiagnosticJson" -> DiagnosticReportShare.shareQishui(this, call, result)
+                "shareNeteaseAdDiagnosticJson" -> DiagnosticReportShare.shareNeteaseAd(this, call, result)
                 "shareText" -> {
                     val text = call.argument<String>("text")?.trim()
                     if (text.isNullOrEmpty()) {

@@ -7,12 +7,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/diagnostics/diagnostic_activity.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/quiet_pull_to_refresh.dart';
 import '../../themes/beta_appearance.dart';
 import '../domain/platform_rewards.dart' show rewardDateKey;
 import '../netease/netease_rewards.dart';
 import '../netease/netease_rewards_provider.dart';
+import '../netease/ad_probe/netease_ad_probe_page.dart';
 import '../retained_kugou_scope.dart';
 import 'platform_reward_day.dart';
 import '../../themes/music_typography.dart';
@@ -23,6 +25,27 @@ import '../../themes/music_typography.dart';
 class NeteaseRewardCalendar extends ConsumerWidget {
   const NeteaseRewardCalendar({this.embedded = false, super.key});
   final bool embedded;
+
+  Future<void> _inspect(BuildContext context, WidgetRef ref) async {
+    final state = ref.read(neteaseRewardsProvider);
+    if (state.ownerId == null ||
+        state.loading ||
+        state.action != null ||
+        ref.read(diagnosticActivityProvider)) {
+      return;
+    }
+    // Keep automatic sign-in/reward writes suspended for this explicit read-only
+    // page, including OS export/return. This does not change the saved setting.
+    final activity = ref.read(diagnosticActivityProvider.notifier);
+    activity.setRunning(true);
+    try {
+      await Navigator.of(
+        context,
+      ).push(betaContentRoute<void>(const NeteaseAdProbePage()));
+    } finally {
+      activity.setRunning(false);
+    }
+  }
 
   Future<void> _act(
     BuildContext context,
@@ -307,6 +330,14 @@ class NeteaseRewardCalendar extends ConsumerWidget {
                       onClaim: () =>
                           unawaited(_act(context, ref, controller.ads)),
                       onStop: controller.stopAds,
+                    ),
+                    const SizedBox(height: 16),
+                    BetaGlassButton(
+                      key: const ValueKey('netease-ad-probe-open'),
+                      height: 52,
+                      interactionEnabled: enabled,
+                      onPressed: () => unawaited(_inspect(context, ref)),
+                      child: const Text('广告配置诊断'),
                     ),
                   ],
                 ),
