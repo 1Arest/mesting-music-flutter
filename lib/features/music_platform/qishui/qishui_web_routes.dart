@@ -1,4 +1,5 @@
 import 'qishui_api.dart';
+import 'qishui_official_routes.dart';
 
 /// Explicit protocol translation backed by the pinned PC references. There is
 /// no generic '/pc' prefix fallback, cross-domain Cookie transplant, or silent
@@ -29,6 +30,11 @@ class QishuiWebRoute {
         '/luna/me/collection/media/delete' =>
           '/luna/pc/me/collection/media/delete',
         '/luna/me/recently-played-media' => '/luna/pc/me/recently-played-media',
+        '/luna/me/follow' => '/luna/me/follow',
+        '/luna/me/unfollow' => '/luna/me/unfollow',
+        '/luna/me/collection/artist' => '/luna/me/collection/artist',
+        '/luna/me/collection/artist/delete' =>
+          '/luna/me/collection/artist/delete',
         _ => null,
       };
       if (target == null) throw const QishuiException('此汽水写入操作尚未完成适配');
@@ -40,6 +46,13 @@ class QishuiWebRoute {
         final value = body[key];
         if (value != null) params[key] = '$value';
       }
+    }
+
+    // The official social APIs use these common paths, not invented PC
+    // variants. Keep their exact query and use the real signer PC identity.
+    if (QishuiOfficialRoutes.supports('GET', path)) {
+      copyFields(['cursor', 'count', 'scene', 'user_id']);
+      return QishuiWebRoute(path, true, const {}, params);
     }
 
     // Pinned PC artist reads (baka-plugins qishui.js / TuneWeave catalog).
@@ -61,6 +74,11 @@ class QishuiWebRoute {
     switch (path) {
       case '/luna/me':
         return QishuiWebRoute('/luna/pc/me', true, const {}, params);
+      case '/luna/me/music_wall':
+        // Official GetMyMusicWallRequest is a JSON read despite using POST.
+        // Preserve its body and the real PC signing identity, not an invented
+        // `/pc` route or an Android installation context.
+        return QishuiWebRoute(path, false, body, params);
       case '/luna/me/playlist/v2':
         copyFields(['cursor', 'count']);
         return QishuiWebRoute('/luna/pc/me/playlist', true, const {}, params);
@@ -73,6 +91,10 @@ class QishuiWebRoute {
           params,
         );
       case '/luna/search/track':
+        // The official SearchResultApi uses POST /luna/search/{search_type}
+        // with a JSON SearchRequest. This is a signed read, not a playlist or
+        // account mutation, and must not be rewritten to the former PC GET.
+        return QishuiWebRoute(path, false, body, params);
       case '/luna/search/artist':
         copyFields([
           'q',
@@ -83,14 +105,7 @@ class QishuiWebRoute {
           'from_search_id',
           'search_scene',
         ]);
-        return QishuiWebRoute(
-          path == '/luna/search/track'
-              ? '/luna/pc/search/track'
-              : '/luna/pc/search/artist',
-          true,
-          const {},
-          params,
-        );
+        return QishuiWebRoute('/luna/pc/search/artist', true, const {}, params);
       case '/luna/video/uploader':
         // The official IMAGE uploader uses this name too (UploadType.Image=0,
         // UploadScene.Default=0). Never guess a '/pc/video/uploader' endpoint.

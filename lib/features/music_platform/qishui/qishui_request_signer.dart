@@ -6,6 +6,7 @@ import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_api.dart';
 import 'qishui_signer_defaults.dart';
 import 'qishui_signer_settings.dart';
+import 'qishui_official_routes.dart';
 
 class QishuiSignedRequest {
   const QishuiSignedRequest(this.uri, this.headers);
@@ -125,6 +126,29 @@ class SodaMRequestSigner
         return const {};
       }
       if (response.statusCode != 200) {
+        // Only recognize our fixed public policy codes. Never surface an
+        // arbitrary helper body/message which could contain request headers,
+        // URLs, credentials, or text from an upstream error page.
+        String? policy;
+        if ({400, 415, 422}.contains(response.statusCode)) {
+          try {
+            final payload = jsonDecode(utf8.decode(response.bodyBytes));
+            final code = payload is Map ? payload['code'] : null;
+            if (const {
+              'forbidden_route',
+              'forbidden_query',
+              'forbidden_body_field',
+              'forbidden_header',
+              'invalid_content_type',
+              'body_digest_mismatch',
+              'identity_mismatch',
+            }.contains(code)) {
+              policy = code as String;
+            }
+          } on Object {
+            // HTTP status is enough when there is no safe structured code.
+          }
+        }
         throw QishuiException(
           switch (response.statusCode) {
             401 ||
@@ -132,9 +156,12 @@ class SodaMRequestSigner
             404 => '签名服务路径不存在（HTTP 404），请检查服务地址和路径前缀',
             429 => '签名助手请求过于频繁（HTTP 429），请稍后重试',
             503 => '签名助手尚未就绪或当前繁忙（HTTP 503），请检查助手状态',
-            400 ||
-            415 ||
-            422 => '签名助手拒绝请求参数（HTTP ${response.statusCode}），请核对助手接口版本',
+            400 || 415 || 422 =>
+              policy == 'forbidden_route' ||
+                      policy == 'forbidden_query' ||
+                      policy == 'forbidden_body_field'
+                  ? '签名助手尚未支持本次接口或参数（HTTP ${response.statusCode}，$policy），请更新助手后重试'
+                  : '签名助手拒绝请求参数（HTTP ${response.statusCode}${policy == null ? '' : '，$policy'}），请核对助手接口版本',
             _ => '汽水签名服务暂不可用（HTTP ${response.statusCode}），请检查助手状态',
           },
           code: 'signer',
@@ -258,6 +285,7 @@ class SodaMRequestSigner
         !(uri.path.startsWith('/luna/pc/') ||
             uri.path == '/luna/me/playlist/media/sort' ||
             uri.path == '/luna/commerce/v2/check_download' ||
+            QishuiOfficialRoutes.supports(method, uri.path) ||
             uri.path == '/luna/video/uploader' && method == 'GET') ||
         !{'GET', 'POST'}.contains(method) ||
         utf8.encode(body).length > 1024 * 1024) {

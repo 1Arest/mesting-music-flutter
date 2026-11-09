@@ -168,11 +168,11 @@ class QishuiCatalogAccumulator<T> {
   }
 }
 
-/// PC search and artist reads have explicit translations in QishuiWebRoute.
-/// The PC references are retained account_search.rs (TuneWeave) and
-/// qishuiPcGet/getArtistWorks (baka-plugins); Android 19.0 DEX independently
-/// establishes search groups and artist identity. Static evidence does not
-/// establish that a particular account/server will accept a request.
+/// Track search follows the common POST declared by the shipped Android
+/// 19.0/21.5 SearchResultApi, rather than guessing a desktop GET from a test
+/// fixture. Artist reads retain their existing PC translation. The caller owns
+/// application signing and account credentials; these DTOs do not create a
+/// mobile identity or infer that a particular server has accepted the request.
 class QishuiSearchCatalog {
   const QishuiSearchCatalog({required QishuiCatalogRequest request})
     : _request = request;
@@ -204,6 +204,21 @@ class QishuiSearchCatalog {
         searchId.length > 128 ||
         RegExp(r'[\x00-\x1f\x7f]').hasMatch(searchId)) {
       throw const QishuiException('请输入有效的歌曲或歌手关键词');
+    }
+    if (kind == QishuiSearchKind.tracks) {
+      // SearchResultApi declares a JSON @Body, not query parameters. Only its
+      // required fields and the requested page cursor are sent: nullable scene
+      // metadata is omitted rather than invented or copied from PC GET APIs.
+      return _request(
+        '/luna/search/track',
+        body: {
+          'q': query,
+          'cursor': cursor,
+          'search_id': searchId,
+          'search_method': 'input',
+        },
+        abortTrigger: abortTrigger,
+      );
     }
     return _request(
       '/luna/search/${kind.pathName}',

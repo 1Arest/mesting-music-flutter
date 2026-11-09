@@ -209,15 +209,18 @@ void main() {
       );
       expect(recorded.first['path'], '/luna/search/track');
       expect(recorded.last['path'], '/luna/search/artist');
-      expect(recorded.first['get'], isTrue);
-      expect(recorded.first['body'], isEmpty);
+      expect(recorded.first['get'], isFalse);
+      expect(recorded.first['query'], isEmpty);
       expect(recorded.first['abort'], isTrue);
-      final query = recorded.first['query'] as Map<String, String>;
-      expect(query['q'], '天空 & moon');
-      expect(query['cursor'], '0');
-      expect(query['search_id'], searchId173);
-      expect(query['search_method'], 'input');
-      expect(query.keys, isNot(contains('cookie')));
+      final body = recorded.first['body'] as Map<String, Object?>;
+      expect(body, {
+        'q': '天空 & moon',
+        'cursor': '0',
+        'search_id': searchId173,
+        'search_method': 'input',
+      });
+      expect(body.keys, isNot(contains('cookie')));
+      expect(recorded.last['get'], isTrue);
       expect((recorded.last['query'] as Map)['cursor'], '20');
     },
   );

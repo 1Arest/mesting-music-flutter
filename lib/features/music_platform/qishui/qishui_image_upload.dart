@@ -240,15 +240,26 @@ class QishuiImageUploader {
     try {
       guard();
       final credential = api.credential;
-      final grant = QishuiImageGrant.parse(
-        await api.request(
+      Map<String, dynamic> authorization;
+      try {
+        authorization = await api.request(
           '/luna/video/uploader',
           get: true,
           query: const {'track_id': '', 'upload_type': '0', 'scene': '0'},
           expectedCredential: credential,
           abortTrigger: abort,
-        ),
-      );
+        );
+      } on QishuiException catch (error) {
+        // The uploader grant comes before any file bytes or playlist update.
+        // Give the user an actionable stage while preserving a definite
+        // helper refusal; it must not become an unknown playlist mutation.
+        throw QishuiException(
+          '图片上传授权未取得：${error.message}',
+          code: error.code,
+          kind: error.kind,
+        );
+      }
+      final grant = QishuiImageGrant.parse(authorization);
       guard();
       final apply = grant.endpoint.replace(
         queryParameters: {

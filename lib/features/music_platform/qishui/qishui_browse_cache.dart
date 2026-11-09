@@ -43,6 +43,12 @@ class QishuiBrowseCachePolicy {
   /// A play-history write must not erase the persisted discovery screen on
   /// every song. Only presentation records affected by that mutation expire.
   static bool affectedBy(String mutation, String route) {
+    if (mutation == '/luna/me/follow' ||
+        mutation == '/luna/me/unfollow' ||
+        mutation == '/luna/me/collection/artist' ||
+        mutation == '/luna/me/collection/artist/delete') {
+      return route == '/luna/me';
+    }
     if (mutation == '/luna/me/recently-played-media') {
       return route == '/luna/me/recently-played-media';
     }

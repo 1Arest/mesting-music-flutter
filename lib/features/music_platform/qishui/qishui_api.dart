@@ -9,6 +9,7 @@ import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_session.dart';
 import 'qishui_web_routes.dart';
 import 'qishui_request_signer.dart';
+import 'qishui_official_routes.dart';
 import 'qishui_playback_failures.dart';
 import '../../../core/cache/browse_response_cache.dart';
 import 'qishui_browse_cache.dart';
@@ -349,11 +350,18 @@ class QishuiApi {
       final route = web
           ? QishuiWebRoute.resolve(path, body, query, write)
           : null;
+      final method = (route?.get ?? get) ? 'GET' : 'POST';
+      if (web &&
+          form != null &&
+          !QishuiOfficialRoutes.formMutation(route!.path)) {
+        throw const QishuiException('此汽水接口不接受表单提交');
+      }
       final signedPc =
           web &&
           (route!.path == '/luna/pc/track_v2' ||
               route.path == '/luna/commerce/v2/check_download' ||
               route.path == '/luna/video/uploader' ||
+              QishuiOfficialRoutes.supports(method, route.path) ||
               write);
       final commerceRead =
           web && route!.path == '/luna/commerce/v2/commerce_info';
@@ -423,11 +431,15 @@ class QishuiApi {
           'x-luna-is-local-user': '1',
         },
       };
-      final method = (route?.get ?? get) ? 'GET' : 'POST';
       // Encode once; do not re-encode a Map after a signature has been issued.
       final encodedBody = method == 'GET'
           ? ''
+          : form != null
+          ? Uri(queryParameters: form).query
           : jsonEncode(route?.body ?? body);
+      final contentType = form == null
+          ? 'application/json; charset=utf-8'
+          : 'application/x-www-form-urlencoded; charset=utf-8';
       // Snapshot the eligible first-party Cookie once. Rotation by a concurrent
       // read must not change these bytes between signing and official dispatch.
       final cookie = authenticated ? _cookieHeader(uri) : '';
@@ -437,7 +449,7 @@ class QishuiApi {
       ).where((c) => c['name'] == 'passport_csrf_token').firstOrNull?['value'];
       if (signedPc) {
         headers.addAll({
-          'content-type': 'application/json; charset=utf-8',
+          'content-type': contentType,
           'x-ss-stub': md5
               .convert(utf8.encode(encodedBody))
               .toString()
@@ -492,13 +504,11 @@ class QishuiApi {
                 ..followRedirects = false
                 ..headers.addAll(headers);
           if (!(route?.get ?? get)) {
-            if (form != null) {
-              request.bodyFields = form;
-            } else {
-              request.headers['content-type'] =
-                  'application/json; charset=utf-8';
-              request.body = encodedBody;
-            }
+            // In particular, follow/unfollow are official form endpoints.
+            // Signing JSON and letting bodyFields later encode a form would
+            // invalidate the signature. Dispatch the exact frozen bytes.
+            request.headers['content-type'] = contentType;
+            request.body = encodedBody;
           }
           dispatched = true;
           return request;
@@ -590,7 +600,7 @@ class QishuiApi {
       // changes and restarts instead of treating cancellation as rejection.
       if (write && dispatched && (epoch != _epoch || abort.isCompleted)) {
         throw const QishuiException(
-          '提交结果尚未确认，请先核对歌单，不要重复提交',
+          '提交结果尚未确认，请先刷新核对，不要重复提交',
           kind: QishuiFailureKind.uncertainWrite,
           unknownWrite: true,
         );

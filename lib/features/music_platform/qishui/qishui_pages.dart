@@ -42,6 +42,11 @@ import 'qishui_history_providers.dart';
 import 'qishui_browse_providers.dart';
 import 'qishui_welfare_page.dart';
 import 'qishui_search_page.dart';
+import 'qishui_social_models.dart';
+import 'qishui_social_providers.dart';
+import 'qishui_social_pages.dart';
+import 'qishui_listening_providers.dart';
+import 'qishui_listening_page.dart';
 
 // Keep historical imports source-compatible after separating catalog pages.
 export 'qishui_search_page.dart';
@@ -234,6 +239,8 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
     ref.invalidate(qishuiBrowseProvider(_browsePage));
     if (widget.root == QishuiRoot.mine) {
       ref.invalidate(qishuiBrowseProvider('profile'));
+      ref.invalidate(qishuiSocialStatsProvider);
+      ref.invalidate(qishuiOfficialListeningProvider);
     }
     final next = _load();
     setState(() {
@@ -317,6 +324,11 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
 
+  Future<void> _openAccountDetail(Widget page) async {
+    await Navigator.of(context).push(betaContentRoute<void>(page));
+    if (mounted && _music.current) await _refresh();
+  }
+
   Widget _mineHeader() => FutureBuilder<Object>(
     future: _profile,
     builder: (context, profile) {
@@ -328,6 +340,10 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
           ? null
           : profileState.value;
       final profileError = profileState.isReloading ? null : profileState.error;
+      final social = ref.watch(qishuiSocialStatsProvider);
+      final counts = social.isReloading ? null : social.value;
+      final listening = ref.watch(qishuiOfficialListeningProvider);
+      final duration = listening.isReloading ? null : listening.value;
       final user = sodaMap(sodaMap(cachedProfile ?? profile.data)['my_info']);
       final name = '${user['nickname'] ?? account?.nickname ?? ''}';
       final picture = sodaPicture(
@@ -349,8 +365,36 @@ class _QishuiContentState extends ConsumerState<_QishuiContent> {
               onEffects: () => _open(const QishuiEffectsPage()),
               onSwitchPlatform: () => openMusicPlatformSwitch(context),
               onSettings: () => context.push('/music/settings'),
+              following: counts?.following,
+              followers: counts?.followers,
+              likes: counts?.likes,
+              listeningLabel: qishuiListeningLabel(duration?.totalSeconds),
+              onFollowing: () => _openAccountDetail(
+                const QishuiFollowListPage(
+                  kind: QishuiFollowListKind.following,
+                ),
+              ),
+              onFollowers: () => _openAccountDetail(
+                const QishuiFollowListPage(
+                  kind: QishuiFollowListKind.followers,
+                ),
+              ),
+              onLikes: () => _openAccountDetail(const QishuiLikesPage()),
+              onListening: () =>
+                  _openAccountDetail(const QishuiListeningPage()),
             ),
           ),
+          if (social.hasError || listening.hasError)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: TextButton(
+                onPressed: () {
+                  ref.invalidate(qishuiSocialStatsProvider);
+                  ref.invalidate(qishuiOfficialListeningProvider);
+                },
+                child: const Text('官方统计暂未更新，点击重试'),
+              ),
+            ),
           if (profileError != null &&
               profileError is! BrowseSnapshotUnavailable)
             Padding(

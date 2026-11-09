@@ -105,7 +105,7 @@ void main() {
       get = false,
       abortTrigger,
     }) {
-      if (query['q'] == '旧关键词') {
+      if (body['q'] == '旧关键词') {
         unawaited(
           abortTrigger!.then((_) {
             oldAborted = true;
@@ -209,7 +209,7 @@ void main() {
         get = false,
         abortTrigger,
       }) async {
-        if (query['cursor'] == '20') {
+        if (body['cursor'] == '20') {
           if (++secondAttempts == 1) throw const QishuiException('后续页暂时连接失败');
           return searchResponse173(
             rows: [

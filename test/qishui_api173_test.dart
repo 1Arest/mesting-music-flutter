@@ -4,26 +4,25 @@ import 'package:mesting_music/features/music_platform/qishui/qishui_api.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_repository.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_web_routes.dart';
 import 'package:mesting_music/features/music_platform/qishui/qishui_playback_recovery.dart';
-import 'qishui_signed_api167_test.dart' show account, reply;
+import 'qishui_signed_api167_test.dart' show account, reply, FixtureSigner;
 import 'qishui_search173_test.dart' show searchResponse173, searchTrack173;
 import 'qishui_protocol_test.dart' show sodaRecording;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
-    'legacy add-to-playlist search uses grouped PC catalog and no helper',
+    'add-to-playlist search shares the signed official JSON POST contract',
     () async {
+      final signer = FixtureSigner();
       final api = QishuiApi(
         MockClient((r) async {
-          expect(r.method, 'GET');
-          expect(r.url.path, '/luna/pc/search/track');
+          expect(r.method, 'POST');
+          expect(r.url.path, '/luna/search/track');
           expect(r.url.queryParameters['device_platform'], 'windows');
           expect(r.url.queryParameters['channel'], 'official');
-          expect(r.url.queryParameters['cursor'], '0');
-          expect(r.url.queryParameters['search_method'], 'input');
-          expect(r.headers['user-agent'], contains('Windows'));
           expect(r.headers['cookie'], isNotNull);
-          expect(r.headers['x-helios'], isNull);
+          expect(r.headers['x-helios'], 'fixture-helios');
+          expect(r.body, signer.signedBody);
           return reply(
             searchResponse173(
               rows: [
@@ -36,10 +35,12 @@ void main() {
             ),
           );
         }),
+        signer: signer,
       )..configure(account());
       addTearDown(api.dispose);
       final result = await QishuiRepository(api).search('测试');
       expect(result.single.platformSongId, '123');
+      expect(signer.signedHeaders!.containsKey('cookie'), isFalse);
     },
   );
   test('artist PC translations are exact GET endpoints', () {

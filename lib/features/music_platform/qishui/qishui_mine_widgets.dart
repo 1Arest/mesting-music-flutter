@@ -29,12 +29,42 @@ class QishuiMineHeader extends StatelessWidget {
     required this.onEffects,
     required this.onSwitchPlatform,
     required this.onSettings,
+    this.following,
+    this.followers,
+    this.likes,
+    this.listeningLabel,
+    this.onFollowing,
+    this.onFollowers,
+    this.onLikes,
+    this.onListening,
     super.key,
   });
   final String nickname, avatar;
   final List<QishuiPlaylist> playlists;
   final VoidCallback onAccount, onMembership, onEffects;
   final VoidCallback onSwitchPlatform, onSettings;
+  final int? following, followers, likes;
+  final String? listeningLabel;
+  final VoidCallback? onFollowing, onFollowers, onLikes, onListening;
+
+  Widget _stat(
+    BuildContext context,
+    String label,
+    int? count,
+    VoidCallback? open,
+  ) => TextButton(
+    onPressed: open,
+    style: TextButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      minimumSize: const Size(48, 48),
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
+      textStyle: Theme.of(context).textTheme.labelLarge,
+    ),
+    child: Semantics(
+      label: '$label${count == null ? '数尚未取得' : ' $count'}',
+      child: ExcludeSemantics(child: Text('${count ?? '—'} $label')),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -64,12 +94,21 @@ class QishuiMineHeader extends StatelessWidget {
                           children: [
                             Text('听歌总时长', style: theme.textTheme.labelLarge),
                             const SizedBox(height: 6),
-                            Semantics(
-                              label: '官方听歌总时长暂未提供',
-                              child: ExcludeSemantics(
-                                child: Text(
-                                  '—',
-                                  style: theme.textTheme.displaySmall,
+                            TextButton(
+                              key: const ValueKey('qishui-official-listening'),
+                              onPressed: onListening,
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(48, 48),
+                                alignment: Alignment.centerLeft,
+                              ),
+                              child: Semantics(
+                                label: '官方听歌总时长 ${listeningLabel ?? '尚未取得'}',
+                                child: ExcludeSemantics(
+                                  child: Text(
+                                    listeningLabel ?? '—',
+                                    style: theme.textTheme.headlineMedium,
+                                  ),
                                 ),
                               ),
                             ),
@@ -98,20 +137,27 @@ class QishuiMineHeader extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 90),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: onAccount,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: Row(
-                        children: [
-                          PlatformAvatar(url: avatar, size: 76),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: onAccount,
+                          borderRadius: BorderRadius.circular(38),
+                          child: Semantics(
+                            label: '汽水账号资料',
+                            button: true,
+                            child: PlatformAvatar(url: avatar, size: 76),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              InkWell(
+                                onTap: onAccount,
+                                child: Text(
                                   nickname.isEmpty ? '汽水账号' : nickname,
                                   style: theme.textTheme.headlineSmall
                                       ?.copyWith(
@@ -120,28 +166,21 @@ class QishuiMineHeader extends StatelessWidget {
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 18,
-                                  runSpacing: 8,
-                                  children: [
-                                    for (final label in ['关注', '粉丝', '获赞'])
-                                      Semantics(
-                                        label: '$label数暂未提供',
-                                        child: ExcludeSemantics(
-                                          child: Text(
-                                            '— $label',
-                                            style: theme.textTheme.labelLarge,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  _stat(context, '关注', following, onFollowing),
+                                  _stat(context, '粉丝', followers, onFollowers),
+                                  _stat(context, '获赞', likes, onLikes),
+                                ],
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

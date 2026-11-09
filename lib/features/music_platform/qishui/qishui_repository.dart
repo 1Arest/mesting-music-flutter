@@ -25,6 +25,7 @@ class QishuiRepository {
     QishuiWriteJournal? writeJournal,
     QishuiOfficialAudioCache? audioCache,
   }) : credential = api.credential,
+       _ownerId = api.session?.userId,
        _audioCache = audioCache ?? QishuiOfficialAudioCache(api.client),
        _journal = writeJournal ?? QishuiWriteJournal(),
        _ownerAbort = api.identityAbort;
@@ -325,7 +326,12 @@ class QishuiRepository {
   Future<void> _abort(Future<void>? caller) =>
       caller == null ? _ownerAbort : Future.any([_ownerAbort, caller]);
   final String? credential;
-  bool get current => credential != null && api.credential == credential;
+  final String? _ownerId;
+  bool get current =>
+      credential != null &&
+      api.credential == credential &&
+      _ownerId != null &&
+      api.session?.userId == _ownerId;
   Future<Map<String, dynamic>> call(
     String path, {
     Map<String, Object?> body = const {},
