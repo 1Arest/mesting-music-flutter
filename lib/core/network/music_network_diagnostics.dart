@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
+import 'music_reward_diagnostic.dart';
+
 enum MusicNetworkOperation {
   playbackUrl,
   audio,
@@ -134,6 +136,7 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
     int? catalogDurationMs,
     int? mediaDurationMs,
     int? mediaCandidateAttempt,
+    MusicRewardDiagnostic? reward,
   }) {
     _rows.add(
       Map.unmodifiable({
@@ -142,6 +145,7 @@ class MusicNetworkDiagnostics extends ChangeNotifier {
             ? platform
             : 'other',
         'operation': operation.name,
+        ...?reward?.toMap(),
         'outcome': outcome.name,
         'elapsedMs': elapsedMs.clamp(0, 3600000),
         'attempt': attempt.clamp(1, 2),

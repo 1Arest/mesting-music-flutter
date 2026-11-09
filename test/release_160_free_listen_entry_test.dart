@@ -8,8 +8,8 @@ import 'package:mesting_music/features/music_platform/netease/netease_free_liste
 /// no value identifies a real advertisement, account or accepted reward.
 String _entry(Map<String, String> fields) => Uri(
   scheme: 'orpheus',
-  host: 'motivationAd',
-  path: '/show',
+  host: 'nm',
+  path: '/motivationAd/show',
   queryParameters: fields,
 ).toString();
 

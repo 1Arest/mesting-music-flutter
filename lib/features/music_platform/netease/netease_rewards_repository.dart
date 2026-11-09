@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/platform_rewards.dart' show rewardDateKey;
+import '../../../core/network/music_reward_diagnostic.dart';
 import 'netease_free_listen_entry.dart';
 import 'netease_music_repository.dart';
 import 'netease_reward_journal.dart';
@@ -292,18 +293,22 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
         progress,
       );
     }
-    final entry = NeteaseFreeListenEntry.parse(
+    final inspection = NeteaseFreeListenEntry.inspect(
       _object(progress['data'])['actionUrl'],
     );
+    NeteaseRewardRequests.recordEntry(inspection, music.api);
+    final entry = inspection.entry;
     if (entry == null) {
-      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
-      return const NeteaseRewardResult(
-        success: false,
-        message: '网易云未提供可识别的免费听领取入口，尚未提交奖励领取',
-      );
+      return NeteaseRewardRequests.entryFailure(inspection);
     }
     if (!entry.requestsQualification) {
-      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
+      NeteaseRewardRequests.recordLocalStop(
+        NeteaseRewardStage.qualification,
+        reward: inspection.diagnostic.withContext(
+          reason: MusicRewardReason.qualificationNotRequested,
+          identity: NeteaseRewardRequests.identity(music.api),
+        ),
+      );
       return const NeteaseRewardResult(
         success: false,
         message: '网易云当前入口未提供直接领取资格流程，尚未提交奖励领取',
@@ -345,7 +350,14 @@ class NeteaseRewardsRepository implements NeteaseRewardService {
     // Native gain construction retains the video's entry source. A hint's
     // source has not been proved equivalent, so it cannot replace the entry.
     if (entry.source <= 0) {
-      NeteaseRewardRequests.recordLocalStop(NeteaseRewardStage.qualification);
+      NeteaseRewardRequests.recordLocalStop(
+        NeteaseRewardStage.qualification,
+        reward: MusicRewardDiagnostic(
+          step: MusicRewardStep.claim,
+          reason: MusicRewardReason.sourceUnavailable,
+          identity: NeteaseRewardRequests.identity(music.api),
+        ),
+      );
       return const NeteaseRewardResult(
         success: false,
         message: '网易云领取入口未提供有效来源，尚未提交奖励领取',

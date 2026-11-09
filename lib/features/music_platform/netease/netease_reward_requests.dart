@@ -1,6 +1,8 @@
 import '../../../core/cache/browse_response_cache.dart';
 import '../../../core/network/music_network_diagnostics.dart';
+import '../../../core/network/music_reward_diagnostic.dart';
 import 'netease_api.dart';
+import 'netease_free_listen_entry.dart';
 import 'netease_request_exception.dart';
 import 'netease_rewards.dart';
 
@@ -68,17 +70,78 @@ abstract final class NeteaseRewardRequests {
   static int? code(Map<String, dynamic> value) =>
       int.tryParse('${value['code']}');
 
+  /// Capture only a category before dispatch. A Set-Cookie response can change
+  /// the jar later, and neither its raw value nor the account belongs in logs.
+  static MusicRewardIdentity identity(NeteaseApi api) {
+    final os = api.cookies['os'];
+    if (os == null) return MusicRewardIdentity.defaultPc;
+    return switch (os.toLowerCase()) {
+      'pc' => MusicRewardIdentity.sessionPc,
+      'android' => MusicRewardIdentity.sessionAndroid,
+      'osx' => MusicRewardIdentity.sessionOsx,
+      _ => MusicRewardIdentity.sessionOther,
+    };
+  }
+
+  static MusicRewardStep _step(NeteaseRewardStage stage) => switch (stage) {
+    NeteaseRewardStage.balance => MusicRewardStep.balance,
+    NeteaseRewardStage.progress => MusicRewardStep.progress,
+    NeteaseRewardStage.qualification => MusicRewardStep.qualification,
+    NeteaseRewardStage.claim => MusicRewardStep.claim,
+    NeteaseRewardStage.signState => MusicRewardStep.signState,
+    NeteaseRewardStage.signIn => MusicRewardStep.signIn,
+  };
+
+  static void recordEntry(
+    NeteaseFreeListenInspection inspection,
+    NeteaseApi api,
+  ) => MusicNetworkDiagnostics.shared.record(
+    platform: 'netease',
+    operation: MusicNetworkOperation.rewardQualification,
+    outcome: inspection.entry == null
+        ? MusicNetworkOutcome.format
+        : MusicNetworkOutcome.success,
+    phase: MusicDiagnosticPhase.responseValidate,
+    transport: 'local',
+    reward: inspection.diagnostic.withContext(identity: identity(api)),
+  );
+
+  /// User-facing copy stays separate from pure URL parsing. The reason is
+  /// actionable without echoing an untrusted link or any request parameters.
+  static NeteaseRewardResult entryFailure(
+    NeteaseFreeListenInspection inspection,
+  ) {
+    final detail = switch (inspection.diagnostic.reason) {
+      MusicRewardReason.entryMissing => '缺失',
+      MusicRewardReason.entryWrongType => '类型异常',
+      MusicRewardReason.entryTooLong => '过长',
+      MusicRewardReason.entryUnsupportedRoute => '格式暂不支持',
+      MusicRewardReason.entryDuplicateField => '参数重复',
+      MusicRewardReason.entryMissingField => '参数不完整',
+      MusicRewardReason.entryInvalidPosition => '参数类型异常',
+      MusicRewardReason.entryInvalidExt => '扩展数据异常',
+      MusicRewardReason.entryInvalidEncoding => '编码异常',
+      _ => '格式异常',
+    };
+    return NeteaseRewardResult(
+      success: false,
+      message: '网易云免费听领取入口$detail，尚未提交奖励领取；可复制精简连接诊断',
+    );
+  }
+
   /// A local validation stop is visibly separate from an upstream response.
   /// Only its fixed stage/outcome are exported, never the rejected entry URL.
   static void recordLocalStop(
     NeteaseRewardStage stage, {
     MusicNetworkOutcome outcome = MusicNetworkOutcome.format,
+    MusicRewardDiagnostic? reward,
   }) => MusicNetworkDiagnostics.shared.record(
     platform: 'netease',
     operation: stage.operation,
     outcome: outcome,
     phase: MusicDiagnosticPhase.responseValidate,
     transport: 'local',
+    reward: reward,
   );
 
   /// Only classified login/security refusals clear a write-ahead marker. An
@@ -115,6 +178,7 @@ abstract final class NeteaseRewardRequests {
     Map<String, Object?> data = const {},
   }) async {
     final stage = NeteaseRewardStage.forPath(path);
+    final requestIdentity = identity(api);
     final watch = Stopwatch()..start();
     try {
       final result = await BrowseResponseCache.live(
@@ -133,6 +197,24 @@ abstract final class NeteaseRewardRequests {
           : status == null
           ? MusicNetworkOutcome.format
           : MusicNetworkOutcome.business;
+      var reason = accepted
+          ? MusicRewardReason.accepted
+          : status == null
+          ? MusicRewardReason.receiptIncomplete
+          : MusicRewardReason.businessRejected;
+      if (accepted && stage == NeteaseRewardStage.qualification) {
+        final data = result['data'];
+        final qualified = data is Map ? data['qualified'] : null;
+        if (!const {true, 1, '1', 'true'}.contains(qualified)) {
+          final denied = const {false, 0, '0', 'false'}.contains(qualified);
+          outcome = denied
+              ? MusicNetworkOutcome.business
+              : MusicNetworkOutcome.format;
+          reason = denied
+              ? MusicRewardReason.qualificationDenied
+              : MusicRewardReason.receiptIncomplete;
+        }
+      }
       if (accepted && stage == NeteaseRewardStage.claim) {
         final data = result['data'];
         final gained = data is Map ? data['gainFlag'] : null;
@@ -142,6 +224,11 @@ abstract final class NeteaseRewardRequests {
             : const {false, 0, '0', 'false'}.contains(gained)
             ? MusicNetworkOutcome.business
             : MusicNetworkOutcome.format;
+        reason = accepted
+            ? MusicRewardReason.accepted
+            : outcome == MusicNetworkOutcome.business
+            ? MusicRewardReason.gainDenied
+            : MusicRewardReason.receiptIncomplete;
       }
       MusicNetworkDiagnostics.shared.record(
         platform: 'netease',
@@ -150,6 +237,11 @@ abstract final class NeteaseRewardRequests {
         phase: MusicDiagnosticPhase.responseValidate,
         elapsedMs: watch.elapsedMilliseconds,
         status: status,
+        reward: MusicRewardDiagnostic(
+          step: _step(stage),
+          reason: reason,
+          identity: requestIdentity,
+        ),
       );
       return result;
     } on Object catch (error) {
@@ -168,6 +260,15 @@ abstract final class NeteaseRewardRequests {
             : MusicDiagnosticPhase.networkSend,
         elapsedMs: watch.elapsedMilliseconds,
         status: httpStatus,
+        reward: MusicRewardDiagnostic(
+          step: _step(stage),
+          reason: httpStatus != null
+              ? MusicRewardReason.httpFailure
+              : outcome == MusicNetworkOutcome.format
+              ? MusicRewardReason.receiptIncomplete
+              : MusicRewardReason.transportFailure,
+          identity: requestIdentity,
+        ),
       );
       throw NeteaseRewardRequestFailure(stage, outcome, httpStatus);
     }

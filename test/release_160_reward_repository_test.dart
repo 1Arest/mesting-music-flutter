@@ -31,8 +31,8 @@ const _extension = '{"syntheticOpaque":"keep exact whitespace  and encoding"}';
 
 String _entry({int source = _source, bool qualification = true}) => Uri(
   scheme: 'orpheus',
-  host: 'motivationAd',
-  path: '/show',
+  host: 'nm',
+  path: '/motivationAd/show',
   queryParameters: {
     'adPosition': '160000',
     'resourceId': '',

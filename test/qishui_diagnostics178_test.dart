@@ -64,8 +64,8 @@ void main() {
         expect(text, isNot(contains(private)));
       }
       final root = jsonDecode(text) as Map;
-      expect(root['appVersion'], '1.0.79');
-      expect(root['appVersionCode'], 100);
+      expect(root['appVersion'], '1.0.80');
+      expect(root['appVersionCode'], 101);
       expect(root['platform'], 'qishui');
       expect(root['memoryOnly'], isTrue);
       expect(root['complete'], isTrue);
