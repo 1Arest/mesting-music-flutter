@@ -13,6 +13,8 @@ import 'qishui_official_routes.dart';
 import 'qishui_playback_failures.dart';
 import '../../../core/cache/browse_response_cache.dart';
 import 'qishui_browse_cache.dart';
+import 'qishui_diagnostics.dart';
+import 'qishui_http_diagnostics.dart';
 
 /// Stable, credential-free categories shared by the transport and status HUD.
 /// A malformed media reply must never be presented as a broken user network.
@@ -345,6 +347,42 @@ class QishuiApi {
       );
     }
     var dispatched = false;
+    final diagnosticFeature = qishuiDiagnosticFeatureForRequest(
+      path,
+      body: body,
+    );
+    void record(
+      QishuiDiagnosticStage stage,
+      QishuiDiagnosticOutcome outcome, {
+      int? status,
+      Object? response,
+      QishuiDiagnosticReason? reason,
+    }) {
+      if (diagnosticFeature == null) return;
+      QishuiDiagnostics.shared.record(
+        feature: diagnosticFeature,
+        stage: stage,
+        outcome: outcome,
+        httpStatus: status,
+        businessCode: qishuiDiagnosticBusinessCode(response),
+        response: response,
+        reason: reason,
+      );
+    }
+
+    Future<Map<String, String>> signedIdentity() async {
+      try {
+        return await signer!.identity(abort.future);
+      } on Object {
+        record(
+          QishuiDiagnosticStage.identity,
+          QishuiDiagnosticOutcome.refused,
+          reason: QishuiDiagnosticReason.identityMissing,
+        );
+        rethrow;
+      }
+    }
+
     try {
       final web = _session?.protocol == QishuiSessionProtocol.web;
       final route = web
@@ -370,10 +408,15 @@ class QishuiApi {
           (route!.path.startsWith('/luna/pc/search/') ||
               route.path.startsWith('/luna/pc/artists/'));
       if (signedPc && signer == null) {
+        record(
+          QishuiDiagnosticStage.helper,
+          QishuiDiagnosticOutcome.refused,
+          reason: QishuiDiagnosticReason.missingSigner,
+        );
         throw const QishuiException('汽水应用签名服务尚未就绪，请稍后重试', code: 'signer');
       }
       final device = signedPc
-          ? await signer!.identity(abort.future)
+          ? await signedIdentity()
           : web
           ? const <String, String>{}
           : await context();
@@ -518,6 +561,13 @@ class QishuiApi {
         throw const QishuiException('操作已取消');
       }
       if (response.statusCode != 200) {
+        record(
+          QishuiDiagnosticStage.response,
+          QishuiDiagnosticOutcome.http,
+          status: response.statusCode,
+          response: qishuiDiagnosticJson(response.bodyBytes),
+          reason: QishuiDiagnosticReason.httpRejected,
+        );
         MusicNetworkDiagnostics.shared.record(
           platform: 'qishui',
           operation: path == '/luna/media_v2'
@@ -537,6 +587,12 @@ class QishuiApi {
         );
       }
       if (response.bodyBytes.isEmpty) {
+        record(
+          QishuiDiagnosticStage.response,
+          QishuiDiagnosticOutcome.format,
+          status: response.statusCode,
+          reason: QishuiDiagnosticReason.emptyResponse,
+        );
         if (signedPc) signer?.invalidateIdentity();
         throw QishuiException(
           signedPc
@@ -549,7 +605,21 @@ class QishuiApi {
         );
       }
       final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+      // This is only a transport/schema observation. Social/listening parsers
+      // publish their separate result, so HTTP 200 cannot hide a missing DTO.
+      record(
+        QishuiDiagnosticStage.response,
+        QishuiDiagnosticOutcome.success,
+        status: response.statusCode,
+        response: decoded,
+      );
       if (decoded is! Map<String, dynamic> || decoded.isEmpty) {
+        record(
+          QishuiDiagnosticStage.parse,
+          QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.responseShape,
+          response: decoded,
+        );
         throw const QishuiException('汽水返回了空数据，请稍后重试');
       }
       final data = decoded['data'];
@@ -562,6 +632,12 @@ class QishuiApi {
           ? rawCode
           : 'invalid';
       if (!allowBusinessError && code != '0') {
+        record(
+          QishuiDiagnosticStage.response,
+          QishuiDiagnosticOutcome.business,
+          status: response.statusCode,
+          response: decoded,
+        );
         // HTTP success and business refusal are different receipts. Export
         // only a bounded numeric code, never the raw error/body or Location.
         MusicNetworkDiagnostics.shared.record(
@@ -607,6 +683,11 @@ class QishuiApi {
       }
       rethrow;
     } on FormatException {
+      record(
+        QishuiDiagnosticStage.parse,
+        QishuiDiagnosticOutcome.format,
+        reason: QishuiDiagnosticReason.invalidJson,
+      );
       throw QishuiException(
         write && dispatched
             ? '提交后的汽水回执无法读取，请先刷新核对，不要重复提交'
@@ -621,6 +702,15 @@ class QishuiApi {
           outcome == MusicNetworkOutcome.cancelled ||
           epoch != _epoch ||
           abort.isCompleted;
+      record(
+        QishuiDiagnosticStage.request,
+        cancelled
+            ? QishuiDiagnosticOutcome.cancelled
+            : QishuiDiagnosticOutcome.network,
+        reason: cancelled
+            ? QishuiDiagnosticReason.accountChanged
+            : QishuiDiagnosticReason.networkFailure,
+      );
       throw QishuiException(
         write && dispatched
             ? '请求结果尚未确认，请先核对状态，不要重复提交'

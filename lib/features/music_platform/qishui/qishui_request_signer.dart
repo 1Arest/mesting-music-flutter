@@ -7,6 +7,8 @@ import 'qishui_api.dart';
 import 'qishui_signer_defaults.dart';
 import 'qishui_signer_settings.dart';
 import 'qishui_official_routes.dart';
+import 'qishui_diagnostics.dart';
+import 'qishui_http_diagnostics.dart';
 
 class QishuiSignedRequest {
   const QishuiSignedRequest(this.uri, this.headers);
@@ -89,8 +91,9 @@ class SodaMRequestSigner
     Uri target,
     String method,
     String? body,
-    Future<void> abort,
-  ) async {
+    Future<void> abort, {
+    QishuiDiagnosticFeature? diagnosticFeature,
+  }) async {
     try {
       // The pinned Flutter engine supports a per-Zone HTTP exception. Keep it
       // inside this exact configured helper call, with redirects disabled. No
@@ -122,6 +125,19 @@ class SodaMRequestSigner
       final response = target.scheme == 'http'
           ? await runZoned(send, zoneValues: {#flutter.io.allow_http: true})
           : await send();
+      if (diagnosticFeature != null && response.statusCode != 200) {
+        final reply = qishuiDiagnosticJson(response.bodyBytes);
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.http,
+          httpStatus: response.statusCode,
+          // Helper replies may contain signing headers. Only its fixed
+          // policy code is eligible; never pass the reply to a schema walk.
+          serviceCode: reply is Map ? reply['code'] : null,
+          reason: QishuiDiagnosticReason.httpRejected,
+        );
+      }
       if (!custom && response.statusCode == 404 && method == 'GET') {
         return const {};
       }
@@ -170,10 +186,27 @@ class SodaMRequestSigner
       }
       final value = jsonDecode(utf8.decode(response.bodyBytes));
       if (value is! Map<String, dynamic> || value['ok'] == false) {
+        if (diagnosticFeature != null) {
+          QishuiDiagnostics.shared.record(
+            feature: diagnosticFeature,
+            stage: QishuiDiagnosticStage.helper,
+            outcome: QishuiDiagnosticOutcome.refused,
+            httpStatus: response.statusCode,
+            reason: QishuiDiagnosticReason.receiptRejected,
+          );
+        }
         throw const QishuiException(
           '汽水签名服务未接受请求，请稍后重试',
           code: 'signer',
           kind: QishuiFailureKind.refused,
+        );
+      }
+      if (diagnosticFeature != null) {
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.success,
+          httpStatus: response.statusCode,
         );
       }
       return value;
@@ -182,6 +215,14 @@ class SodaMRequestSigner
     } on http.RequestAbortedException {
       rethrow;
     } on MusicTransportException catch (error) {
+      if (diagnosticFeature != null) {
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.network,
+          reason: QishuiDiagnosticReason.networkFailure,
+        );
+      }
       throw QishuiException(
         error.outcome == MusicNetworkOutcome.timeout
             ? '签名服务连接超时，请检查地址与助手状态'
@@ -190,6 +231,20 @@ class SodaMRequestSigner
         kind: error.outcome == MusicNetworkOutcome.timeout
             ? QishuiFailureKind.timeout
             : QishuiFailureKind.connection,
+      );
+    } on FormatException {
+      if (diagnosticFeature != null) {
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.invalidJson,
+        );
+      }
+      throw const QishuiException(
+        '汽水签名服务连接或回执异常，请稍后重试',
+        code: 'signer',
+        kind: QishuiFailureKind.connection,
       );
     } on Object {
       throw const QishuiException(
@@ -303,6 +358,13 @@ class SodaMRequestSigner
         safeHeaders[entry.key] = entry.value;
       }
     }
+    final diagnosticPayload = qishuiDiagnosticJson(utf8.encode(body));
+    final diagnosticFeature = qishuiDiagnosticFeatureForRequest(
+      uri.path,
+      body: diagnosticPayload is Map<String, dynamic>
+          ? diagnosticPayload
+          : const {},
+    );
     final value = await _call(
       endpoint,
       'POST',
@@ -314,6 +376,7 @@ class SodaMRequestSigner
         'ts_ms': DateTime.now().millisecondsSinceEpoch,
       }),
       abort,
+      diagnosticFeature: diagnosticFeature,
     );
     final signedHeaders = <String, String>{};
     void take(String name, Object? raw) {
@@ -336,6 +399,14 @@ class SodaMRequestSigner
       take(name, value[name] ?? value[name.replaceAll('-', '_')]);
     }
     if (!signedHeaders.keys.toSet().containsAll({'x-helios', 'x-medusa'})) {
+      if (diagnosticFeature != null) {
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.missingFields,
+        );
+      }
       throw const QishuiException('汽水签名服务未返回完整应用签名，请稍后重试', code: 'signer');
     }
     MusicNetworkDiagnostics.shared.record(
@@ -348,6 +419,14 @@ class SodaMRequestSigner
       ),
     );
     if (custom && value['device_id'] != uri.queryParameters['device_id']) {
+      if (diagnosticFeature != null) {
+        QishuiDiagnostics.shared.record(
+          feature: diagnosticFeature,
+          stage: QishuiDiagnosticStage.helper,
+          outcome: QishuiDiagnosticOutcome.refused,
+          reason: QishuiDiagnosticReason.identityMismatch,
+        );
+      }
       throw const QishuiException('签名助手返回的设备身份不一致，请检查助手配置', code: 'signer');
     }
     final query = {...uri.queryParameters};

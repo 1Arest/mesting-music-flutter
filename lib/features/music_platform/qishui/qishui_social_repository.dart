@@ -5,6 +5,7 @@ import 'qishui_models.dart';
 import 'qishui_repository.dart';
 import 'qishui_social_models.dart';
 import 'qishui_write_journal.dart';
+import 'qishui_diagnostics.dart';
 
 /// Owns only the current Soda account. Reads and mutations use the official
 /// common API paths; there are no guessed PC social routes or other-platform
@@ -23,6 +24,47 @@ class QishuiSocialRepository {
     if (!current) throw const QishuiException('汽水账号已变化，请返回后重新打开');
   }
 
+  /// DTO failures happen after an HTTP 200 and were absent from the generic
+  /// network log. Keep their feature and safe structure, never the user data.
+  T _parse<T>(
+    QishuiDiagnosticFeature feature,
+    Map<String, dynamic> response,
+    T Function() parse,
+  ) {
+    try {
+      final result = parse();
+      QishuiDiagnostics.shared.record(
+        feature: feature,
+        stage: QishuiDiagnosticStage.parse,
+        outcome: QishuiDiagnosticOutcome.success,
+      );
+      return result;
+    } on Object {
+      QishuiDiagnostics.shared.record(
+        feature: feature,
+        stage: QishuiDiagnosticStage.parse,
+        outcome: QishuiDiagnosticOutcome.format,
+        reason: QishuiDiagnosticReason.responseShape,
+        response: response,
+      );
+      rethrow;
+    }
+  }
+
+  QishuiSocialStats _stats(Map<String, dynamic> response) {
+    final stats = QishuiSocialStats.parse(response);
+    QishuiDiagnostics.shared.record(
+      feature: QishuiDiagnosticFeature.socialStats,
+      stage: QishuiDiagnosticStage.parse,
+      outcome: stats.hasCounts
+          ? QishuiDiagnosticOutcome.success
+          : QishuiDiagnosticOutcome.format,
+      reason: stats.hasCounts ? null : QishuiDiagnosticReason.missingFields,
+      response: stats.hasCounts ? null : response,
+    );
+    return stats;
+  }
+
   Future<QishuiSocialStats> fetchStats({Future<void>? abortTrigger}) async {
     _guard();
     final root = qishuiSocialPayload(
@@ -30,16 +72,22 @@ class QishuiSocialRepository {
     );
     final user = sodaMap(root['my_info']);
     if ('${user['id'] ?? ''}' != owner) {
+      QishuiDiagnostics.shared.record(
+        feature: QishuiDiagnosticFeature.socialStats,
+        stage: QishuiDiagnosticStage.identity,
+        outcome: QishuiDiagnosticOutcome.refused,
+        reason: QishuiDiagnosticReason.identityMismatch,
+      );
       throw const QishuiException('汽水账号资料不匹配');
     }
-    final stats = QishuiSocialStats.parse(root);
+    final stats = _stats(root);
     if (root['my_stats'] is Map) return stats;
     // Some PC responses omit statistics. The official UserApi has a common
     // GET /luna/user/info returning user_stats, with its user ID checked before
     // accepting counts. This is an explicit verified route, not a blind retry
     // of a failed profile request or a speculative /pc path substitution.
     final full = await _userInfo(owner, abortTrigger: abortTrigger);
-    return QishuiSocialStats.parse(full);
+    return _stats(full);
   }
 
   Future<Map<String, dynamic>> _userInfo(
@@ -54,7 +102,11 @@ class QishuiSocialRepository {
       query: {'user_id': id},
       abortTrigger: abortTrigger,
     );
-    QishuiSocialPerson.parseUserInfo(result, id);
+    _parse(
+      QishuiDiagnosticFeature.userInfo,
+      result,
+      () => QishuiSocialPerson.parseUserInfo(result, id),
+    );
     _guard();
     return result;
   }
@@ -89,7 +141,13 @@ class QishuiSocialRepository {
       abortTrigger: abortTrigger,
     );
     _guard();
-    return QishuiSocialPage.parse(result, cursor);
+    return _parse(
+      kind == QishuiFollowListKind.following
+          ? QishuiDiagnosticFeature.following
+          : QishuiDiagnosticFeature.followers,
+      result,
+      () => QishuiSocialPage.parse(result, cursor),
+    );
   }
 
   Future<QishuiSocialPerson> setFollowing(
@@ -140,6 +198,13 @@ class QishuiSocialRepository {
       _guard();
       final artists = root['artists'];
       if (artists is! List || artists.length > 200) {
+        QishuiDiagnostics.shared.record(
+          feature: QishuiDiagnosticFeature.artistCollection,
+          stage: QishuiDiagnosticStage.parse,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.responseShape,
+          response: root,
+        );
         throw const QishuiException('汽水歌手关注列表格式异常');
       }
       if (artists.any((a) => qishuiSocialId(sodaMap(a)['id']) == id)) {
@@ -148,6 +213,13 @@ class QishuiSocialRepository {
       final hasMore = root['has_more'];
       if (hasMore == false || hasMore == 0 || hasMore == '0') return false;
       if (hasMore != true && hasMore != 1 && hasMore != '1') {
+        QishuiDiagnostics.shared.record(
+          feature: QishuiDiagnosticFeature.artistCollection,
+          stage: QishuiDiagnosticStage.parse,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.missingFields,
+          response: root,
+        );
         throw const QishuiException('汽水未返回完整歌手关注列表的续载状态');
       }
       final next = root['next_cursor'];
@@ -155,6 +227,13 @@ class QishuiSocialRepository {
           next.isEmpty ||
           !qishuiSocialCursorValid(next) ||
           !visited.add(next)) {
+        QishuiDiagnostics.shared.record(
+          feature: QishuiDiagnosticFeature.artistCollection,
+          stage: QishuiDiagnosticStage.parse,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.invalidFields,
+          response: root,
+        );
         throw const QishuiException('汽水歌手关注列表续载位置异常');
       }
       cursor = next;
@@ -214,11 +293,23 @@ class QishuiSocialRepository {
           await artistMembership(id, abortTrigger: abortTrigger) == value) {
         _guard();
         await _journal.finish(key);
+        QishuiDiagnostics.shared.record(
+          feature: QishuiDiagnosticFeature.artistCollection,
+          stage: QishuiDiagnosticStage.readback,
+          outcome: QishuiDiagnosticOutcome.success,
+        );
         return artist.withArtistMembership(value);
       }
     } on Object {
       // Keep the digest when the official readback cannot settle the write.
     }
+    QishuiDiagnostics.shared.record(
+      feature: QishuiDiagnosticFeature.artistCollection,
+      stage: QishuiDiagnosticStage.readback,
+      outcome: QishuiDiagnosticOutcome.unconfirmed,
+      reason: QishuiDiagnosticReason.receiptRejected,
+      response: response,
+    );
     throw const QishuiException(
       '歌手关注操作已提交，官方列表尚未确认；不会自动重发，请刷新或到官版核对',
       unknownWrite: true,
@@ -291,12 +382,28 @@ class QishuiSocialRepository {
           responseState == after.followStatus &&
           (after.following == value || value && after.requested)) {
         await _journal.finish(key);
+        QishuiDiagnostics.shared.record(
+          feature: value
+              ? QishuiDiagnosticFeature.userFollow
+              : QishuiDiagnosticFeature.userUnfollow,
+          stage: QishuiDiagnosticStage.readback,
+          outcome: QishuiDiagnosticOutcome.success,
+        );
         return after;
       }
     } on Object {
       // The server may already have committed it. Keep the operation digest
       // pending after cancellation, account changes or an unreadable readback.
     }
+    QishuiDiagnostics.shared.record(
+      feature: value
+          ? QishuiDiagnosticFeature.userFollow
+          : QishuiDiagnosticFeature.userUnfollow,
+      stage: QishuiDiagnosticStage.readback,
+      outcome: QishuiDiagnosticOutcome.unconfirmed,
+      reason: QishuiDiagnosticReason.receiptRejected,
+      response: receipt,
+    );
     throw const QishuiException(
       '关注操作已提交，官方状态尚未确认；请刷新或到官版核对，不会自动重发',
       unknownWrite: true,

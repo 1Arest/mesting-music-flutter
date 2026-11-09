@@ -15,6 +15,7 @@ import 'qishui_media_attempts.dart';
 import 'qishui_search_catalog.dart';
 import 'qishui_image_upload.dart';
 import 'qishui_history_repository.dart';
+import 'qishui_diagnostics.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 
 /// Typed feature adapter. Account ownership is captured at construction; a
@@ -254,11 +255,24 @@ class QishuiRepository {
               Uri.tryParse(confirmed.cover)?.path.endsWith('/$image') ==
                   true)) {
         await _journal.finish(key);
+        QishuiDiagnostics.shared.record(
+          feature: QishuiDiagnosticFeature.playlistCover,
+          stage: QishuiDiagnosticStage.readback,
+          outcome: QishuiDiagnosticOutcome.success,
+          receiptAccepted: true,
+        );
         return confirmed;
       }
     } on Object {
       /* Keep unknown update pending; no blind write retry. */
     }
+    QishuiDiagnostics.shared.record(
+      feature: QishuiDiagnosticFeature.playlistCover,
+      stage: QishuiDiagnosticStage.readback,
+      outcome: QishuiDiagnosticOutcome.unconfirmed,
+      reason: QishuiDiagnosticReason.cloudReadbackMismatch,
+      receiptAccepted: false,
+    );
     throw const QishuiException(
       '封面已提交，云端状态尚未核对成功，请刷新或到官版核对；不会自动重发',
       unknownWrite: true,

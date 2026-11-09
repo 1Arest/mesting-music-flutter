@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/network/music_http_client.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_api.dart';
+import 'qishui_diagnostics.dart';
+import 'qishui_http_diagnostics.dart';
 import 'qishui_models.dart';
 
 /// The music-wall DTO stores seconds. This is independent of the millisecond
@@ -180,8 +182,17 @@ class QishuiListeningRepository {
       api.credential == credential &&
       _current();
 
-  void _guard() {
+  void _guard({
+    QishuiDiagnosticFeature feature = QishuiDiagnosticFeature.listeningReport,
+  }) {
     if (!current) {
+      QishuiDiagnostics.shared.record(
+        feature: feature,
+        stage: QishuiDiagnosticStage.prepare,
+        outcome: QishuiDiagnosticOutcome.cancelled,
+        reason: QishuiDiagnosticReason.accountChanged,
+        willSubmit: false,
+      );
       throw const QishuiException(
         '汽水账号已变化，时长操作已取消',
         kind: QishuiFailureKind.cancelled,
@@ -193,15 +204,97 @@ class QishuiListeningRepository {
       other == null ? _abort.future : Future.any<void>([_abort.future, other]);
 
   Future<QishuiListeningSnapshot> fetch({Future<void>? abortTrigger}) async {
-    _guard();
+    _guard(feature: QishuiDiagnosticFeature.officialListening);
     final response = await api.request(
       '/luna/me/music_wall',
       body: const {'feed_music_wall_extra': <String, Object>{}, 'ab_param': ''},
       expectedCredential: credential,
       abortTrigger: _cancel(abortTrigger),
     );
-    _guard();
-    return QishuiListeningSnapshot.parse(response, fetchedAt: _now());
+    _guard(feature: QishuiDiagnosticFeature.officialListening);
+    // The transport log records HTTP 200 before the DTO is parsed. Record the
+    // two independent outcomes so a missing cumulative duration stays visible.
+    final nested = sodaMap(response['data']);
+    final payload = nested.containsKey('listen_duration') ? nested : response;
+    final duration = sodaMap(payload['listen_duration']);
+    try {
+      final snapshot = QishuiListeningSnapshot.parse(
+        response,
+        fetchedAt: _now(),
+      );
+      final hasDuration =
+          snapshot.totalSeconds != null || snapshot.weekSeconds != null;
+      QishuiDiagnostics.shared.record(
+        feature: QishuiDiagnosticFeature.officialListening,
+        stage: QishuiDiagnosticStage.parse,
+        outcome: hasDuration
+            ? QishuiDiagnosticOutcome.success
+            : QishuiDiagnosticOutcome.format,
+        reason: hasDuration ? null : QishuiDiagnosticReason.missingFields,
+        response: hasDuration ? null : response,
+      );
+      return snapshot;
+    } on QishuiException {
+      QishuiDiagnostics.shared.record(
+        feature: QishuiDiagnosticFeature.officialListening,
+        stage: QishuiDiagnosticStage.parse,
+        outcome: QishuiDiagnosticOutcome.format,
+        reason: duration.isEmpty
+            ? QishuiDiagnosticReason.missingFields
+            : QishuiDiagnosticReason.invalidFields,
+        response: response,
+      );
+      rethrow;
+    }
+  }
+
+  /// All report observations use closed values. Event bodies and the account
+  /// or device identity never enter diagnostics, even when validation fails.
+  void _report({
+    required QishuiDiagnosticStage stage,
+    required QishuiDiagnosticOutcome outcome,
+    QishuiDiagnosticReason? reason,
+    int? httpStatus,
+    Object? businessCode,
+    Object? response,
+    bool? identityReady,
+    bool? willSubmit,
+    bool? receiptAccepted,
+  }) {
+    QishuiDiagnostics.shared.record(
+      feature: QishuiDiagnosticFeature.listeningReport,
+      stage: stage,
+      outcome: outcome,
+      reason: reason,
+      httpStatus: httpStatus,
+      businessCode: businessCode,
+      response: response,
+      identityReady: identityReady,
+      ownerReady: RegExp(r'^\d{1,30}$').hasMatch(owner),
+      willSubmit: willSubmit,
+      receiptAccepted: receiptAccepted,
+    );
+  }
+
+  /// A disk failure before dispatch and one after an accepted service receipt
+  /// need different evidence. Neither is permission to replay an old event.
+  Future<void> _writeLedger(
+    QishuiListeningLedger value, {
+    bool receiptAccepted = false,
+  }) async {
+    try {
+      await store.write(owner, value);
+      _ledger = value;
+    } on Object {
+      _report(
+        stage: QishuiDiagnosticStage.ledger,
+        outcome: QishuiDiagnosticOutcome.localOnly,
+        reason: QishuiDiagnosticReason.storeWriteFailed,
+        willSubmit: false,
+        receiptAccepted: receiptAccepted,
+      );
+      rethrow;
+    }
   }
 
   Future<QishuiListeningLedger> ledger() {
@@ -213,6 +306,16 @@ class QishuiListeningRepository {
         .read(owner)
         .then((value) {
           return _ledger ??= value;
+        })
+        .catchError((Object error, StackTrace stack) {
+          _report(
+            stage: QishuiDiagnosticStage.ledger,
+            outcome: QishuiDiagnosticOutcome.localOnly,
+            reason: QishuiDiagnosticReason.storeReadFailed,
+            willSubmit: false,
+            receiptAccepted: false,
+          );
+          Error.throwWithStackTrace(error, stack);
         })
         .whenComplete(() => _loadingLedger = null);
   }
@@ -268,6 +371,13 @@ class QishuiListeningRepository {
           heardMilliseconds < 0 ||
           events.isEmpty ||
           events.length > 3) {
+        _report(
+          stage: QishuiDiagnosticStage.prepare,
+          outcome: QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.invalidFields,
+          willSubmit: false,
+          receiptAccepted: false,
+        );
         throw const QishuiException('汽水听歌上报事件无效');
       }
       var previous = await ledger();
@@ -280,26 +390,79 @@ class QishuiListeningRepository {
           unconfirmedMilliseconds:
               previous.unconfirmedMilliseconds + heardMilliseconds,
         );
-        await store.write(owner, previous);
-        _ledger = previous;
+        await _writeLedger(previous);
       }
-      if (!current) return QishuiListeningDelivery.unconfirmed;
-      if (!reportEnabled) return QishuiListeningDelivery.localOnly;
+      if (!current) {
+        _report(
+          stage: QishuiDiagnosticStage.prepare,
+          outcome: QishuiDiagnosticOutcome.cancelled,
+          reason: QishuiDiagnosticReason.accountChanged,
+          willSubmit: false,
+          receiptAccepted: false,
+        );
+        return QishuiListeningDelivery.unconfirmed;
+      }
+      if (!reportEnabled) {
+        _report(
+          stage: QishuiDiagnosticStage.prepare,
+          outcome: QishuiDiagnosticOutcome.localOnly,
+          reason: QishuiDiagnosticReason.reportDisabled,
+          willSubmit: false,
+          receiptAccepted: false,
+        );
+        return QishuiListeningDelivery.localOnly;
+      }
+      var stage = QishuiDiagnosticStage.identity;
       try {
         final signer = api.signer;
         if (signer == null) {
-          throw const QishuiException('汽水听歌上报设备身份尚未就绪');
+          _report(
+            stage: stage,
+            outcome: QishuiDiagnosticOutcome.localOnly,
+            reason: QishuiDiagnosticReason.missingSigner,
+            identityReady: false,
+            willSubmit: false,
+            receiptAccepted: false,
+          );
+          return QishuiListeningDelivery.unconfirmed;
         }
         final identity = await signer.identity(_abort.future);
         _guard();
-        final body = jsonEncode(
-          eventBody(
-            identity: identity,
-            owner: owner,
-            events: events,
-            playing: playing,
-          ),
+        String body;
+        try {
+          body = jsonEncode(
+            eventBody(
+              identity: identity,
+              owner: owner,
+              events: events,
+              playing: playing,
+            ),
+          );
+        } on QishuiException {
+          // No identity text is copied. Distinguish an unavailable real did
+          // from an unsupported desktop UA while preserving the old refusal.
+          final hasDevice = RegExp(
+            r'^\d{1,30}$',
+          ).hasMatch(identity['device_id'] ?? '');
+          _report(
+            stage: stage,
+            outcome: QishuiDiagnosticOutcome.localOnly,
+            reason: hasDevice
+                ? QishuiDiagnosticReason.invalidFields
+                : QishuiDiagnosticReason.identityMissing,
+            identityReady: false,
+            willSubmit: false,
+            receiptAccepted: false,
+          );
+          return QishuiListeningDelivery.unconfirmed;
+        }
+        _report(
+          stage: stage,
+          outcome: QishuiDiagnosticOutcome.success,
+          identityReady: true,
+          willSubmit: true,
         );
+        stage = QishuiDiagnosticStage.submit;
         final response = await sendMusicRequest(
           client: api.client,
           platform: 'qishui',
@@ -325,10 +488,33 @@ class QishuiListeningRepository {
                 ..body = body,
         );
         _guard();
-        if (response.statusCode != 200 || response.bodyBytes.isEmpty) {
+        stage = QishuiDiagnosticStage.response;
+        if (response.statusCode != 200) {
+          final reply = qishuiDiagnosticJson(response.bodyBytes);
+          _report(
+            stage: stage,
+            outcome: QishuiDiagnosticOutcome.http,
+            httpStatus: response.statusCode,
+            businessCode: qishuiDiagnosticBusinessCode(reply),
+            response: reply,
+            reason: QishuiDiagnosticReason.httpRejected,
+            receiptAccepted: false,
+          );
           return QishuiListeningDelivery.unconfirmed;
         }
-        final reply = sodaMap(jsonDecode(utf8.decode(response.bodyBytes)));
+        if (response.bodyBytes.isEmpty) {
+          _report(
+            stage: stage,
+            outcome: QishuiDiagnosticOutcome.format,
+            httpStatus: response.statusCode,
+            reason: QishuiDiagnosticReason.emptyResponse,
+            receiptAccepted: false,
+          );
+          return QishuiListeningDelivery.unconfirmed;
+        }
+        final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+        final reply = sodaMap(decoded);
+        stage = QishuiDiagnosticStage.receipt;
         // An HTTP success without an explicit positive service receipt is
         // uncertain, including empty JSON. Never guess a zero success code.
         final accepted =
@@ -340,7 +526,35 @@ class QishuiListeningRepository {
             (reply['message'] == 'success' ||
                 reply['code'] == 0 ||
                 reply['status_code'] == 0);
-        if (!accepted) return QishuiListeningDelivery.unconfirmed;
+        if (!accepted) {
+          final explicitlyRejected =
+              reply['success'] == false ||
+              reply['error'] != null ||
+              (reply['code'] != null && reply['code'] != 0) ||
+              (reply['status_code'] != null && reply['status_code'] != 0) ||
+              (reply['message'] != null && reply['message'] != 'success');
+          _report(
+            stage: stage,
+            outcome: QishuiDiagnosticOutcome.unconfirmed,
+            httpStatus: response.statusCode,
+            businessCode: qishuiDiagnosticBusinessCode(reply),
+            response: decoded,
+            reason: decoded is! Map
+                ? QishuiDiagnosticReason.responseShape
+                : explicitlyRejected
+                ? QishuiDiagnosticReason.receiptRejected
+                : QishuiDiagnosticReason.receiptMissing,
+            receiptAccepted: false,
+          );
+          return QishuiListeningDelivery.unconfirmed;
+        }
+        _report(
+          stage: stage,
+          outcome: QishuiDiagnosticOutcome.success,
+          httpStatus: response.statusCode,
+          businessCode: qishuiDiagnosticBusinessCode(reply),
+          receiptAccepted: true,
+        );
         if (heardMilliseconds > 0) {
           final updated = QishuiListeningLedger(
             heardMilliseconds: previous.heardMilliseconds,
@@ -349,11 +563,53 @@ class QishuiListeningRepository {
             unconfirmedMilliseconds:
                 previous.unconfirmedMilliseconds - heardMilliseconds,
           );
-          await store.write(owner, updated);
-          _ledger = updated;
+          stage = QishuiDiagnosticStage.ledger;
+          await _writeLedger(updated, receiptAccepted: true);
         }
         return QishuiListeningDelivery.accepted;
-      } on Object {
+      } on Object catch (error) {
+        // _writeLedger already records whether the service had accepted the
+        // report. Do not obscure that fact with a generic network failure.
+        if (stage != QishuiDiagnosticStage.ledger) {
+          final cancelled = !current;
+          final format =
+              error is FormatException ||
+              error is MusicTransportException &&
+                  error.outcome == MusicNetworkOutcome.format;
+          final network =
+              error is MusicTransportException ||
+              error is QishuiException &&
+                  {
+                    QishuiFailureKind.connection,
+                    QishuiFailureKind.timeout,
+                  }.contains(error.kind);
+          _report(
+            stage: stage,
+            outcome: cancelled
+                ? QishuiDiagnosticOutcome.cancelled
+                : format
+                ? QishuiDiagnosticOutcome.format
+                : network
+                ? QishuiDiagnosticOutcome.network
+                : QishuiDiagnosticOutcome.unconfirmed,
+            reason: cancelled
+                ? QishuiDiagnosticReason.accountChanged
+                : error is FormatException
+                ? QishuiDiagnosticReason.invalidJson
+                : format
+                ? QishuiDiagnosticReason.oversizedResponse
+                : network
+                ? QishuiDiagnosticReason.networkFailure
+                : stage == QishuiDiagnosticStage.identity
+                ? QishuiDiagnosticReason.identityMissing
+                : QishuiDiagnosticReason.unknown,
+            identityReady: stage == QishuiDiagnosticStage.identity
+                ? false
+                : null,
+            willSubmit: stage == QishuiDiagnosticStage.identity ? false : null,
+            receiptAccepted: false,
+          );
+        }
         // No old event is retained for a second attempt. Current local heard
         // time remains available even if the network or account has changed.
         return QishuiListeningDelivery.unconfirmed;
@@ -375,8 +631,7 @@ class QishuiListeningRepository {
         unconfirmedMilliseconds:
             previous.unconfirmedMilliseconds + heardMilliseconds,
       );
-      await store.write(owner, updated);
-      _ledger = updated;
+      await _writeLedger(updated);
     });
     _tail = result.then<void>((_) {}, onError: (Object _) {});
     await result;

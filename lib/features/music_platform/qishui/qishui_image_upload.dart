@@ -9,11 +9,17 @@ import '../../../core/network/music_http_client.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 import 'qishui_api.dart';
 import 'qishui_models.dart';
+import 'qishui_diagnostics.dart';
+import 'qishui_http_diagnostics.dart';
 
 /// The application API issues an ephemeral ImageX grant. Only that grant goes
 /// to the vendor upload service; music Cookies, CSRF and NAS tokens stay in
 /// QishuiApi. None of these objects is serializable or included in diagnostics.
 class QishuiImageGrant {
+  // The shipped Soda uploader uses this private ImageX gateway for BOTH its
+  // HTTP request and AWSV4 canonical URI. Signing/requesting '/' is a different
+  // operation even when the host, temporary credentials and query are equal.
+  static const apiPath = '/top/v1';
   QishuiImageGrant._(
     this.endpoint,
     this.serviceId,
@@ -49,14 +55,14 @@ class QishuiImageGrant {
         !qishuiImageUploadUriAllowed(endpoint) ||
         endpoint.hasQuery ||
         endpoint.hasFragment ||
-        !{'', '/'}.contains(endpoint.path)) {
+        !{'', '/', apiPath}.contains(endpoint.path)) {
       throw const QishuiException(
         '汽水未返回可信的图片上传服务',
         kind: QishuiFailureKind.format,
       );
     }
     return QishuiImageGrant._(
-      endpoint.replace(path: '/'),
+      endpoint.replace(path: apiPath),
       field(row, 'service_id', 128),
       field(security, 'access_key_id', 256),
       field(security, 'secret_access_key', 512),
@@ -83,9 +89,10 @@ bool qishuiImageUploadUriAllowed(Uri uri) {
   ].any((domain) => uri.host == domain || uri.host.endsWith('.$domain'));
 }
 
-/// Matches the shipped AWSV4Auth/BDAuthHelper canonical algorithm. This ImageX
-/// adapter uses the SDK ImageX scope (empty region, service=imagex), distinct
-/// from Volc's HMAC-SHA256 API). Do not log canonical requests or signatures.
+/// Matches the shipped AWSV4Auth/BDAuthHelper canonical algorithm and private
+/// gateway path. The retained empty-region/ImageX scope remains a compatibility
+/// assumption; it is not a proven SDK region default. Do not log canonical
+/// requests, temporary credentials or signatures.
 class QishuiImageSignature {
   static Map<String, String> headers({
     required String method,
@@ -94,6 +101,12 @@ class QishuiImageSignature {
     required QishuiImageGrant grant,
     required DateTime now,
   }) {
+    if (uri.path != QishuiImageGrant.apiPath) {
+      throw const QishuiException(
+        '图片上传请求路径无效，请重新打开后重试',
+        kind: QishuiFailureKind.format,
+      );
+    }
     String two(int n) => '$n'.padLeft(2, '0');
     final time = now.toUtc();
     final date = '${time.year}${two(time.month)}${two(time.day)}';
@@ -174,6 +187,34 @@ class QishuiImageUploader {
     }
     var cancelled = false;
     var finished = false;
+    var activeStage = QishuiDiagnosticStage.grant;
+    void record(
+      QishuiDiagnosticStage stage,
+      QishuiDiagnosticOutcome outcome, {
+      int? httpStatus,
+      Object? response,
+      Object? serviceCode,
+      Object? businessCode,
+      QishuiDiagnosticReason? reason,
+      bool? receiptAccepted,
+    }) => QishuiDiagnostics.shared.record(
+      feature: QishuiDiagnosticFeature.coverUpload,
+      stage: stage,
+      outcome: outcome,
+      httpStatus: httpStatus,
+      serviceCode: serviceCode,
+      businessCode: businessCode,
+      response: response,
+      reason: reason,
+      receiptAccepted: receiptAccepted,
+    );
+    Object? serviceCode(Object? response) {
+      if (response is! Map) return null;
+      final metadata = response['ResponseMetadata'];
+      final error = metadata is Map ? metadata['Error'] : null;
+      return error is Map ? error['Code'] : null;
+    }
+
     unawaited(
       abort.then((_) {
         if (!finished) cancelled = true;
@@ -193,30 +234,65 @@ class QishuiImageUploader {
       String method,
       String body,
       Map<String, String> headers, {
+      required QishuiDiagnosticStage stage,
       List<int>? binary,
     }) async {
+      activeStage = stage;
       guard();
       if (!qishuiImageUploadUriAllowed(uri)) {
+        record(
+          stage,
+          QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.uploadAddressInvalid,
+        );
         throw const QishuiException(
           '图片上传地址不受支持',
           kind: QishuiFailureKind.format,
         );
       }
-      final response = await sendMusicRequest(
-        client: api.client,
-        platform: 'qishui',
-        operation: MusicNetworkOperation.other,
-        abortTrigger: abort,
-        retryRead: false,
-        timeout: const Duration(seconds: 40),
-        maximumResponseBytes: 512 * 1024,
-        build: (cancel) =>
-            http.AbortableRequest(method, uri, abortTrigger: cancel)
-              ..followRedirects = false
-              ..headers.addAll(headers)
-              ..bodyBytes = binary ?? utf8.encode(body),
-      );
+      late final http.Response response;
+      try {
+        response = await sendMusicRequest(
+          client: api.client,
+          platform: 'qishui',
+          operation: MusicNetworkOperation.other,
+          abortTrigger: abort,
+          retryRead: false,
+          timeout: const Duration(seconds: 40),
+          maximumResponseBytes: 512 * 1024,
+          build: (cancel) =>
+              http.AbortableRequest(method, uri, abortTrigger: cancel)
+                ..followRedirects = false
+                ..headers.addAll(headers)
+                ..bodyBytes = binary ?? utf8.encode(body),
+        );
+      } on Object {
+        record(
+          stage,
+          cancelled || !current()
+              ? QishuiDiagnosticOutcome.cancelled
+              : QishuiDiagnosticOutcome.network,
+          reason: cancelled || !current()
+              ? QishuiDiagnosticReason.accountChanged
+              : QishuiDiagnosticReason.networkFailure,
+        );
+        rethrow;
+      }
       guard();
+      final decoded = qishuiDiagnosticJson(response.bodyBytes);
+      record(
+        stage,
+        response.statusCode == 200
+            ? QishuiDiagnosticOutcome.success
+            : QishuiDiagnosticOutcome.http,
+        httpStatus: response.statusCode,
+        response: decoded,
+        serviceCode: serviceCode(decoded),
+        businessCode: qishuiDiagnosticBusinessCode(decoded),
+        reason: response.statusCode == 200
+            ? null
+            : QishuiDiagnosticReason.httpRejected,
+      );
       if (response.statusCode != 200) {
         throw QishuiException(
           '图片上传未完成（HTTP ${response.statusCode}）',
@@ -226,9 +302,20 @@ class QishuiImageUploader {
       return response;
     }
 
-    Map<String, dynamic> result(http.Response response) {
+    Map<String, dynamic> result(
+      http.Response response,
+      QishuiDiagnosticStage stage,
+    ) {
       final json = sodaMap(jsonDecode(utf8.decode(response.bodyBytes)));
       if (sodaMap(json['ResponseMetadata'])['Error'] != null) {
+        record(
+          stage,
+          QishuiDiagnosticOutcome.refused,
+          httpStatus: response.statusCode,
+          response: json,
+          serviceCode: serviceCode(json),
+          reason: QishuiDiagnosticReason.receiptRejected,
+        );
         throw const QishuiException(
           '图片服务未接受本次上传',
           kind: QishuiFailureKind.refused,
@@ -259,7 +346,19 @@ class QishuiImageUploader {
           kind: error.kind,
         );
       }
-      final grant = QishuiImageGrant.parse(authorization);
+      late final QishuiImageGrant grant;
+      try {
+        grant = QishuiImageGrant.parse(authorization);
+      } on QishuiException {
+        record(
+          QishuiDiagnosticStage.grant,
+          QishuiDiagnosticOutcome.format,
+          reason: QishuiDiagnosticReason.grantInvalid,
+          response: authorization,
+        );
+        rethrow;
+      }
+      record(QishuiDiagnosticStage.grant, QishuiDiagnosticOutcome.success);
       guard();
       final apply = grant.endpoint.replace(
         queryParameters: {
@@ -282,7 +381,9 @@ class QishuiImageUploader {
             grant: grant,
             now: _clock(),
           ),
+          stage: QishuiDiagnosticStage.apply,
         ),
+        QishuiDiagnosticStage.apply,
       );
       final address = sodaMap(
         applied['UploadAddress'] ?? applied['InnerUploadAddress'],
@@ -290,6 +391,12 @@ class QishuiImageUploader {
       final stores = sodaRows(address['StoreInfos']);
       final hosts = address['UploadHosts'];
       if (stores.length != 1 || hosts is! List || hosts.isEmpty) {
+        record(
+          QishuiDiagnosticStage.apply,
+          QishuiDiagnosticOutcome.format,
+          response: applied,
+          reason: QishuiDiagnosticReason.uploadAddressInvalid,
+        );
         throw const QishuiException(
           '图片上传地址资料不完整',
           kind: QishuiFailureKind.format,
@@ -305,6 +412,12 @@ class QishuiImageUploader {
           RegExp(r'[\r\n\x00]').hasMatch(auth) ||
           session.isEmpty ||
           session.length > 8192) {
+        record(
+          QishuiDiagnosticStage.apply,
+          QishuiDiagnosticOutcome.format,
+          response: applied,
+          reason: QishuiDiagnosticReason.invalidFields,
+        );
         throw const QishuiException(
           '图片上传授权资料无效',
           kind: QishuiFailureKind.format,
@@ -317,18 +430,39 @@ class QishuiImageUploader {
       if (uploadHost == null ||
           uploadHost.hasQuery ||
           !{'', '/'}.contains(uploadHost.path)) {
+        record(
+          QishuiDiagnosticStage.apply,
+          QishuiDiagnosticOutcome.format,
+          response: applied,
+          reason: QishuiDiagnosticReason.uploadAddressInvalid,
+        );
         throw const QishuiException('图片存储地址无效', kind: QishuiFailureKind.format);
       }
       final uploadUri = uploadHost.replace(path: '/upload/v1/$storeUri');
-      final uploaded = await send(uploadUri, 'POST', '', {
-        'authorization': auth,
-        'content-type': 'application/octet-stream',
-        'x-upload-content-crc32': QishuiImageSignature.crc32(bytes),
-      }, binary: bytes);
+      final uploaded = await send(
+        uploadUri,
+        'POST',
+        '',
+        {
+          'authorization': auth,
+          'content-type': 'application/octet-stream',
+          'x-upload-content-crc32': QishuiImageSignature.crc32(bytes),
+        },
+        stage: QishuiDiagnosticStage.storage,
+        binary: bytes,
+      );
       final receipt = sodaMap(jsonDecode(utf8.decode(uploaded.bodyBytes)));
       if (receipt['code'] != 2000 &&
           receipt['code'] != 0 &&
           receipt['code'] != '2000') {
+        record(
+          QishuiDiagnosticStage.storage,
+          QishuiDiagnosticOutcome.refused,
+          response: receipt,
+          businessCode: receipt['code'],
+          reason: QishuiDiagnosticReason.storageReceiptInvalid,
+          receiptAccepted: false,
+        );
         throw const QishuiException(
           '图片内容尚未被存储服务确认',
           kind: QishuiFailureKind.refused,
@@ -355,20 +489,41 @@ class QishuiImageUploader {
             now: _clock(),
           ),
           'content-type': 'application/json',
-        }),
+        }, stage: QishuiDiagnosticStage.commit),
+        QishuiDiagnosticStage.commit,
       );
       final returned = sodaRows(committed['Results']);
       final uri = returned.length == 1 ? '${returned.single['Uri'] ?? ''}' : '';
       if (uri != storeUri || !validQishuiImageKey(uri)) {
+        record(
+          QishuiDiagnosticStage.commit,
+          QishuiDiagnosticOutcome.format,
+          response: committed,
+          reason: QishuiDiagnosticReason.commitReceiptInvalid,
+          receiptAccepted: false,
+        );
         throw const QishuiException(
           '图片上传尚未取得一致的云端凭据，请重试',
           kind: QishuiFailureKind.format,
         );
       }
       guard();
+      record(
+        QishuiDiagnosticStage.commit,
+        QishuiDiagnosticOutcome.success,
+        receiptAccepted: true,
+      );
       return uri;
     } on QishuiException {
       rethrow;
+    } on FormatException {
+      guard();
+      record(
+        activeStage,
+        QishuiDiagnosticOutcome.format,
+        reason: QishuiDiagnosticReason.invalidJson,
+      );
+      throw const QishuiException('图片上传回执无法读取，请重新选择保存');
     } on Object {
       guard();
       // Never surface response JSON, upload endpoints or ephemeral secrets.

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/network/music_diagnostic_clipboard.dart';
 import '../../../core/network/music_network_diagnostics.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
+import '../../music_platform/qishui/qishui_diagnostics_page.dart';
 
 /// Local, bounded evidence for intermittent failures on another user's device.
 /// Opening/copying this page never probes an account or submits a login/SMS.
@@ -57,6 +59,15 @@ class _MusicNetworkDiagnosticsPageState
           children: [
             const Text('保留本次启动最近 80 条连接结果。失败后优先复制精简记录，包含最近一次故障及同平台前序阶段。'),
             const SizedBox(height: 16),
+            BetaGlassButton(
+              height: buttonHeight,
+              label: '汽水专用诊断',
+              onPressed: () => Navigator.of(
+                context,
+              ).push(betaContentRoute<void>(const QishuiDiagnosticsPage())),
+              child: const Text('汽水专用诊断'),
+            ),
+            const SizedBox(height: 12),
             BetaGlassButton(
               height: buttonHeight,
               interactionEnabled: !_copying,
