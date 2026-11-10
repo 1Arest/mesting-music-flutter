@@ -85,6 +85,10 @@ class _Transport extends Fake implements MestingAudioHandler {
   @override
   List<MediaItem> get upcomingQueue => [];
   @override
+  bool get randomUpcoming => false;
+  @override
+  Stream<bool> get randomUpcomingStream => Stream.value(false);
+  @override
   PlaybackOrder get playbackOrder => order;
   @override
   Future<void> skipToNext() async {

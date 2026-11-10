@@ -215,6 +215,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
   Future<void> accept(
     Map<String, dynamic> result, {
     String? loginMethod,
+    bool retainCurrentPlatform = false,
   }) => _serialize(() async {
     // Initialization must settle before a fresh login may replace its state.
     await readyForInteractiveLogin();
@@ -237,7 +238,14 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       throw const MusicPlatformException('酷狗返回的登录凭据不完整，请重试登录');
     }
     final saveWatch = Stopwatch()..start();
-    await _selectKugou(session, loginMethod: loginMethod, verifiedLogin: true);
+    await _selectKugou(
+      session,
+      loginMethod: loginMethod,
+      verifiedLogin: true,
+      activate:
+          !retainCurrentPlatform ||
+          state.value?.platform == MusicPlatform.kugou,
+    );
     MusicNetworkDiagnostics.shared.record(
       platform: 'kugou',
       operation: MusicNetworkOperation.login,
@@ -246,7 +254,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       transport: 'local',
       elapsedMs: saveWatch.elapsedMilliseconds,
     );
-    if (!hadAccount) {
+    if (!hadAccount && !retainCurrentPlatform) {
       ref.read(betaEntryFlowProvider.notifier).authenticated();
     }
   });
@@ -258,6 +266,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     String? loginMethod,
     bool Function()? isCurrent,
     bool verifiedLogin = false,
+    bool activate = true,
   }) async {
     void check() {
       if (isCurrent != null && !isCurrent()) {
@@ -293,7 +302,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       // Local restore failure must not invalidate a platform-confirmed login.
       // Recovery writes only its isolated encrypted overlay, never the old DB.
       check();
-      if (state.value?.ownerId != session.ownerId) {
+      if (activate && state.value?.ownerId != session.ownerId) {
         await _prepare(session.ownerId);
       }
       KugouRecoverySave? recovery;
@@ -306,13 +315,13 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
           await store.write(session);
         }
         check();
-        {
+        if (activate) {
           await ref
               .read(betaAccountChoiceProvider.notifier)
               .select(BetaAccountChoice.kugou);
         }
         check();
-        _publishKugou(committed);
+        _publishKugou(committed, activate: activate);
       } on Object {
         if (recovery != null) await recovery.rollback();
         if (choice != null && ref.read(betaAccountChoiceProvider) != choice) {
@@ -323,7 +332,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       return;
     }
     check();
-    if (state.value?.ownerId != session.ownerId) {
+    if (activate && state.value?.ownerId != session.ownerId) {
       await _prepare(session.ownerId);
     }
     try {
@@ -334,7 +343,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
         await store.write(session);
       }
       check();
-      {
+      if (activate) {
         await ref
             .read(betaAccountChoiceProvider.notifier)
             .select(BetaAccountChoice.kugou);
@@ -351,7 +360,7 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       }
       rethrow;
     }
-    _publishKugou(committed);
+    _publishKugou(committed, activate: activate);
   }
 
   static bool _isStorageFailure(Object error) =>
@@ -360,10 +369,11 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       error is FormatException ||
       error is TimeoutException;
 
-  void _publishKugou(PlatformSession committed) {
+  void _publishKugou(PlatformSession committed, {bool activate = true}) {
     ref.read(retainedKugouMutationProvider.notifier).publish(committed);
     ref.invalidate(savedKugouSessionProvider);
-    _publish(committed);
+    ref.invalidate(savedKugouAccountsProvider);
+    if (activate) _publish(committed);
   }
 
   Future<void> switchKugouAccount(String userId) => _serialize(() async {
@@ -430,9 +440,15 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
     ref.invalidate(savedKugouAccountsProvider);
   });
 
-  Future<void> acceptNetease(NeteaseSession session) => _serialize(() async {
+  Future<void> acceptNetease(
+    NeteaseSession session, {
+    bool retainCurrentPlatform = false,
+  }) => _serialize(() async {
     await readyForInteractiveLogin();
     final hadAccount = state.value != null;
+    final activate =
+        !retainCurrentPlatform ||
+        state.value?.platform == MusicPlatform.netease;
     if (session.userId.isEmpty ||
         session.deviceId.isEmpty ||
         (session.cookies['MUSIC_U'] ?? '').isEmpty) {
@@ -468,13 +484,17 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
               .recoverVerifiedLogin(session);
         }
       }
-      await _prepare(session.identity.ownerId);
-      await ref
-          .read(betaAccountChoiceProvider.notifier)
-          .select(BetaAccountChoice.netease);
+      if (activate) {
+        await _prepare(session.identity.ownerId);
+        await ref
+            .read(betaAccountChoiceProvider.notifier)
+            .select(BetaAccountChoice.netease);
+      }
       ref.read(retainedNeteaseEpochProvider.notifier).advance();
-      ref.read(neteaseApiProvider).configure(session);
-      _publish(session.identity);
+      if (activate) {
+        ref.read(neteaseApiProvider).configure(session);
+        _publish(session.identity);
+      }
       MusicNetworkDiagnostics.shared.record(
         platform: 'netease',
         operation: MusicNetworkOperation.login,
@@ -493,7 +513,9 @@ class PlatformAccountController extends AsyncNotifier<PlatformSession?> {
       }
       rethrow;
     }
-    if (!hadAccount) ref.read(betaEntryFlowProvider.notifier).authenticated();
+    if (!hadAccount && activate) {
+      ref.read(betaEntryFlowProvider.notifier).authenticated();
+    }
   });
 
   /// A verified Passport/Luna identity is durably stored before publication.

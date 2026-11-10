@@ -85,10 +85,10 @@ void main() {
       page.id,
       fixture.container.read(platformAccountProvider).value!.userId,
     );
-      final closing = driver.close();
-      await tester.pumpAndSettle();
-      await tester.pump(const Duration(milliseconds: 600));
-      await closing;
+    final closing = driver.close();
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 600));
+    await closing;
     await tester.pumpWidget(const SizedBox.shrink());
     router.dispose();
     await fixture.dispose();
@@ -196,6 +196,7 @@ void main() {
         expect(failure, isNull);
         expect(requests, hasLength(12));
         expect(result?['observedSelections'], 12);
+        // Root transitions are restored; diagnostics must observe actual motion.
         expect(result?['motionObserved'], isTrue);
         expect(result?['finalPaintedTabVerified'], isTrue);
         expect(find.text('root3').hitTestable(), findsOneWidget);

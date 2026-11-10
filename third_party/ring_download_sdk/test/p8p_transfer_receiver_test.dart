@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ring_download_sdk/compat.dart';
 import 'package:ring_download_sdk/src/p8p/leases.dart';
 import 'package:ring_download_sdk/src/p8p/diagnostics.dart';
+import 'package:ring_download_sdk/src/p8p/lifecycle_trace.dart';
 import 'package:ring_download_sdk/src/p8p/ordered_writer.dart';
 import 'package:ring_download_sdk/src/p8p/transfer_protocol.dart';
 import 'package:ring_download_sdk/src/p8p/transfer_receiver.dart';
@@ -28,6 +29,9 @@ void main() {
   var failClose = false;
   var failObserver = false;
   late List<P8PSourceDiagnostic> diagnostics;
+  late List<P8PLifecycleEvent> lifecycle;
+  Completer<void>? enqueueGate;
+  var failLifecycle = false;
   var closedTransports = 0;
   Map<String, Object?> control(
     String type,
@@ -92,6 +96,9 @@ void main() {
     failClose = false;
     failObserver = false;
     diagnostics = [];
+    lifecycle = [];
+    enqueueGate = null;
+    failLifecycle = false;
     closedTransports = 0;
     closeGate = null;
     sent = [];
@@ -139,6 +146,9 @@ void main() {
       writer: writer,
       send: (value) async {
         sent.add(value);
+        if (value['type'] == 'get' && enqueueGate != null) {
+          await enqueueGate!.future;
+        }
         if (value['type'] == 'hello') {
           receiver.acceptControl(jsonEncode({...value, 'max_inflight': 4}));
         }
@@ -152,10 +162,17 @@ void main() {
         diagnostics.add(event);
         if (failObserver) throw StateError('private observer failure');
       },
+      onLifecycle: (event) {
+        lifecycle.add(event);
+        if (failLifecycle) throw StateError('injected lifecycle observer');
+      },
     );
     await receiver.connect(const Duration(seconds: 1));
   });
   tearDown(() async {
+    if (enqueueGate != null && !enqueueGate!.isCompleted) {
+      enqueueGate!.complete();
+    }
     if (closeGate != null && !closeGate!.isCompleted) closeGate!.complete();
     try {
       await receiver.close();
@@ -163,6 +180,81 @@ void main() {
     await writer.close();
     await directory.delete(recursive: true);
   });
+
+  test(
+    'hello and native enqueue traces do not claim payload delivery',
+    () async {
+      expect(lifecycle.map((e) => e.code), [P8PLifecycleCode.helloReady]);
+      enqueueGate = Completer<void>();
+      final first = await request(0);
+      expect(
+        lifecycle.where((e) => e.code == P8PLifecycleCode.requestEnqueued),
+        isEmpty,
+      );
+      expect(first.receivedBytes, 0);
+      expect(book.reservations, 1);
+      enqueueGate!.complete();
+      await Future<void>.delayed(Duration.zero);
+      final queued = lifecycle.singleWhere(
+        (e) => e.code == P8PLifecycleCode.requestEnqueued,
+      );
+      expect(queued.metrics['owner_closed'], 0);
+      expect(first.receivedBytes, 0);
+      deliver(first);
+      await first.verified;
+      final second = await request(1);
+      deliver(second);
+      await second.verified;
+      await writer.idle;
+      expect(
+        lifecycle.where((e) => e.code == P8PLifecycleCode.firstHeader),
+        hasLength(1),
+      );
+      expect(
+        lifecycle.where((e) => e.code == P8PLifecycleCode.requestEnqueued),
+        hasLength(1),
+      );
+      expect(sent.map((v) => v['type']), ['hello', 'get', 'get']);
+      expect(await store.completeAndVerified(), true);
+    },
+  );
+
+  test(
+    'enqueue failure is not logged as sent and retains physical ownership',
+    () async {
+      enqueueGate = Completer<void>();
+      closeGate = Completer<void>();
+      final ticket = await request(0);
+      final failed = expectLater(ticket.verified, throwsStateError);
+      enqueueGate!.completeError(StateError('injected enqueue failure'));
+      await failed;
+      expect(receiver.closed, true);
+      expect(book.reservations, 1);
+      expect(
+        lifecycle.where((e) => e.code == P8PLifecycleCode.requestEnqueued),
+        isEmpty,
+      );
+      closeGate!.complete();
+      await ticket.stopped;
+      expect(book.reservations, 0);
+    },
+  );
+
+  test(
+    'throwing lifecycle observer preserves requests and verified receipts',
+    () async {
+      failLifecycle = true;
+      final first = await request(0), last = await request(1);
+      deliver(last);
+      deliver(first);
+      await Future.wait([first.verified, last.verified]);
+      await writer.idle;
+      expect(await store.completeAndVerified(), true);
+      expect(sent.map((v) => v['type']), ['hello', 'get', 'get']);
+      expect(receiver.pending, 0);
+      expect(diagnostics, isEmpty);
+    },
+  );
 
   test(
     'framed out of order pieces use the existing verified prefix writer',

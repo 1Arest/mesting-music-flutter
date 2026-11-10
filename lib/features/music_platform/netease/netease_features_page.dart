@@ -1,6 +1,8 @@
+import '../presentation/source_comments_page.dart';
 import '../../experience/presentation/music_discovery_sections.dart';
 import '../presentation/platform_collection_play.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
+import '../../../shared/widgets/music_filter_dropdown.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -21,6 +23,7 @@ import '../../../shared/models/track.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../../shared/widgets/route_settled_content.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_glass_action.dart';
 import '../../experience/presentation/editorial_widgets.dart';
 import '../data/platform_category_search.dart';
 import '../data/platform_explore.dart';
@@ -38,6 +41,8 @@ import 'netease_features_repository.dart';
 import 'netease_membership_page.dart';
 import 'netease_item_artwork.dart';
 import '../presentation/platform_play_all_button.dart';
+import '../presentation/library_collection_masthead.dart';
+import '../presentation/platform_ranking_header.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../data/platform_comments_repository.dart';
 import '../presentation/platform_comments_page.dart';
@@ -301,6 +306,19 @@ class NeteaseFeaturesPage extends ConsumerStatefulWidget {
 }
 
 class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
+  /// Only actual song collections receive the cover composition. Directories,
+  /// MV browsers and podcast/account pages retain their own navigation layout.
+  bool get _songCollection => const {
+    NeteaseFeed.intelligence,
+    NeteaseFeed.cloud,
+    NeteaseFeed.week,
+    NeteaseFeed.allTime,
+    NeteaseFeed.recentSongs,
+    NeteaseFeed.historySongs,
+    NeteaseFeed.artistSongs,
+    NeteaseFeed.artistNewSongs,
+    NeteaseFeed.recommendedSongs,
+  }.contains(widget.feed);
   final _browse = CachedBrowseLoader();
   final _items = <NeteaseItem>[];
   int _page = 0, _cursor = 0, _generation = 0;
@@ -487,268 +505,339 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
     }
   }
 
+  /// The left play entry and right download target share the same row as other
+  /// collections. The download remains explicitly limited to loaded songs.
+  Widget _trackControls(List<Track> tracks) {
+    final play = PlatformPlayAllButton(
+      loading: _playingAll,
+      total: _songCollection && !_more ? tracks.length : null,
+      onPressed: _busy ? null : _playAll,
+    );
+    void download() {
+      if (_current) enqueueAudioDownloads(context, ref, tracks);
+    }
+
+    if (_songCollection) {
+      return Row(
+        children: [
+          Expanded(child: play),
+          const SizedBox(width: 8),
+          BetaGlassAction(
+            label: '下载已加载歌曲',
+            icon: Icons.download_outlined,
+            blue: false,
+            onPressed: download,
+          ),
+        ],
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        play,
+        TextButton.icon(
+          icon: const Icon(CupertinoIcons.arrow_down_circle),
+          label: const Text('下载已加载歌曲'),
+          onPressed: download,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(platformAccountProvider);
+    final title =
+        widget.title ?? NeteaseFeaturesRepository.titles[widget.feed]!;
+    final tracks = _items.map((item) => item.track).whereType<Track>().toList();
     return PlatformPageFrame(
-      title: widget.title ?? NeteaseFeaturesRepository.titles[widget.feed]!,
-      child: !_current
-          ? const EditorialEmpty('账号已变化，请返回后重新打开')
-          : MusicRefreshIndicator(
-              onRefresh: () => _load(reset: true),
-              child: AutomaticSongPaging(
-                songListId:
-                    'netease-feed:${widget.feed.name}:${widget.id}:$_area:$_artistArea',
-                enabled: _more && !_busy && !_playingAll && _error == null,
-                onLoadMore: _load,
-                child: ListView.builder(
-                  cacheExtent: MediaQuery.sizeOf(context).height,
-                  padding: BetaContentInsets.musicPaddingOf(
-                    context,
-                    EdgeInsets.only(
-                      bottom: BetaContentInsets.musicBottomOf(
-                        context,
-                        editorialBottomClearance,
+      title: title,
+      headerInScroll: _songCollection && _current,
+      child: PlatformRankingScrollShell(
+        title: title,
+        enabled: _songCollection && _current,
+        child: !_current
+            ? const EditorialEmpty('账号已变化，请返回后重新打开')
+            : MusicRefreshIndicator(
+                onRefresh: () => _load(reset: true),
+                child: AutomaticSongPaging(
+                  songListId:
+                      'netease-feed:${widget.feed.name}:${widget.id}:$_area:$_artistArea',
+                  enabled: _more && !_busy && !_playingAll && _error == null,
+                  onLoadMore: _load,
+                  child: ListView.builder(
+                    cacheExtent: MediaQuery.sizeOf(context).height,
+                    padding: BetaContentInsets.musicPaddingOf(
+                      context,
+                      EdgeInsets.only(
+                        bottom: BetaContentInsets.musicBottomOf(
+                          context,
+                          editorialBottomClearance,
+                        ),
                       ),
                     ),
-                  ),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: _items.length + 2,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: _items.length + 2,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return Column(
                           children: [
-                            if (widget.feed == NeteaseFeed.podcasts)
-                              _PodcastNavigation(),
-                            if (widget.feed == NeteaseFeed.podcastPrograms)
-                              NeteaseResourceActions(
-                                item: NeteaseItem(
-                                  id: widget.id,
-                                  name: widget.title ?? '播客',
-                                  kind: NeteaseEntity.podcast,
-                                ),
+                            if (_songCollection)
+                              LibraryCollectionMasthead(
+                                title: title,
+                                cover: tracks.firstOrNull?.coverAsset ?? '',
+                                total: tracks.length,
+                                countLabel: _more
+                                    ? '已加载 ${tracks.length} 首歌曲'
+                                    : null,
                               ),
-                            if (_items.any((i) => i.track != null))
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  PlatformPlayAllButton(
-                                    loading: _playingAll,
-                                    onPressed: _busy ? null : _playAll,
-                                  ),
-                                  TextButton.icon(
-                                    icon: const Icon(
-                                      CupertinoIcons.arrow_down_circle,
+                                  if (widget.feed == NeteaseFeed.podcasts)
+                                    _PodcastNavigation(),
+                                  if (widget.feed ==
+                                      NeteaseFeed.podcastPrograms)
+                                    NeteaseResourceActions(
+                                      item: NeteaseItem(
+                                        id: widget.id,
+                                        name: widget.title ?? '播客',
+                                        kind: NeteaseEntity.podcast,
+                                      ),
                                     ),
-                                    label: const Text('下载已加载歌曲'),
-                                    onPressed: () {
-                                      if (!_current) return;
-                                      enqueueAudioDownloads(
-                                        context,
-                                        ref,
-                                        _items
-                                            .map((i) => i.track)
-                                            .whereType<Track>()
-                                            .toList(),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            if (widget.feed == NeteaseFeed.cloud)
-                              BetaGlassButton(
-                                onPressed: _writing ? null : _upload,
-                                child: Text(_writing ? '正在处理…' : '上传音乐到网易云云盘'),
-                              ),
-                            if ({
-                              NeteaseFeed.albums,
-                              NeteaseFeed.artists,
-                              NeteaseFeed.mvs,
-                            }.contains(widget.feed))
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  for (final area
-                                      in widget.feed == NeteaseFeed.artists
-                                          ? ['华语', '欧美', '韩国', '日本']
-                                          : widget.feed == NeteaseFeed.mvs
-                                          ? ['全部', '内地', '港台', '欧美', '日本', '韩国']
-                                          : ['全部', '华语', '欧美', '日本', '韩国'])
-                                    ChoiceChip(
-                                      label: Text(area),
-                                      selected:
-                                          widget.feed == NeteaseFeed.artists
-                                          ? _artistArea ==
-                                                [
-                                                      '华语',
-                                                      '欧美',
-                                                      '韩国',
-                                                      '日本',
-                                                    ].indexOf(area) +
-                                                    1
-                                          : _area ==
-                                                (widget.feed ==
-                                                        NeteaseFeed.albums
-                                                    ? {
-                                                        '全部': 'ALL',
-                                                        '华语': 'ZH',
-                                                        '欧美': 'EA',
-                                                        '日本': 'JP',
-                                                        '韩国': 'KR',
-                                                      }[area]
-                                                    : area),
-                                      onSelected: _busy
+                                  if (_items.any((i) => i.track != null))
+                                    _trackControls(tracks),
+                                  if (widget.feed == NeteaseFeed.cloud)
+                                    BetaGlassButton(
+                                      onPressed: _writing ? null : _upload,
+                                      child: Text(
+                                        _writing ? '正在处理…' : '上传音乐到网易云云盘',
+                                      ),
+                                    ),
+                                  if (widget.feed == NeteaseFeed.mvs)
+                                    MusicFilterDropdown(
+                                      key: const ValueKey('mv-area-dropdown'),
+                                      value: _area == 'ALL' ? '全部' : _area,
+                                      options: const [
+                                        '全部',
+                                        '内地',
+                                        '港台',
+                                        '欧美',
+                                        '日本',
+                                        '韩国',
+                                      ],
+                                      onChanged: _busy
                                           ? null
-                                          : (_) {
-                                              if (widget.feed ==
-                                                  NeteaseFeed.artists) {
-                                                _artistArea =
-                                                    [
-                                                      '华语',
-                                                      '欧美',
-                                                      '韩国',
-                                                      '日本',
-                                                    ].indexOf(area) +
-                                                    1;
-                                              } else {
-                                                _area =
-                                                    widget.feed ==
-                                                        NeteaseFeed.albums
-                                                    ? {
-                                                        '全部': 'ALL',
-                                                        '华语': 'ZH',
-                                                        '欧美': 'EA',
-                                                        '日本': 'JP',
-                                                        '韩国': 'KR',
-                                                      }[area]!
-                                                    : area;
-                                              }
+                                          : (area) {
+                                              _area = area;
                                               _load(reset: true);
                                             },
                                     ),
+                                  if ({
+                                    NeteaseFeed.albums,
+                                    NeteaseFeed.artists,
+                                  }.contains(widget.feed))
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        for (final area
+                                            in widget.feed ==
+                                                    NeteaseFeed.artists
+                                                ? ['华语', '欧美', '韩国', '日本']
+                                                : widget.feed == NeteaseFeed.mvs
+                                                ? [
+                                                    '全部',
+                                                    '内地',
+                                                    '港台',
+                                                    '欧美',
+                                                    '日本',
+                                                    '韩国',
+                                                  ]
+                                                : [
+                                                    '全部',
+                                                    '华语',
+                                                    '欧美',
+                                                    '日本',
+                                                    '韩国',
+                                                  ])
+                                          ChoiceChip(
+                                            label: Text(area),
+                                            selected:
+                                                widget.feed ==
+                                                    NeteaseFeed.artists
+                                                ? _artistArea ==
+                                                      [
+                                                            '华语',
+                                                            '欧美',
+                                                            '韩国',
+                                                            '日本',
+                                                          ].indexOf(area) +
+                                                          1
+                                                : _area ==
+                                                      (widget.feed ==
+                                                              NeteaseFeed.albums
+                                                          ? {
+                                                              '全部': 'ALL',
+                                                              '华语': 'ZH',
+                                                              '欧美': 'EA',
+                                                              '日本': 'JP',
+                                                              '韩国': 'KR',
+                                                            }[area]
+                                                          : area),
+                                            onSelected: _busy
+                                                ? null
+                                                : (_) {
+                                                    if (widget.feed ==
+                                                        NeteaseFeed.artists) {
+                                                      _artistArea =
+                                                          [
+                                                            '华语',
+                                                            '欧美',
+                                                            '韩国',
+                                                            '日本',
+                                                          ].indexOf(area) +
+                                                          1;
+                                                    } else {
+                                                      _area =
+                                                          widget.feed ==
+                                                              NeteaseFeed.albums
+                                                          ? {
+                                                              '全部': 'ALL',
+                                                              '华语': 'ZH',
+                                                              '欧美': 'EA',
+                                                              '日本': 'JP',
+                                                              '韩国': 'KR',
+                                                            }[area]!
+                                                          : area;
+                                                    }
+                                                    _load(reset: true);
+                                                  },
+                                          ),
+                                      ],
+                                    ),
+                                  if (_writing)
+                                    const Center(
+                                      child: MusicActivityIndicator(
+                                        independent: true,
+                                      ),
+                                    ),
                                 ],
                               ),
-                            if (_writing)
-                              const Center(
-                                child: MusicActivityIndicator(
-                                  independent: true,
-                                ),
-                              ),
+                            ),
                           ],
-                        ),
-                      );
-                    }
-                    if (index == _items.length + 1) {
-                      if (_busy) {
-                        return const PlatformFeedbackState(loading: true);
-                      }
-                      if (_error != null) {
-                        return EditorialEmpty(
-                          _error!,
-                          onRetry: () => _load(reset: _items.isEmpty),
                         );
                       }
-                      return _items.isEmpty
-                          ? EditorialEmpty(
-                              '暂无${widget.title ?? NeteaseFeaturesRepository.titles[widget.feed] ?? '内容'}',
-                            )
-                          : _more
-                          ? const SizedBox(height: 12)
-                          : const MusicListEnd();
-                    }
-                    final item = _items[index - 1];
-                    if (item.track != null) {
-                      return Column(
-                        children: [
-                          EditorialTrackRow(
-                            track: item.track!,
-                            contextTracks: _items
-                                .map((i) => i.track)
-                                .whereType<Track>()
-                                .toList(),
-                          ),
-                          if (widget.feed == NeteaseFeed.cloud)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: _writing
-                                    ? null
-                                    : () => _deleteCloud(item),
-                                child: const Text('从云盘删除'),
-                              ),
+                      if (index == _items.length + 1) {
+                        if (_busy) {
+                          return const PlatformFeedbackState(loading: true);
+                        }
+                        if (_error != null) {
+                          return EditorialEmpty(
+                            _error!,
+                            onRetry: () => _load(reset: _items.isEmpty),
+                          );
+                        }
+                        return _items.isEmpty
+                            ? EditorialEmpty(
+                                '暂无${widget.title ?? NeteaseFeaturesRepository.titles[widget.feed] ?? '内容'}',
+                              )
+                            : _more
+                            ? const SizedBox(height: 12)
+                            : const MusicListEnd();
+                      }
+                      final item = _items[index - 1];
+                      if (item.track != null) {
+                        return Column(
+                          children: [
+                            EditorialTrackRow(
+                              track: item.track!,
+                              contextTracks: _items
+                                  .map((i) => i.track)
+                                  .whereType<Track>()
+                                  .toList(),
                             ),
-                          if (item.kind == NeteaseEntity.program)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  final account = ref
-                                      .read(platformAccountProvider)
-                                      .value;
-                                  if (account == null || !_current) return;
-                                  Navigator.of(
-                                    context,
-                                    rootNavigator: true,
-                                  ).push(
-                                    MestingPageRoute<void>(
-                                      builder: (_) => PlatformCommentsPage(
-                                        resource: PlatformCommentResource(
-                                          kind: PlatformCommentKind.podcast,
-                                          id: item.id,
-                                          name: item.name,
-                                        ),
-                                        repository: NeteaseCommentsRepository(
-                                          ref.read(musicPlatformApiProvider),
-                                          account,
-                                          ref.read(
-                                            neteaseMusicRepositoryProvider,
+                            if (widget.feed == NeteaseFeed.cloud)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: _writing
+                                      ? null
+                                      : () => _deleteCloud(item),
+                                  child: const Text('从云盘删除'),
+                                ),
+                              ),
+                            if (item.kind == NeteaseEntity.program)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () {
+                                    final account = ref
+                                        .read(platformAccountProvider)
+                                        .value;
+                                    if (account == null || !_current) return;
+                                    Navigator.of(
+                                      context,
+                                      rootNavigator: true,
+                                    ).push(
+                                      MestingPageRoute<void>(
+                                        builder: (_) => PlatformCommentsPage(
+                                          resource: PlatformCommentResource(
+                                            kind: PlatformCommentKind.podcast,
+                                            id: item.id,
+                                            name: item.name,
+                                          ),
+                                          repository: NeteaseCommentsRepository(
+                                            ref.read(musicPlatformApiProvider),
+                                            account,
+                                            ref.read(
+                                              neteaseMusicRepositoryProvider,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
-                                child: const Text('节目评论'),
+                                    );
+                                  },
+                                  child: const Text('节目评论'),
+                                ),
                               ),
-                            ),
-                        ],
-                      );
-                    }
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 8,
-                      ),
-                      leading: NeteaseItemArtwork(
-                        key: ValueKey(
-                          'netease-item-art-${item.kind.name}-${item.id}',
+                          ],
+                        );
+                      }
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 8,
                         ),
-                        item: item,
-                      ),
-                      title: Text(item.name),
-                      subtitle: item.subtitle.isEmpty
-                          ? null
-                          : Text(
-                              item.subtitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                      trailing: const Icon(
-                        CupertinoIcons.chevron_right,
-                        size: 16,
-                      ),
-                      onTap: () => openNeteaseItem(context, item),
-                    );
-                  },
+                        leading: NeteaseItemArtwork(
+                          key: ValueKey(
+                            'netease-item-art-${item.kind.name}-${item.id}',
+                          ),
+                          item: item,
+                        ),
+                        title: Text(item.name),
+                        subtitle: item.subtitle.isEmpty
+                            ? null
+                            : Text(
+                                item.subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                        trailing: const Icon(
+                          CupertinoIcons.chevron_right,
+                          size: 16,
+                        ),
+                        onTap: () => openNeteaseItem(context, item),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -758,11 +847,13 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
 class NeteaseResourceActions extends ConsumerStatefulWidget {
   const NeteaseResourceActions({
     required this.item,
+    this.onComments,
     this.onDownload,
     this.showDownload = false,
     super.key,
   });
   final NeteaseItem item;
+  final VoidCallback? onComments;
   final VoidCallback? onDownload;
   final bool showDownload;
   @override
@@ -905,7 +996,7 @@ class _NeteaseAccountPanelState extends ConsumerState<NeteaseAccountPanel> {
               builder: (_) => const NeteaseMembershipPage(),
             ),
           ),
-          child: const Text('我的会员 · 本地 SVIP'),
+          child: const Text('我的会员 · 至尊SVIP'),
         ),
         const SizedBox(height: 12),
         BetaGlassButton(
@@ -1017,6 +1108,31 @@ class _NeteaseResourceActionsState
   );
 
   void _comments() {
+    if (widget.onComments == null && widget.item.kind == NeteaseEntity.mv) {
+      Navigator.of(context, rootNavigator: true).push(
+        MestingPageRoute<void>(
+          builder: (_) => LinkedMvCommentsPage(
+            mvId: widget.item.id,
+            track: Track(
+              id: 'netease_mv_${widget.item.id}',
+              title: widget.item.name,
+              artist: widget.item.subtitle,
+              album: '',
+              duration: Duration.zero,
+              audioAsset: '',
+              coverAsset: widget.item.cover,
+              lyricsAsset: '',
+              source: TrackSource.netease,
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    if (widget.onComments != null) {
+      widget.onComments!();
+      return;
+    }
     final account = ref.read(platformAccountProvider).value;
     if (account == null || !_current) return;
     Navigator.of(context).push(

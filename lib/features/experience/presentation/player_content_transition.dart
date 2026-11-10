@@ -94,60 +94,70 @@ class _PlayerContentTransitionState extends State<PlayerContentTransition>
     return _PlayerTransitionSurface(
       key: ValueKey(id),
       outgoing: outgoing,
-      opacity: outgoing ? _outgoingAlpha : _incomingAlpha,
+      motion: _motion,
+      opacity: () => outgoing ? _outgoingAlpha : _incomingAlpha,
       direction: widget.direction,
       child: child,
     );
   }
 
   @override
-  Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _motion,
-    builder: (context, _) => Stack(
-      alignment: Alignment.center,
-      fit: StackFit.passthrough,
-      children: [
-        if (_outgoing != null)
-          _surface(_outgoing!, _outgoingId!, outgoing: true),
-        _surface(_current, _currentId, outgoing: false),
-      ],
-    ),
+  Widget build(BuildContext context) => Stack(
+    alignment: Alignment.center,
+    fit: StackFit.passthrough,
+    children: [
+      if (_outgoing != null) _surface(_outgoing!, _outgoingId!, outgoing: true),
+      _surface(_current, _currentId, outgoing: false),
+    ],
   );
 }
 
 class _PlayerTransitionSurface extends StatelessWidget {
   const _PlayerTransitionSurface({
     required this.outgoing,
+    required this.motion,
     required this.opacity,
     required this.direction,
     required this.child,
     super.key,
   });
   final bool outgoing;
-  final double opacity, direction;
+  final Animation<double> motion;
+  final double Function() opacity;
+  final double direction;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final distance = 1 - opacity;
     return IgnorePointer(
       ignoring: outgoing,
       child: ExcludeSemantics(
         excluding: outgoing,
         child: TickerMode(
           enabled: !outgoing,
-          child: Opacity(
-            opacity: opacity.clamp(0, 1),
-            child: FractionalTranslation(
-              translation: Offset(
-                (outgoing ? -1 : 1) * direction * .045 * distance,
-                .018 * distance,
-              ),
-              child: Transform.scale(
-                scale: 1 - .015 * distance,
-                child: RepaintBoundary(child: child),
-              ),
-            ),
+          // Only the optical transforms change on a tick. Stack membership,
+          // input/semantics/ticker gates and the stable content boundary change
+          // when the selected surface changes, not 120 times per second.
+          child: AnimatedBuilder(
+            animation: motion,
+            child: RepaintBoundary(child: child),
+            builder: (context, child) {
+              final alpha = opacity();
+              final distance = 1 - alpha;
+              return Opacity(
+                opacity: alpha.clamp(0, 1),
+                child: FractionalTranslation(
+                  translation: Offset(
+                    (outgoing ? -1 : 1) * direction * .045 * distance,
+                    .018 * distance,
+                  ),
+                  child: Transform.scale(
+                    scale: 1 - .015 * distance,
+                    child: child,
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

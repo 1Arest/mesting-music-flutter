@@ -31,6 +31,7 @@ import '../core/platform/distribution_channel.dart';
 import '../features/music_platform/data/embedded_kugou_music_source.dart';
 import '../features/music_platform/data/music_platform_api.dart';
 import '../features/music_platform/music_platform_providers.dart';
+import '../features/music_platform/cross_platform_music_scope.dart';
 import '../features/music_platform/platform_quality_providers.dart';
 import '../features/music_platform/platform_recommendation_providers.dart';
 import '../features/music_platform/listening_sync/listening_sync_providers.dart';
@@ -73,6 +74,21 @@ class MestingMusicApp extends ConsumerWidget {
         // A restored media item must revalidate the active official account.
         if (track.hasLocalAudio && track.source != TrackSource.qishui) {
           return track;
+        }
+        if (track.source == TrackSource.netease ||
+            track.source == TrackSource.kugou) {
+          final identity = await ref.read(platformAccountProvider.future);
+          if (identity?.platform != MusicPlatform.qishui &&
+              (identity?.platform.name ?? 'kugou') != track.source.name) {
+            final quality = ref.read(platformQualityProvider);
+            return resolveSupplementaryMusic(
+              ref,
+              track,
+              quality.preferred,
+              requireQuality:
+                  quality.switching && quality.switchingTrackId == track.id,
+            );
+          }
         }
         if (track.source == TrackSource.qishui) {
           final identity = await ref.read(platformAccountProvider.future);

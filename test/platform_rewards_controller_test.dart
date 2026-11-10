@@ -75,6 +75,9 @@ void main() {
   }) async {
     SharedPreferences.setMockInitialValues({
       PlatformRewardsController.autoSignInKey: automatic,
+      PlatformRewardsController.autoAdsKey('A'): false,
+      PlatformRewardsController.autoAdsKey('B'): false,
+      PlatformRewardsController.autoAdsKey('retained'): false,
     });
     preferences = await SharedPreferences.getInstance();
     service = _Service();
@@ -85,6 +88,9 @@ void main() {
         platformAccountProvider.overrideWith(_Account.new),
         savedKugouSessionProvider.overrideWith((ref) async => null),
         platformRewardServiceProvider.overrideWithValue(service),
+        platformRewardClockProvider.overrideWithValue(
+          () => DateTime(2026, 10, 26, 18),
+        ),
         platformRewardDelayProvider.overrideWithValue(
           delay ??
               (duration, cancelled) async {

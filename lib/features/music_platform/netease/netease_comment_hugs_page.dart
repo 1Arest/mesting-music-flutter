@@ -16,11 +16,13 @@ class NeteaseCommentHugsPage extends ConsumerStatefulWidget {
     required this.repository,
     required this.resource,
     required this.comment,
+    this.sourceCurrent,
     super.key,
   });
   final NeteaseCommentsRepository repository;
   final PlatformCommentResource resource;
   final PlatformComment comment;
+  final bool Function()? sourceCurrent;
   @override
   ConsumerState<NeteaseCommentHugsPage> createState() =>
       _NeteaseCommentHugsPageState();
@@ -34,9 +36,10 @@ class _NeteaseCommentHugsPageState
   bool _busy = false, _sent = false, _more = false;
   int _page = 1;
   bool get _current =>
-      ref.read(usesNeteaseProvider) &&
-      ref.read(neteaseMusicRepositoryProvider).credential ==
-          widget.repository.music.credential;
+      widget.sourceCurrent?.call() ??
+      (ref.read(usesNeteaseProvider) &&
+          ref.read(neteaseMusicRepositoryProvider).credential ==
+              widget.repository.music.credential);
   @override
   void initState() {
     super.initState();

@@ -2,7 +2,6 @@ import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_popover.dart';
@@ -10,6 +9,8 @@ import '../../../shared/widgets/beta_glass_menu_item.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../library/library_providers.dart';
 import '../../library/presentation/library_access.dart';
+import '../../library/presentation/favorite_toggle_button.dart';
+import '../../player/presentation/open_now_playing.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../auth/presentation/beta_login_navigation.dart';
 import '../../music_platform/platform_recommendation_providers.dart';
@@ -123,8 +124,7 @@ Future<void> showPlaybackPillMenu(
             ),
             const Divider(height: 12, indent: 16, endIndent: 16),
             action('lyrics', '查看歌词', CupertinoIcons.text_alignleft),
-            if (platform)
-              action('comments', '歌曲评论', CupertinoIcons.text_bubble),
+            if (platform) action('comments', '歌曲评论', Icons.chat_bubble_outline),
             if (platform) action('quality', '音质', CupertinoIcons.waveform),
             if (track.source == TrackSource.netease && !track.hasLocalAudio)
               action(
@@ -174,8 +174,10 @@ Future<void> showPlaybackPillMenu(
         final wasFavorite = ref
             .read(favoriteTrackIdsProvider)
             .contains(track.id);
-        await ref.read(libraryRepositoryProvider).toggleFavorite(track);
-        if (context.mounted) {
+        final nextFavorite = await ref
+            .read(favoriteMutationsProvider)
+            .toggle(track, wasFavorite: wasFavorite);
+        if (context.mounted && nextFavorite != null) {
           showMusicNotice(
             context,
             icon: wasFavorite
@@ -183,6 +185,7 @@ Future<void> showPlaybackPillMenu(
                 : Icons.favorite_rounded,
             title: wasFavorite ? '已取消喜欢' : '已添加到喜欢',
             message: '',
+            iconColor: favoriteFeedbackColor(context),
           );
         }
       case 'playlist':
@@ -190,7 +193,7 @@ Future<void> showPlaybackPillMenu(
       case 'queue':
         await showPlaybackQueueSheet(context);
       case 'lyrics':
-        await context.push('/player', extra: const PlaybackPillLyricsIntent());
+        await openNowPlaying(context, ref, lyrics: true);
       case 'comments':
         if (ref.read(platformAccountProvider).value == null) {
           await openBetaLogin(context, redirect: '/music');

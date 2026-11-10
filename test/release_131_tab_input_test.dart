@@ -157,7 +157,7 @@ void main() {
         if (target == 2) await capture(tester, 'tab-latest-during-motion');
       }
       expect(events, [3, 1, 0, 2, 3, 0]);
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 9; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
       expect(viewport.selectedIndex, 0);

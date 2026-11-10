@@ -1102,6 +1102,28 @@ class RenderLiquidGlassLayer extends LiquidGlassRenderObject
   }) {
     final stable = identical(geometry, _lastShadowGeometry);
     _lastShadowGeometry = geometry;
+    // A settled capsule must prefer the complete shadow image. The width-only
+    // cache below retains blurred corners, but still composites a dstOut layer
+    // for every shadow on every frame. It is useful while morphing, not while
+    // this exact matte, bounds, DPR and shadow list remain unchanged.
+    if (stable) {
+      if (!identical(_bakedShadowGeometry, geometry) ||
+          !listEquals(_bakedShadowList, shadows) ||
+          _bakedShadowBounds != bounds ||
+          _bakedShadowDpr != devicePixelRatio) {
+        _bakeShadows(geometry, bounds);
+      }
+      if (_bakedShadow case final baked?) {
+        GlassRenderDiagnostics.count(GlassRenderMetric.shadowCacheHits);
+        canvas.drawImageRect(
+          baked,
+          Rect.fromLTWH(0, 0, baked.width.toDouble(), baked.height.toDouble()),
+          _bakedShadowRect.shift(offset),
+          Paint()..filterQuality = FilterQuality.low,
+        );
+        return;
+      }
+    }
     if (_roundedShadows.paint(
       canvas: canvas,
       offset: offset,
@@ -1122,24 +1144,6 @@ class RenderLiquidGlassLayer extends LiquidGlassRenderObject
           GlassRenderDiagnostics.count(GlassRenderMetric.shadowCacheHits),
     )) {
       return;
-    }
-    if (stable) {
-      if (!identical(_bakedShadowGeometry, geometry) ||
-          !listEquals(_bakedShadowList, shadows) ||
-          _bakedShadowBounds != bounds ||
-          _bakedShadowDpr != devicePixelRatio) {
-        _bakeShadows(geometry, bounds);
-      }
-      if (_bakedShadow case final baked?) {
-        GlassRenderDiagnostics.count(GlassRenderMetric.shadowCacheHits);
-        canvas.drawImageRect(
-          baked,
-          Rect.fromLTWH(0, 0, baked.width.toDouble(), baked.height.toDouble()),
-          _bakedShadowRect.shift(offset),
-          Paint()..filterQuality = FilterQuality.low,
-        );
-        return;
-      }
     }
     _drawShadows(canvas, bounds.shift(offset), geometry);
   }
@@ -1190,11 +1194,16 @@ class RenderLiquidGlassLayer extends LiquidGlassRenderObject
     }
     if (area == null) return;
     final dpr = devicePixelRatio;
-    final width = (area.width * dpr).ceil();
-    final height = (area.height * dpr).ceil();
+    // Anchor the offscreen raster to the same physical-pixel grid as the live
+    // canvas. Keeping a fractional origin here rasterized then resampled the
+    // inner cutout at two different phases, most visible at fractional DPR.
+    final left = (area.left * dpr).floorToDouble() / dpr;
+    final top = (area.top * dpr).floorToDouble() / dpr;
+    final width = ((area.right - left) * dpr).ceil();
+    final height = ((area.bottom - top) * dpr).ceil();
     if (width <= 0 || height <= 0) return;
     // Whole physical pixels, so the image is drawn back unscaled.
-    final rect = Rect.fromLTWH(area.left, area.top, width / dpr, height / dpr);
+    final rect = Rect.fromLTWH(left, top, width / dpr, height / dpr);
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder)

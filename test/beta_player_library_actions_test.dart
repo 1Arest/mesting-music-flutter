@@ -60,6 +60,11 @@ class _Library extends LibraryRepository {
   _Library(super.database) : super(ownerId: 'kugou:7');
   int toggles = 0;
   @override
+  Future<void> setFavorite(Track track, {required bool favorite}) async {
+    toggles++;
+  }
+
+  @override
   Future<bool> toggleFavorite(Track track) async {
     toggles++;
     return true;
@@ -134,6 +139,10 @@ void main() {
       expect(find.byTooltip('显示或隐藏歌词'), findsOneWidget);
       await tester.tap(find.byKey(ValueKey('favorite-button-${_track.id}')));
       await tester.pump();
+      // The icon is immediate; the shared coordinator sends the final intent
+      // only after the short quiet window used to fold rapid reversals.
+      expect(library.toggles, 0);
+      await tester.pump(const Duration(milliseconds: 500));
       expect(library.toggles, 1);
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -150,11 +159,13 @@ void main() {
         MestingAudioHandler.notificationToggleFavoriteAction,
       );
       await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
       await tester.pump();
       expect(library.toggles, 2);
       expect(handler.mediaItem.value, null);
       expect(tester.takeException(), null);
       await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 2));
     },
     skip: !DistributionChannel.isBeta,
   );

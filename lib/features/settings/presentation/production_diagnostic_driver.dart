@@ -27,7 +27,6 @@ import '../../experience/presentation/apple_player_controls.dart';
 import '../../experience/presentation/player_queue_panel.dart';
 import '../../music_platform/presentation/beta_personal_profile.dart';
 import '../../../shared/widgets/beta_glass_popover.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../experience/presentation/music_home_catalogues.dart';
 import '../../experience/presentation/editorial_widgets.dart';
 import '../../history/presentation/listening_history_page.dart';
@@ -991,12 +990,9 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
         );
         await WidgetsBinding.instance.endOfFrame;
         final menus = _visible(rootOverlay: true)
-            .where(
-              (e) => profile
-                  ? e.widget is LiquidGlassSurface &&
-                        e.widget.key == liquidGlassSheetSurfaceKey
-                  : e.widget is BetaLiquidMenu,
-            )
+            // Profile and player menus now share the same anchored route.
+            // Observe that live surface while retaining the exact route lease.
+            .where((e) => e.widget is BetaLiquidMenu)
             .toList();
         if (failure != null ||
             menus.length != 1 ||
@@ -1009,12 +1005,9 @@ class ProductionDiagnosticDriver implements DiagnosticDriver {
         await _dismissInteractionOverlay();
         await completed;
         ticket.check();
-        if (_visible(rootOverlay: true).any(
-          (e) => profile
-              ? e.widget is LiquidGlassSurface &&
-                    e.widget.key == liquidGlassSheetSurfaceKey
-              : e.widget is BetaLiquidMenu,
-        )) {
+        if (_visible(
+          rootOverlay: true,
+        ).any((e) => e.widget is BetaLiquidMenu)) {
           throw StateError('menu_close_not_observed');
         }
         FrameTimingProbe.markTransition('menu_closed_$i');

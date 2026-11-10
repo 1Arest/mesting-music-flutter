@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import '../core/services/app_upgrade_p2p_protocol.dart';
 import 'diagnostics.dart';
 import 'leases.dart';
+import 'lifecycle_trace.dart';
 import 'ordered_writer.dart';
 import 'transfer_protocol.dart';
 
@@ -32,6 +33,7 @@ class P8PTransferReceiver {
     required this.send,
     required this.closeTransport,
     this.onDiagnostic,
+    this.onLifecycle,
   }) {
     if (!P8PTransferProtocol.wireId(book.generation)) {
       throw ArgumentError('P8P generation outside wire bounds');
@@ -43,6 +45,8 @@ class P8PTransferReceiver {
   final Future<void> Function(Map<String, Object?>) send;
   final Future<void> Function() closeTransport;
   final P8PDiagnosticObserver? onDiagnostic;
+  final P8PLifecycleObserver? onLifecycle;
+  bool _firstHeaderObserved = false;
   bool _failureObserved = false;
   P8PLeaseBook get book => writer.book;
   final _pending = <int, P8PTransferTicket>{};
@@ -93,9 +97,23 @@ class P8PTransferReceiver {
       throw StateError('p8p_invalid_source_request');
     }
     final ticket = P8PTransferTicket._(lease);
+    final firstRequest = _lastIssued == 0;
     _pending[lease.id] = ticket;
     _lastIssued = lease.id;
-    _send(_control('get', {'request_id': lease.id, 'index': lease.index}));
+    _send(
+      _control('get', {'request_id': lease.id, 'index': lease.index}),
+      accepted: firstRequest && onLifecycle != null
+          ? () {
+              observeP8PLifecycle(
+                onLifecycle,
+                P8PLifecycleEvent(
+                  P8PLifecycleCode.requestEnqueued,
+                  metrics: {'owner_closed': _closed ? 1 : 0},
+                ),
+              );
+            }
+          : null,
+    );
     return ticket;
   }
 
@@ -130,7 +148,15 @@ class P8PTransferReceiver {
           }
           _sourceCapacity = advised;
         }
-        if (!_ready.isCompleted) _ready.complete();
+        if (!_ready.isCompleted) {
+          _ready.complete();
+          if (onLifecycle != null) {
+            observeP8PLifecycle(
+              onLifecycle,
+              P8PLifecycleEvent(P8PLifecycleCode.helloReady),
+            );
+          }
+        }
         return;
       }
       if (!_ready.isCompleted ||
@@ -177,6 +203,15 @@ class P8PTransferReceiver {
           throw const FormatException('p8p_invalid_piece_size');
         }
         ticket._buffer = Uint8List(ticket.lease.bytes);
+        if (!_firstHeaderObserved) {
+          _firstHeaderObserved = true;
+          if (onLifecycle != null) {
+            observeP8PLifecycle(
+              onLifecycle,
+              P8PLifecycleEvent(P8PLifecycleCode.firstHeader),
+            );
+          }
+        }
       } else if (value['type'] == 'piece-end') {
         if (ticket._buffer == null || ticket._received != ticket.lease.bytes) {
           throw const FormatException('p8p_piece_length_mismatch');
@@ -242,9 +277,17 @@ class P8PTransferReceiver {
     ticket._stopped.complete();
   }
 
-  void _send(Map<String, Object?> value) {
+  void _send(Map<String, Object?> value, {void Function()? accepted}) {
+    final operation = Future<void>.sync(() => send(value));
+    if (accepted != null) {
+      // Observe a successful native enqueue independently. Preserve the
+      // original failure-handler ordering even when tracing is enabled.
+      unawaited(
+        operation.then<void>((_) => accepted(), onError: (Object _) {}),
+      );
+    }
     unawaited(
-      Future<void>.sync(() => send(value)).catchError((Object error) {
+      operation.catchError((Object error) {
         _fail(error, _pending[value['request_id']]);
       }),
     );

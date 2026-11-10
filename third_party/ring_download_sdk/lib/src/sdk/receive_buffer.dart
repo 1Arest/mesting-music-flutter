@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import '../core/services/app_upgrade_receive_buffer.dart';
+import 'models.dart';
 
 /// One RTC receive owner. Signalling never awaits tuning. Closing fences new
 /// calls and requests native closure before RTC teardown, with a fixed bound.
@@ -10,12 +11,15 @@ class RingRtcReceiveBufferOwner implements AppUpgradeReceiveBufferOwner {
   RingRtcReceiveBufferOwner({
     MethodChannel? channel,
     void Function(String)? onResult,
+    void Function(RingDownloadDiagnostic)? onDiagnostic,
   }) : _channel = channel ?? const MethodChannel('ring_download_sdk/network'),
-       _onResult = onResult {
+       _onResult = onResult,
+       _onDiagnostic = onDiagnostic {
     _begin = _call<bool>('beginRtcReceiveBuffer', {'owner': _owner});
   }
   final MethodChannel _channel;
   final void Function(String)? _onResult;
+  final void Function(RingDownloadDiagnostic)? _onDiagnostic;
   final _owner = const Uuid().v4().replaceAll('-', '');
   late final Future<bool?> _begin;
   final _seen = <String>{};
@@ -120,12 +124,37 @@ class RingRtcReceiveBufferOwner implements AppUpgradeReceiveBufferOwner {
         'unmatched',
         'partial',
       };
-      final code = result is Map && codes.contains(result['code'])
-          ? result['code'] as String
-          : 'unavailable';
+      final observation = result is Map && codes.contains(result['code'])
+          ? result
+          : const <Object?, Object?>{};
+      final code = observation['code'] as String? ?? 'unavailable';
       if (!_closed) {
         try {
           _onResult?.call('receive_buffer_$code');
+        } catch (_) {}
+        if (_closed) return;
+        final matched = observation['matched'];
+        final bytes = observation['minBufferBytes'];
+        final matchedSockets = matched is int && matched >= 0 && matched <= 8
+            ? matched
+            : null;
+        final minimumBytes =
+            matchedSockets != null &&
+                matchedSockets > 0 &&
+                bytes is int &&
+                bytes > 0 &&
+                bytes <= 64 * 1024 * 1024
+            ? bytes
+            : null;
+        try {
+          _onDiagnostic?.call(
+            RingDownloadDiagnostic(
+              stage: 'rtc',
+              code: 'receive_buffer_$code',
+              matchedReceiveSockets: matchedSockets,
+              minReceiveBufferBytes: minimumBytes,
+            ),
+          );
         } catch (_) {}
       }
     } finally {

@@ -16,6 +16,7 @@ import '../domain/platform_search_user.dart';
 import 'netease_playback_log.dart';
 import 'netease_footprint.dart';
 import 'netease_preview.dart';
+import '../../../shared/models/song_search_facts.dart';
 
 /// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
 /// the same Track / catalogue models as Kugou, with provider-qualified IDs.
@@ -211,10 +212,121 @@ class NeteaseMusicRepository {
     );
     final values = rows(result['songs']);
     final total = int.tryParse('${result['songCount']}');
+    final originals = <String>{};
+    final present = values.map((row) => '${row['id']}').toSet();
+    for (final row in values) {
+      final original = object(row['originSongSimpleData']);
+      final id = '${original['songId'] ?? ''}';
+      // Recover only the server's explicit original link for this exact song.
+      // A cover's text or a guessed singer/ID can never manufacture a result.
+      final originalName = clean(
+        original['name'],
+      ).replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      final term = query.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      final related =
+          originalName.isNotEmpty &&
+          term.contains(originalName) &&
+          (term == originalName ||
+              rows(original['artists']).any(
+                (a) =>
+                    clean(a['name']).isNotEmpty &&
+                    term.contains(
+                      clean(
+                        a['name'],
+                      ).replaceAll(RegExp(r'\s+'), '').toLowerCase(),
+                    ),
+              ));
+      if (RegExp(r'^[1-9][0-9]*$').hasMatch(id) &&
+          !present.contains(id) &&
+          related) {
+        originals.add(id);
+      }
+    }
+    final recovered = <Map<String, dynamic>>[];
+    if (originals.isNotEmpty) {
+      try {
+        final detail = await call('/song/detail', {
+          'ids': originals.take(6).toList(),
+        }, abort);
+        final privileges = {
+          for (final p in rows(detail['privileges'])) '${p['id']}': p,
+        };
+        for (final row in rows(detail['songs'])) {
+          if (originals.contains('${row['id']}')) {
+            recovered.add({
+              ...row,
+              'originCoverType': 1,
+              'privilege': row['privilege'] ?? privileges['${row['id']}'],
+            });
+          }
+        }
+      } on Object {
+        // A failed enrichment retains all upstream songs, including trials.
+      }
+    }
+    final complete = [...values, ...recovered];
     return PlatformSearchPage(
-      tracks(values),
+      tracks(complete),
       total,
       total == null ? values.length >= 30 : page * 30 < total,
+      facts: {
+        for (final row in complete)
+          if (track(row) != null) track(row)!.id: searchFacts(row),
+      },
+    );
+  }
+
+  static SongSearchFacts searchFacts(Map<String, dynamic> row) {
+    final original = object(row['originSongSimpleData']);
+    return SongSearchFacts(
+      kind: switch (int.tryParse('${row['originCoverType']}')) {
+        1 => SearchRecordingKind.original,
+        2 => SearchRecordingKind.cover,
+        3 => SearchRecordingKind.rework,
+        _ => SearchRecordingKind.unknown,
+      },
+      membership: row['fee'] == 1 || row['fee'] == 4,
+      originalArtists: rows(
+        original['artists'],
+      ).map((a) => clean(a['name'])).where((n) => n.isNotEmpty).toList(),
+      originalTitle: clean(original['name']),
+      originalWorkId: '${original['songId'] ?? ''}',
+      originalAlbum: clean(object(original['albumMeta'])['name']),
+    );
+  }
+
+  /// Resolve account-specific permission using only the normal URL metadata.
+  /// Search keeps restricted songs; no media is played/downloaded/reported.
+  Future<SongSearchFacts> inspectSearchAvailability(
+    Track value,
+    SongSearchFacts facts, {
+    Future<void>? abortTrigger,
+  }) async {
+    if (api.session == null) {
+      return facts.withAccess(SearchPlaybackAccess.restricted, label: '需登录网易云');
+    }
+    final payload = await call('/song/url', {
+      'id': songId(value.id),
+      'level': 'standard',
+    }, abortTrigger);
+    final values = rows(payload['data']);
+    if (values.isEmpty) {
+      return facts.withAccess(SearchPlaybackAccess.restricted);
+    }
+    final row = values.first;
+    final uri = Uri.tryParse('${row['url'] ?? ''}');
+    if (uri == null ||
+        !{'http', 'https'}.contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      return facts.withAccess(SearchPlaybackAccess.restricted);
+    }
+    if (neteaseResponseIsPreview(row, value.duration)) {
+      return facts.withAccess(SearchPlaybackAccess.preview);
+    }
+    return facts.withAccess(
+      neteaseMilliseconds(row['time']) > 0 && value.duration > Duration.zero
+          ? SearchPlaybackAccess.full
+          : SearchPlaybackAccess.unknown,
     );
   }
 

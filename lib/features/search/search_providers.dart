@@ -22,6 +22,10 @@ import 'data/kugou_music_source.dart';
 import 'data/music_search_repository.dart';
 import 'data/netease_music_source.dart';
 import 'domain/music_source.dart';
+import 'data/fused_song_search.dart';
+import '../music_platform/cross_platform_music_scope.dart';
+import '../../shared/models/song_search_facts.dart';
+import '../music_platform/retained_kugou_scope.dart';
 
 final musicSearchHttpClientProvider = Provider<http.Client>((ref) {
   final client = SystemMusicIoClient();
@@ -127,12 +131,33 @@ final platformSearchRepositoryProvider = Provider<PlatformSearchRepository>((
   ref,
 ) {
   final api = ref.watch(musicPlatformApiProvider);
-  return ref.watch(usesNeteaseProvider)
+  final netease = ref.watch(usesNeteaseProvider);
+  final primary = netease
       ? NeteaseSearchAdapter(api, ref.watch(neteaseMusicRepositoryProvider))
       : PlatformSearchRepository(api);
+  if (ref.watch(usesQishuiProvider)) return primary;
+  // A retained source login can change while the selected platform stays put.
+  // Discard its old permission ranking as well as its transport in that case.
+  ref.watch(retainedKugouMutationProvider);
+  ref.watch(retainedNeteaseEpochProvider);
+  return FusedSongSearchRepository(
+    api,
+    primary: primary,
+    primaryLabel: netease ? '网易云' : '酷狗',
+    secondaryLabel: netease ? '酷狗' : '网易云',
+    secondary: () async => netease
+        ? PlatformSearchRepository(
+            await ref.read(supplementaryKugouApiProvider.future),
+          )
+        : NeteaseSearchAdapter(
+            api,
+            await ref.read(supplementaryNeteaseMusicProvider.future),
+          ),
+  );
 });
 
 class MusicSearchController extends Notifier<MusicSearchState> {
+  final _chosenSources = <String, String>{};
   final _browse = CachedBrowseLoader();
   static const _legacyRecentKey = 'music_recent_searches';
   String _recentSearchesKey = _legacyRecentKey;
@@ -152,6 +177,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
 
   @override
   MusicSearchState build() {
+    _chosenSources.clear();
     // Rebuilding for a platform/account change invalidates in-flight pages as
     // well as their rendered rows; public search responses are owner-bound too.
     ++_generation;
@@ -159,6 +185,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
     _scheduledQuery = null;
     _debounce?.cancel();
     _cancelPlatform();
+    if (DistributionChannel.isBeta) ref.watch(platformSearchRepositoryProvider);
     ref.watch(
       platformAccountProvider.select((s) => (s.value?.ownerId, s.value?.token)),
     );
@@ -221,6 +248,7 @@ class MusicSearchController extends Notifier<MusicSearchState> {
   }
 
   void _beginQuery(String query) {
+    _chosenSources.clear();
     state = state.copyWith(
       query: query,
       localTracks: DistributionChannel.isBeta ? null : const [],
@@ -336,33 +364,80 @@ class MusicSearchController extends Notifier<MusicSearchState> {
     }
     try {
       final repository = ref.read(platformSearchRepositoryProvider);
-      final result = await _browse.load(
-        key: page,
-        request: () =>
-            repository.search(query, page: page, abortTrigger: abort.future),
-        onUpdate: (previous, current) {
-          if (!ref.mounted ||
-              generation != _generation ||
-              state.query != query) {
-            return;
-          }
-          final items = state.onlineTracks.toList();
-          replaceBrowsePage(
-            items,
-            previous.tracks,
-            current.tracks,
-            (track) => track.id,
-            fallbackIndex: (page - 1) * 30,
-          );
-          state = state.copyWith(
-            onlineTracks: items,
-            total: current.total,
-            hasMore: page == _page ? current.hasMore : state.hasMore,
-            fromCache: false,
-          );
-        },
-      );
+      // Fusion owns independent source cursors and cumulative grouping. A
+      // stale-while-revalidate callback must not reset those cursors in the
+      // background after later pages have already been appended.
+      final result = repository is FusedSongSearchRepository
+          ? await repository.search(
+              query,
+              page: page,
+              abortTrigger: abort.future,
+            )
+          : await _browse.load(
+              key: page,
+              request: () => repository.search(
+                query,
+                page: page,
+                abortTrigger: abort.future,
+              ),
+              onUpdate: (previous, current) {
+                if (!ref.mounted ||
+                    generation != _generation ||
+                    state.query != query) {
+                  return;
+                }
+                final items = state.onlineTracks.toList();
+                replaceBrowsePage(
+                  items,
+                  previous.tracks,
+                  current.tracks,
+                  (track) => track.id,
+                  fallbackIndex: (page - 1) * 30,
+                );
+                state = state.copyWith(
+                  onlineTracks: items,
+                  total: current.total,
+                  hasMore: page == _page ? current.hasMore : state.hasMore,
+                  fromCache: false,
+                );
+              },
+            );
       if (generation != _generation) return;
+      if (result is FusedSongSearchPage) {
+        final tracks = result.tracks
+            .map((preferred) {
+              final choices = result.sources[preferred.id] ?? [preferred];
+              final selectedIds = choices
+                  .map((t) => _chosenSources[t.id])
+                  .whereType<String>()
+                  .toSet();
+              return choices.firstWhere(
+                (t) => selectedIds.contains(t.id),
+                orElse: () => preferred,
+              );
+            })
+            .toList(growable: false);
+        _page = page;
+        _rememberQuery(query);
+        state = state.copyWith(
+          onlineTracks: tracks,
+          sourceChoices: result.sources,
+          songFacts: result.facts,
+          warnings: result.warnings,
+          localTracks: const [],
+          isLoading: false,
+          isLoadingMore: false,
+          clearTotal: true,
+          hasMore: result.hasMore,
+          clearError: true,
+          // A partial source failure is explicitly retryable. Do not let the
+          // viewport automatically hammer the same failed source page forever.
+          moreError: result.warnings.isEmpty ? null : '重试未完成的音源',
+          clearMoreError: result.warnings.isEmpty,
+          fromCache: false,
+        );
+        return;
+      }
       // Remove repeated file IDs only; never collapse distinct recordings by
       // title/artist or re-rank upstream results with the legacy fuzzy matcher.
       final merged = <String, Track>{
@@ -409,6 +484,21 @@ class MusicSearchController extends Notifier<MusicSearchState> {
     return const <Track>[];
   }
 
+  /// Selection changes the recording shown/played, never the active platform.
+  void chooseSongSource(String currentId, Track selected) {
+    final choices = state.sourceChoices[currentId];
+    if (choices == null || !choices.any((t) => t.id == selected.id)) return;
+    for (final source in choices) {
+      _chosenSources[source.id] = selected.id;
+    }
+    state = state.copyWith(
+      onlineTracks: [
+        for (final track in state.onlineTracks)
+          track.id == currentId ? selected : track,
+      ],
+    );
+  }
+
   void _rememberQuery(String query) {
     final recent = [...state.recentSearches]
       ..remove(query)
@@ -442,6 +532,8 @@ class MusicSearchState {
     this.hasMore = false,
     this.isLoadingMore = false,
     this.moreError,
+    this.sourceChoices = const {},
+    this.songFacts = const {},
   });
 
   final String query;
@@ -456,6 +548,8 @@ class MusicSearchState {
   final bool hasMore;
   final bool isLoadingMore;
   final String? moreError;
+  final Map<String, List<Track>> sourceChoices;
+  final Map<String, SongSearchFacts> songFacts;
 
   bool get hasResults => localTracks.isNotEmpty || onlineTracks.isNotEmpty;
 
@@ -475,6 +569,8 @@ class MusicSearchState {
     bool? isLoadingMore,
     String? moreError,
     bool clearMoreError = false,
+    Map<String, List<Track>>? sourceChoices,
+    Map<String, SongSearchFacts>? songFacts,
   }) {
     return MusicSearchState(
       query: query ?? this.query,
@@ -489,6 +585,8 @@ class MusicSearchState {
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       moreError: clearMoreError ? null : moreError ?? this.moreError,
+      sourceChoices: sourceChoices ?? this.sourceChoices,
+      songFacts: songFacts ?? this.songFacts,
     );
   }
 }

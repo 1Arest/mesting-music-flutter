@@ -10,7 +10,7 @@ import '../../../core/database/app_database.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../../shared/widgets/beta_glass_popover.dart';
 import '../../auth/presentation/beta_account_card.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../experience/presentation/editorial_widgets.dart';
@@ -47,24 +47,28 @@ class BetaPersonalProfile extends ConsumerStatefulWidget {
 }
 
 class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
+  final _accountAnchor = GlobalKey(debugLabel: 'personal-account-menu-anchor');
   bool _menuOpen = false;
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
   Future<void> _sign() async => _open(const UnifiedRewardPage());
 
   /// Shared by the real button and the fixed interaction diagnostic. Never
-  /// enqueue duplicate sheets when two taps arrive before the barrier paints.
+  /// enqueue duplicate popovers when two taps arrive before the barrier paints.
   Future<void> openAccountMenu({
     ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
   }) async {
     if (_menuOpen) return;
+    final box = _accountAnchor.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final anchor = box.localToGlobal(Offset.zero) & box.size;
     _menuOpen = true;
     try {
-      final action = await showLiquidGlassBottomSheet<String>(
+      // Reuse Qishui's anchored glass route and reversible liquid motion. The
+      // existing diagnostic still leases the exact route through this callback.
+      final action = await showBetaGlassPopover<String>(
         context: context,
-        useRootNavigator: true,
-        useSafeArea: true,
-        waitForExit: true,
+        anchor: anchor,
         onRouteCreated: onRouteCreated,
         builder: (sheet) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 18),
@@ -135,6 +139,7 @@ class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
             key: const ValueKey('profile-heading-sliver'),
             child: _PersonalHeading(
               signedIn: session != null,
+              accountAnchor: _accountAnchor,
               onAccount: openAccountMenu,
             ),
           ),
@@ -188,9 +193,14 @@ class _ProfilePart extends StatelessWidget {
 }
 
 class _PersonalHeading extends StatelessWidget {
-  const _PersonalHeading({required this.signedIn, required this.onAccount});
+  const _PersonalHeading({
+    required this.signedIn,
+    required this.onAccount,
+    required this.accountAnchor,
+  });
   final bool signedIn;
   final VoidCallback onAccount;
+  final GlobalKey accountAnchor;
   @override
   Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 14),
@@ -213,6 +223,7 @@ class _PersonalHeading extends StatelessWidget {
             const Spacer(),
             if (signedIn)
               BetaGlassButton(
+                key: accountAnchor,
                 label: '账号选项',
                 width: 48,
                 height: 48,
@@ -274,13 +285,10 @@ class _PersonalIdentity extends ConsumerWidget {
                   fontWeight: MusicTypography.titleWeight,
                 ),
               ),
-              if (session.platform == MusicPlatform.netease)
-                const NeteaseLocalSvipBadge(inline: true),
+              const NeteaseLocalSvipBadge(inline: true),
             ],
           ),
         ),
-        if (session.platform != MusicPlatform.netease)
-          const NeteaseLocalSvipBadge(),
         const SizedBox(height: 9),
         Text(
           '${session.platformLabel}账号',

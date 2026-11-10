@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/track.dart';
+import 'library_collection_masthead.dart';
 import '../../../shared/widgets/artwork_image.dart';
+import 'platform_ranking_header.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../experience/presentation/editorial_widgets.dart';
 import '../music_platform_providers.dart';
@@ -206,6 +208,52 @@ class _PlatformCatalogDetailPageState
     }
   }
 
+  /// Artist information has its own compact navigation. Album/song collection
+  /// headers must not push the artist's album/MV/follow actions out of reach.
+  Widget _artistHeader(BuildContext context) => Padding(
+    padding: const EdgeInsets.all(22),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: ArtworkImage(uri: widget.hit.cover, width: 80, height: 80),
+            ),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.hit.subtitle.isNotEmpty) ...[
+                    Text(
+                      widget.hit.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  PlatformPlayAllButton(
+                    loading: _playingAll,
+                    onPressed: _busy || _tracks.isEmpty ? null : _playAll,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (ref.watch(usesNeteaseProvider))
+          NeteaseResourceActions(
+            item: NeteaseItem(
+              id: widget.hit.id,
+              name: widget.hit.title,
+              kind: NeteaseEntity.artist,
+            ),
+          ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     if (widget.hit.kind == PlatformSearchKind.playlists) {
@@ -225,66 +273,51 @@ class _PlatformCatalogDetailPageState
         child: const EditorialEmpty('账号已变化，请返回后重新打开'),
       );
     }
+    final coverHeader = widget.hit.kind != PlatformSearchKind.artists;
     return PlatformPageFrame(
       title: widget.hit.title,
-      child: AutomaticSongPaging(
-        songListId:
-            'catalog:${widget.hit.kind.name}:${widget.hit.globalId.isEmpty ? widget.hit.id : widget.hit.globalId}',
-        enabled: _more && !_busy && !_playingAll && _error == null,
-        onLoadMore: _load,
-        child: ListView.builder(
-          cacheExtent: MediaQuery.sizeOf(context).height,
-          key: PageStorageKey(
-            'catalog-${widget.hit.kind.name}-${widget.hit.id}',
-          ),
-          padding: BetaContentInsets.musicPaddingOf(
-            context,
-            EdgeInsets.only(bottom: 190),
-          ),
-          itemCount: _tracks.length + 2,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
+      headerInScroll: coverHeader,
+      child: PlatformRankingScrollShell(
+        title: widget.hit.title,
+        enabled: coverHeader,
+        child: AutomaticSongPaging(
+          songListId:
+              'catalog:${widget.hit.kind.name}:${widget.hit.globalId.isEmpty ? widget.hit.id : widget.hit.globalId}',
+          enabled: _more && !_busy && !_playingAll && _error == null,
+          onLoadMore: _load,
+          child: ListView.builder(
+            cacheExtent: MediaQuery.sizeOf(context).height,
+            key: PageStorageKey(
+              'catalog-${widget.hit.kind.name}-${widget.hit.id}',
+            ),
+            padding: BetaContentInsets.musicPaddingOf(
+              context,
+              EdgeInsets.only(bottom: 190),
+            ),
+            itemCount: _tracks.length + 2,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                if (!coverHeader) return _artistHeader(context);
+                return Column(
                   children: [
-                    Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(
-                            widget.hit.kind == PlatformSearchKind.artists
-                                ? 50
-                                : 14,
-                          ),
-                          child: ArtworkImage(
-                            uri: widget.hit.cover,
-                            width: 80,
-                            height: 80,
-                          ),
+                    LibraryCollectionMasthead(
+                      title: widget.hit.title,
+                      cover: widget.hit.cover.isNotEmpty
+                          ? widget.hit.cover
+                          : _tracks.firstOrNull?.coverAsset ?? '',
+                      total: _tracks.length,
+                      countLabel: _more ? '已加载 ${_tracks.length} 首歌曲' : null,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: PlatformPlayAllButton(
+                          loading: _playingAll,
+                          total: _more ? null : _tracks.length,
+                          onPressed: _busy || _tracks.isEmpty ? null : _playAll,
                         ),
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (widget.hit.subtitle.isNotEmpty) ...[
-                                Text(
-                                  widget.hit.subtitle,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                              ],
-                              PlatformPlayAllButton(
-                                loading: _playingAll,
-                                onPressed: _busy || _tracks.isEmpty
-                                    ? null
-                                    : _playAll,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     if (ref.watch(usesNeteaseProvider) &&
                         widget.hit.kind != PlatformSearchKind.playlists)
@@ -298,25 +331,25 @@ class _PlatformCatalogDetailPageState
                         ),
                       ),
                   ],
-                ),
-              );
-            }
-            if (index <= _tracks.length) {
-              return EditorialTrackRow(
-                track: _tracks[index - 1],
-                contextTracks: _tracks,
-              );
-            }
-            if (_busy) return const PlatformFeedbackState(loading: true);
-            if (_error != null) {
-              return TextButton(onPressed: _load, child: Text(_error!));
-            }
-            return _tracks.isEmpty
-                ? const EditorialEmpty('平台暂未返回歌曲')
-                : _more
-                ? const SizedBox(height: 12)
-                : const MusicListEnd();
-          },
+                );
+              }
+              if (index <= _tracks.length) {
+                return EditorialTrackRow(
+                  track: _tracks[index - 1],
+                  contextTracks: _tracks,
+                );
+              }
+              if (_busy) return const PlatformFeedbackState(loading: true);
+              if (_error != null) {
+                return TextButton(onPressed: _load, child: Text(_error!));
+              }
+              return _tracks.isEmpty
+                  ? const EditorialEmpty('平台暂未返回歌曲')
+                  : _more
+                  ? const SizedBox(height: 12)
+                  : const MusicListEnd();
+            },
+          ),
         ),
       ),
     );

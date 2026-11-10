@@ -77,22 +77,21 @@ class DefaultRingTransferEngine
           ? AppUpgradeUploadBudget.mobile
           : null,
       receiveBufferFactory: config.enableP2P && Platform.isAndroid
-          ? () => RingRtcReceiveBufferOwner(
-              onResult: (code) {
-                config.onDiagnostic?.call(
-                  RingDownloadDiagnostic(stage: 'rtc', code: code),
-                );
-              },
-            )
+          ? () => RingRtcReceiveBufferOwner(onDiagnostic: config.onDiagnostic)
           : null,
       allowSharing: config.allowSharing,
       enableP8P: config.enableP8P,
+      p8pPeerRaceLimit: config.p8pPeerRaceLimit,
+      p8pSourcePortDiversity: config.p8pSourcePortDiversity,
       // Foreground only; heartbeat renews the server lease while Wi-Fi permits.
       sharingDuration: null,
       diagnostic: (event) {
         AppUpgradeP2PDiagnostics.record(event);
         try {
-          config.onDiagnostic?.call(
+          final callback = config.onDiagnostic;
+          if (callback == null) return;
+          final safe = event.toJson();
+          callback(
             RingDownloadDiagnostic(
               stage: AppUpgradeP2PDiagnostic.safeCode(event.stage),
               code: AppUpgradeP2PDiagnostic.safeCode(event.code),
@@ -104,6 +103,13 @@ class DefaultRingTransferEngine
               peerBytes: event.peerBytes,
               seedBytes: event.seedBytes,
               elapsedMs: event.elapsedMs,
+              attempt: safe['attempt'] as String?,
+              durationMs: event.durationMs,
+              connectionDetails: event.code == 'peer_failure_detail'
+                  ? Map<String, int>.unmodifiable(
+                      safe['metrics'] as Map<String, int>,
+                    )
+                  : const {},
             ),
           );
         } catch (_) {

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'diagnostics.dart';
 import 'leases.dart';
+import 'lifecycle_trace.dart';
 import 'ordered_writer.dart';
 import 'source_goodput.dart';
 import 'sources.dart';
@@ -21,6 +22,9 @@ class _SourceState {
   bool failed = false;
   bool closingRequested = false;
   int availableAfterMicros = 0;
+  int prefixRecoveries = 0;
+  int? recoveryPrefix, recoveryProbe;
+  bool get recovering => recoveryPrefix != null;
   final jobs = <int, _Job>{};
   final diagnosticEvents = <P8PDiagnosticCode>{};
 }
@@ -32,6 +36,7 @@ class _Job {
   final _SourceState source;
   bool cancelled = false, verified = false;
   int? cancelAt;
+  int? prefixSinceMicros;
   int receivedBytes = 0, lastProgressMicros;
 }
 
@@ -46,25 +51,29 @@ class P8PCoordinator {
     this.hedgeAfter = const Duration(seconds: 1),
     this.stopGrace = const Duration(seconds: 1),
     this.onDiagnostic,
+    this.onLifecycle,
   });
   final P8POrderedWriter writer;
   final int Function() clockMicros;
   final Duration requestTimeout, hedgeAfter, stopGrace;
   final P8PDiagnosticObserver? onDiagnostic;
+  final P8PLifecycleObserver? onLifecycle;
+  int _snapshotSequence = 0;
   P8PLeaseBook get book => writer.book;
   final _sources = <String, _SourceState>{};
+  final _retiredSources = <String, _SourceState>{};
   final _jobs = <int, _Job>{};
   final _cleanup = <Future<void>>[];
   Completer<void>? _wake;
   bool _closed = false;
   Future<void>? _closing;
   final _metrics = <String, int>{};
-  // Only four fixed local aliases are exported; opaque source/session IDs
+  // Only six fixed local aliases are exported; opaque source/session IDs
   // never become metric keys. Reading this snapshot cannot change scheduling,
   // goodput samples, ownership, clocks or source availability.
   Map<String, int> get metrics => Map.unmodifiable({
     ..._metrics,
-    for (final state in _sources.values)
+    for (final state in [..._retiredSources.values, ..._sources.values])
       if (state.diagnosticAlias case final String alias) ...{
         'source_${alias}_requests': state.diagnosticRequests,
         'source_${alias}_verified_bytes': state.diagnosticVerifiedBytes,
@@ -75,6 +84,22 @@ class P8PCoordinator {
   });
   void _count(String key, [int value = 1]) =>
       _metrics.update(key, (old) => old + value, ifAbsent: () => value);
+
+  /// A live source has delivered a SHA-verified piece, rather than just hello.
+  bool hasVerifiedSource(String id) {
+    final state = _sources[id];
+    return state != null && !state.failed && state.samples > 0;
+  }
+
+  /// A failed startup probe can be a normally acknowledged lease timeout.
+  /// Retire that unproven source without treating cancellation as a wire fault;
+  /// its physical requests and native owner still have to stop before reuse.
+  void rejectUnprovenSource(String id) {
+    final state = _sources[id];
+    if (_closed || state == null || state.samples > 0) return;
+    _closeSource(state, P8PDiagnosticCode.sourceStopped);
+  }
+
   void _notify() {
     if (_wake?.isCompleted == false) _wake!.complete();
   }
@@ -102,17 +127,52 @@ class P8PCoordinator {
     if (_closed ||
         source.closed ||
         _sources.containsKey(source.id) ||
-        _sources.length >= 4) {
+        _retiredSources.containsKey(source.id) ||
+        _sources.length >= 4 ||
+        _sources.length + _retiredSources.length >= 6) {
       return false;
     }
     final alias =
-        const {'peer1', 'peer2', 'seed', 'https'}.contains(diagnosticAlias) &&
-            !_sources.values.any(
-              (state) => state.diagnosticAlias == diagnosticAlias,
-            )
+        const {
+              'peer1',
+              'peer2',
+              'peer3',
+              'peer4',
+              'seed',
+              'https',
+            }.contains(diagnosticAlias) &&
+            ![
+              ..._retiredSources.values,
+              ..._sources.values,
+            ].any((state) => state.diagnosticAlias == diagnosticAlias)
         ? diagnosticAlias
         : null;
     _sources[source.id] = _SourceState(source, alias);
+    _notify();
+    return true;
+  }
+
+  /// A failed source frees admission only after its real close and all request
+  /// owners stop. Keep its metrics and identity consumed for this task. Four
+  /// live sources and six lifetime records cover HTTPS, seed and four peers.
+  Future<bool> retireFailedSource(String id) async {
+    final state = _sources[id];
+    if (_closed || state == null || !(state.failed || state.source.closed)) {
+      return false;
+    }
+    try {
+      _closeSource(state, P8PDiagnosticCode.sourceStopped);
+      await state.source.close();
+      await Future.wait(state.jobs.values.map((job) => job.request.stopped));
+    } catch (_) {
+      // Failed or pending physical disposal never grants replacement capacity.
+      return false;
+    }
+    if (_closed || state.jobs.isNotEmpty || !identical(_sources[id], state)) {
+      return false;
+    }
+    _sources.remove(id);
+    _retiredSources[id] = state;
     _notify();
     return true;
   }
@@ -129,18 +189,58 @@ class P8PCoordinator {
     return sum + remaining;
   });
 
+  int _tailRecoveryMicros(_Job job, _SourceState replacement, double estimate) {
+    final unit = job.request.progressUnitBytes;
+    final remaining = job.request.lease.bytes - job.receivedBytes;
+    if (unit <= 0 ||
+        unit > 64 * 1024 ||
+        job.receivedBytes <= 0 ||
+        remaining <= 0 ||
+        remaining > min(unit, job.request.lease.bytes ~/ 4) ||
+        clockMicros() - replacement.lastSample >
+            P8PSourceGoodput.sampleTtlMicros) {
+      return 0;
+    }
+    // A nearly complete RTC message may be waiting for one recovery round.
+    // Price that wait using the alternative's verified whole-piece cost,
+    // capped at one existing rescue interval. Never change the hard lease,
+    // request slots, verification rules or source's measured goodput.
+    return min(hedgeAfter.inMicroseconds, estimate.ceil());
+  }
+
   _SourceState? _choose(int index, {String? excluding}) {
-    final candidates = _sources.values
+    var candidates = _sources.values
         .where(
           (state) =>
               !state.failed &&
+              (!state.recovering ||
+                  (excluding == null &&
+                      book.persistedPieces > state.recoveryPrefix! &&
+                      state.jobs.isEmpty)) &&
               clockMicros() >= state.availableAfterMicros &&
               state.source.id != excluding &&
               state.source.canServe(index),
         )
         .toList();
+    if (index == book.persistedPieces && excluding == null) {
+      final now = clockMicros();
+      final proven = candidates
+          .where(
+            (state) =>
+                !state.recovering &&
+                state.samples > 0 &&
+                now - state.lastSample <= P8PSourceGoodput.sampleTtlMicros,
+          )
+          .toList();
+      // Give a new source one lookahead probe while a recently verified
+      // origin owns the writable prefix. If all proven owners are busy,
+      // wait for capacity instead of putting a cold probe on that prefix.
+      // Without a proven provider, cold origins can still make first proof.
+      if (proven.isNotEmpty) candidates = proven;
+    }
     double estimate(_SourceState state) {
-      if (state.samples == 0 ||
+      if (state.recovering ||
+          state.samples == 0 ||
           clockMicros() - state.lastSample > P8PSourceGoodput.sampleTtlMicros) {
         return state.jobs.isEmpty ? -1 : double.infinity;
       }
@@ -153,7 +253,9 @@ class P8PCoordinator {
     final best = candidates.first;
     // Wait for a proven fast source rather than filling every free slot with
     // a slower source. Cold origins get one finite probe, not a full queue.
-    final capacity = best.samples == 0 ? 1 : best.source.capacity;
+    final capacity = best.recovering || best.samples == 0
+        ? 1
+        : best.source.capacity;
     return best.jobs.length >= capacity ? null : best;
   }
 
@@ -190,7 +292,21 @@ class P8PCoordinator {
     );
     if (lease == null) return null;
     try {
+      if (onLifecycle != null && state.diagnosticRequests == 0) {
+        observeP8PLifecycle(
+          onLifecycle,
+          P8PLifecycleEvent(
+            P8PLifecycleCode.requestAllocated,
+            alias: state.diagnosticAlias,
+            metrics: {
+              'request_timeout_us': lease.deadlineMicros - lease.startedMicros,
+              'reserved_slots': book.reservations,
+            },
+          ),
+        );
+      }
       final request = state.source.start(lease);
+      if (state.recovering) state.recoveryProbe = lease.id;
       state.goodput.started(lease.startedMicros);
       if (state.jobs.isEmpty) state.diagnosticBusySince = lease.startedMicros;
       state.diagnosticRequests++;
@@ -205,6 +321,10 @@ class P8PCoordinator {
             job.verified = true;
             state.goodput.verified(lease.bytes, clockMicros());
             state.diagnosticVerifiedBytes += lease.bytes;
+            if (state.recoveryProbe == lease.id) {
+              state.recoveryPrefix = state.recoveryProbe = null;
+              _count('source_rejoins');
+            }
             _count('verified_bytes', lease.bytes);
             _notify();
           },
@@ -278,12 +398,40 @@ class P8PCoordinator {
     }
   }
 
+  void _rescuePrefix(_Job job, {bool hedged = false}) {
+    final state = job.source;
+    // A proven RTC owner supports request-scoped cancel acknowledgement.
+    // One prefix stall need not destroy its siblings or the whole transport.
+    // Quarantine new work until that prefix is persisted and all existing
+    // physical owners stop, then admit one lookahead proof. A second rescue
+    // is terminal for this task; cancellation still has the normal stop grace.
+    if (state.source is P8PRtcPieceSource &&
+        state.samples > 0 &&
+        state.prefixRecoveries == 0) {
+      _traceRescueSlots();
+      state.prefixRecoveries++;
+      state.recoveryPrefix = job.request.lease.index;
+      _observe(state, P8PDiagnosticCode.prefixRescued, job);
+      book.cancel(job.request.lease);
+      job.cancelled = true;
+      job.cancelAt = clockMicros();
+      state.diagnosticCancelled++;
+      job.request.cancel();
+      _count('source_recoveries');
+    } else if (hedged) {
+      state.failed = true;
+    } else {
+      _closeSource(state, P8PDiagnosticCode.prefixRescued, job);
+    }
+  }
+
   void _closeSource(
     _SourceState state,
     P8PDiagnosticCode reason, [
     _Job? cause,
   ]) {
     if (state.closingRequested) return;
+    if (reason == P8PDiagnosticCode.prefixRescued) _traceRescueSlots();
     state.closingRequested = true;
     state.failed = true;
     _observe(state, reason, cause);
@@ -295,6 +443,43 @@ class P8PCoordinator {
     final closing = state.source.close();
     _cleanup.add(closing);
     unawaited(closing.catchError((Object _) {}));
+  }
+
+  void _traceRescueSlots() {
+    if (onLifecycle == null) return;
+    final now = clockMicros();
+    final sequence = ++_snapshotSequence;
+    final leases = book.diagnosticReservations;
+    for (var position = 0; position < leases.length; position++) {
+      final reservation = leases[position];
+      final lease = reservation.lease;
+      final phase = reservation.phase;
+      final ready =
+          phase == P8PReservationPhase.ready ||
+          phase == P8PReservationPhase.writing;
+      final state = _sources[lease.source] ?? _retiredSources[lease.source];
+      observeP8PLifecycle(
+        onLifecycle,
+        P8PLifecycleEvent(
+          P8PLifecycleCode.rescueSlot,
+          alias: state?.diagnosticAlias,
+          metrics: {
+            'snapshot_sequence': sequence, 'slot_position': position + 1,
+            'reserved_slots': leases.length,
+            'slot_phase': phase.index + 1,
+            'piece_ahead': lease.index - book.persistedPieces,
+            // The latest ordinary poll owns progress observation; tracing never
+            // invokes an adapter getter or discounts unverified ownership.
+            'body_bytes': ready
+                ? lease.bytes
+                : (_jobs[lease.id]?.receivedBytes ?? 0),
+            'body_expected_bytes': lease.bytes,
+            'request_age_us': max(0, now - lease.startedMicros),
+            'request_remaining_us': max(0, lease.deadlineMicros - now),
+          },
+        ),
+      );
+    }
   }
 
   /// Also used while the writer is paused and independent HTTPS owns startup.
@@ -347,7 +532,13 @@ class P8PCoordinator {
         ) {
           if (book.phase(index) != P8PPiecePhase.missing) continue;
           final source = _choose(index);
-          if (source == null) break;
+          if (source == null) {
+            // A missing prefix still needs its own reservation before any
+            // lookahead. Once that owner exists, a busy gap need not prevent
+            // other sources from filling the remaining bounded window.
+            if (index == book.persistedPieces) break;
+            continue;
+          }
           _start(index, source);
         }
         if (!book.complete) {
@@ -360,11 +551,14 @@ class P8PCoordinator {
               )
               .toList();
           if (owners.length == 1) {
+            final prefixOwner = owners.single;
+            prefixOwner.prefixSinceMicros ??= clockMicros();
             final source = _choose(
               book.persistedPieces,
               excluding: owners.single.source.source.id,
             );
             if (source != null &&
+                !source.recovering &&
                 source.samples > 0 &&
                 source.bytesPerMicrosecond != null) {
               final queued = _queuedBytes(source);
@@ -376,22 +570,30 @@ class P8PCoordinator {
               // A whole-piece age includes transfer/queue time. Do not hedge
               // a body that is still advancing. This never extends expiry,
               // and unverified bytes earn no rate sample or write receipt.
-              final idle = clockMicros() - owners.single.lastProgressMicros;
-              if (idle >= hedgeAfter.inMicroseconds &&
+              // Ahead-of-prefix work did not block ordered writes. Start the
+              // idle rescue clock when this request becomes the prefix, or
+              // at its latest progress, whichever is later. Its original
+              // hard lease deadline and physical slot remain unchanged.
+              final idle =
+                  clockMicros() -
+                  max(
+                    prefixOwner.lastProgressMicros,
+                    prefixOwner.prefixSinceMicros!,
+                  );
+              final rescueIdle =
+                  hedgeAfter.inMicroseconds +
+                  _tailRecoveryMicros(prefixOwner, source, estimate);
+              if (idle >= rescueIdle &&
                   age >=
                       max(hedgeAfter.inMicroseconds, (estimate * 2).ceil())) {
                 if (book.reservations < 4) {
                   if (_start(book.persistedPieces, source, hedge: true) !=
                       null) {
-                    owners.single.source.failed = true;
+                    _rescuePrefix(prefixOwner, hedged: true);
                     _count('prefix_rescues');
                   }
                 } else {
-                  _closeSource(
-                    owners.single.source,
-                    P8PDiagnosticCode.prefixRescued,
-                    owners.single,
-                  );
+                  _rescuePrefix(prefixOwner);
                   _count('prefix_rescues');
                 }
               }

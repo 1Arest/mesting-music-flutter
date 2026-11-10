@@ -37,7 +37,7 @@ class PlayerMoreMenu extends StatefulWidget {
     required this.onSelected,
     this.trigger,
     this.tooltip = '更多操作',
-    this.menuWidth = 280,
+    this.menuWidth = 236,
     this.disclosure,
     super.key,
   });
@@ -69,10 +69,13 @@ class PlayerMoreMenuState extends State<PlayerMoreMenu> {
           ? Colors.white
           : const Color(0xFF202024);
       var expanded = false;
+      final media = MediaQuery.of(context);
+      final minimum = widget.menuWidth < 210 ? widget.menuWidth : 210.0;
+      final width = (media.size.width * .62).clamp(minimum, widget.menuWidth);
       final value = await showBetaGlassPopover<String>(
         context: context,
         anchor: box.localToGlobal(Offset.zero) & box.size,
-        width: widget.menuWidth,
+        width: width,
         label: '关闭更多菜单',
         fromInnerEdge: true,
         motion: BetaMenuMotion.player,
@@ -86,8 +89,10 @@ class PlayerMoreMenuState extends State<PlayerMoreMenu> {
                 for (
                   var group = 0;
                   group <
-                      widget.groups.length +
-                          (widget.disclosure == null ? 0 : 1);
+                      (expanded
+                          ? 1
+                          : widget.groups.length +
+                                (widget.disclosure == null ? 0 : 1));
                   group++
                 ) ...[
                   if (group > 0)
@@ -98,7 +103,8 @@ class PlayerMoreMenuState extends State<PlayerMoreMenu> {
                       indent: 16,
                       endIndent: 16,
                     ),
-                  if (group == widget.groups.length) ...[
+                  if ((!expanded && group == widget.groups.length) ||
+                      expanded) ...[
                     Semantics(
                       button: true,
                       expanded: expanded,
@@ -127,23 +133,10 @@ class PlayerMoreMenuState extends State<PlayerMoreMenu> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  widget.disclosure!.current,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: ink.withValues(alpha: .65),
-                                    fontSize: MusicTypography.captionSize,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
                               Icon(
                                 expanded
-                                    ? CupertinoIcons.chevron_up
-                                    : CupertinoIcons.chevron_down,
+                                    ? CupertinoIcons.chevron_left
+                                    : CupertinoIcons.chevron_right,
                                 size: 13,
                                 color: ink,
                               ),
@@ -154,10 +147,10 @@ class PlayerMoreMenuState extends State<PlayerMoreMenu> {
                     ),
                   ],
                   for (final action
-                      in group < widget.groups.length
-                          ? widget.groups[group]
-                          : expanded
+                      in expanded
                           ? widget.disclosure!.actions
+                          : group < widget.groups.length
+                          ? widget.groups[group]
                           : <PlayerMenuAction>[])
                     Semantics(
                       selected: action.selected,

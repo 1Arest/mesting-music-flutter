@@ -464,7 +464,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                     track,
                                   ),
                                   icon: const Icon(
-                                    Icons.chat_bubble_outline_rounded,
+                                    Icons.chat_bubble_outline,
                                     color: Colors.white70,
                                   ),
                                 ),

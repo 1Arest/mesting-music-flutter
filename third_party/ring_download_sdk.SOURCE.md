@@ -1,3 +1,16 @@
+# 2026-11-10 Music 1.0.89：升级 Ring Download SDK 1.1.8
+
+- 用户确认与本轮界面及收藏修复一起升级官方正式版，不开启新增实验选项。
+- 官方下载页：https://download.csnas.asia/sdk
+- 原始包：https://download.csnas.asia/static/ring-download-sdk-1.1.8.zip
+- 官方摘要：https://download.csnas.asia/static/ring-download-sdk-1.1.8.sha256
+- 原始 ZIP SHA-256：`dbe069aed481145acb5b361d6ed2f7ac266b7e3ce1bc91723a5acfdf00332b60`；281 个发行文件逐项验证，旧 SDK/锁/来源说明私有备份。
+- 宿主 Flutter 3.41.9 / Dart 3.11.5 下，仅在 `app_upgrade_v40_download_client.dart` 移除已由前序长度检查证明非空的冗余 `bootstrapFile!` 并补注释；280 项保留发行原字节，原生载荷与官方包一致，不改变读取、调度或协议行为。SDK 元数据测试已由上游支持从宿主定位，无需额外测试补丁。宿主锁只将 SDK 版本 1.1.2 改为 1.1.8，其余依赖保持。
+- 保留 appId=music、更新源、HTTPS/P2P/P8P、完整性校验和原安装器；allowSharing=false。普通节点竞速沿用默认两路，源端口增强保持默认关闭。
+- 上游自带的实验室材料不作为本 App 实机下载、安装或提速验收；宿主兼容及新验证另行记录。
+
+以下为保留的历史集成说明。
+
 # 2026-11-04 Music 1.0.51：升级 Ring Download SDK 1.1.2
 
 - 用户确认将 SDK 更新与本轮页面修复一起交付；使用官方最新正式包，非开发候选。

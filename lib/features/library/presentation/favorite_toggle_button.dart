@@ -12,6 +12,11 @@ import '../../music_platform/presentation/platform_feedback.dart';
 
 const _favoriteAccent = MestingPalette.favorite;
 
+/// Shared by the player, list glyphs and their status HUDs.
+Color favoriteFeedbackColor(BuildContext context) => DistributionChannel.isBeta
+    ? BetaAppearance.favorite(Theme.of(context).brightness)
+    : _favoriteAccent;
+
 class FavoriteToggleButton extends ConsumerWidget {
   const FavoriteToggleButton({
     required this.track,
@@ -64,8 +69,10 @@ class FavoriteToggleButton extends ConsumerWidget {
               );
               if (!allowed || !context.mounted) return;
               try {
-                await ref.read(libraryRepositoryProvider).toggleFavorite(track);
-                if (context.mounted) {
+                final next = await ref
+                    .read(favoriteMutationsProvider)
+                    .toggle(track, wasFavorite: favorite);
+                if (context.mounted && next != null) {
                   showMusicNotice(
                     context,
                     icon: star
@@ -77,6 +84,7 @@ class FavoriteToggleButton extends ConsumerWidget {
                         : Icons.favorite_rounded,
                     title: favorite ? '已取消喜欢' : '已添加到喜欢',
                     message: '',
+                    iconColor: favoriteFeedbackColor(context),
                   );
                 }
               } catch (error) {
@@ -84,13 +92,10 @@ class FavoriteToggleButton extends ConsumerWidget {
               }
             },
             icon: star
-                ? AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: Icon(
-                      favorite ? Icons.star_rounded : Icons.star_border_rounded,
-                      key: ValueKey(favorite),
-                      size: compact ? 25 : 28,
-                    ),
+                ? Icon(
+                    favorite ? Icons.star_rounded : Icons.star_border_rounded,
+                    key: ValueKey(favorite),
+                    size: compact ? 25 : 28,
                   )
                 : _FavoriteGlyph(favorite: favorite, size: compact ? 21 : 23),
           ),
@@ -100,8 +105,8 @@ class FavoriteToggleButton extends ConsumerWidget {
   }
 }
 
-/// Successful state changes animate locally; a failed cloud write never plays
-/// a misleading filled-heart celebration. Both directions interrupt smoothly.
+/// The glyph commits immediately; only its small scale acknowledgment animates.
+/// A cloud rollback therefore restores the outline on its first painted frame.
 class _FavoriteGlyph extends StatefulWidget {
   const _FavoriteGlyph({required this.favorite, required this.size});
   final bool favorite;
@@ -114,23 +119,13 @@ class _FavoriteGlyphState extends State<_FavoriteGlyph>
     with SingleTickerProviderStateMixin {
   late final _motion = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 420),
+    duration: const Duration(milliseconds: 180),
     value: 1,
   );
-  late double _from = widget.favorite ? 1 : 0;
-  double get _fill =>
-      _from +
-      ((widget.favorite ? 1 : 0) - _from) *
-          Curves.easeOutCubic.transform(_motion.value);
   @override
   void didUpdateWidget(covariant _FavoriteGlyph oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.favorite != widget.favorite) {
-      _motion.duration = Duration(milliseconds: widget.favorite ? 420 : 760);
-      _from =
-          _from +
-          ((oldWidget.favorite ? 1.0 : 0.0) - _from) *
-              Curves.easeOutCubic.transform(_motion.value);
       if (MediaQuery.disableAnimationsOf(context)) {
         _motion.value = 1;
       } else {
@@ -149,54 +144,16 @@ class _FavoriteGlyphState extends State<_FavoriteGlyph>
   Widget build(BuildContext context) => RepaintBoundary(
     child: AnimatedBuilder(
       animation: _motion,
-      builder: (_, _) {
-        final pulse = TweenSequence<double>([
-          TweenSequenceItem(
-            tween: Tween(
-              begin: 1.0,
-              end: widget.favorite ? 1.24 : .8,
-            ).chain(CurveTween(curve: Curves.easeOutCubic)),
-            weight: 35,
-          ),
-          TweenSequenceItem(
-            tween: Tween(
-              begin: widget.favorite ? 1.24 : .8,
-              end: 1.0,
-            ).chain(CurveTween(curve: Curves.easeOutBack)),
-            weight: 65,
-          ),
-        ]).transform(_motion.value);
-        return Transform.scale(
-          scale: pulse,
-          child: SizedBox.square(
-            dimension: widget.size,
-            child: Stack(
-              children: [
-                if (!widget.favorite && _motion.value < .78)
-                  Opacity(
-                    opacity: (1 - _motion.value / .78).clamp(0.0, 1.0),
-                    child: Icon(Icons.heart_broken_outlined, size: widget.size),
-                  ),
-                if (_fill < 1)
-                  Opacity(
-                    opacity: !widget.favorite && _motion.value < .78
-                        ? 0
-                        : 1 - _fill,
-                    child: Icon(
-                      Icons.favorite_border_rounded,
-                      size: widget.size,
-                    ),
-                  ),
-                if (_fill > 0 && (widget.favorite || _motion.value >= .78))
-                  Opacity(
-                    opacity: _fill,
-                    child: Icon(Icons.favorite_rounded, size: widget.size),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+      builder: (_, child) => Transform.scale(
+        scale: 1 + .12 * (1 - Curves.easeOutCubic.transform(_motion.value)),
+        child: child,
+      ),
+      child: Icon(
+        widget.favorite
+            ? Icons.favorite_rounded
+            : Icons.favorite_border_rounded,
+        size: widget.size,
+      ),
     ),
   );
 }

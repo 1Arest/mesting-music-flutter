@@ -1,0 +1,92 @@
+{
+  "version": "1.1.6",
+  "channel": "stable",
+  "released_at": "2026-11-08",
+  "candidate_version": "1.1.6-dev.3",
+  "formal_version_delta": {
+    "transmission_runtime_changes": [],
+    "models_version_literal_only": true,
+    "dependency_version_metadata_only": true
+  },
+  "regression": {
+    "full_frozen_candidate_tests": 648,
+    "formal_full_tests": 648,
+    "counts_overlap": true,
+    "formal_full_log_sha256": "02accf0a1eb807b730c5a31e07f285b5e6830db757ce5a874c7cb4213956296e",
+    "static_analysis": "passed"
+  },
+  "native_acceptance": {
+    "file_bytes": 155305939,
+    "whole_file_verified": true,
+    "receipt_seconds": 17.01,
+    "traffic": {
+      "final_verified": true,
+      "https_body_bytes": 69206784,
+      "peer_body_bytes": 33554432,
+      "peer_verified_bytes": 33554432,
+      "seed_body_bytes": 53594067,
+      "seed_verified_bytes": 53594067
+    },
+    "P2P_verified_percent": 56.11,
+    "full_native_transports_released": 4,
+    "cancel": {
+      "actual_partial_transfer_cancelled": true,
+      "verified_bytes_at_cancel": 8388608,
+      "first_payload_ms": 605,
+      "interrupted_result_ms": 1669,
+      "last_native_release_ms": 1716,
+      "native_transports_released": 4,
+      "SDK_disposed": true,
+      "original_controller_assertion_failed": true,
+      "reason": "Expected UI cancel_requested fell outside bounded event list; actual partial cancellation independently checked in log plus final UI. No rerun required."
+    },
+    "cleanup": {
+      "test_cache_cleared": true,
+      "test_process_absent": true,
+      "screen_asleep": true,
+      "target_APK_not_installed": true,
+      "ADB": "device"
+    },
+    "limitations": [
+      "One home Wi-Fi sample; no stable speed or P2P ratio guarantee",
+      "C-Mac and D-Windows still failed ICE to home receiver",
+      "B closed SCTP snapshot retains sent_queue_chunks=1/flight_bytes=84; process has no RTC UDP sockets, so snapshot is not recorded as an all-zero queue"
+    ]
+  },
+  "Android_file_descriptor_probe": {
+    "passed": true,
+    "fresh_hashes": 101,
+    "open_fixture_descriptors_at_each_receipt": 0,
+    "worker_terminated": true
+  },
+  "B_acceptance": {
+    "version": "1.0.20+repair15",
+    "actual_source_tests": 217,
+    "passed": 216,
+    "skipped_no_non_loopback_IPv6": 1,
+    "real_piece_bytes": 1048576,
+    "real_piece_SHA256": true,
+    "receive_UDP_rebound": 3,
+    "process_RTC_UDP_after": 0,
+    "restart_count": 0
+  },
+  "release_scope": "User accepts B supply/release as gate; C/D home-network ICE is separately tracked.",
+  "ordinary_native_owner_default": 2,
+  "ordinary_native_owner_configurable_max": 4,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "request_deadline_seconds": 8,
+  "stop_grace_seconds": 1,
+  "source_port_diversity_default": false,
+  "sharing_default": false,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "host_official_APK_built": false,
+  "limitations": [
+    "Single tablet sample does not guarantee fixed throughput or all NAT paths.",
+    "C/D home-path ICE and native Mac acceptance remain separate.",
+    "Apps require developer rebuild/signing; publication does not update installed apps."
+  ]
+}

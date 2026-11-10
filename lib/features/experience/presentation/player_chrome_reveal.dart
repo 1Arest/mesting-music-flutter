@@ -16,6 +16,7 @@ class PlayerChromeReveal extends ValueNotifier<double> {
   PlayerChromeReveal() : super(0);
   final _owners = <Object>[];
   bool _disposed = false;
+  bool get hasPlayer => _owners.isNotEmpty;
 
   void claim(Object owner) {
     _owners.remove(owner);

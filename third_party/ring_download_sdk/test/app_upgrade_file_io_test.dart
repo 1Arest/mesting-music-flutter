@@ -75,6 +75,22 @@ void main() {
   );
 
   test(
+    'already cancelled hash is rejected before opening a missing path',
+    () async {
+      await expectLater(
+        appUpgradeFileSha256(source.path, cancelSignal: Future<void>.value()),
+        throwsA(
+          isA<FileSystemException>().having(
+            (e) => e.message,
+            'reason',
+            'file_hash_cancelled',
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
     'rename replaces the old prefix with the exact verified source',
     () async {
       await source.writeAsBytes([1, 2, 3], flush: true);

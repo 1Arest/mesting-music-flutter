@@ -188,8 +188,8 @@ class QishuiDiagnostics extends ChangeNotifier {
     bool compact = false,
   }) => {
     'schema': 178,
-    'appVersion': '1.0.82',
-    'appVersionCode': 103,
+    'appVersion': '1.0.89',
+    'appVersionCode': 109,
     'platform': 'qishui',
     'memoryOnly': true,
     'group': group.name,

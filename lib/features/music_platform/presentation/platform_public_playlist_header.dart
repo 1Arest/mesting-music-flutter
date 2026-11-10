@@ -1,17 +1,14 @@
 import 'dart:async';
+import '../../../shared/widgets/collection_play_all_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/platform/share_bridge.dart';
 import '../../../shared/models/track.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
-import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_root_tab_viewport.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../library/library_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
-import '../../themes/beta_appearance.dart';
 import '../data/music_platform_api.dart';
 import '../data/platform_explore.dart';
 import '../data/platform_library_repository.dart';
@@ -202,35 +199,6 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
     }
   }
 
-  void _details() {
-    if (_info == null) {
-      unawaited(_read());
-      return;
-    }
-    showLiquidGlassBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (_) => SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.item.title,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _info!.description.isEmpty ? '平台暂未提供歌单介绍' : _info!.description,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.watch(platformAccountProvider);
@@ -248,22 +216,22 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
         PlatformCollectionMasthead(
           title: widget.item.title,
           platform: _owner!.platform,
-          cover: _info?.cover.isNotEmpty == true
-              ? _info!.cover
-              : widget.item.cover,
+          cover:
+              [
+                    _info?.cover,
+                    widget.item.cover,
+                    widget.tracks.firstOrNull?.coverAsset,
+                  ]
+                  .whereType<String>()
+                  .where((cover) => cover.isNotEmpty)
+                  .firstOrNull ??
+              '',
           period: '',
           secondary: [
             if (_info?.creator.isNotEmpty == true) _info!.creator,
             if (count != null) '$count 首歌曲',
           ].join(' · '),
-          onSearch: () => GoRouter.maybeOf(context)?.push('/music/search'),
-          onDetails: _details,
-          coverAction: PlatformCoverPlayControl(
-            key: const ValueKey('playlist-cover-play'),
-            label: '播放${widget.item.title}全部歌曲',
-            loading: _playing,
-            onPressed: _busy ? null : () => unawaited(_play()),
-          ),
+          coverOnly: true,
           actions: [
             PlatformCollectionAction(
               id: 'save',
@@ -317,26 +285,7 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: BetaAppearance.playbackAction(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                        child: _playing
-                            ? const BetaActivityIndicator(
-                                color: Colors.white,
-                                radius: 8,
-                              )
-                            : const Icon(
-                                Icons.play_arrow_rounded,
-                                color: Colors.white,
-                                size: 21,
-                              ),
-                      ),
+                      CollectionPlayGlyph(loading: _playing),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(

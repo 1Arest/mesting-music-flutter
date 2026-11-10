@@ -157,6 +157,23 @@ class MestingAudioHandler extends BaseAudioHandler
   List<String> _unshuffledUpcomingIds = const [];
   PlaybackMode get _mode => _order.legacy;
   final _orderController = StreamController<PlaybackOrder>.broadcast();
+  bool _randomUpcoming = false;
+  String? _explicitNextId;
+  final _randomUpcomingController = StreamController<bool>.broadcast();
+  bool get randomUpcoming => _randomUpcoming;
+  Stream<bool> get randomUpcomingStream async* {
+    yield _randomUpcoming;
+    yield* _randomUpcomingController.stream;
+  }
+
+  /// This chooses from remaining pending recordings, never shuffles the
+  /// displayed list or changes the playing source/global repeat order.
+  Future<void> setRandomUpcoming(bool enabled) async {
+    if (_randomUpcoming == enabled) return;
+    _randomUpcoming = enabled;
+    _randomUpcomingController.add(enabled);
+  }
+
   PlaybackOrder get playbackOrder => _order;
   Stream<PlaybackOrder> get playbackOrderStream async* {
     yield _order;
@@ -445,6 +462,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _togetherUserCommandController.close();
     await _seekingController.close();
     await _deferredPositions.close();
+    await _randomUpcomingController.close();
     await _player.dispose();
   }
 
@@ -1608,16 +1626,22 @@ class MestingAudioHandler extends BaseAudioHandler
         final candidates = _continueAfterExplicitQueue && manual.isNotEmpty
             ? manual
             : _upcomingMediaItems;
-        final targetIndex = QueueEngine.resolveUpcomingIndex(
-          length: candidates.length,
-          // Shuffle is materialized in the visible queue when enabled, so
-          // Next must play the first displayed candidate instead of rolling
-          // another independent random index behind the user's back.
-          mode: PlaybackMode.list,
-          random: _random,
+        final forcedIndex = candidates.indexWhere(
+          (item) => item.id == _explicitNextId,
         );
+        final targetIndex = forcedIndex >= 0
+            ? forcedIndex
+            : QueueEngine.resolveUpcomingIndex(
+                length: candidates.length,
+                // Shuffle is materialized in the visible queue when enabled, so
+                // Next must play the first displayed candidate instead of rolling
+                // another independent random index behind the user's back.
+                mode: _randomUpcoming ? PlaybackMode.random : PlaybackMode.list,
+                random: _random,
+              );
         final target = trackForId(candidates[targetIndex].id);
         if (target != null) {
+          _explicitNextId = null;
           await playSingleTrack(target, preservePendingAdvance: true);
           advanced = true;
           if (_preserveServerOrder) unawaited(_ensureRadioFallbackTracks());
@@ -2178,6 +2202,7 @@ class MestingAudioHandler extends BaseAudioHandler
     final index = _upcomingMediaItems.indexWhere((item) => item.id == track.id);
     if (index < 0 || mediaItem.value?.id == track.id) return false;
     await reorderUpcoming(index, 0);
+    _explicitNextId = track.id;
     return true;
   }
 
@@ -2194,6 +2219,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _upcomingMediaItems = _upcomingMediaItems
         .where((item) => item.id != id)
         .toList(growable: false);
+    if (_explicitNextId == id) _explicitNextId = null;
     _publishUpcomingQueue();
     _broadcastState(_player.playbackEvent);
     _trace(
@@ -2265,6 +2291,7 @@ class MestingAudioHandler extends BaseAudioHandler
     bool Function()? togetherGuard,
   }) async {
     if (togetherGuard?.call() == false) return;
+    _explicitNextId = null;
     if (!recommendationContext) _onExplicitPlayback?.call();
     _recommendedUpcomingIds
       ..clear()

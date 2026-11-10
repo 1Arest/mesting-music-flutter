@@ -106,7 +106,8 @@ class BetaPageTransitionsBuilder extends PageTransitionsBuilder {
   );
 }
 
-/// Root tabs have no entry animation (their PageView owns tab motion), but the
+/// The viewport owns Tab selection motion; the root route itself has no entry
+/// animation. The
 /// shell must participate as the parent of pages pushed above its Navigator.
 /// Otherwise returning from a subpage remounts an apparently forward-moving
 /// destination while the real parent remains static beneath it.
@@ -117,7 +118,7 @@ class BetaRootTransitionPage<T> extends Page<T> {
   Route<T> createRoute(BuildContext context) => BetaContentRoute<T>(
     settings: this,
     allowSnapshotting: false,
-    // Root selection is already animated by PageView. A nonzero primary
+    // Root motion belongs to BetaRootTabViewport. A nonzero primary
     // duration can freeze the newly selected branch's readiness TickerMode.
     transitionDuration: Duration.zero,
     reverseTransitionDuration: Duration.zero,

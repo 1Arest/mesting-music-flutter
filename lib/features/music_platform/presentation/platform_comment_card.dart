@@ -3,6 +3,7 @@ import '../data/platform_comments_repository.dart';
 import '../../themes/music_theme_tokens.dart';
 import 'platform_avatar.dart';
 import '../../themes/music_typography.dart';
+import 'expandable_comment_body.dart';
 
 /// Comment content has its own presentation component; thread identity and
 /// writes remain owned by the page/repository instead of the visual card.
@@ -79,8 +80,9 @@ class PlatformCommentCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 9),
-                SelectableText(
-                  comment.content,
+                ExpandableCommentBody(
+                  key: ValueKey(('comment-body', comment.id)),
+                  text: comment.content,
                   style: TextStyle(
                     color: tokens.textPrimary,
                     fontSize: MusicTypography.subheadlineSize,

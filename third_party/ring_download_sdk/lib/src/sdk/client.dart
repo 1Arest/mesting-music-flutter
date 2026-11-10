@@ -220,7 +220,10 @@ class RingDownloadSdk with WidgetsBindingObserver {
           (task.request.fileSize > 0 && actualSize != task.request.fileSize)) {
         throw const RingDownloadException(RingDownloadError.integrity);
       }
-      final actualSha = await appUpgradeFileSha256(file.path);
+      final actualSha = await appUpgradeFileSha256(
+        file.path,
+        cancelSignal: task._cancel.whenCancel,
+      );
       if (task.request.hasExpectedSha256 &&
           actualSha != task.request.sha256.trim().toLowerCase()) {
         throw const RingDownloadException(RingDownloadError.integrity);

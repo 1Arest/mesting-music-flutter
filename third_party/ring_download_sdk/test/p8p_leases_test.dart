@@ -28,6 +28,46 @@ void main() {
   setUp(() => now = 0);
 
   test(
+    'diagnostic view distinguishes cancelling loser from ready winner of same piece',
+    () {
+      final book = make();
+      final slow = book.request(0, 'slow', timeout: timeout)!;
+      now = 1100000;
+      final fast = book.request(0, 'fast', timeout: timeout, hedge: true)!;
+      expect(book.verified(fast), true);
+      final before = book.diagnosticReservations;
+      expect(before.map((s) => s.phase), [
+        P8PReservationPhase.cancelling,
+        P8PReservationPhase.ready,
+      ]);
+      expect(before.map((s) => s.lease.source), ['slow', 'fast']);
+      expect(book.reservations, 2);
+      expect(() => before.clear(), throwsUnsupportedError);
+      final write = book.beginWrite()!;
+      now = 3000000;
+      final during = book.diagnosticReservations;
+      expect(during.map((s) => s.phase), [
+        P8PReservationPhase.cancelling,
+        P8PReservationPhase.writing,
+      ]);
+      expect(
+        book.reservations,
+        2,
+        reason: 'Observation cannot expire or release physical owners',
+      );
+      expect(
+        before.last.phase,
+        P8PReservationPhase.ready,
+        reason: 'Captured view is immutable',
+      );
+      book.acknowledgeStopped(slow);
+      book.persisted(write);
+      expect(book.reservations, 0);
+      expect(book.persistedPieces, 1);
+    },
+  );
+
+  test(
     'bodyless admission keeps capacity until physical stop without using a body attempt',
     () {
       final book = make(slots: 1, attempts: 1, repeat: 0);

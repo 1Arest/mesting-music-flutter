@@ -481,8 +481,8 @@ class AppUpgradeV40DownloadClient {
                   currentInfo.fileSize,
                 );
                 if (await bootstrapFile.length() < end) return null;
-                // The preceding length check already promotes this file on
-                // the host Dart SDK; no second assertion or transfer change.
+                // Dart 3.11 promotes this value after the length check above;
+                // retain the upstream read while avoiding a redundant bang.
                 final bytes = await bootstrapFile
                     .openRead(start, end)
                     .fold<BytesBuilder>(
@@ -1699,7 +1699,10 @@ class AppUpgradeV40DownloadClient {
     final expected = expectedSha256.trim().toLowerCase();
     if (!RegExp(r'^[a-f0-9]{64}$').hasMatch(expected)) return false;
     final watch = Stopwatch()..start();
-    final actual = await appUpgradeFileSha256(file.path);
+    final actual = await appUpgradeFileSha256(
+      file.path,
+      cancelSignal: _activeCancel?.whenCancel,
+    );
     _p2pClient.recordDownloadDiagnostic(
       'performance',
       'file_hash_profile',

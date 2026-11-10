@@ -1,0 +1,18 @@
+{
+  "result": {
+    "passed": true,
+    "fresh_hashes": 101,
+    "open_fixture_descriptors_at_each_receipt": 0,
+    "worker_terminated": true
+  },
+  "cleanup": {
+    "screen_before": "Asleep",
+    "screen_after": "Asleep",
+    "root_removed": true,
+    "ADB": "device"
+  },
+  "artifact_sha256": "4ccfb6a4cf25ac47bbb25ccb296588097a315b999865d75404273d0fdf0cdd85",
+  "evidence_bytes": 3122,
+  "evidence_sha256": "5be6da9d4da7fef70036eb1e383361a7634e99220a3652a2044deb9417d319ca",
+  "scope": "Actual SDK Android reader via app_process; no APK body downloaded; not a Flutter method-channel integration test"
+}

@@ -5,7 +5,7 @@ import 'package:mesting_music/shared/widgets/beta_root_tab_viewport.dart';
 void main() {
   for (final reduced in [false, true]) {
     testWidgets(
-      'retained root viewport follows approved direction reduced=$reduced',
+      'retained root viewport animates and respects reduced motion reduced=$reduced',
       (tester) async {
         var selected = 0;
         late StateSetter update;
@@ -37,19 +37,24 @@ void main() {
         double left(int i) =>
             tester.getRect(find.byKey(ValueKey('tab-surface-$i'))).left;
         for (final target in [1, 2, 3, 2, 1, 0, 3, 0]) {
-          final previous = selected;
           update(() => selected = target);
           await tester.pump();
-          await tester.pump(const Duration(milliseconds: 180));
           final bounds = tester.getRect(find.byType(BetaRootTabViewport));
           final offset = (left(target) - bounds.left) / bounds.width;
+          expect(offset.abs(), reduced ? 0 : 1);
+          expect(viewport.motionSettled, reduced);
+          await tester.pump(const Duration(milliseconds: 180));
           if (reduced) {
-            expect(offset, 0);
+            expect(left(target), closeTo(bounds.left, .001));
           } else {
-            // Observe the real painted surface, independently of a particular
-            // scroll widget: distant destinations now travel one screen.
-            expect(offset, previous < target ? greaterThan(0) : lessThan(0));
-            expect(offset.abs(), lessThan(1));
+            expect(
+              (left(target) - bounds.left).abs(),
+              closeTo(
+                bounds.width * (1 - Curves.easeInOutCubic.transform(.5)),
+                2,
+              ),
+            );
+            expect(viewport.paintedIndices.length, 2);
           }
           await tester.pumpAndSettle();
           expect(left(target), closeTo(bounds.left, .001));

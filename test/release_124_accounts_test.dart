@@ -109,6 +109,8 @@ void main() {
   }) async {
     SharedPreferences.setMockInitialValues({
       PlatformRewardsController.autoSignInKey: automatic,
+      PlatformRewardsController.autoAdsKey('A'): false,
+      PlatformRewardsController.autoAdsKey('kg'): false,
     });
     final prefs = await SharedPreferences.getInstance();
     final service = _Rewards();

@@ -49,6 +49,8 @@ class AppUpgradeP2PManifest {
     this.serverTrickle = false,
     this.candidateBatch = false,
     this.attemptDiagnostics = false,
+    this.peerCandidateReplacement = false,
+    this.peerCandidateIdentity = false,
     this.sharedDeadline = false,
     this.p8pAdaptiveWindow = false,
     this.p8pTransfer = false,
@@ -75,6 +77,8 @@ class AppUpgradeP2PManifest {
   final bool serverOfferCancel;
   final bool serverTrickle;
   final bool candidateBatch, attemptDiagnostics, sharedDeadline;
+  final bool peerCandidateReplacement;
+  final bool peerCandidateIdentity;
   final bool p8pAdaptiveWindow;
   final bool p8pTransfer;
   final int? fastSignalPollMs;
@@ -226,6 +230,9 @@ class AppUpgradeP2PManifest {
           json['server_offer_cancel_protocol_version'] is int &&
           json['server_offer_cancel_protocol_version'] == 1,
       attemptDiagnostics: json['attempt_diagnostics_supported'] == true,
+      peerCandidateReplacement:
+          json['peer_candidate_replacement_supported'] == true,
+      peerCandidateIdentity: json['peer_candidate_identity_supported'] == true,
       sharedDeadline: json['peer_shared_deadline_supported'] == true,
       p8pAdaptiveWindow: P8PWindowProtocol.advertised(json['p8p']),
       p8pTransfer: P8PTransferProtocol.advertised(json['p8p']),

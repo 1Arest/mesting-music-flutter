@@ -12,27 +12,30 @@ class BetaPopupMenuButton<T> extends StatelessWidget {
     required this.onSelected,
     this.tooltip = '更多操作',
     this.icon = const Icon(CupertinoIcons.ellipsis),
+    this.width = 48,
     super.key,
   });
   final PopupMenuItemBuilder<T> itemBuilder;
   final ValueChanged<T> onSelected;
   final String tooltip;
   final Widget icon;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     if (!DistributionChannel.isBeta) {
       return PopupMenuButton<T>(
         tooltip: tooltip,
-        icon: icon,
+        icon: width == 48 ? icon : null,
         itemBuilder: itemBuilder,
         onSelected: onSelected,
+        child: width == 48 ? null : SizedBox(width: width, child: icon),
       );
     }
     return Builder(
       builder: (anchorContext) => BetaGlassButton(
         label: tooltip,
-        width: 48,
+        width: width,
         height: 48,
         onPressed: () async {
           final box = anchorContext.findRenderObject()! as RenderBox;

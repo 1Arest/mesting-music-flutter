@@ -1,0 +1,44 @@
+{
+  "candidate_sdk": "1.1.3-dev.5",
+  "private_APK_version": "0.0.17+17",
+  "private_APK_sha256": "13af3424f1a15d15479d5687f76e31fb537214e6d5db2683387c1eda82dbc03c",
+  "arm64_release_AOT": true,
+  "same_private_signer": true,
+  "alignment_16KiB_verified": true,
+  "full_file_bytes": 155305939,
+  "elapsed_ms": 31236,
+  "full_sha256": "3e85c2171647dccff7b59b4b68b462717f03426327081b774c77192cff50571a",
+  "independent_file_hash_verified": true,
+  "ordinary_peer_verified_bytes": 2097152,
+  "independent_upload_report_matched": true,
+  "ordinary_peer_attempt_alias": "peer1",
+  "peak_reserved_bytes": 4194304,
+  "peak_reservations": 4,
+  "repeat_reserved_bytes": 0,
+  "native_release_events": 5,
+  "SDK_disposal_observed": true,
+  "resource_observing_after": false,
+  "private_process_stopped": true,
+  "exact_download_leaf_reclaimed_bytes": 155305939,
+  "ADB_kept": true,
+  "global_device_settings_changed": false,
+  "tail_extra_wait_activation_proven": false,
+  "comparative_speedup_proven": false,
+  "Windows_public_path_proven": false,
+  "battery_observations": {
+    "before": {
+      "level": "42",
+      "temperature": "321"
+    },
+    "after": {
+      "level": "42",
+      "temperature": "323"
+    }
+  },
+  "entire_process_last_sample": {
+    "cpu_ms": 44747,
+    "pss_kib": 120067
+  },
+  "scope": "Independent private SDK receiver; no formal host update or signature installation. Short whole-process samples are not SDK incremental/peak/long-term energy evidence.",
+  "earlier_lock_interrupted_round_preserved": true
+}

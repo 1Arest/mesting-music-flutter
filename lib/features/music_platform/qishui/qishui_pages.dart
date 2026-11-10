@@ -62,6 +62,12 @@ class QishuiRootSwitch extends ConsumerWidget {
   final Widget child;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // The real, opaque selector remains above this root until preparation and
+    // the destination's first frame finish. Do not mount the next catalog once
+    // for credential publication and a second time for its final visit key.
+    if (ref.watch(platformPresentationSwitchProvider)) {
+      return ColoredBox(color: Theme.of(context).colorScheme.surface);
+    }
     final account = ref.watch(platformAccountProvider);
     final visit = ref.watch(platformHomeVisitProvider);
     Widget surface(Widget child) => PlatformRootSurface(

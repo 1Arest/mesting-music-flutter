@@ -20,6 +20,8 @@ import 'platform_discovery_page.dart';
 import 'platform_feedback.dart';
 import 'platform_comments_page.dart';
 import 'platform_design.dart';
+import 'platform_ranking_header.dart';
+import 'library_collection_masthead.dart';
 import '../../experience/presentation/music_library_page.dart';
 import '../../playlists/presentation/playlist_editor_dialog.dart';
 import '../../experience/presentation/editorial_widgets.dart';
@@ -148,91 +150,118 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
       title: playlist.value?.name ?? '云端歌单',
       subtitle:
           '${ref.watch(platformAccountProvider).value?.platformLabel ?? ''}云端歌单',
-      actions: [
-        IconButton(
-          tooltip: '歌单评论',
-          icon: const Icon(Icons.comment_outlined),
-          onPressed: () async {
-            try {
-              final commentId = await repository.commentId(id);
-              if (context.mounted) {
-                openPlatformPlaylistComments(
-                  context,
-                  ref,
-                  id: commentId,
-                  name: playlist.value?.name ?? '歌单',
-                );
-              }
-            } catch (error) {
-              if (context.mounted) showPlatformFailure(context, error);
-            }
+      headerInScroll: true,
+      child: PlatformRankingScrollShell(
+        title: playlist.value?.name ?? '云端歌单',
+        child: MusicRefreshIndicator(
+          onRefresh: () async {
+            await repository.synchronize(forcePull: true);
+            ref.invalidate(playlistProvider(id));
           },
-        ),
-        if (playlist.value != null && repository.canManage(id))
-          BetaPopupMenuButton<String>(
-            onSelected: (action) =>
-                _manage(context, ref, repository, playlist.value!, action),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'rename', child: Text('编辑名称与封面')),
-              PopupMenuItem(value: 'delete', child: Text('删除歌单')),
-            ],
-          ),
-      ],
-      child: MusicRefreshIndicator(
-        onRefresh: () async {
-          await repository.synchronize(forcePull: true);
-          ref.invalidate(playlistProvider(id));
-        },
-        child: ListenableBuilder(
-          listenable: window ?? const AlwaysStoppedAnimation(0),
-          builder: (context, _) => AutomaticSongPaging(
-            songListId: 'cloud-playlist:$id',
-            enabled:
-                window != null &&
-                window.hasMore &&
-                !window.loading &&
-                window.error == null,
-            onLoadMore: () => window?.loadMore() ?? Future.value(),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                if (playlist.hasValue)
+          child: ListenableBuilder(
+            listenable: window ?? const AlwaysStoppedAnimation(0),
+            builder: (context, _) => AutomaticSongPaging(
+              songListId: 'cloud-playlist:$id',
+              enabled:
+                  window != null &&
+                  window.hasMore &&
+                  !window.loading &&
+                  window.error == null,
+              onLoadMore: () => window?.loadMore() ?? Future.value(),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
                   SliverToBoxAdapter(
-                    child: EditorialCollectionHero(
-                      cover: playlist.value?.coverAsset ?? '',
-                      description: playlist.value?.description ?? '',
-                      tracks: value.value ?? const [],
-                      total: window?.total,
-                      loadComplete: window?.complete,
+                    child: LibraryCollectionMasthead(
+                      title: playlist.value?.name ?? '云端歌单',
+                      cover: playlist.value?.coverAsset?.isNotEmpty == true
+                          ? playlist.value!.coverAsset!
+                          : value.value?.firstOrNull?.coverAsset ?? '',
+                      total: window?.total ?? value.value?.length ?? 0,
+                      toolbarActions: [
+                        IconButton(
+                          tooltip: '歌单评论',
+                          icon: const Icon(Icons.chat_bubble_outline),
+                          onPressed: () async {
+                            try {
+                              final commentId = await repository.commentId(id);
+                              if (context.mounted) {
+                                openPlatformPlaylistComments(
+                                  context,
+                                  ref,
+                                  id: commentId,
+                                  name: playlist.value?.name ?? '歌单',
+                                );
+                              }
+                            } catch (error) {
+                              if (context.mounted) {
+                                showPlatformFailure(context, error);
+                              }
+                            }
+                          },
+                        ),
+                        if (playlist.value != null && repository.canManage(id))
+                          BetaPopupMenuButton<String>(
+                            onSelected: (action) => _manage(
+                              context,
+                              ref,
+                              repository,
+                              playlist.value!,
+                              action,
+                            ),
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'rename',
+                                child: Text('编辑名称与封面'),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text('删除歌单'),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
                   ),
-                PlatformSongs(
-                  sliver: true,
-                  value: value,
-                  retry: () => repository.synchronize(forcePull: true),
-                  playlistId: repository.canManage(id) ? id : null,
-                ),
-                SliverToBoxAdapter(
-                  child: window?.loading == true
-                      ? const PlatformFeedbackState(loading: true)
-                      : window?.error != null
-                      ? TextButton(
-                          onPressed: window!.loadMore,
-                          child: const Text('加载未完成，点击重试'),
-                        )
-                      : window?.hasMore == true
-                      ? const SizedBox(height: 12)
-                      : const MusicListEnd(),
-                ),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: BetaContentInsets.musicBottomOf(
-                      context,
-                      editorialBottomClearance,
+                  if (playlist.hasValue)
+                    SliverToBoxAdapter(
+                      child: EditorialCollectionHero(
+                        compact: true,
+                        cover: playlist.value?.coverAsset ?? '',
+                        description: playlist.value?.description ?? '',
+                        tracks: value.value ?? const [],
+                        total: window?.total,
+                        loadComplete: window?.complete,
+                      ),
+                    ),
+                  PlatformSongs(
+                    sliver: true,
+                    value: value,
+                    retry: () => repository.synchronize(forcePull: true),
+                    playlistId: repository.canManage(id) ? id : null,
+                  ),
+                  SliverToBoxAdapter(
+                    child: window?.loading == true
+                        ? const PlatformFeedbackState(loading: true)
+                        : window?.error != null
+                        ? TextButton(
+                            onPressed: window!.loadMore,
+                            child: const Text('加载未完成，点击重试'),
+                          )
+                        : window?.hasMore == true
+                        ? const SizedBox(height: 12)
+                        : const MusicListEnd(),
+                  ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: BetaContentInsets.musicBottomOf(
+                        context,
+                        editorialBottomClearance,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

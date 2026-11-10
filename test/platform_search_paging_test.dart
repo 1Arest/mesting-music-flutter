@@ -86,6 +86,11 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     return ProviderContainer(
       overrides: [
+        // This fixture exercises the unchanged single-source paging adapter.
+        // Fusion and source grouping have their own explicit two-source cases.
+        platformSearchRepositoryProvider.overrideWith(
+          (ref) => PlatformSearchRepository(ref.watch(musicPlatformApiProvider)),
+        ),
         sharedPreferencesProvider.overrideWithValue(
           await SharedPreferences.getInstance(),
         ),

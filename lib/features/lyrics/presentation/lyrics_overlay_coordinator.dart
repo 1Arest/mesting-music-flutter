@@ -85,7 +85,25 @@ class _LyricsOverlayCoordinatorState
         final repository = ref.read(libraryRepositoryProvider);
         bool nextFavorite;
         try {
-          nextFavorite = await repository.toggleFavorite(track);
+          // Beta notifications and the overlay use the same account lane as
+          // player/list taps, so switching surfaces cannot bypass coalescing.
+          final result = DistributionChannel.isBeta
+              ? await ref
+                    .read(favoriteMutationsProvider)
+                    .toggle(
+                      track,
+                      wasFavorite: ref
+                          .read(favoriteTrackIdsProvider)
+                          .contains(track.id),
+                    )
+              : await repository.toggleFavorite(track);
+          if (result == null ||
+              !mounted ||
+              !identical(repository, ref.read(libraryRepositoryProvider)) ||
+              ref.read(currentTrackProvider).id != track.id) {
+            return;
+          }
+          nextFavorite = result;
         } catch (error) {
           if (mounted) showPlatformFailure(context, error);
           return;

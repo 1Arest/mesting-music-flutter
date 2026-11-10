@@ -17,10 +17,14 @@ class NeteaseMvRepository extends PlatformMvRepository {
     final rows = NeteaseMusicRepository.rows(songs['songs']);
     final id = rows.isEmpty ? '0' : '${rows.first['mv'] ?? 0}';
     if ((int.tryParse(id) ?? 0) <= 0) return null;
-    return byId(id, fallbackTitle: track.title);
+    return byId(id, fallbackTitle: track.title, fallbackArtist: track.artist);
   }
 
-  Future<MusicMv?> byId(String id, {String fallbackTitle = ''}) async {
+  Future<MusicMv?> byId(
+    String id, {
+    String fallbackTitle = '',
+    String fallbackArtist = '',
+  }) async {
     NeteaseMusicRepository.songId(id);
     final detail = NeteaseMusicRepository.object(
       (await music.call('/mv/detail', {'id': id}))['data'],
@@ -40,10 +44,18 @@ class NeteaseMvRepository extends PlatformMvRepository {
             ).compareTo(int.parse(a.hash.split(':').last)),
           );
     if (qualities.isEmpty) return null;
+    final artists = NeteaseMusicRepository.rows(
+      detail['artists'],
+    ).map((a) => '${a['name'] ?? ''}').where((a) => a.isNotEmpty).join('/');
     return MusicMv(
       id: id,
       title: '${detail['name'] ?? fallbackTitle}',
       qualities: qualities,
+      artist: artists.isNotEmpty ? artists : fallbackArtist,
+      duration: Duration(
+        milliseconds: int.tryParse('${detail['duration'] ?? 0}') ?? 0,
+      ),
+      source: TrackSource.netease,
     );
   }
 

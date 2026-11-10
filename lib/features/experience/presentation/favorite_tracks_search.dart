@@ -11,6 +11,7 @@ import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/keyboard_overlay_layout.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import '../../library/library_providers.dart';
+import '../../music_platform/presentation/library_collection_masthead.dart';
 import '../../library/data/favorite_track_window.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import '../../music_platform/presentation/platform_comment_composer.dart';
@@ -35,9 +36,11 @@ class FavoriteTracksSearch extends ConsumerStatefulWidget {
     required this.header,
     required this.onRefresh,
     required this.onCreatePlaylist,
+    this.coverHeader = false,
     super.key,
   });
   final VoidCallback onCreatePlaylist;
+  final bool coverHeader;
   final List<Track> tracks;
   final Widget header;
   final Future<void> Function() onRefresh;
@@ -197,7 +200,9 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.only(
-                      top: MediaQuery.paddingOf(context).top + 14,
+                      top: widget.coverHeader
+                          ? 0
+                          : MediaQuery.paddingOf(context).top + 14,
                       bottom: _editing
                           ? lift + 88 + MediaQuery.viewPaddingOf(context).bottom
                           : BetaContentInsets.musicBottomOf(context, 12),
@@ -205,6 +210,24 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                     itemCount: tracks.length + 3,
                     itemBuilder: (context, index) {
                       if (index == 0) {
+                        if (widget.coverHeader) {
+                          return LibraryCollectionMasthead(
+                            title: '我的喜欢',
+                            cover: widget.tracks.isEmpty
+                                ? ''
+                                : widget.tracks.first.coverAsset,
+                            total: ref.watch(favoriteCollectionCountProvider),
+                            toolbarActions: [
+                              IconButton(
+                                tooltip: '新建歌单',
+                                onPressed: widget.onCreatePlaylist,
+                                icon: const Icon(
+                                  Icons.add_circle_outline_rounded,
+                                ),
+                              ),
+                            ],
+                          );
+                        }
                         return EditorialHeader(
                           '我的喜欢',
                           back: true,

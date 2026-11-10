@@ -1,0 +1,47 @@
+00:00 +0: loading ${SDK}/test/sdk_contract_test.dart
+00:00 +0: ${SDK}/test/sdk_contract_test.dart: SDK status version matches source package metadata
+00:00 +1: ${SDK}/test/sdk_contract_test.dart: ordinary peer race configuration is bounded before engine work
+00:00 +2: ${SDK}/test/sdk_contract_test.dart: sharing waits for a positively resumed lifecycle state
+00:00 +3: ${SDK}/test/sdk_contract_test.dart: invalid applications and insecure requests fail before transfer
+00:00 +4: ${SDK}/test/sdk_contract_test.dart: task resolves only after exact file size and SHA are verified
+00:00 +5: ${SDK}/test/sdk_contract_test.dart: a transport returning corrupt bytes never produces a successful receipt
+00:00 +6: ${SDK}/test/sdk_contract_test.dart: truncated files and an over-optimistic progress callback are rejected
+00:00 +7: ${SDK}/test/sdk_contract_test.dart: cancellation before scheduled start performs no engine or network work
+00:00 +8: ${SDK}/test/sdk_contract_test.dart: active tenant is exclusive even across SDK instances; other tenants proceed
+00:00 +9: ${SDK}/test/sdk_contract_test.dart: dispose cancels a running transfer, awaits cleanup, and is idempotent
+00:00 +10: ${SDK}/test/sdk_contract_test.dart: transport errors expose no signed URL or raw exception text
+00:00 +11: ${SDK}/test/sdk_contract_test.dart: standalone SDK uses actual HTTPS engine for a business-selected CDN URL
+00:00 +12: ${SDK}/test/sdk_contract_test.dart: sharing is opt-in and does not follow a metered or unknown network
+00:00 +13: ${SDK}/test/sdk_contract_test.dart: installation revalidation rejects a file changed after successful download
+00:00 +14: ${SDK}/test/sdk_contract_test.dart: missing verification file returns a stable storage error
+00:00 +15: ${SDK}/test/sdk_contract_test.dart: hosted service URLs cannot cross the configured application boundary
+00:00 +16: loading ${SDK}/test/sdk_release_test.dart
+00:02 +16: ${SDK}/test/sdk_release_test.dart: discovers alpha without a LifeRing-specific URL or host credentials
+00:02 +17: ${SDK}/test/sdk_release_test.dart: discovers beta without a LifeRing-specific URL or host credentials
+00:02 +18: ${SDK}/test/sdk_release_test.dart: rejects cross application before making a download task
+00:02 +19: ${SDK}/test/sdk_release_test.dart: rejects missing SHA before making a download task
+00:02 +20: ${SDK}/test/sdk_release_test.dart: rejects fractional size before making a download task
+00:02 +21: ${SDK}/test/sdk_release_test.dart: rejects string size before making a download task
+00:02 +22: ${SDK}/test/sdk_release_test.dart: rejects oversized artifact before making a download task
+00:02 +23: ${SDK}/test/sdk_release_test.dart: rejects bad version before making a download task
+00:02 +24: ${SDK}/test/sdk_release_test.dart: rejects inactive status before making a download task
+00:02 +25: ${SDK}/test/sdk_release_test.dart: rejects unsupported Android major before making a download task
+00:02 +26: ${SDK}/test/sdk_release_test.dart: rejects build mismatch before making a download task
+00:02 +27: ${SDK}/test/sdk_release_test.dart: rejects ETag header injection before making a download task
+00:02 +28: ${SDK}/test/sdk_release_test.dart: rejects cross-app primary and canonical before making a download task
+00:02 +29: ${SDK}/test/sdk_release_test.dart: rejects cross-app backup before making a download task
+00:02 +30: ${SDK}/test/sdk_release_test.dart: rejects HTTP backup before making a download task
+00:02 +31: ${SDK}/test/sdk_release_test.dart: rejects URL credentials before making a download task
+00:02 +32: ${SDK}/test/sdk_release_test.dart: rejects wrong port before making a download task
+00:02 +33: ${SDK}/test/sdk_release_test.dart: rejects fragment before making a download task
+00:02 +34: ${SDK}/test/sdk_release_test.dart: legacy omitted build stays absent and stable artifact ID follows SHA
+00:02 +35: ${SDK}/test/sdk_release_test.dart: no cached metadata is used after a lookup failure
+00:02 +36: ${SDK}/test/sdk_release_test.dart: HTTP 302 has a stable code and never follows a redirect
+00:02 +37: ${SDK}/test/sdk_release_test.dart: HTTP 429 has a stable code and never follows a redirect
+00:02 +38: ${SDK}/test/sdk_release_test.dart: HTTP 503 has a stable code and never follows a redirect
+00:02 +39: ${SDK}/test/sdk_release_test.dart: metadata response has a strict body limit
+00:02 +40: ${SDK}/test/sdk_release_test.dart: dispose cancels an in-flight metadata lookup
+00:02 +41: ${SDK}/test/sdk_release_test.dart: one-call download uses one exact metadata snapshot and verifies all bytes
+00:02 +42: ${SDK}/test/sdk_release_test.dart: disposing during a business lookup fences its late response
+00:02 +43: ${SDK}/test/sdk_release_test.dart: business resolver exceptions cannot expose a signed URL
+00:02 +44: All tests passed!

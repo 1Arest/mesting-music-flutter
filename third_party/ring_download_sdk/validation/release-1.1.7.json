@@ -1,0 +1,72 @@
+{
+  "version": "1.1.7",
+  "channel": "stable",
+  "released_at": "2026-11-09",
+  "candidate_version": "1.1.7-dev.1",
+  "regression": {
+    "formal_full_tests": 651,
+    "formal_full_log_sha256": "1d7fc8cedbf1140ed5702b2fa7d73a8b698cd1b8e28dd20e843f9b14b6eb311a",
+    "static_analysis": "passed",
+    "inputs_unchanged": true
+  },
+  "new_behavior": {
+    "history_scope": "SDK instance, exact online registration and API base",
+    "history_ttl_seconds": 120,
+    "history_max_entries": 32,
+    "three_peer_mode_explicit": true,
+    "hedge_delay_ms": 2000,
+    "hedge_requires_no_open_ordinary_channel": true,
+    "connection_failure_diagnostics_address_free": true
+  },
+  "ordinary_native_owner_default": 2,
+  "ordinary_native_owner_configurable_max": 4,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "source_port_diversity_default": false,
+  "sharing_default": false,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "Android_independent_host": {
+    "build": "0.0.26+26",
+    "sdk": "1.1.7",
+    "signed": true,
+    "alignment_16KiB_verified": true,
+    "debuggable": false,
+    "host_tests_passed": 9,
+    "device_acceptance": false
+  },
+  "Android_native_source_identical_to_1_1_6": true,
+  "current_release_Android_device_acceptance": "pending, user tablet unavailable",
+  "prior_Android_device_acceptance": {
+    "version": "1.1.6",
+    "whole_file_verified": true,
+    "full_native_transports_released": 4,
+    "historical_only": true
+  },
+  "prior_B_acceptance": {
+    "version": "1.0.20+repair15",
+    "actual_source_tests": 217,
+    "passed": 216,
+    "skipped_no_non_loopback_IPv6": 1,
+    "real_piece_bytes": 1048576,
+    "real_piece_SHA256": true,
+    "receive_UDP_rebound": 3,
+    "process_RTC_UDP_after": 0,
+    "restart_count": 0,
+    "historical_only": true
+  },
+  "initial_regression": {
+    "failure_record_retained": true,
+    "actual_completion_unknown": true,
+    "test_fixture_correction": "Precompute fake sender SHA and manifest before its 2s connection clock, avoiding synchronous 24MiB hashing in hello."
+  },
+  "host_official_APK_built": false,
+  "limitations": [
+    "1.1.7 Android cold download, cancellation and native resource release await a new device run.",
+    "D to home IPv4 ICE remains unresolved. Candidate ranking and hedging do not establish a blocked UDP path.",
+    "Earlier B and Android acceptance are historical and do not represent 1.1.7 device coverage.",
+    "Hosts must configure p8pPeerRaceLimit: 3 for staggered hedging and rebuild/sign their own APK."
+  ]
+}

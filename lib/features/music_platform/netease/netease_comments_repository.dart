@@ -4,7 +4,12 @@ import '../data/platform_comments_repository.dart';
 import 'netease_music_repository.dart';
 
 class NeteaseCommentsRepository extends PlatformCommentsRepository {
-  NeteaseCommentsRepository(super.api, super.identity, this.music);
+  NeteaseCommentsRepository(
+    super.api,
+    super.identity,
+    this.music, {
+    super.readOnly,
+  });
   final NeteaseMusicRepository music;
   final _replyCursors = <String, int>{};
   final _listCursors = <String, String>{};
@@ -105,6 +110,7 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformCommentResource resource,
     PlatformComment comment,
   ) async {
+    requireWritable();
     await music.call('/comment/like', {
       'threadId': _thread(resource),
       'commentId': comment.id,
@@ -116,6 +122,7 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformCommentResource resource,
     PlatformComment comment,
   ) async {
+    requireWritable();
     await music.api.request(
       '/api/v2/resource/comments/hug/listener',
       {
@@ -150,6 +157,7 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformComment? replyTo,
     PlatformComment? thread,
   }) async {
+    requireWritable();
     final text = content.trim();
     if (text.isEmpty || text.length > 1000) {
       throw const MusicPlatformException('评论请输入 1 至 1000 个字符');
@@ -169,6 +177,7 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformComment comment, {
     PlatformComment? thread,
   }) async {
+    requireWritable();
     if (comment.userId != identity.userId) {
       throw const MusicPlatformException('只能删除当前账号发布的评论');
     }

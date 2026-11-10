@@ -6,13 +6,23 @@ Flutter Android APK 下载 SDK。已有更新后台选版本和来源，SDK 自�
 
 ## 当前版本
 
-当前正式源码版为 [1.1.2](https://download.csnas.asia/static/ring-download-sdk-1.1.2.zip)。包含取消竞态修复、Android定向接收缓冲、已授权缓存恢复和手机轻量分享。HTTPS立即开始，外部COS独立；`enableP8P`默认false，由接入方明确开启。
+当前正式源码发布版本为 **1.1.8**。服务端声明候补能力时，建连或握手失败后整轮最多尝试4个不同普通身份；默认同时最多2个普通原生所有者，显式四路竞速时最多4个，已接纳普通正文仍最多2路，共享4片/4MiB。创建未返回或释放失败继续占位，前缀优先和既有请求预算保持。
+
+将 `p8pPeerRaceLimit` 显式设为 3 且服务端支持候补时，SDK 先尝试两路普通节点，约 2 秒尚无普通节点交付校验首片时可补试第三路，已打开但没有校验首片的通道也可触发补位。默认两路，普通节点正文最多两路。SDK 实例内短期优先尝试已交付校验首片的在线登记，并输出建连和首片失败的分阶段诊断。源端口增强默认关闭。晚到的有效 Trickle 候选可获得一次至多 1 秒的检查余量，仍受原始总期限约束。失败诊断可提供不含地址、端口和候选标识的 ICE 检查收发计数。 本版验证记录见 `validation/release-1.1.8.json`。
+
+1.1.5 对已供过校验片的 RTC 来源增加一次请求级软救援：仅取消卡住前缀，不误伤同源其他请求；真实取消确认或关闭前仍占槽位，完成一次试片SHA后才重新加入，重复停滞退役。默认 `p8pPeerRaceLimit: 2`；显式设为4时只扩大建连竞速，普通正文仍最多两路，原整轮四身份、四槽/4MiB及服务端种子独立计数不变。`p8pSourcePortDiversity: false` 保持默认，开启需要对端及服务端协商和预算支持，不能保证穿透或绕过VPN。
+
+已有连续正文且仅剩一个本地RTC接收帧、并不超过片长四分之一时，按替代来源近期已校验速率保留有界恢复机会，最多增加一个既有救援周期；原硬截止、物理退役、HTTPS立即开始和外部COS独立保持。部分正文不计校验贡献，HTTP、零进度及非尾部沿用原救援规则。已接纳普通来源在正文传输中失败时，等请求、来源和原生所有者实际退役后可在原四次普通候选预算内补位；保留旧来源身份与历史统计，不重试已消耗身份。
+
+1.1.5 历史验收：精确候选1.1.5-dev.5完整635项回归和静态检查通过，正式版只调整版本文字。平板实际冷下载155305939字节并通过整包SHA、App取消与资源释放；另以真实Android原生WebRTC和本机HTTP完成三种9MiB+31字节合成文件救援场景，均通过整文件SHA、槽位和原生对象归零。原诊断夹具在扣住get后错误地转发cancel的失败和修正、构建器仅因声明版本元数据写回而失败的记录均保留。详见`validation/release-1.1.5.json`；这些结果不证明历史公网0B根因、所有NAT、固定速度、长期能耗或正式宿主签名安装。
+
+源码包：[1.1.8](https://download.csnas.asia/static/ring-download-sdk-1.1.8.zip)。`enableP8P`默认false，由接入方明确开启。
 
 Android分享仅在明确前台、非计费Wi-Fi、业务许可、文件校验和资源状态都允许时运行。手机进程共享1个接收方、正文256KiB/s预算及最多256KiB突发；信令、协议头和重传另计。低电量、省电或温度异常暂停，退后台停止资源观察，不创建后台常驻。B/Linux不采用手机限速。宿主仍须保存收据、重新授权并调用`restoreSharing`；开启配置不会自动找到分享文件。
 
-新接收器按手机的单片容量调度。旧端边界和本版固定输入验收见`validation/release-1.1.2.json`；源码、实验室和单台平板通过不代表正式宿主、所有公网或蜂窝已验收。App开发者替换依赖、执行flutter pub get并沿用原签名打包，已安装App不会因SDK发布自动更新。
+新接收器按手机的单片容量调度。旧端边界和本版固定输入验收见`validation/release-1.1.5.json`；源码、实验室和单台平板通过不代表正式宿主、所有公网或蜂窝已验收。App开发者替换依赖、执行flutter pub get并沿用原签名打包，已安装App不会因SDK发布自动更新。
 
-原 [1.1.1](https://download.csnas.asia/static/ring-download-sdk-1.1.1.zip)、[1.1.0](https://download.csnas.asia/static/ring-download-sdk-1.1.0.zip) 与 [1.0.3原P2P](https://download.csnas.asia/static/ring-download-sdk-1.0.3.zip) 归档保留原文件和摘要。
+历史 [1.1.7](https://download.csnas.asia/static/ring-download-sdk-1.1.7.zip)、[1.1.4](https://download.csnas.asia/static/ring-download-sdk-1.1.4.zip)、[1.1.3](https://download.csnas.asia/static/ring-download-sdk-1.1.3.zip)、[1.1.2](https://download.csnas.asia/static/ring-download-sdk-1.1.2.zip)、[1.1.1](https://download.csnas.asia/static/ring-download-sdk-1.1.1.zip)、[1.1.0](https://download.csnas.asia/static/ring-download-sdk-1.1.0.zip) 与 [1.0.3原P2P](https://download.csnas.asia/static/ring-download-sdk-1.0.3.zip) 归档保留原文件和摘要。
 
 新 App 使用下载平台分配的自己的 `appId/slug`、Android 包名和发布 APK。App 开发者准备原安装签名、业务更新响应及 UI/安装入口；业务后台准备可修改的完整主下载链接和自己的 COS/CDN 地址。新 App 沿用 LifeRing 相同的下载字段契约，无需复制其业务后台或其他功能。
 
@@ -31,7 +41,7 @@ import 'package:ring_download_sdk/ring_download_sdk.dart';
 WidgetsFlutterBinding.ensureInitialized();
 final sdk = RingDownloadSdk(const RingDownloadConfig(
   appId: 'your-app',
-  enableP8P: true, // 1.1.2 正式版显式开启 P8P
+  enableP8P: true, // 1.1.4 正式版显式开启 P8P
   allowSharing: false, // 接入方明确选择；LifeRing 沿用 true
 ));
 // 业务后台先完成 hasUpdate、账号、灰度和来源选择。
@@ -88,10 +98,10 @@ await result.revalidate();
 
 ## 验证和维护
 
-本版晚到节点补查最多追加 8 次查询，包含启动阶段最多尝试 2 个节点身份；下载完成、取消或退出时停止补查并收尾。它只在 P8P 多源已接管后运行，不延迟纯 HTTPS 下载。
+旧正式1.1.2的晚到节点补查最多追加8次查询、整轮最多2个普通身份；1.1.4在服务端声明候补能力时整轮最多4次不同普通身份尝试，同时仍最多2个普通原生所有者。下载完成、取消或退出时停止补查并收尾，纯HTTPS下载不额外等待。
 
 Android API24+ / arm64，完整平台范围见 [ENTERPRISE.md](docs/ENTERPRISE.md)，构建见 [BUILD_ENVIRONMENT.md](docs/BUILD_ENVIRONMENT.md)，交付检查见 [RELEASE_GATE.md](docs/RELEASE_GATE.md)。SDK 不提供原生 AAR、iOS 或私有租户权限系统。
 
 新接入验证本站/P8P、无节点 HTTPS、本站停机且后台主字段切 COS、COS 无摘要、错误摘要拒绝、取消/恢复、前后台/网络切换、旧版升级和正式签名安装。源码/回环与实验室通过不等于正式宿主和所有公网/蜂窝通过；结果按固定输入与验证范围记录，不承诺固定倍数或成功率。
 
-执行 `tool/verify.ps1`；示例发布构建沿用 `example/package.cmd`。历史稳定归档及 `validation/summary.json` 保留原验证范围；本版证据见 `validation/release-1.1.2.json`。按发布方决定不追加长期耐久测试，不承诺所有网络成功率或固定提速比例。许可、provenance 和第三方通知随源码保留。
+执行 `tool/verify.ps1`；示例发布构建沿用 `example/package.cmd`。历史稳定归档及 `validation/summary.json` 保留原验证范围；本版证据见 `validation/release-1.1.4.json`，历史1.1.2证据保留于 `validation/release-1.1.2.json`。按发布方决定不追加长期耐久测试，不承诺所有网络成功率或固定提速比例。许可、provenance 和第三方通知随源码保留。

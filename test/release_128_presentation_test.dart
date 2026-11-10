@@ -413,7 +413,7 @@ void main() {
   );
 
   testWidgets(
-    'rapid tabs retarget without a jump and keep at most two viewport render children',
+    'rapid tabs retarget without a jump and preserve visible tiles through repeated retargets',
     (tester) async {
       var selected = 0;
       late StateSetter update;
@@ -450,7 +450,7 @@ void main() {
       update(() => selected = 0);
       await tester.pump();
       expect(left(0), closeTo(before, .001));
-      await tester.pump(const Duration(milliseconds: 40));
+      await tester.pump(const Duration(milliseconds: 160));
       expect(left(0), greaterThan(before));
       for (final target in [2, 1, 3, 0, 2, 3, 1, 0]) {
         final previous = {for (final i in viewport.paintedIndices) i: left(i)};

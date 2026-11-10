@@ -620,7 +620,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
             CupertinoIcons.list_bullet,
           ),
           const PlayerMenuAction('quality', '音质选择', CupertinoIcons.waveform),
-          const PlayerMenuAction('comments', '歌曲评论', CupertinoIcons.text_quote),
+          const PlayerMenuAction('comments', '歌曲评论', Icons.chat_bubble_outline),
           if (track.source == TrackSource.netease && !track.hasLocalAudio)
             const PlayerMenuAction(
               'choose-source',

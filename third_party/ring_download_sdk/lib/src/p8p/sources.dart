@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'leases.dart';
 import 'ordered_writer.dart';
 import 'transfer_receiver.dart';
+import 'transfer_protocol.dart';
 
 typedef P8PRangeReader =
     Future<Uint8List> Function(int index, CancelToken token);
@@ -35,11 +36,16 @@ class P8PSourceRequest {
     this.stopped,
     this.cancel, {
     int Function()? receivedBytes,
+    this.progressUnitBytes = 0,
   }) : _receivedBytes = receivedBytes;
   final P8PLease lease;
   final Future<void> verified, stopped;
   final void Function() cancel;
   final int Function()? _receivedBytes;
+
+  /// Local adapter's maximum contiguous progress step, never a peer claim.
+  /// Zero keeps ordinary rescue timing. This earns no verified goodput.
+  final int progressUnitBytes;
 
   /// Contiguous received bytes are liveness only, never verified goodput or
   /// authorization to persist. The lease deadline remains the hard bound.
@@ -77,6 +83,8 @@ class P8PRtcPieceSource implements P8PPieceSource {
       ticket.stopped,
       () => receiver.cancel(ticket),
       receivedBytes: () => ticket.receivedBytes,
+      progressUnitBytes:
+          P8PTransferProtocol.maxFrameBytes - P8PTransferProtocol.headerBytes,
     );
   }
 

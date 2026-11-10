@@ -18,6 +18,7 @@ void showMusicNotice(
   required IconData? icon,
   required String title,
   required String message,
+  Color? iconColor,
 }) {
   if (icon == Icons.check_rounded || icon == Icons.check) {
     appHaptic(context, AppHapticEvent.success);
@@ -36,6 +37,7 @@ void showMusicNotice(
         icon: icon,
         title: title,
         message: message,
+        iconColor: iconColor,
         onDismissed: () {
           if (_activeMusicNotice != entry) return;
           entry.remove();
@@ -54,8 +56,10 @@ class _MusicNoticeOverlay extends StatefulWidget {
     required this.title,
     required this.message,
     required this.onDismissed,
+    this.iconColor,
   });
   final IconData? icon;
+  final Color? iconColor;
   final String title, message;
   final VoidCallback onDismissed;
   @override
@@ -170,11 +174,13 @@ class _MusicNoticeOverlayState extends State<_MusicNoticeOverlay>
                                 else
                                   Icon(
                                     widget.icon,
-                                    color: error
-                                        ? foreground
-                                        : BetaAppearance.accent(
-                                            Theme.of(context).brightness,
-                                          ),
+                                    color:
+                                        widget.iconColor ??
+                                        (error
+                                            ? foreground
+                                            : BetaAppearance.accent(
+                                                Theme.of(context).brightness,
+                                              )),
                                     size: 22,
                                   ),
                                 const SizedBox(width: 10),
