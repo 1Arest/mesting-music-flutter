@@ -151,7 +151,21 @@ final themePerformanceProvider =
       ThemePerformanceController.new,
     );
 
-enum ProgressDecoration { followTheme, classic, shinchan, helloKitty, kuromi }
+enum ProgressDecoration {
+  followTheme,
+  classic,
+  shinchan,
+  helloKitty,
+  kuromi,
+  myMelody,
+  usagi,
+  chiikawa,
+  hachiware,
+  puppyWhite,
+  puppyGray,
+  cinnamoroll,
+  sleepingKirby,
+}
 
 class ThemeVisualSettings {
   const ThemeVisualSettings({
@@ -269,6 +283,14 @@ MusicThemeIp decorationIp(
     ProgressDecoration.shinchan => MusicThemeIp.shinchan,
     ProgressDecoration.helloKitty => MusicThemeIp.helloKitty,
     ProgressDecoration.kuromi => MusicThemeIp.kuromi,
+    ProgressDecoration.myMelody => MusicThemeIp.myMelody,
+    ProgressDecoration.usagi => MusicThemeIp.usagi,
+    ProgressDecoration.chiikawa => MusicThemeIp.chiikawa,
+    ProgressDecoration.hachiware => MusicThemeIp.hachiware,
+    ProgressDecoration.puppyWhite => MusicThemeIp.puppyWhite,
+    ProgressDecoration.puppyGray => MusicThemeIp.puppyGray,
+    ProgressDecoration.cinnamoroll => MusicThemeIp.cinnamoroll,
+    ProgressDecoration.sleepingKirby => MusicThemeIp.sleepingKirby,
   };
 }
 
@@ -276,14 +298,7 @@ String? progressCharacterAsset(
   ProgressDecoration decoration,
   MusicThemePreset preset,
 ) {
-  return switch (decorationIp(decoration, preset)) {
-    MusicThemeIp.classic => null,
-    MusicThemeIp.shinchan => null,
-    MusicThemeIp.helloKitty =>
-      'assets/images/theme_gallery/hello-kitty-progress-head.png',
-    MusicThemeIp.kuromi =>
-      'assets/images/theme_gallery/kuromi-progress-head.png',
-  };
+  return companionAssetForIp(decorationIp(decoration, preset));
 }
 
 String progressDecorationLabel(ProgressDecoration decoration) =>
@@ -293,4 +308,26 @@ String progressDecorationLabel(ProgressDecoration decoration) =>
       ProgressDecoration.shinchan => '小新',
       ProgressDecoration.helloKitty => 'Hello Kitty',
       ProgressDecoration.kuromi => '库洛米',
+      ProgressDecoration.myMelody => '美乐蒂',
+      ProgressDecoration.usagi => '乌萨奇',
+      ProgressDecoration.chiikawa => '吉伊卡哇',
+      ProgressDecoration.hachiware => '小八',
+      ProgressDecoration.puppyWhite => '小白',
+      ProgressDecoration.puppyGray => '小灰',
+      ProgressDecoration.cinnamoroll => '大耳狗',
+      ProgressDecoration.sleepingKirby => '睡帽卡比',
     };
+
+String progressDecorationSeries(ProgressDecoration value) => switch (value) {
+  ProgressDecoration.followTheme || ProgressDecoration.classic => '基础',
+  ProgressDecoration.shinchan => '蜡笔小新',
+  ProgressDecoration.helloKitty ||
+  ProgressDecoration.kuromi ||
+  ProgressDecoration.myMelody ||
+  ProgressDecoration.cinnamoroll => '三丽鸥',
+  ProgressDecoration.usagi ||
+  ProgressDecoration.chiikawa ||
+  ProgressDecoration.hachiware => '吉伊卡哇',
+  ProgressDecoration.puppyWhite || ProgressDecoration.puppyGray => '线条小狗',
+  ProgressDecoration.sleepingKirby => '星之卡比',
+};

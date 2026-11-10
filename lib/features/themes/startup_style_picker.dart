@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/branded_launch_screen.dart';
-import '../../app/startup_video_surface.dart';
 import '../../app/startup_image_surface.dart';
 import '../../shared/widgets/beta_glass_controls.dart';
 import '../../shared/widgets/music_notice.dart';
@@ -11,8 +10,7 @@ import '../../shared/widgets/beta_press_surface.dart';
 import 'startup_style.dart';
 import 'music_typography.dart';
 
-/// Static posters keep scrolling cheap and silent. Each explicit preview owns
-/// one video controller and releases it when the preview route is dismissed.
+/// Static artwork keeps selection and previews silent.
 class StartupStylePicker extends ConsumerStatefulWidget {
   const StartupStylePicker({super.key});
 
@@ -79,9 +77,7 @@ class _StartupStylePickerState extends ConsumerState<StartupStylePicker> {
                   Positioned.fill(
                     child: style == StartupStyle.classic
                         ? const MestingBrandedLaunchScreen(forceCoral: true)
-                        : style.staticImage
-                        ? StartupImageSurface(style: style)
-                        : StartupVideoSurface(style: style, onFinished: () {}),
+                        : StartupImageSurface(style: style),
                   ),
                   Positioned(
                     top: 12,

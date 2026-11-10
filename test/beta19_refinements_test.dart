@@ -9,9 +9,7 @@ import 'package:liquid_glass_widgets/src/engine/internal/transform_tracking_repa
 import 'package:liquid_glass_widgets/src/engine/render_liquid_glass_geometry.dart';
 import 'package:liquid_glass_widgets/src/engine/rendering/liquid_glass_render_object.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
-import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/app/startup_image_surface.dart';
-import 'package:mesting_music/app/startup_video_surface.dart';
 import 'package:mesting_music/features/themes/startup_style.dart';
 import 'package:mesting_music/features/player/presentation/shinchan_progress_walker.dart';
 import 'package:mesting_music/features/themes/theme_controller.dart';
@@ -98,28 +96,20 @@ void main() {
     'Beta upgrade chooses image one once and then respects explicit changes',
     () async {
       SharedPreferences.setMockInitialValues({
-        startupStylePreferenceKey: StartupStyle.companionsTwo.id,
+        startupStylePreferenceKey: 'video-two',
       });
       final prefs = await SharedPreferences.getInstance();
       await migrateBeta19StartupStyle(prefs);
-      expect(
-        savedStartupStyle(prefs),
-        DistributionChannel.isBeta
-            ? StartupStyle.staticOne
-            : StartupStyle.companionsTwo,
-      );
+      expect(savedStartupStyle(prefs), StartupStyle.staticOne);
       await prefs.setString(
         startupStylePreferenceKey,
         StartupStyle.staticTwo.id,
       );
       await migrateBeta19StartupStyle(prefs);
       expect(savedStartupStyle(prefs), StartupStyle.staticTwo);
-      await prefs.setString(
-        startupStylePreferenceKey,
-        StartupStyle.companionsOne.id,
-      );
+      await prefs.setString(startupStylePreferenceKey, 'video-one');
       await migrateBeta19StartupStyle(prefs);
-      expect(savedStartupStyle(prefs), StartupStyle.companionsOne);
+      expect(savedStartupStyle(prefs), StartupStyle.staticTwo);
     },
   );
 
@@ -132,8 +122,6 @@ void main() {
         );
         await tester.pump();
         expect(tester.widget<Image>(find.byType(Image)).fit, BoxFit.contain);
-        expect(style.videoAsset, isNull);
-        expect(find.byType(StartupVideoSurface), findsNothing);
         expect(tester.binding.transientCallbackCount, 0);
       }
     },

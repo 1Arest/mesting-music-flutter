@@ -215,8 +215,8 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
                         ),
                       ),
                     if (!busy &&
-                        (characterIp == MusicThemeIp.helloKitty ||
-                            characterIp == MusicThemeIp.kuromi))
+                        (characterIp != MusicThemeIp.classic &&
+                            characterIp != MusicThemeIp.shinchan))
                       Positioned(
                         left: progressCompanionLeft(
                           progress: progress,

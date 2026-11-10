@@ -15,6 +15,7 @@ import '../../core/platform/distribution_channel.dart';
 import '../player/presentation/player_visual_stages.dart';
 import '../player/presentation/vinyl_disc.dart';
 import '../player/presentation/shinchan_progress_walker.dart';
+import '../player/presentation/uploaded_progress_portrait.dart';
 import '../player/player_visual_style.dart';
 import 'app_brand_style.dart';
 import 'beta_appearance.dart';
@@ -226,7 +227,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                       if (DistributionChannel.isBeta) ...[
                         const _SettingsHeading(
                           title: '启动页',
-                          description: '下次冷启动时展示，视频保留原声；后台切回不会重播。',
+                          description: '下次冷启动时展示；后台切回不会重播。',
                         ),
                         const SizedBox(height: 11),
                         const StartupStylePicker(),
@@ -282,7 +283,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: DistributionChannel.isBeta
                               ? 1
-                              : MusicThemeIp.values.length,
+                              : musicThemeCategories.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
@@ -291,7 +292,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                                 mainAxisExtent: 70,
                               ),
                           itemBuilder: (context, index) {
-                            final ip = MusicThemeIp.values[index];
+                            final ip = musicThemeCategories[index];
                             return _IpCategoryCard(
                               ip: ip,
                               active: activeIp == ip,
@@ -369,7 +370,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                         description: '进度条颜色可以独立于当前皮肤设置。',
                       ),
                       const SizedBox(height: 10),
-                      _DecorationPicker(
+                      ProgressDecorationPicker(
                         selected: visual.progressStyle,
                         character: false,
                         onSelected: (value) => ref
@@ -382,7 +383,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                         description: '选择在播放进度线上陪伴你的角色。',
                       ),
                       const SizedBox(height: 10),
-                      _DecorationPicker(
+                      ProgressDecorationPicker(
                         selected: visual.progressCharacter,
                         character: true,
                         onSelected: (value) => ref
@@ -1212,6 +1213,14 @@ class _IpCategoryCard extends StatelessWidget {
       MusicThemeIp.shinchan => ('蜡笔小新', 'KASUKABE DAYS'),
       MusicThemeIp.helloKitty => ('Hello Kitty', 'SWEET BOW CLUB'),
       MusicThemeIp.kuromi => ('库洛米', 'MISCHIEF NIGHT'),
+      MusicThemeIp.myMelody => ('美乐蒂', 'PROGRESS COMPANION'),
+      MusicThemeIp.usagi => ('乌萨奇', 'PROGRESS COMPANION'),
+      MusicThemeIp.chiikawa => ('吉伊卡哇', 'PROGRESS COMPANION'),
+      MusicThemeIp.hachiware => ('小八', 'PROGRESS COMPANION'),
+      MusicThemeIp.puppyWhite => ('小白', 'PROGRESS COMPANION'),
+      MusicThemeIp.puppyGray => ('小灰', 'PROGRESS COMPANION'),
+      MusicThemeIp.cinnamoroll => ('大耳狗', 'PROGRESS COMPANION'),
+      MusicThemeIp.sleepingKirby => ('睡帽卡比', 'PROGRESS COMPANION'),
     };
     return Material(
       color: active
@@ -1297,12 +1306,14 @@ class _IpAvatar extends StatelessWidget {
         'assets/images/theme_gallery/hello-kitty-progress-head.png',
       MusicThemeIp.kuromi =>
         'assets/images/theme_gallery/kuromi-progress-head.png',
+      _ => null,
     };
     final colors = switch (ip) {
       MusicThemeIp.classic => const [Color(0xFFFFFFFF), Color(0xFFDCEEFA)],
       MusicThemeIp.shinchan => const [Color(0xFFFFF9CF), Color(0xFFFFE8D1)],
       MusicThemeIp.helloKitty => const [Color(0xFFFFFAF5), Color(0xFFE4EEFF)],
       MusicThemeIp.kuromi => const [Color(0xFFFBF4FF), Color(0xFFE7D6F0)],
+      _ => const [Colors.white, Color(0xFFEAF2FF)],
     };
     return Container(
       width: 38,
@@ -1692,11 +1703,12 @@ class _IllustratedPresetCard extends StatelessWidget {
   }
 }
 
-class _DecorationPicker extends StatelessWidget {
-  const _DecorationPicker({
+class ProgressDecorationPicker extends StatelessWidget {
+  const ProgressDecorationPicker({
     required this.selected,
     required this.character,
     required this.onSelected,
+    super.key,
   });
 
   final ProgressDecoration selected;
@@ -1705,29 +1717,52 @@ class _DecorationPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      itemCount: DistributionChannel.isBeta
-          ? ProgressDecoration.values.length - 1
-          : ProgressDecoration.values.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 9,
-        mainAxisSpacing: 9,
-        mainAxisExtent: 48,
-      ),
-      itemBuilder: (context, index) {
-        final value = ProgressDecoration
-            .values[index + (DistributionChannel.isBeta ? 1 : 0)];
-        return _DecorationChoice(
-          value: value,
-          active: selected == value,
-          character: character,
-          onTap: () => onSelected(value),
-        );
-      },
+    final groups = <String, List<ProgressDecoration>>{};
+    for (final value in ProgressDecoration.values) {
+      if (DistributionChannel.isBeta &&
+          value == ProgressDecoration.followTheme) {
+        continue;
+      }
+      final series = progressDecorationSeries(value);
+      groups.putIfAbsent(series, () => []).add(value);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final group in groups.entries) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Text(
+              group.key,
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: group.value.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 9,
+              mainAxisSpacing: 9,
+              mainAxisExtent: 48,
+            ),
+            itemBuilder: (context, index) {
+              final value = group.value[index];
+              return _DecorationChoice(
+                value: value,
+                active: selected == value,
+                character: character,
+                onTap: () => onSelected(value),
+              );
+            },
+          ),
+        ],
+      ],
     );
   }
 }
@@ -1828,6 +1863,7 @@ class _DecorationChoice extends StatelessWidget {
             ProgressDecoration.shinchan => '蜡笔小新',
             ProgressDecoration.helloKitty => 'Hello Kitty',
             ProgressDecoration.kuromi => '库洛米',
+            _ => progressDecorationLabel(value),
           }
         : progressDecorationLabel(value);
     return Material(
@@ -1892,6 +1928,14 @@ class _DecorationChoiceIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ip = decorationIp(value, musicThemePresets.first);
+    if (isUploadedProgressIp(ip)) {
+      return SizedBox(
+        width: 26,
+        height: 26,
+        child: UploadedProgressPortrait(ip: ip),
+      );
+    }
     final asset = switch (value) {
       ProgressDecoration.shinchan =>
         'assets/images/theme_gallery/shinchan-avatar-v2.png',

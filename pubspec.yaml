@@ -258,6 +258,14 @@ flutter:
     - assets/images/theme_gallery/progress-shiro-walk-pass.png
     - assets/images/theme_gallery/hello-kitty-progress-head.png
     - assets/images/theme_gallery/kuromi-progress-head.png
+    - assets/images/theme_gallery/my-melody-progress.png
+    - assets/images/theme_gallery/usagi-progress.png
+    - assets/images/theme_gallery/chiikawa-progress.png
+    - assets/images/theme_gallery/hachiware-progress.png
+    - assets/images/theme_gallery/puppy-white-progress.png
+    - assets/images/theme_gallery/puppy-gray-progress.png
+    - assets/images/theme_gallery/cinnamoroll-progress.png
+    - assets/images/theme_gallery/sleeping-kirby-progress.png
     # The existing classic-turntable preview still uses this single cover.
     - assets/images/theme_playlists/shinchan/cover-01.jpg
 

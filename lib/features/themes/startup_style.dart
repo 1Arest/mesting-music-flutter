@@ -5,7 +5,7 @@ import '../../core/persistence/app_preferences.dart';
 import '../../core/platform/distribution_channel.dart';
 
 /// Startup media is independent of launcher aliases, player style and theme.
-/// Beta.19 adds static art without retiring either existing film.
+/// Retired video preferences resolve to the matching static artwork.
 const startupStylePreferenceKey = 'beta12_startup_style';
 const beta19StartupMigrationKey = 'beta19_static_startup_migrated';
 
@@ -22,8 +22,6 @@ enum StartupStyle {
     'assets/branding/startup/companions-static-2',
     staticImage: true,
   ),
-  companionsOne('video-one', '音乐伙伴', 'assets/branding/startup/companions-1'),
-  companionsTwo('video-two', '唱片派对', 'assets/branding/startup/companions-2'),
   classic('classic', '经典启动页', null);
 
   const StartupStyle(
@@ -36,10 +34,7 @@ enum StartupStyle {
   final String label;
   final String? assetBase;
   final bool staticImage;
-  bool get isVideo => assetBase != null && !staticImage;
-  String? get videoAsset => isVideo ? '$assetBase.mp4' : null;
-  String? get posterAsset =>
-      assetBase == null ? null : '$assetBase.${staticImage ? 'png' : 'webp'}';
+  String? get posterAsset => assetBase == null ? null : '$assetBase.png';
 }
 
 /// Explicitly confirmed upgrade rule: switch once, then respect later choices.
@@ -56,13 +51,16 @@ Future<void> migrateBeta19StartupStyle(SharedPreferences preferences) async {
   if (saved) await preferences.setBool(beta19StartupMigrationKey, true);
 }
 
-StartupStyle savedStartupStyle(SharedPreferences preferences) =>
-    StartupStyle.values.firstWhere(
-      (style) => style.id == preferences.getString(startupStylePreferenceKey),
-      orElse: () => DistributionChannel.isBeta
-          ? StartupStyle.staticOne
-          : StartupStyle.companionsOne,
-    );
+StartupStyle savedStartupStyle(SharedPreferences preferences) {
+  final id = preferences.getString(startupStylePreferenceKey);
+  // Preserve the artwork choice of users who selected a retired video.
+  if (id == 'video-one') return StartupStyle.staticTwo;
+  if (id == 'video-two') return StartupStyle.staticOne;
+  return StartupStyle.values.firstWhere(
+    (style) => style.id == id,
+    orElse: () => StartupStyle.staticOne,
+  );
+}
 
 class StartupStyleController extends Notifier<StartupStyle> {
   @override

@@ -193,8 +193,8 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                           ),
                         ),
                       ),
-                    if (characterIp == MusicThemeIp.helloKitty ||
-                        characterIp == MusicThemeIp.kuromi)
+                    if (characterIp != MusicThemeIp.classic &&
+                        characterIp != MusicThemeIp.shinchan)
                       Positioned(
                         left: progressCompanionLeft(
                           progress: value / maximum,
