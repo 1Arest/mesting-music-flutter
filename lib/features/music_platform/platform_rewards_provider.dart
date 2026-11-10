@@ -8,6 +8,12 @@ import 'domain/platform_session.dart';
 import 'retained_kugou_scope.dart';
 import '../../core/diagnostics/diagnostic_activity.dart';
 import 'netease/netease_rewards_provider.dart';
+import 'data/platform_ad_progress_store.dart';
+
+/// Injectable clock keeps restart/cooldown tests independent of real waiting.
+final platformRewardClockProvider = Provider<DateTime Function()>(
+  (ref) => DateTime.now,
+);
 
 final platformRewardServiceProvider = Provider<PlatformRewardService>(
   (ref) => PlatformRewardsRepository(
@@ -45,6 +51,7 @@ class PlatformRewardState {
     this.localDates = const {},
     this.loading = false,
     this.autoSignIn = true,
+    this.autoAds = true,
     this.action,
     this.adCount = 0,
     this.adWaiting = false,
@@ -54,7 +61,7 @@ class PlatformRewardState {
   final String? ownerId, message;
   final RewardSnapshot? snapshot;
   final Set<String> localDates;
-  final bool loading, autoSignIn, adWaiting, needsVerification;
+  final bool loading, autoSignIn, autoAds, adWaiting, needsVerification;
   final RewardAction? action;
   final int adCount;
   Set<String> get signedDates => {...?snapshot?.signedDates, ...localDates};
@@ -63,6 +70,7 @@ class PlatformRewardState {
     Set<String>? localDates,
     bool? loading,
     bool? autoSignIn,
+    bool? autoAds,
     RewardAction? action,
     bool clearAction = false,
     int? adCount,
@@ -75,6 +83,7 @@ class PlatformRewardState {
     localDates: localDates ?? this.localDates,
     loading: loading ?? this.loading,
     autoSignIn: autoSignIn ?? this.autoSignIn,
+    autoAds: autoAds ?? this.autoAds,
     action: clearAction ? null : action ?? this.action,
     adCount: adCount ?? this.adCount,
     adWaiting: adWaiting ?? this.adWaiting,
@@ -100,8 +109,10 @@ final platformRewardAutomationProvider = Provider<void>((ref) {
 class PlatformRewardsController extends Notifier<PlatformRewardState> {
   static const autoSignInKey = 'md3_rewards.auto_sign_in';
   static String datesKey(String owner) => 'md3_rewards.signed_dates.$owner';
+  static String autoAdsKey(String owner) => 'md3_rewards.auto_ads.$owner';
   int _generation = 0, _loadVersion = 0;
   Completer<void>? _adAbort;
+  final _automaticAdAttempts = <String>{};
 
   @override
   PlatformRewardState build() {
@@ -116,6 +127,7 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
     });
     final ticket = ++_generation;
     _loadVersion++;
+    stopAds();
     _adAbort = null;
     ref.onDispose(() {
       _generation++;
@@ -134,13 +146,16 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
         if (!_valid(ticket, owner)) return;
         await refresh();
         if (!_valid(ticket, owner) ||
-            !state.autoSignIn ||
             ref.read(diagnosticActivityProvider) ||
             state.action != null) {
           return;
         }
         final day = state.snapshot?.now ?? DateTime.now();
-        if (!state.signedDates.contains(rewardDateKey(day))) await signIn();
+        if (state.autoSignIn &&
+            !state.signedDates.contains(rewardDateKey(day))) {
+          await signIn();
+        }
+        if (_valid(ticket, owner)) await _automaticAds(ticket, owner);
       }),
     );
     return PlatformRewardState(
@@ -148,6 +163,12 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
       localDates: dates,
       loading: true,
       autoSignIn: automatic,
+      autoAds: preferences.getBool(autoAdsKey(owner.userId)) ?? true,
+      adCount: PlatformAdProgress.read(
+        preferences,
+        owner.userId,
+        rewardDateKey(ref.read(platformRewardClockProvider)()),
+      ).count,
     );
   }
 
@@ -155,6 +176,44 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
     if (!ref.mounted || ticket != _generation) return false;
     final current = ref.read(retainedKugouSessionProvider);
     return current?.userId == owner.userId && current?.token == owner.token;
+  }
+
+  Future<void> _automaticAds(int ticket, PlatformSession owner) async {
+    if (!_valid(ticket, owner) ||
+        !state.autoAds ||
+        state.needsVerification ||
+        state.action != null ||
+        ref.read(diagnosticActivityProvider)) {
+      return;
+    }
+    final day = rewardDateKey(
+      state.snapshot?.now ?? ref.read(platformRewardClockProvider)(),
+    );
+    // One automatic attempt per owner/day per application process. Failures
+    // remain visible for manual retry; token refresh cannot create retry storms.
+    if (!_automaticAdAttempts.add('${owner.userId}:$day')) return;
+    await _claimAds(refreshFirst: false);
+  }
+
+  Future<void> setAutoAds(bool enabled) async {
+    final owner = ref.read(retainedKugouSessionProvider);
+    if (owner == null) return;
+    final ticket = _generation;
+    final saved = await ref
+        .read(sharedPreferencesProvider)
+        .setBool(autoAdsKey(owner.userId), enabled);
+    if (!saved) throw StateError('自动广告领取设置未保存，请重试');
+    if (!_valid(ticket, owner)) return;
+    state = state.copyWith(autoAds: enabled);
+    if (!enabled) {
+      stopAds();
+      return;
+    }
+    final day = rewardDateKey(
+      state.snapshot?.now ?? ref.read(platformRewardClockProvider)(),
+    );
+    _automaticAdAttempts.remove('${owner.userId}:$day');
+    unawaited(_automaticAds(ticket, owner));
   }
 
   Future<void> setAutoSignIn(bool enabled) async {
@@ -203,6 +262,13 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
           membershipsAvailable: snapshot.membershipsAvailable,
         ),
         loading: false,
+        adCount: state.action == RewardAction.ad
+            ? null
+            : PlatformAdProgress.read(
+                ref.read(sharedPreferencesProvider),
+                owner.userId,
+                rewardDateKey(snapshot.now),
+              ).count,
       );
     } on Object {
       if (_valid(ticket, owner) && load == _loadVersion) {
@@ -222,7 +288,7 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
     }
     if (state.action != null) return const RewardOutcome(false, '当前领取尚未完成，请稍候');
     final ticket = _generation;
-    state = state.copyWith(action: action, adCount: 0, adWaiting: false);
+    state = state.copyWith(action: action, adWaiting: false);
     RewardOutcome result;
     try {
       result = await operation(owner, ticket);
@@ -303,14 +369,51 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
     if (abort != null && !abort.isCompleted) abort.complete();
   }
 
-  Future<RewardOutcome> ads() => _run(RewardAction.ad, (owner, ticket) async {
+  Future<RewardOutcome> ads() => _claimAds(refreshFirst: true);
+
+  Future<RewardOutcome> _claimAds({
+    required bool refreshFirst,
+  }) => _run(RewardAction.ad, (owner, ticket) async {
+    if (refreshFirst) await refresh();
+    if (!_valid(ticket, owner) || ref.read(diagnosticActivityProvider)) {
+      return const RewardOutcome(false, '账号已变化或诊断已启动');
+    }
     final abort = Completer<void>();
     _adAbort = abort;
-    var successes = 0;
+    final preferences = ref.read(sharedPreferencesProvider);
+    final clock = ref.read(platformRewardClockProvider);
+    final localDayAtStart = rewardDateKey(clock());
+    final day = rewardDateKey(state.snapshot?.now ?? clock());
+    var progress = PlatformAdProgress.read(preferences, owner.userId, day);
+    var successes = progress.count;
+    state = state.copyWith(adCount: successes);
+    if (progress.done || successes >= 8) {
+      return const RewardOutcome(true, '今日广告次数已用完', quotaDone: true);
+    }
+    Future<bool> waitGap() async {
+      final remaining =
+          30000 - (clock().millisecondsSinceEpoch - progress.lastSuccessMs);
+      if (progress.lastSuccessMs > 0 && remaining > 0) {
+        state = state.copyWith(adWaiting: true);
+        await ref.read(platformRewardDelayProvider)(
+          Duration(milliseconds: remaining.clamp(0, 30000)),
+          abort.future,
+        );
+        if (_valid(ticket, owner)) state = state.copyWith(adWaiting: false);
+      }
+      return _valid(ticket, owner) &&
+          !abort.isCompleted &&
+          !ref.read(diagnosticActivityProvider);
+    }
+
     // Preserve upstream's maximum eight claims and 30s successful-claim gap.
     // A quota response is terminal; cancellation/owner change prevents any
     // later request rather than merely hiding its UI.
-    for (var attempt = 0; attempt < 8; attempt++) {
+    for (var attempt = successes; attempt < 8; attempt++) {
+      if (!await waitGap()) break;
+      if (rewardDateKey(clock()) != localDayAtStart) {
+        return RewardOutcome(true, '日期已变化，本轮已停止，已确认 $successes 次');
+      }
       if (!_valid(ticket, owner) ||
           abort.isCompleted ||
           ref.read(diagnosticActivityProvider)) {
@@ -319,6 +422,13 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
       final result = await ref.read(platformRewardServiceProvider).ad(owner);
       if (!_valid(ticket, owner)) break;
       if (result.quotaDone) {
+        progress = PlatformAdProgress(
+          count: successes,
+          lastSuccessMs: progress.lastSuccessMs,
+          done: true,
+        );
+        await progress.save(preferences, owner.userId, day);
+        if (!_valid(ticket, owner)) break;
         return RewardOutcome(
           true,
           '今日广告次数已用完，已确认 $successes 次',
@@ -330,13 +440,15 @@ class PlatformRewardsController extends Notifier<PlatformRewardState> {
       }
       successes++;
       state = state.copyWith(adCount: successes);
-      if (attempt != 7) {
-        state = state.copyWith(adWaiting: true);
-        await ref.read(platformRewardDelayProvider)(
-          const Duration(seconds: 30),
-          abort.future,
-        );
-        if (_valid(ticket, owner)) state = state.copyWith(adWaiting: false);
+      progress = PlatformAdProgress(
+        count: successes,
+        lastSuccessMs: clock().millisecondsSinceEpoch,
+        done: successes >= 8,
+      );
+      final saved = await progress.save(preferences, owner.userId, day);
+      if (!_valid(ticket, owner)) break;
+      if (!saved) {
+        return RewardOutcome(false, '平台已确认 $successes 次，本机进度未保存，自动领取已停止，请手动核对');
       }
     }
     return RewardOutcome(

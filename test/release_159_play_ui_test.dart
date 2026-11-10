@@ -1,3 +1,4 @@
+import 'support/source187_paging_fixture.dart';
 // This historical fixture covers NetEase/Kugou; Soda is covered by qishui_* tests.
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
@@ -18,6 +19,7 @@ import 'package:mesting_music/features/music_platform/platform_recommendation_pr
 import 'package:mesting_music/features/music_platform/presentation/platform_collection_play.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_mode_play.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_search_landing.dart';
+import 'package:mesting_music/features/music_platform/presentation/platform_ranking_header.dart';
 import 'package:mesting_music/shared/models/track.dart';
 import 'package:mesting_music/shared/models/track_page.dart';
 import 'package:mesting_music/shared/widgets/beta_page_route_observer.dart';
@@ -44,6 +46,8 @@ class _Account extends PlatformAccountController {
 }
 
 class _Queue extends Fake implements MestingAudioHandler {
+  @override
+  int get transportRevision => 0;
   List<Track> received = [];
   List<MediaItem> pending = [];
   @override
@@ -204,6 +208,7 @@ void main() {
           audioHandler: queue,
           accountFactory: () => _Account(platform),
           extraOverrides: [
+            retainedPagingLogin187(),
             platformDailyProvider.overrideWith((ref) async => tracks),
           ],
         );
@@ -246,6 +251,7 @@ void main() {
           audioHandler: queue,
           accountFactory: () => _Account(platform),
           extraOverrides: [
+            retainedPagingLogin187(),
             platformFmProvider.overrideWith((ref) async => tracks),
             platformRecommendationSessionProvider.overrideWithValue(radio),
           ],
@@ -279,7 +285,10 @@ void main() {
       final heart = _Heart([...tracks, tracks.first]);
       final fixture = await PersonalProfileFixture.create(
         audioHandler: queue,
-        extraOverrides: [neteaseFeaturesProvider.overrideWithValue(heart)],
+        extraOverrides: [
+          retainedPagingLogin187(),
+          neteaseFeaturesProvider.overrideWithValue(heart),
+        ],
       );
       addTearDown(fixture.dispose);
       await tester.pumpWidget(
@@ -304,7 +313,10 @@ void main() {
     tester,
   ) async {
     final queue = _Queue(), pending = Completer<List<Track>>();
-    final fixture = await PersonalProfileFixture.create(audioHandler: queue);
+    final fixture = await PersonalProfileFixture.create(
+      extraOverrides: [retainedPagingLogin187()],
+      audioHandler: queue,
+    );
     addTearDown(fixture.dispose);
     await tester.pumpWidget(
       _host(
@@ -340,7 +352,10 @@ void main() {
     'leaving a full page permanently revokes its old request even after returning',
     (tester) async {
       final queue = _Queue(), pending = Completer<List<Track>>();
-      final fixture = await PersonalProfileFixture.create(audioHandler: queue);
+      final fixture = await PersonalProfileFixture.create(
+        extraOverrides: [retainedPagingLogin187()],
+        audioHandler: queue,
+      );
       addTearDown(fixture.dispose);
       final observer = BetaPageRouteObserver();
       await tester.pumpWidget(
@@ -403,6 +418,7 @@ void main() {
   ) async {
     final queue = _Queue(), pending = Completer<List<Track>>();
     final fixture = await PersonalProfileFixture.create(
+      extraOverrides: [retainedPagingLogin187()],
       audioHandler: queue,
       accountFactory: () => _Account(MusicPlatform.netease),
     );
@@ -434,7 +450,10 @@ void main() {
     'a minimal host without an observer also revokes a covered read',
     (tester) async {
       final queue = _Queue(), pending = Completer<List<Track>>();
-      final fixture = await PersonalProfileFixture.create(audioHandler: queue);
+      final fixture = await PersonalProfileFixture.create(
+        extraOverrides: [retainedPagingLogin187()],
+        audioHandler: queue,
+      );
       addTearDown(fixture.dispose);
       await tester.pumpWidget(
         _host(
@@ -481,7 +500,10 @@ void main() {
     (tester) async {
       final queue = _Queue()
         ..pending = [const MediaItem(id: 'pending-fixture', title: '旧待播')];
-      final fixture = await PersonalProfileFixture.create(audioHandler: queue);
+      final fixture = await PersonalProfileFixture.create(
+        extraOverrides: [retainedPagingLogin187()],
+        audioHandler: queue,
+      );
       addTearDown(fixture.dispose);
       await tester.pumpWidget(
         _host(
@@ -505,7 +527,10 @@ void main() {
     'switching a retained tab away and back revokes its old selection',
     (tester) async {
       final queue = _Queue(), pending = Completer<List<Track>>();
-      final fixture = await PersonalProfileFixture.create(audioHandler: queue);
+      final fixture = await PersonalProfileFixture.create(
+        extraOverrides: [retainedPagingLogin187()],
+        audioHandler: queue,
+      );
       addTearDown(fixture.dispose);
       var visible = true;
       late StateSetter update;
@@ -561,6 +586,7 @@ void main() {
             musicRepository: music,
             accountFactory: () => _Account(platform),
             extraOverrides: [
+              retainedPagingLogin187(),
               platformExploreRepositoryProvider.overrideWithValue(_Pages()),
               musicPlatformApiProvider.overrideWithValue(
                 api157(
@@ -593,10 +619,28 @@ void main() {
           );
           await _settle(tester);
           await ready146(tester);
-          final key = ValueKey(
-            rank ? 'ranking-cover-play' : 'playlist-cover-play',
-          );
+          final key = ValueKey(rank ? 'ranking-play-all' : 'playlist-play-all');
           expect(find.byKey(key), findsOneWidget);
+          expect(
+            find.byKey(const ValueKey('ranking-cover-play')),
+            findsNothing,
+          );
+          final masthead = tester.widget<PlatformCollectionMasthead>(
+            find.byType(PlatformCollectionMasthead),
+          );
+          expect(masthead.coverOnly, true);
+          expect(masthead.onSearch, isNull);
+          expect(masthead.onDetails, isNull);
+          expect(masthead.coverAction, isNull);
+          expect(
+            tester
+                .widget<Text>(
+                  find.byKey(const ValueKey('ranking-masthead-title')),
+                )
+                .style!
+                .fontSize,
+            32,
+          );
           await tester.tap(find.byKey(key));
           await _settle(tester);
           expect(queue.received, hasLength(77));
@@ -617,6 +661,7 @@ void main() {
         final fixture = await PersonalProfileFixture.create(
           accountFactory: () => _Account(platform),
           extraOverrides: [
+            retainedPagingLogin187(),
             platformDailyProvider.overrideWith((ref) async => tracks),
             platformFmProvider.overrideWith((ref) async => tracks),
             platformExploreProvider.overrideWith(

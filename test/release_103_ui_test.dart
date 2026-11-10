@@ -1,3 +1,9 @@
+import 'package:mesting_music/features/music_platform/source_media_scope.dart';
+import 'package:mesting_music/features/music_platform/retained_kugou_scope.dart';
+import 'package:mesting_music/features/music_platform/linked_music_providers.dart';
+import 'package:mesting_music/features/music_platform/data/linked_music_mvs.dart';
+import 'package:mesting_music/features/music_platform/data/platform_mv_repository.dart';
+import 'package:mesting_music/features/music_platform/data/platform_search_repository.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -189,6 +195,8 @@ void main() {
     Size size = const Size(390, 844),
     bool eq = false,
     bool profileError = false,
+    bool mixedMvs = false,
+    bool noPlayableMv = false,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -246,6 +254,15 @@ void main() {
               },
             ),
           },
+          '/video/barrage' => {
+            'status': 1,
+            'data': {
+              'list': [
+                {'id': 'mv-comment', 'content': '酷狗视频评论', 'nickname': '用户'},
+              ],
+              'total': 1,
+            },
+          },
           '/kmr/audio/mv' => {
             'status': 1,
             'data': [
@@ -281,6 +298,52 @@ void main() {
         audioHandlerProvider.overrideWithValue(actual),
         musicEqualizerProvider.overrideWithValue(equalizer),
         musicPlatformApiProvider.overrideWithValue(api),
+        // The original single-platform fixture has no foreign account/network.
+        savedKugouSessionProvider.overrideWith((ref) async => null),
+        if (!mixedMvs)
+          linkedMvSourceProvider(TrackSource.netease).overrideWith(
+            (ref) async => MvSourceRepositories(
+              PlatformMvRepository(api),
+              _NoCounterpartSearch(api),
+              () => true,
+            ),
+          ),
+        if (mixedMvs || noPlayableMv)
+          linkedMvSourceProvider(TrackSource.kugou).overrideWith(
+            (ref) async => MvSourceRepositories(
+              _MvChoiceFixture(api, TrackSource.kugou, fail: noPlayableMv),
+              _NoCounterpartSearch(api),
+              () => true,
+            ),
+          ),
+        if (mixedMvs)
+          linkedMvSourceProvider(TrackSource.netease).overrideWith(
+            (ref) async => MvSourceRepositories(
+              _MvChoiceFixture(api, TrackSource.netease, fail: true),
+              _MvCounterpartFixture(api),
+              () => true,
+            ),
+          ),
+        if (mixedMvs)
+          sourceMediaScopeProvider(TrackSource.netease).overrideWith(
+            (ref) async => SourceMediaScope(
+              source: TrackSource.netease,
+              api:
+                  MusicPlatformApi(
+                      server: _Server(),
+                      client: MockClient(
+                        (_) async =>
+                            throw StateError('No live foreign requests'),
+                      ),
+                    )
+                    ..session = const PlatformSession(
+                      userId: 'foreign-ne',
+                      token: 'foreign-test-token',
+                      platform: MusicPlatform.netease,
+                    ),
+              isCurrent: () => true,
+            ),
+          ),
         platformAccountProvider.overrideWith(_Account.new),
         appVersionProvider.overrideWith((_) async => _version),
         appUpdateControllerProvider.overrideWith(_Update.new),
@@ -542,6 +605,67 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+    testWidgets(
+      'failed foreign MV switch retains actual source and its comment default, $mode',
+      (tester) async {
+        final previous = VideoPlayerPlatform.instance;
+        final video = _Video();
+        VideoPlayerPlatform.instance = video;
+        addTearDown(() => VideoPlayerPlatform.instance = previous);
+        final track = Track.fromJson({
+          ...testTracks.first.toJson(),
+          'id': 'kugou_fixture',
+          'source': 'kugou',
+          'platformSongId': '12345',
+        });
+        await mount(
+          tester,
+          MusicMvPage(track: track),
+          dark: dark,
+          mixedMvs: true,
+        );
+        await tester.pumpAndSettle();
+        expect(video.ids, 1);
+        await tester.tap(find.text('网易云 MV'));
+        await tester.pumpAndSettle();
+        expect(video.ids, 1);
+        expect(find.textContaining('平台暂未提供此清晰度'), findsOneWidget);
+        await tester.ensureVisible(find.text('查看评论'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('查看评论'));
+        await tester.pumpAndSettle();
+        expect(find.text('MV评论').hitTestable(), findsWidgets);
+        expect(find.text('酷狗视频评论').hitTestable(), findsOneWidget);
+      },
+    );
+    testWidgets(
+      'MV comments remain available when no playback URL is permitted, $mode',
+      (tester) async {
+        final previous = VideoPlayerPlatform.instance;
+        final video = _Video();
+        VideoPlayerPlatform.instance = video;
+        addTearDown(() => VideoPlayerPlatform.instance = previous);
+        final track = Track.fromJson({
+          ...testTracks.first.toJson(),
+          'id': 'kugou_fixture',
+          'source': 'kugou',
+          'platformSongId': '12345',
+        });
+        await mount(
+          tester,
+          MusicMvPage(track: track),
+          dark: dark,
+          noPlayableMv: true,
+        );
+        await tester.pumpAndSettle();
+        expect(video.ids, 0);
+        await tester.ensureVisible(find.text('查看评论'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('查看评论'));
+        await tester.pumpAndSettle();
+        expect(find.text('酷狗视频评论').hitTestable(), findsOneWidget);
+      },
+    );
     testWidgets('MV initializes and switches actual video controllers, $mode', (
       tester,
     ) async {
@@ -752,4 +876,52 @@ void main() {
     expect(controller.state.levels.first, isNot(previous));
     expect(controller.state.preset, '自定义');
   });
+}
+
+class _NoCounterpartSearch extends PlatformSearchRepository {
+  _NoCounterpartSearch(super.api);
+  @override
+  Future<PlatformSearchPage> search(
+    String q, {
+    int page = 1,
+    Future<void>? abortTrigger,
+  }) async => const PlatformSearchPage([], 0, false);
+}
+
+class _MvChoiceFixture extends PlatformMvRepository {
+  _MvChoiceFixture(super.api, this.source, {this.fail = false});
+  final TrackSource source;
+  final bool fail;
+  @override
+  Future<MusicMv?> lookup(Track track) async => MusicMv(
+    id: '${source.name}-real-video',
+    title: track.title,
+    artist: track.artist,
+    duration: const Duration(minutes: 4),
+    source: source,
+    qualities: [MusicMvQuality('${source.name}-quality', '高清')],
+  );
+  @override
+  Future<List<Uri>> urls(MusicMvQuality quality) async =>
+      fail ? [] : [Uri.parse('https://media.example/mv-${source.name}.mp4')];
+}
+
+class _MvCounterpartFixture extends PlatformSearchRepository {
+  _MvCounterpartFixture(super.api);
+  @override
+  Future<PlatformSearchPage> search(
+    String q, {
+    int page = 1,
+    Future<void>? abortTrigger,
+  }) async => PlatformSearchPage(
+    [
+      Track.fromJson({
+        ...testTracks.first.toJson(),
+        'id': 'netease_700',
+        'source': 'netease',
+      }),
+    ],
+    1,
+    false,
+  );
 }

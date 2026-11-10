@@ -8,6 +8,7 @@ import 'package:mesting_music/features/player/presentation/beta_playback_actions
 import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_session.dart';
 import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
+import 'package:mesting_music/features/music_platform/source_media_scope.dart';
 import 'package:mesting_music/features/music_platform/data/platform_explore.dart';
 import 'package:mesting_music/features/music_platform/presentation/platform_search_landing.dart';
 import 'package:mesting_music/shared/models/track.dart';
@@ -38,6 +39,8 @@ class _Account extends PlatformAccountController {
 }
 
 class _Queue extends Fake implements MestingAudioHandler {
+  @override
+  int get transportRevision => 0;
   List<Track> received = [];
   List<MediaItem> pending = [];
   @override
@@ -110,6 +113,20 @@ void main() {
               audioHandler: queue,
               accountFactory: () => _Account(platform),
               extraOverrides: [
+                // This historical paging fixture uses Kugou song157 records
+                // under both UIs. Provide its retained source login explicitly;
+                // the test still verifies all 77 tracks and page ordering.
+                sourceMediaScopeProvider(TrackSource.kugou).overrideWith(
+                  (ref) async => SourceMediaScope(
+                    source: TrackSource.kugou,
+                    api: api157(
+                      (_) async => throw StateError(
+                        'No source network in paging fixture',
+                      ),
+                    ),
+                    isCurrent: () => true,
+                  ),
+                ),
                 platformExploreRepositoryProvider.overrideWithValue(_Pages()),
                 musicPlatformApiProvider.overrideWithValue(
                   api157(
@@ -273,6 +290,20 @@ void main() {
             final fixture = await PersonalProfileFixture.create(
               accountFactory: () => _Account(platform),
               extraOverrides: [
+                // This historical paging fixture uses Kugou song157 records
+                // under both UIs. Provide its retained source login explicitly;
+                // the test still verifies all 77 tracks and page ordering.
+                sourceMediaScopeProvider(TrackSource.kugou).overrideWith(
+                  (ref) async => SourceMediaScope(
+                    source: TrackSource.kugou,
+                    api: api157(
+                      (_) async => throw StateError(
+                        'No source network in paging fixture',
+                      ),
+                    ),
+                    isCurrent: () => true,
+                  ),
+                ),
                 platformDailyProvider.overrideWith((ref) async => songs),
                 platformFmProvider.overrideWith((ref) async => songs),
                 platformDiscoveryProvider.overrideWith((ref) async => songs),
@@ -397,6 +428,19 @@ void main() {
           accountFactory: () => _Account(platform),
           audioHandler: queue,
           extraOverrides: [
+            // This historical paging fixture uses Kugou song157 records
+            // under both UIs. Provide its retained source login explicitly;
+            // the test still verifies all 77 tracks and page ordering.
+            sourceMediaScopeProvider(TrackSource.kugou).overrideWith(
+              (ref) async => SourceMediaScope(
+                source: TrackSource.kugou,
+                api: api157(
+                  (_) async =>
+                      throw StateError('No source network in paging fixture'),
+                ),
+                isCurrent: () => true,
+              ),
+            ),
             platformExploreRepositoryProvider.overrideWithValue(_Pages()),
           ],
         );
@@ -477,6 +521,19 @@ void main() {
           accountFactory: () => _Account(platform),
           audioHandler: queue,
           extraOverrides: [
+            // This historical paging fixture uses Kugou song157 records
+            // under both UIs. Provide its retained source login explicitly;
+            // the test still verifies all 77 tracks and page ordering.
+            sourceMediaScopeProvider(TrackSource.kugou).overrideWith(
+              (ref) async => SourceMediaScope(
+                source: TrackSource.kugou,
+                api: api157(
+                  (_) async =>
+                      throw StateError('No source network in paging fixture'),
+                ),
+                isCurrent: () => true,
+              ),
+            ),
             platformExploreRepositoryProvider.overrideWithValue(_Pages()),
             musicPlatformApiProvider.overrideWithValue(api),
           ],

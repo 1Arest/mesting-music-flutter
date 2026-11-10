@@ -33,18 +33,18 @@ void main() {
     },
   );
   test(
-    'thumbnail preserves path and query while bounding CDN image dimensions',
+    'thumbnail bounds bare photos and preserves supplied processing queries',
     () {
       final uri = Uri.parse(
         sizedArtworkUri(
-          'http://p1.music.126.net/a==/cover.jpg?x=kept',
+          'http://p1.music.126.net/a==/cover.jpg',
           width: 192,
           height: 510,
         ),
       );
       expect(uri.scheme, 'https');
       expect(uri.path, '/a==/cover.jpg');
-      expect(uri.queryParameters, {'x': 'kept', 'param': '192y510'});
+      expect(uri.queryParameters, {'param': '192y510'});
       expect(
         Uri.parse(
           sizedArtworkUri(uri.toString(), width: 9000, height: 1),
@@ -56,6 +56,10 @@ void main() {
         'https://other.example/a?sign=keep',
       );
       expect(sizedArtworkUri('assets/cover.webp'), 'assets/cover.webp');
+      expect(
+        sizedArtworkUri('http://p1.music.126.net/a.jpg?x=kept'),
+        'https://p1.music.126.net/a.jpg?x=kept',
+      );
     },
   );
   test('a bare primary image ID cannot hide the later CDN URL', () {

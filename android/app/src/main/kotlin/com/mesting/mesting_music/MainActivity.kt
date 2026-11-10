@@ -285,6 +285,7 @@ open class MainActivity : AudioServiceActivity() {
                 "shareDiagnosticJson" -> DiagnosticReportShare.share(this, call, result)
                 "shareQishuiDiagnosticJson" -> DiagnosticReportShare.shareQishui(this, call, result)
                 "shareNeteaseAdDiagnosticJson" -> DiagnosticReportShare.shareNeteaseAd(this, call, result)
+                "shareToWeChat" -> SongLinkShare.openWeChat(this, call, result)
                 "shareText" -> {
                     val text = call.argument<String>("text")?.trim()
                     if (text.isNullOrEmpty()) {
@@ -499,7 +500,7 @@ open class MainActivity : AudioServiceActivity() {
             validMimeType == null ||
             fileName.isNullOrBlank()
         ) {
-            result.error("invalid_image", "头像文件不可用", null)
+            result.error("invalid_image", "图片文件不可用", null)
             return
         }
         val request = PendingImageSave(
@@ -514,7 +515,7 @@ open class MainActivity : AudioServiceActivity() {
                 PackageManager.PERMISSION_GRANTED
         ) {
             if (pendingImageSave != null) {
-                result.error("save_in_progress", "另一个头像正在保存", null)
+                result.error("save_in_progress", "另一张图片正在保存", null)
                 return
             }
             pendingImageSave = request
@@ -533,7 +534,7 @@ open class MainActivity : AudioServiceActivity() {
         }.onSuccess { uri ->
             request.result.success(uri.toString())
         }.onFailure {
-            request.result.error("save_failed", "头像保存失败，请稍后重试", null)
+            request.result.error("save_failed", "图片保存失败，请稍后重试", null)
         }
     }
 
@@ -615,7 +616,7 @@ open class MainActivity : AudioServiceActivity() {
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
             finishImageSave(request)
         } else {
-            request.result.error("permission_denied", "需要存储权限才能保存头像", null)
+            request.result.error("permission_denied", "需要存储权限才能保存图片", null)
         }
     }
 

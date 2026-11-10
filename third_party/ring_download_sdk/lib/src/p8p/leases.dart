@@ -5,6 +5,14 @@ enum P8PPiecePhase { missing, leased, ready, writing, persisted }
 
 enum P8PLeasePhase { active, cancelling }
 
+enum P8PReservationPhase { active, cancelling, ready, writing }
+
+class P8PReservationSnapshot {
+  const P8PReservationSnapshot(this.lease, this.phase);
+  final P8PLease lease;
+  final P8PReservationPhase phase;
+}
+
 /// A trusted adapter observed its own cancellation, rather than a transport
 /// fault. This error alone never acknowledges physical stop or frees a lease.
 class P8PLeaseCancelled extends StateError {
@@ -94,6 +102,24 @@ class P8PLeaseBook {
   bool get closed => _closed;
   bool get complete => _persisted == pieceCount;
   int get reservations => _leases.length + _ready.length;
+
+  /// An immutable bounded ownership view. Reading it never expires a lease.
+  List<P8PReservationSnapshot> get diagnosticReservations => List.unmodifiable([
+    for (final lease in _leases.values)
+      P8PReservationSnapshot(
+        lease,
+        _cancelling.contains(lease.id)
+            ? P8PReservationPhase.cancelling
+            : P8PReservationPhase.active,
+      ),
+    for (final lease in _ready.values)
+      P8PReservationSnapshot(
+        lease,
+        identical(_writing?.lease, lease)
+            ? P8PReservationPhase.writing
+            : P8PReservationPhase.ready,
+      ),
+  ]);
   int get peakReservations => _peakReservations;
   int get peakReservedBytes => _peakReservedBytes;
   int get reservedBytes =>

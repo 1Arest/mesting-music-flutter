@@ -1,4 +1,5 @@
 import '../../music_platform/presentation/song_actions_sheet.dart';
+import '../../../shared/widgets/collection_play_all_button.dart';
 import '../../downloads/downloaded_track_subtitle.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/music_list_footer.dart';
@@ -522,28 +523,43 @@ class EditorialCollectionHero extends ConsumerWidget {
     required this.cover,
     required this.tracks,
     this.description = '',
+    this.compact = false,
     this.total,
     this.loadComplete,
     super.key,
   });
+  final bool compact;
   final String cover;
   final String description;
   final List<Track> tracks;
   final int? total;
   final Future<List<Track>> Function()? loadComplete;
+
+  Future<void> _play(BuildContext context, WidgetRef ref) async {
+    try {
+      final all = loadComplete == null ? tracks : await loadComplete!();
+      if (context.mounted && all.isNotEmpty) {
+        await playBetaSelection(context, ref, all.first, playAll: all);
+      }
+    } catch (failure) {
+      if (context.mounted) showPlatformFailure(context, failure);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
     padding: const EdgeInsets.fromLTRB(22, 16, 22, 26),
     child: Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: cover.isEmpty && tracks.isNotEmpty
-              ? TrackArtwork(track: tracks.first, width: 210, height: 210)
-              : ArtworkImage(uri: cover, width: 210, height: 210),
-        ),
-        const SizedBox(height: 18),
-        if (description.isNotEmpty)
+        if (!compact)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: cover.isEmpty && tracks.isNotEmpty
+                ? TrackArtwork(track: tracks.first, width: 210, height: 210)
+                : ArtworkImage(uri: cover, width: 210, height: 210),
+          ),
+        if (!compact) const SizedBox(height: 18),
+        if (!compact && description.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
@@ -557,39 +573,30 @@ class EditorialCollectionHero extends ConsumerWidget {
               ),
             ),
           ),
-        Text(
-          '${total ?? tracks.length} 首歌曲',
-          style: TextStyle(color: context.musicThemeTokens.textSecondary),
-        ),
-        const SizedBox(height: 14),
-        FilledButton.icon(
-          onPressed: tracks.isEmpty
-              ? null
-              : () async {
-                  try {
-                    final all = loadComplete == null
-                        ? tracks
-                        : await loadComplete!();
-                    if (context.mounted && all.isNotEmpty) {
-                      await playBetaSelection(
-                        context,
-                        ref,
-                        all.first,
-                        playAll: all,
-                      );
-                    }
-                  } catch (failure) {
-                    if (context.mounted) showPlatformFailure(context, failure);
-                  }
-                },
-          icon: const Icon(Icons.play_arrow_rounded),
-          style: FilledButton.styleFrom(
-            backgroundColor: BetaAppearance.playbackAction(
-              Theme.of(context).brightness,
-            ),
-            foregroundColor: Colors.white,
+        if (!compact)
+          Text(
+            '${total ?? tracks.length} 首歌曲',
+            style: TextStyle(color: context.musicThemeTokens.textSecondary),
           ),
-          label: const Text('播放全部'),
+        const SizedBox(height: 14),
+        Align(
+          alignment: compact ? Alignment.centerLeft : Alignment.center,
+          child: compact
+              ? CollectionPlayAllButton(
+                  total: total ?? tracks.length,
+                  onPressed: tracks.isEmpty ? null : () => _play(context, ref),
+                )
+              : FilledButton.icon(
+                  onPressed: tracks.isEmpty ? null : () => _play(context, ref),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: BetaAppearance.playbackAction(
+                      Theme.of(context).brightness,
+                    ),
+                    foregroundColor: Colors.white,
+                  ),
+                  label: const Text('播放全部'),
+                ),
         ),
       ],
     ),

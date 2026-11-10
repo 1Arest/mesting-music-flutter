@@ -872,7 +872,7 @@ Future<Track> resolveNeteasePlayback(
       ref.read(usesNeteaseProvider) &&
       ref.read(neteaseMusicRepositoryProvider).credential == credential;
   try {
-    return await resolveNeteaseTrack(
+    final resolved = await resolveNeteaseTrack(
       music: music,
       fallback: ref.read(neteaseFallbackResolverProvider),
       allowFallback: ref.read(neteaseFallbackEnabledProvider),
@@ -885,6 +885,20 @@ Future<Track> resolveNeteasePlayback(
           NeteaseTrackSource.automatic,
       abortTrigger: request.abort,
     );
+    if (resolved.audioOrigin?.isKugou == true) {
+      final retained = ref.read(retainedKugouMutationProvider);
+      final owner = retained.known
+          ? retained.session
+          : await ref.read(savedKugouSessionProvider.future);
+      if (!current()) throw const MusicPlatformException('账号已变化，请重新选择歌曲');
+      if (owner == null) {
+        throw const MusicPlatformException(
+          '请先登录酷狗账号，此资源可能需要会员权限',
+          code: 'source_login_kugou',
+        );
+      }
+    }
+    return resolved;
   } finally {
     requests.finish(request.epoch);
   }

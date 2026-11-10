@@ -82,7 +82,7 @@ class _PlaybackQueueSheetFrame extends ConsumerWidget {
       duration: const Duration(milliseconds: 280),
       curve: Curves.easeOutCubic,
       heightFactor: DistributionChannel.isBeta
-          ? ((160 + queue.length * 76 + mediaQuery.padding.bottom) /
+          ? ((208 + queue.length * 76 + mediaQuery.padding.bottom) /
                     mediaQuery.size.height)
                 .clamp(.32, .86)
                 .toDouble()

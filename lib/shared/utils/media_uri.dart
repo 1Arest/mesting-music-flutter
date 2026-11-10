@@ -56,6 +56,12 @@ String sizedArtworkUri(String value, {int width = 768, int height = 768}) {
   final normalized = normalizeArtworkUri(value);
   final uri = Uri.tryParse(normalized);
   if (uri == null || !uri.host.endsWith('.music.126.net')) return normalized;
+  // Official playlist covers can contain an ordered imageView/watermark chain
+  // with repeated thumbnail/type/image/dx/dy keys. queryParameters is a
+  // single-value map: rebuilding that chain turns a valid image into HTTP400.
+  // Preserve supplied processing/signature queries byte-for-byte; ordinary
+  // bare photos and simple param thumbnails still use our bounded resize.
+  if (_hasArtworkProcessingQuery(uri)) return normalized;
   return uri
       .replace(
         queryParameters: {
@@ -65,6 +71,10 @@ String sizedArtworkUri(String value, {int width = 768, int height = 768}) {
       )
       .toString();
 }
+
+bool _hasArtworkProcessingQuery(Uri uri) => uri.queryParametersAll.entries.any(
+  (entry) => entry.key != 'param' || entry.value.length > 1,
+);
 
 String artworkContentIdentity(String source) {
   try {
@@ -119,6 +129,24 @@ String artworkContentIdentity(String source) {
     final host = RegExp(r'^p[0-9]+\.music\.126\.net$').hasMatch(uri.host)
         ? 'artwork.music.126.net'
         : uri.host;
+    if (uri.host.endsWith('.music.126.net') &&
+        _hasArtworkProcessingQuery(uri)) {
+      // Distinct ordered processing chains must not share a retained frame or
+      // rejection identity merely because their last duplicate values match.
+      // Public-CDN signature renewal and simple thumbnail sizes still refer
+      // to the same picture. Filter those keys without rebuilding the ordered
+      // transform chain through a single-value map.
+      final chain = uri.query
+          .split('&')
+          .where((part) {
+            final key = Uri.decodeQueryComponent(
+              part.split('=').first,
+            ).toLowerCase();
+            return part.isNotEmpty && !volatile.contains(key);
+          })
+          .join('&');
+      return '$host$path?$chain';
+    }
     return '$host$path?${Uri(queryParameters: {for (final k in keys) k: uri.queryParameters[k]!}).query}';
   } on FormatException {
     return source;

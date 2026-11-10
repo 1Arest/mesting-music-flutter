@@ -1,12 +1,20 @@
 import '../../../shared/models/track.dart';
 import 'embedded_kugou_music_source.dart';
 import 'music_platform_api.dart';
+import '../../../shared/models/song_search_facts.dart';
+import 'platform_track_duration.dart';
 
 class PlatformSearchPage {
-  const PlatformSearchPage(this.tracks, this.total, this.hasMore);
+  const PlatformSearchPage(
+    this.tracks,
+    this.total,
+    this.hasMore, {
+    this.facts = const {},
+  });
   final List<Track> tracks;
   final int? total;
   final bool hasMore;
+  final Map<String, SongSearchFacts> facts;
 }
 
 /// Direct adaptation of upstream KugouApiClient.search: 30 rows per page,
@@ -16,6 +24,58 @@ class PlatformSearchRepository {
   PlatformSearchRepository(this.api);
   final MusicPlatformApi api;
   static const pageSize = 30;
+
+  /// Metadata-only normal-source check: no media download, device registration,
+  /// listening report or account change may be triggered by showing results.
+  Future<SongSearchFacts> inspectAvailability(
+    Track track,
+    SongSearchFacts facts, {
+    Future<void>? abortTrigger,
+  }) async {
+    final payload = await api.get(
+      '/song/url',
+      query: {'hash': track.id.substring(6).toLowerCase(), 'quality': '128'},
+      expectedSession: api.session,
+      allowBusinessError: true,
+      abortTrigger: abortTrigger,
+    );
+    final raw = payload['data'];
+    final row = MusicPlatformApi.objectMap(
+      raw is List && raw.isNotEmpty ? raw.first : raw ?? payload,
+    );
+    final url = row['url'] ?? row['play_url'];
+    final candidates = url is List ? url : [url];
+    if (!candidates.any((u) {
+      final uri = Uri.tryParse('$u');
+      return uri != null &&
+          {'http', 'https'}.contains(uri.scheme) &&
+          uri.host.isNotEmpty;
+    })) {
+      // A registration/transient business error is not a rights verdict.
+      // Search must not register a device or claim unavailable on that basis.
+      return facts.withAccess(
+        '${row['priv_status']}' == '0'
+            ? SearchPlaybackAccess.restricted
+            : SearchPlaybackAccess.unknown,
+      );
+    }
+    final fail = row['fail_process'];
+    final size =
+        int.tryParse('${row['fileSize'] ?? row['file_size'] ?? 0}') ?? 0;
+    final preview =
+        (fail is List && fail.contains('buy')) || size > 0 && size < 200 * 1024;
+    final duration = PlatformTrackDuration.fromFields(row);
+    final short =
+        duration != null &&
+        track.duration > duration + const Duration(seconds: 3);
+    return facts.withAccess(
+      preview || short
+          ? SearchPlaybackAccess.preview
+          : duration != null && track.duration > Duration.zero
+          ? SearchPlaybackAccess.full
+          : SearchPlaybackAccess.unknown,
+    );
+  }
 
   Future<PlatformSearchPage> search(
     String query, {

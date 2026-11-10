@@ -1,4 +1,5 @@
 import '../../library/favorite_pins_provider.dart';
+import '../../../shared/widgets/collection_play_all_button.dart';
 import 'favorite_tracks_search.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -17,10 +18,10 @@ import '../../music_platform/netease/netease_features_page.dart';
 import '../../music_platform/netease/netease_library_sections.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../music_platform/presentation/platform_design.dart';
+import '../../music_platform/presentation/library_collection_masthead.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../playlists/presentation/playlist_editor_dialog.dart';
 import '../../../shared/models/track.dart';
-import '../../../shared/widgets/track_artwork.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../themes/beta_appearance.dart';
 import 'editorial_widgets.dart';
@@ -61,6 +62,7 @@ class MusicLibraryPage extends ConsumerWidget {
           ),
           data: (tracks) => view == 'favorites'
               ? FavoriteTracksSearch(
+                  coverHeader: true,
                   onCreatePlaylist: () => createEditorialPlaylist(context, ref),
                   tracks: tracks,
                   header: _CollectionTracks(
@@ -86,7 +88,7 @@ class MusicLibraryPage extends ConsumerWidget {
                       onRefresh: () => repository.synchronize(forcePull: true),
                       child: ListView.builder(
                         padding: EdgeInsets.only(
-                          top: MediaQuery.paddingOf(context).top + 14,
+                          top: 0,
                           bottom: BetaContentInsets.musicBottomOf(
                             context,
                             editorialBottomClearance,
@@ -100,17 +102,22 @@ class MusicLibraryPage extends ConsumerWidget {
                         itemCount: tracks.length + 3,
                         itemBuilder: (context, index) {
                           if (index == 0) {
-                            return EditorialHeader(
-                              view == 'favorites' ? '我的喜欢' : '最近播放',
-                              back: true,
-                              trailing: IconButton(
-                                tooltip: '新建歌单',
-                                onPressed: () =>
-                                    createEditorialPlaylist(context, ref),
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
+                            return LibraryCollectionMasthead(
+                              title: '最近播放',
+                              cover: tracks.isEmpty
+                                  ? ''
+                                  : tracks.first.coverAsset,
+                              total: recentWindow?.total ?? tracks.length,
+                              toolbarActions: [
+                                IconButton(
+                                  tooltip: '新建歌单',
+                                  onPressed: () =>
+                                      createEditorialPlaylist(context, ref),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline_rounded,
+                                  ),
                                 ),
-                              ),
+                              ],
                             );
                           }
                           if (index == 1) {
@@ -374,95 +381,75 @@ class _CollectionTracks extends ConsumerWidget {
   });
   final List<Track> tracks;
   final String empty;
-  final bool headerOnly;
-  final bool favoriteCollection;
+  final bool headerOnly, favoriteCollection;
   final Future<List<Track>> Function()? loadComplete;
   final int? total;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => tracks.isEmpty
-      ? EditorialEmpty(empty)
-      : Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: TrackArtwork(
-                      track: tracks.first,
-                      width: 112,
-                      height: 112,
-                    ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = favoriteCollection
+        ? ref.watch(favoriteCollectionCountProvider)
+        : total ?? tracks.length;
+    return tracks.isEmpty
+        ? EditorialEmpty(empty)
+        : Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 10, 22, 16),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: CollectionPlayAllButton(
+                    total: count,
+                    onPressed: () async {
+                      final repository = ref.read(libraryRepositoryProvider);
+                      final window = ref.exists(favoriteTrackWindowProvider)
+                          ? ref.read(favoriteTrackWindowProvider)
+                          : null;
+                      try {
+                        var all = loadComplete != null
+                            ? await loadComplete!()
+                            : favoriteCollection && window != null
+                            ? await window.complete()
+                            : tracks;
+                        // A completed page read must not publish another account's queue.
+                        if (!context.mounted ||
+                            !identical(
+                              repository,
+                              ref.read(libraryRepositoryProvider),
+                            )) {
+                          return;
+                        }
+                        if (favoriteCollection) {
+                          all = ref
+                              .read(favoritePinsProvider)
+                              .apply(
+                                ref.read(activeLibraryOwnerProvider),
+                                all,
+                                all.map((t) => t.id).toSet(),
+                              );
+                        }
+                        if (all.isNotEmpty) {
+                          await playBetaSelection(
+                            context,
+                            ref,
+                            all.first,
+                            playAll: all,
+                          );
+                        }
+                      } catch (error) {
+                        if (context.mounted) {
+                          showPlatformFailure(context, error);
+                        }
+                      }
+                    },
                   ),
-                  const SizedBox(width: 22),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${favoriteCollection ? ref.watch(favoriteCollectionCountProvider) : total ?? tracks.length} 首歌曲',
-                          style: TextStyle(
-                            color: context.musicThemeTokens.textSecondary,
-                            fontSize: MusicTypography.subheadlineSize,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: () async {
-                            final window =
-                                ref.exists(favoriteTrackWindowProvider)
-                                ? ref.read(favoriteTrackWindowProvider)
-                                : null;
-                            try {
-                              var all = loadComplete != null
-                                  ? await loadComplete!()
-                                  : favoriteCollection && window != null
-                                  ? await window.complete()
-                                  : tracks;
-                              if (favoriteCollection) {
-                                all = ref
-                                    .read(favoritePinsProvider)
-                                    .apply(
-                                      ref.read(activeLibraryOwnerProvider),
-                                      all,
-                                      all.map((t) => t.id).toSet(),
-                                    );
-                              }
-                              if (context.mounted && all.isNotEmpty) {
-                                await playBetaSelection(
-                                  context,
-                                  ref,
-                                  all.first,
-                                  playAll: all,
-                                );
-                              }
-                            } catch (error) {
-                              if (context.mounted) {
-                                showPlatformFailure(context, error);
-                              }
-                            }
-                          },
-                          icon: const Icon(Icons.play_arrow_rounded),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: BetaAppearance.playbackAction(
-                              Theme.of(context).brightness,
-                            ),
-                            foregroundColor: Colors.white,
-                          ),
-                          label: const Text('播放全部'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-            if (!headerOnly)
-              for (final track in tracks)
-                EditorialTrackRow(track: track, contextTracks: tracks),
-          ],
-        );
+              if (!headerOnly)
+                for (final track in tracks)
+                  EditorialTrackRow(track: track, contextTracks: tracks),
+            ],
+          );
+  }
 }
 
 /// The repository is captured before opening the editor. If the active owner

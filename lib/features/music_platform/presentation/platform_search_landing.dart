@@ -1,5 +1,9 @@
 import 'platform_collection_play.dart';
 import 'platform_public_playlist_header.dart';
+import 'library_collection_masthead.dart';
+import '../../../shared/widgets/collection_play_all_button.dart';
+import '../../player/presentation/beta_playback_actions.dart';
+import 'platform_feedback.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -335,6 +339,31 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
   int _sourceOffset = 0;
   int? _total;
   bool _downloadingAll = false;
+  bool _playingAll = false;
+
+  /// Scene/tag/album song pages use the same complete-collection boundary as
+  /// public playlists. A late read cannot replace another page/account's queue.
+  Future<void> _playAll() async {
+    if (_playingAll || _busy || _tracks.isEmpty) return;
+    final lease = PlatformCoverPlayLease(ref, context, () => mounted);
+    setState(() => _playingAll = true);
+    try {
+      final all = await completePublicCollection(
+        ref,
+        _resolvedItem ?? widget.item,
+        () => lease.current,
+      );
+      if (mounted && lease.current && all.isNotEmpty) {
+        await playBetaSelection(context, ref, all.first, playAll: all);
+      }
+    } catch (error) {
+      if (mounted && lease.current) showPlatformFailure(context, error);
+    } finally {
+      lease.dispose();
+      if (mounted) setState(() => _playingAll = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -462,11 +491,9 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
         child: const EditorialEmpty('账号已变化，请返回后重新打开'),
       );
     }
-    final collectionHeader =
-        widget.item.kind == PlatformExploreKind.rank ||
-        widget.item.kind == PlatformExploreKind.playlist;
     final collectionScene =
         _resolvedItem?.sceneContent == PlatformSceneContent.collections;
+    final collectionHeader = !collectionScene;
     final content = AutomaticSongPaging(
       songListId: 'explore:${widget.item.kind.name}:${widget.item.id}',
       enabled: _more && !_busy && _error == null,
@@ -494,65 +521,84 @@ class _ExploreSongsPageState extends ConsumerState<PlatformExploreSongsPage> {
                 total: _total,
               );
             }
-            if (!ref.watch(usesNeteaseProvider)) {
-              return const SizedBox.shrink();
-            }
             return Column(
               children: [
-                NeteaseResourceActions(
-                  item: NeteaseItem(
-                    id: widget.item.id,
-                    name: widget.item.title,
-                    kind: widget.item.kind == PlatformExploreKind.album
-                        ? NeteaseEntity.album
-                        : NeteaseEntity.playlist,
+                if (!collectionScene) ...[
+                  LibraryCollectionMasthead(
+                    title: widget.item.title,
+                    cover: widget.item.cover.isNotEmpty
+                        ? widget.item.cover
+                        : _tracks.firstOrNull?.coverAsset ?? '',
+                    total: _total ?? _tracks.length,
+                    countLabel: _total == null && _more
+                        ? '已加载 ${_tracks.length} 首歌曲'
+                        : null,
                   ),
-                  showDownload: !collectionScene,
-                  onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
-                      ? null
-                      : () async {
-                          final current = ref
-                              .read(platformAccountProvider)
-                              .value;
-                          if (current?.ownerId != _owner ||
-                              current?.token != _token) {
-                            return;
-                          }
-                          setState(() => _downloadingAll = true);
-                          try {
-                            final all = await ref
-                                .read(neteaseMusicRepositoryProvider)
-                                .exploreTracks(_resolvedItem ?? widget.item);
-                            if (!context.mounted ||
-                                ref
-                                        .read(platformAccountProvider)
-                                        .value
-                                        ?.ownerId !=
-                                    _owner ||
-                                ref
-                                        .read(platformAccountProvider)
-                                        .value
-                                        ?.token !=
-                                    _token) {
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                    child: CollectionPlayAllButton(
+                      key: const ValueKey('explore-play-all'),
+                      total: _total,
+                      loading: _playingAll,
+                      onPressed: _busy || _tracks.isEmpty ? null : _playAll,
+                    ),
+                  ),
+                ],
+                if (ref.watch(usesNeteaseProvider))
+                  NeteaseResourceActions(
+                    item: NeteaseItem(
+                      id: widget.item.id,
+                      name: widget.item.title,
+                      kind: widget.item.kind == PlatformExploreKind.album
+                          ? NeteaseEntity.album
+                          : NeteaseEntity.playlist,
+                    ),
+                    showDownload: !collectionScene,
+                    onDownload: !_loaded || _tracks.isEmpty || _downloadingAll
+                        ? null
+                        : () async {
+                            final current = ref
+                                .read(platformAccountProvider)
+                                .value;
+                            if (current?.ownerId != _owner ||
+                                current?.token != _token) {
                               return;
                             }
-                            await enqueueAudioDownloads(context, ref, all);
-                          } catch (failure) {
-                            if (context.mounted) {
-                              showMusicNotice(
-                                context,
-                                icon: Icons.error_outline,
-                                title: '歌曲读取未完成，请重试',
-                                message: '',
-                              );
+                            setState(() => _downloadingAll = true);
+                            try {
+                              final all = await ref
+                                  .read(neteaseMusicRepositoryProvider)
+                                  .exploreTracks(_resolvedItem ?? widget.item);
+                              if (!context.mounted ||
+                                  ref
+                                          .read(platformAccountProvider)
+                                          .value
+                                          ?.ownerId !=
+                                      _owner ||
+                                  ref
+                                          .read(platformAccountProvider)
+                                          .value
+                                          ?.token !=
+                                      _token) {
+                                return;
+                              }
+                              await enqueueAudioDownloads(context, ref, all);
+                            } catch (failure) {
+                              if (context.mounted) {
+                                showMusicNotice(
+                                  context,
+                                  icon: Icons.error_outline,
+                                  title: '歌曲读取未完成，请重试',
+                                  message: '',
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _downloadingAll = false);
+                              }
                             }
-                          } finally {
-                            if (mounted) {
-                              setState(() => _downloadingAll = false);
-                            }
-                          }
-                        },
-                ),
+                          },
+                  ),
               ],
             );
           }

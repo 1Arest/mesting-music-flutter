@@ -308,6 +308,16 @@ class _ArtworkViewport extends MultiChildRenderObjectWidget {
 
 class _ArtworkParentData extends ContainerBoxParentData<RenderBox> {}
 
+/// Geometry is shared only within one synchronous paint. Scroll, layout and
+/// ancestor transforms are measured again next paint, so fast reversals and
+/// newly decoded covers cannot reuse an earlier frame's loading boundary.
+typedef _ArtworkRowMeasurement = ({
+  ArtworkRevealEntry entry,
+  RenderBox box,
+  Rect rect,
+  bool visible,
+});
+
 class _RenderArtworkViewport extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _ArtworkParentData>,
@@ -386,7 +396,7 @@ class _RenderArtworkViewport extends RenderBox
 
   /// Prefer the complete song row/card, including text above its cover. Never
   /// lift the anchor to an entire long Column or to another reveal viewport.
-  Rect? _visibleRow(ArtworkRevealEntry entry, {bool visibleOnly = true}) {
+  _ArtworkRowMeasurement? _measureRow(ArtworkRevealEntry entry) {
     if (!entry.enabled) return null;
     final box = entry.box();
     if (box == null || !box.attached || !box.hasSize || box.size.isEmpty) {
@@ -407,27 +417,39 @@ class _RenderArtworkViewport extends RenderBox
       box.getTransformTo(this),
       Offset.zero & box.size,
     );
-    if (imageRect.right <= 0 ||
-        imageRect.left >= size.width ||
-        visibleOnly && !imageRect.overlaps(Offset.zero & size)) {
+    if (imageRect.right <= 0 || imageRect.left >= size.width) {
       return null;
     }
-    return MatrixUtils.transformRect(
-      anchor.getTransformTo(this),
-      Offset.zero & anchor.size,
+    return (
+      entry: entry,
+      box: box,
+      rect: identical(anchor, box)
+          ? imageRect
+          : MatrixUtils.transformRect(
+              anchor.getTransformTo(this),
+              Offset.zero & anchor.size,
+            ),
+      visible: imageRect.overlaps(Offset.zero & size),
     );
   }
 
   /// Include lazy cache children, not just painted rows. This establishes the
   /// boundary before a fast gesture can move the first pending row on screen.
-  void _updateFrontiers() {
+  void _updateFrontiers(List<_ArtworkRowMeasurement> measurements) {
     final rows = <ScrollPosition, List<(Rect, bool, bool, bool)>>{};
     final footers = <ScrollPosition, double>{};
-    for (final entry in controller.entries) {
-      final rect = _visibleRow(entry, visibleOnly: false);
-      if (rect == null) continue;
+    final inverses = <RenderViewportBase, Matrix4>{};
+    // Window geometry and a viewport's inverse are identical for all rows in
+    // this paint; a long lazy cache must not invert the same matrix per cover.
+    final target =
+        _geometry.bottom -
+        MusicLoadingGeometry.indicatorExtent -
+        MusicLoadingGeometry.contentGap -
+        MusicLoadingGeometry.chromeGap;
+    for (final measurement in measurements) {
+      final entry = measurement.entry;
       for (
-        RenderObject? node = entry.box()?.parent;
+        RenderObject? node = measurement.box.parent;
         node != null && node != this;
         node = node.parent
       ) {
@@ -435,9 +457,13 @@ class _RenderArtworkViewport extends RenderBox
             node.axisDirection == AxisDirection.down &&
             node.offset is ScrollPosition) {
           final position = node.offset as ScrollPosition;
-          final inverse = Matrix4.inverted(node.getTransformTo(this));
+          final viewport = node;
+          final inverse = inverses.putIfAbsent(
+            viewport,
+            () => Matrix4.inverted(viewport.getTransformTo(this)),
+          );
           (rows[position] ??= []).add((
-            MatrixUtils.transformRect(inverse, rect),
+            MatrixUtils.transformRect(inverse, measurement.rect),
             entry.ready,
             !_committed.contains(entry.identity),
             entry.atomicBatch,
@@ -445,11 +471,6 @@ class _RenderArtworkViewport extends RenderBox
           // Transform into list coordinates before adding its scroll offset.
           // Overscroll or an entering tab may scale the painted subtree; a
           // paint-space extent otherwise feeds that scale back into physics.
-          final target =
-              _geometry.bottom -
-              MusicLoadingGeometry.indicatorExtent -
-              MusicLoadingGeometry.contentGap -
-              MusicLoadingGeometry.chromeGap;
           final localTarget = MatrixUtils.transformPoint(
             inverse,
             Offset(0, target),
@@ -520,13 +541,19 @@ class _RenderArtworkViewport extends RenderBox
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    _updateFrontiers();
+    // Discover each registered row once, then reuse the exact measurements for
+    // scroll fences, visible-batch gating and commit bookkeeping. Previously
+    // the same ancestor transforms were walked up to four times per row/frame.
+    final measurements = <_ArtworkRowMeasurement>[
+      for (final entry in controller.entries) ?_measureRow(entry),
+    ];
+    _updateFrontiers(measurements);
     var pendingTop = size.height;
     var visible = false, blocked = false, pendingArtwork = false;
     var batchTop = size.height;
-    for (final entry in controller.entries) {
-      final rect = _visibleRow(entry);
-      if (rect == null) continue;
+    for (final measurement in measurements) {
+      if (!measurement.visible) continue;
+      final entry = measurement.entry, rect = measurement.rect;
       visible = true;
       if (!_committed.contains(entry.identity) && rect.top < batchTop) {
         batchTop = rect.top;
@@ -548,8 +575,9 @@ class _RenderArtworkViewport extends RenderBox
         : size.height;
     if (visible && !blocked) {
       _presented = true;
-      for (final entry in controller.entries) {
-        if (entry.ready && _visibleRow(entry) != null) {
+      for (final measurement in measurements) {
+        final entry = measurement.entry;
+        if (entry.ready && measurement.visible) {
           _committed.remove(entry.identity);
           _committed.add(entry.identity);
         }

@@ -1,0 +1,32 @@
+{
+  "cold_full_sha256": true,
+  "bytes": 155305939,
+  "elapsed_ms": 20239,
+  "cold_controller_exit": 0,
+  "cancel_at_bytes": 1048576,
+  "cancel_SDK_disposal_and_process_exit": true,
+  "cancel_controller_exit": 1,
+  "cancel_controller_failure": "Immediate sleep-state observation before normal transition completed",
+  "followup_readonly_screen_asleep": true,
+  "ADB_preserved": true,
+  "nonce_cache_files_remaining": 0,
+  "forced_body_failure_replacement_on_tablet": false,
+  "cancel_backend_final_telemetry_received": false,
+  "formal_host_upgrade": false,
+  "candidate_sdk": "1.1.4-dev.1",
+  "private_APK": {
+    "version": "0.0.18+18",
+    "bytes": 29805854,
+    "sha256": "108c1ceae9f51d5c43de2775aa90e7bf54688be1953be0486feaf32274e5cbd6",
+    "same_private_signature": true,
+    "alignment_16KiB": true
+  },
+  "full_sha256": "3e85c2171647dccff7b59b4b68b462717f03426327081b774c77192cff50571a",
+  "peer_verified_bytes": 91226112,
+  "seed_verified_bytes": 3145728,
+  "independent_peer_upload_report_matched": true,
+  "formal_host_installed": false,
+  "cancel_backend_expired_as_unreported": true,
+  "cancel_before_credentials_received": true,
+  "global_device_settings_changed": false
+}

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
 import '../../../core/platform/share_bridge.dart';
@@ -10,11 +9,10 @@ import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../../shared/widgets/artwork_image.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../../shared/widgets/collection_play_all_button.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../library/library_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
-import '../../themes/beta_appearance.dart';
 import '../data/platform_explore.dart';
 import '../data/music_platform_api.dart';
 import '../data/platform_library_repository.dart';
@@ -290,40 +288,6 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
     }
   }
 
-  void _details() {
-    if (_info == null) {
-      unawaited(_read());
-      return;
-    }
-    showLiquidGlassBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (sheet) => SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.item.title,
-              style: Theme.of(sheet).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _info!.description.isEmpty ? '平台暂未提供榜单介绍' : _info!.description,
-            ),
-            if (!_netease)
-              const Padding(
-                padding: EdgeInsets.only(top: 12),
-                child: Text('收藏保留本期歌曲，之后可在酷狗云歌单中管理。'),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.watch(platformAccountProvider);
@@ -341,17 +305,20 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
         PlatformCollectionMasthead(
           title: widget.item.title,
           platform: _owner!.platform,
-          cover: _info?.cover ?? widget.item.cover,
+          // Empty metadata cannot erase a valid shelf/first-song cover.
+          cover:
+              [
+                    _info?.cover,
+                    widget.item.cover,
+                    widget.tracks.firstOrNull?.coverAsset,
+                  ]
+                  .whereType<String>()
+                  .where((cover) => cover.isNotEmpty)
+                  .firstOrNull ??
+              '',
+          coverOnly: true,
           updatedAt: _info?.updatedAt,
           period: _info?.period ?? '',
-          onSearch: () => GoRouter.maybeOf(context)?.push('/music/search'),
-          onDetails: _details,
-          coverAction: PlatformCoverPlayControl(
-            key: const ValueKey('ranking-cover-play'),
-            label: '播放${widget.item.title}全部歌曲',
-            loading: _playing,
-            onPressed: _busy ? null : () => unawaited(_play()),
-          ),
           actions: [
             PlatformCollectionAction(
               id: 'save',
@@ -407,26 +374,7 @@ class _RankingHeaderState extends ConsumerState<PlatformRankingHeader> {
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: BetaAppearance.playbackAction(
-                            Theme.of(context).brightness,
-                          ),
-                        ),
-                        child: _playing
-                            ? const BetaActivityIndicator(
-                                color: Colors.white,
-                                radius: 8,
-                              )
-                            : const Icon(
-                                Icons.play_arrow_rounded,
-                                size: 21,
-                                color: Colors.white,
-                              ),
-                      ),
+                      CollectionPlayGlyph(loading: _playing),
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text.rich(
@@ -488,19 +436,25 @@ class PlatformCollectionMasthead extends StatelessWidget {
     required this.cover,
     required this.period,
     required this.actions,
-    required this.onSearch,
-    required this.onDetails,
+    this.onSearch,
+    this.onDetails,
     this.updatedAt,
     this.secondary,
     this.coverAction,
+    this.coverOnly = true,
+    this.platformLabel,
+    this.toolbarActions = const [],
   });
   final String? secondary;
   final Widget? coverAction;
+  final bool coverOnly;
+  final String? platformLabel;
+  final List<Widget> toolbarActions;
   final String title, cover, period;
   final MusicPlatform platform;
   final DateTime? updatedAt;
   final List<PlatformCollectionAction> actions;
-  final VoidCallback onSearch, onDetails;
+  final VoidCallback? onSearch, onDetails;
   @override
   Widget build(BuildContext context) {
     final netease = platform == MusicPlatform.netease;
@@ -526,7 +480,7 @@ class PlatformCollectionMasthead extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 26),
+            padding: EdgeInsets.only(bottom: actions.isEmpty ? 0 : 26),
             child: SizedBox(
               width: double.infinity,
               child: Stack(
@@ -534,44 +488,76 @@ class PlatformCollectionMasthead extends StatelessWidget {
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: netease
-                              ? const [Color(0xFF8E292F), Color(0xFFAC4C53)]
-                              : const [Color(0xFF144F70), Color(0xFF367C95)],
-                        ),
+                        color: coverOnly ? const Color(0xFF39393F) : null,
+                        gradient: coverOnly
+                            ? null
+                            : LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: netease
+                                    ? const [
+                                        Color(0xFF8E292F),
+                                        Color(0xFFAC4C53),
+                                      ]
+                                    : const [
+                                        Color(0xFF144F70),
+                                        Color(0xFF367C95),
+                                      ],
+                              ),
                       ),
                     ),
                   ),
                   if (cover.isNotEmpty)
                     Positioned.fill(
                       child: Opacity(
-                        opacity: .16,
+                        opacity: coverOnly ? 1 : .16,
                         child: ArtworkImage(uri: cover, fit: BoxFit.cover),
                       ),
                     ),
+                  // A neutral scrim preserves the artwork's own colors; it
+                  // provides contrast without platform-red/blue tinting.
+                  if (coverOnly)
+                    const Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0x55000000), Color(0x99000000)],
+                          ),
+                        ),
+                      ),
+                    ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(20, top + 10, 20, 50),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      top + 10,
+                      20,
+                      actions.isEmpty ? 26 : 50,
+                    ),
                     child: Column(
                       children: [
                         Row(
                           children: [
                             const BetaGlassBackButton(),
                             const Spacer(),
-                            BetaGlassAction(
-                              label: '搜索歌曲',
-                              icon: Icons.search_rounded,
-                              blue: false,
-                              onPressed: onSearch,
-                            ),
-                            const SizedBox(width: 8),
-                            BetaGlassAction(
-                              label: '榜单介绍',
-                              icon: Icons.more_vert,
-                              blue: false,
-                              onPressed: onDetails,
-                            ),
+                            ...toolbarActions,
+                            if (onSearch != null)
+                              BetaGlassAction(
+                                label: '搜索歌曲',
+                                icon: Icons.search_rounded,
+                                blue: false,
+                                onPressed: onSearch,
+                              ),
+                            if (onSearch != null && onDetails != null)
+                              const SizedBox(width: 8),
+                            if (onDetails != null)
+                              BetaGlassAction(
+                                label: '榜单介绍',
+                                icon: Icons.more_vert,
+                                blue: false,
+                                onPressed: onDetails,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -585,7 +571,7 @@ class PlatformCollectionMasthead extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              netease ? '网易云音乐' : '酷狗音乐',
+                              platformLabel ?? (netease ? '网易云音乐' : '酷狗音乐'),
                               style: const TextStyle(
                                 fontSize: MusicTypography.footnoteSize,
                                 color: Colors.white70,
@@ -600,8 +586,8 @@ class PlatformCollectionMasthead extends StatelessWidget {
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 42,
+                          style: TextStyle(
+                            fontSize: coverOnly ? 32 : 42,
                             height: 1.12,
                             fontWeight: MusicTypography.titleWeight,
                             color: Colors.white,
@@ -642,12 +628,13 @@ class PlatformCollectionMasthead extends StatelessWidget {
               ),
             ),
           ),
-          Positioned(
-            left: 22,
-            right: 22,
-            bottom: 0,
-            child: _RankingActionCapsule(actions: actions),
-          ),
+          if (actions.isNotEmpty)
+            Positioned(
+              left: 22,
+              right: 22,
+              bottom: 0,
+              child: _RankingActionCapsule(actions: actions),
+            ),
         ],
       ),
     );
@@ -660,10 +647,12 @@ class PlatformRankingScrollShell extends StatefulWidget {
   const PlatformRankingScrollShell({
     required this.title,
     required this.child,
+    this.enabled = true,
     super.key,
   });
   final String title;
   final Widget child;
+  final bool enabled;
   @override
   State<PlatformRankingScrollShell> createState() => _RankingScrollShellState();
 }
@@ -671,56 +660,57 @@ class PlatformRankingScrollShell extends StatefulWidget {
 class _RankingScrollShellState extends State<PlatformRankingScrollShell> {
   bool _collapsed = false;
   @override
-  Widget build(BuildContext context) =>
-      NotificationListener<ScrollNotification>(
-        onNotification: (scroll) {
-          if (scroll.depth == 0 && scroll.metrics.axis == Axis.vertical) {
-            final next = scroll.metrics.pixels > 170;
-            if (next != _collapsed) setState(() => _collapsed = next);
-          }
-          return false;
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            widget.child,
-            if (_collapsed)
-              Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                child: ColoredBox(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: Row(
-                        children: [
-                          const BetaGlassBackButton(
-                            key: ValueKey('ranking-collapsed-back'),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              widget.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: MusicTypography.headingSize,
-                                fontWeight: MusicTypography.titleWeight,
+  Widget build(BuildContext context) => !widget.enabled
+      ? widget.child
+      : NotificationListener<ScrollNotification>(
+          onNotification: (scroll) {
+            if (scroll.depth == 0 && scroll.metrics.axis == Axis.vertical) {
+              final next = scroll.metrics.pixels > 170;
+              if (next != _collapsed) setState(() => _collapsed = next);
+            }
+            return false;
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              widget.child,
+              if (_collapsed)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  right: 0,
+                  child: ColoredBox(
+                    color: Theme.of(context).colorScheme.surface,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: Row(
+                          children: [
+                            const BetaGlassBackButton(
+                              key: ValueKey('ranking-collapsed-back'),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                widget.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: MusicTypography.headingSize,
+                                  fontWeight: MusicTypography.titleWeight,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
 }
 
 class PlatformCollectionAction {

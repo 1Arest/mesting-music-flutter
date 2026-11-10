@@ -205,6 +205,9 @@ void main() {
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 500));
           expect(find.text('退出一起听'), findsOneWidget);
+          // The new share entry must coexist with Together and the narrow
+          // menu; existing actions keep their original close-before-open flow.
+          expect(find.text('分享歌曲'), findsOneWidget);
           await tester.tap(find.text('退出一起听'));
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 500));

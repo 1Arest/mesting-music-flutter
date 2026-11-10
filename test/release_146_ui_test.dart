@@ -199,7 +199,7 @@ void main() {
 
   for (final dark in [false, true]) {
     testWidgets(
-      'favorites local search retains creation and has no button inflation dark=$dark',
+      'favorites cover retains creation and downloaded state without removed search dark=$dark',
       (tester) async {
         final fixture = await PersonalProfileFixture.create(
           extraOverrides: [
@@ -261,19 +261,14 @@ void main() {
         await tester.pump();
         expect(find.byTooltip('新建歌单'), findsOneWidget);
         expect(find.text('已下载'), findsOneWidget);
-        await tester.tap(find.byTooltip('搜索我的喜欢'));
-        await tester.pump();
-        final composer = tester.widget<PlatformCommentComposer>(
-          find.byType(PlatformCommentComposer),
-        );
-        expect(composer.expandOnPress, false);
-        expect(composer.singleLine, true);
-        await tester.enterText(find.byType(TextField), '673');
-        await tester.pump();
-        expect(find.text('测试歌曲 673'), findsOneWidget);
-        expect(find.text('测试歌曲 0'), findsNothing);
-        expect(find.text('已下载'), findsNothing);
-        await shot(tester, 'favorites-search-${dark ? 'dark' : 'light'}');
+        expect(find.byTooltip('搜索我的喜欢'), findsNothing);
+        expect(find.byType(PlatformCommentComposer), findsNothing);
+        expect(find.byType(TextField), findsNothing);
+        // Removing the entry must not remove creation or the real local-file
+        // marker from the unchanged, paged collection beneath the cover.
+        expect(find.byTooltip('新建歌单'), findsOneWidget);
+        expect(find.text('已下载'), findsOneWidget);
+        await shot(tester, 'favorites-cover-${dark ? 'dark' : 'light'}');
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       },

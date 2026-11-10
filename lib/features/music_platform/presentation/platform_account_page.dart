@@ -1,3 +1,5 @@
+import '../../../core/network/music_http_client.dart';
+import '../netease/netease_api.dart';
 import '../qishui/qishui_providers.dart';
 import '../qishui/qishui_account_page.dart';
 import '../qishui/qishui_login_page.dart';
@@ -37,6 +39,7 @@ class PlatformAccountPage extends ConsumerStatefulWidget {
     this.platform = MusicPlatform.kugou,
     this.neteaseMethod = NeteaseLoginMethod.qr,
     this.loginOnly = false,
+    this.retainCurrentPlatform = false,
     super.key,
   });
   final PlatformLoginMethod initialMethod;
@@ -46,6 +49,9 @@ class PlatformAccountPage extends ConsumerStatefulWidget {
   /// Adding the other platform must not turn its form into the active account's
   /// management screen. Its credential is committed only on successful login.
   final bool loginOnly;
+
+  /// A supplementary-source login saves its own credential without switching UI.
+  final bool retainCurrentPlatform;
 
   @override
   ConsumerState<PlatformAccountPage> createState() =>
@@ -59,8 +65,15 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
   NeteaseLoginService? _neteaseLogin;
   NeteaseQrChallenge? _neteaseChallenge;
   bool get _isNetease => widget.platform == MusicPlatform.netease;
-  NeteaseLoginService get _netLogin =>
-      _neteaseLogin ??= NeteaseLoginService(ref.read(neteaseApiProvider));
+  MusicHttpClient? _sourceClient;
+  MusicPlatformApi? _sourceKugou;
+  NeteaseApi? _sourceNetease;
+  MusicHttpClient get _privateClient => _sourceClient ??= MusicHttpClient();
+  NeteaseLoginService get _netLogin => _neteaseLogin ??= NeteaseLoginService(
+    widget.retainCurrentPlatform
+        ? (_sourceNetease ??= NeteaseApi(_privateClient))
+        : ref.read(neteaseApiProvider),
+  );
   PlatformLoginMethod _method = PlatformLoginMethod.phone;
   PlatformQrChallenge? _challenge;
   String? _message;
@@ -71,8 +84,15 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
   int _countdown = 0;
   Timer? _countdownTimer;
 
-  PlatformLoginService get _login =>
-      PlatformLoginService(ref.read(musicPlatformApiProvider));
+  PlatformLoginService get _login => PlatformLoginService(
+    widget.retainCurrentPlatform
+        ? (_sourceKugou ??= MusicPlatformApi(
+            server: ref.read(musicServerProvider),
+            client: _privateClient,
+            sessionCurrent: () => mounted,
+          ))
+        : ref.read(musicPlatformApiProvider),
+  );
 
   @override
   void initState() {
@@ -92,6 +112,7 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
   @override
   void dispose() {
     ++_generation;
+    _sourceClient?.close();
     _countdownTimer?.cancel();
     _phone.dispose();
     _code.dispose();
@@ -161,7 +182,11 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
         if (result != null) {
           await ref
               .read(platformAccountProvider.notifier)
-              .accept(result, loginMethod: _method.name);
+              .accept(
+                result,
+                loginMethod: _method.name,
+                retainCurrentPlatform: widget.retainCurrentPlatform,
+              );
           if (!mounted || generation != _generation) return;
           Navigator.of(context).pop(true);
           return;
@@ -297,7 +322,11 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
       }
       await ref
           .read(platformAccountProvider.notifier)
-          .accept(data, loginMethod: _method.name);
+          .accept(
+            data,
+            loginMethod: _method.name,
+            retainCurrentPlatform: widget.retainCurrentPlatform,
+          );
       if (mounted && generation == _generation) Navigator.of(context).pop(true);
     } on Object catch (error) {
       if (mounted && generation == _generation) {
@@ -324,7 +353,12 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
             : _password.text,
       );
       if (!mounted || generation != _generation) return;
-      await ref.read(platformAccountProvider.notifier).acceptNetease(result);
+      await ref
+          .read(platformAccountProvider.notifier)
+          .acceptNetease(
+            result,
+            retainCurrentPlatform: widget.retainCurrentPlatform,
+          );
       if (mounted && generation == _generation) Navigator.of(context).pop(true);
     } on Object catch (error) {
       if (mounted && generation == _generation) {
@@ -349,7 +383,12 @@ class _PlatformAccountPageState extends ConsumerState<PlatformAccountPage> {
         final result = await _netLogin.poll(challenge);
         if (!mounted || generation != _generation) return;
         if (result == null) continue;
-        await ref.read(platformAccountProvider.notifier).acceptNetease(result);
+        await ref
+            .read(platformAccountProvider.notifier)
+            .acceptNetease(
+              result,
+              retainCurrentPlatform: widget.retainCurrentPlatform,
+            );
         if (mounted && generation == _generation) {
           Navigator.of(context).pop(true);
         }

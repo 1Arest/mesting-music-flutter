@@ -27,7 +27,15 @@ class P8PSourceDiagnostic {
     String? alias,
     int? actualBytes,
     int? expectedBytes,
-  }) : alias = const {'peer1', 'peer2', 'seed', 'https'}.contains(alias)
+  }) : alias =
+           const {
+             'peer1',
+             'peer2',
+             'peer3',
+             'peer4',
+             'seed',
+             'https',
+           }.contains(alias)
            ? alias
            : null,
        actualBytes = actualBytes?.clamp(0, 1024 * 1024),

@@ -31,7 +31,9 @@ class PlatformCommentResource {
   final String id;
   final String name;
   final String hash;
-  String get code => kind == PlatformCommentKind.song
+  String get code => kind == PlatformCommentKind.mv
+      ? 'db3664c219a6e350b00ab08d7f723a79'
+      : kind == PlatformCommentKind.song
       ? 'fc4be23b4e972707f36b8a828a93ba8a'
       : 'ca53b96fe5a1d9c22d71c8f522ef7c4f';
 }
@@ -130,7 +132,18 @@ class PlatformCommentPage {
 /// are not accepted here. Remote permission checks remain authoritative; local
 /// ownership checks additionally keep delete controls off other users' comments.
 class PlatformCommentsRepository {
-  PlatformCommentsRepository(this.api, this.identity);
+  PlatformCommentsRepository(this.api, this.identity, {this.readOnly = false});
+
+  /// Public comments can be read without pretending an anonymous viewer is
+  /// logged in. Mutations always require the source's real retained credential.
+  final bool readOnly;
+  PlatformSession? get readIdentity => readOnly ? null : identity;
+  void requireWritable() {
+    if (readOnly) {
+      throw MusicPlatformException('请先登录${identity.platformLabel}账号后参与评论');
+    }
+  }
+
   final MusicPlatformApi api;
   final PlatformSession identity;
   final _repairedSongIds = <String, String>{};
@@ -148,7 +161,7 @@ class PlatformCommentsRepository {
       final result = await api.get(
         '/audio',
         query: {'hash': track.id.substring(6)},
-        expectedSession: identity,
+        expectedSession: readIdentity,
       );
       id = PlatformSongIdentity.fromPayload(result);
     }
@@ -156,7 +169,7 @@ class PlatformCommentsRepository {
       final result = await api.get(
         '/song/url',
         query: {'hash': track.id.substring(6), 'quality': '128'},
-        expectedSession: identity,
+        expectedSession: readIdentity,
         allowBusinessError: true,
       );
       id = PlatformSongIdentity.fromPayload(result);
@@ -186,6 +199,8 @@ class PlatformCommentsRepository {
         ? '/comment/music/topliked'
         : reply
         ? '/comment/floor'
+        : resource.kind == PlatformCommentKind.mv
+        ? '/video/barrage'
         : resource.kind == PlatformCommentKind.song
         ? '/comment/music'
         : '/comment/playlist';
@@ -199,13 +214,17 @@ class PlatformCommentsRepository {
         'tid': thread.id,
         'resource_type': resource.kind.name,
         'code': resource.code,
+      } else if (resource.kind == PlatformCommentKind.mv) ...{
+        if (resource.id.isNotEmpty) 'video_id': resource.id,
+        if (resource.hash.isNotEmpty) 'hash': resource.hash,
+        'name': resource.name,
       } else if (resource.kind == PlatformCommentKind.song)
         'mixsongid': _repairedSongIds[resource.hash] ?? resource.id
       else
         'id': resource.id,
     };
     Future<Map<String, dynamic>> request() =>
-        api.get(path, query: query, expectedSession: identity);
+        api.get(path, query: query, expectedSession: readIdentity);
     Map<String, dynamic> payload;
     try {
       payload = await request();
@@ -225,7 +244,7 @@ class PlatformCommentsRepository {
         final metadata = await api.get(
           '/audio',
           query: {'hash': resource.hash},
-          expectedSession: identity,
+          expectedSession: readIdentity,
         );
         final repaired = PlatformSongIdentity.fromPayload(metadata);
         if (repaired.isEmpty || repaired == resource.id) rethrow;
@@ -237,7 +256,12 @@ class PlatformCommentsRepository {
       }
     }
     final data = MusicPlatformApi.objectMap(payload['data'] ?? payload);
-    final raw = data['list'] ?? data['comments'] ?? const [];
+    final raw =
+        data['list'] ??
+        data['comments'] ??
+        payload['list'] ??
+        payload['comments'] ??
+        const [];
     if (raw is! List) throw const MusicPlatformException('评论数据格式异常，请重试');
     final childrenId =
         '${data['childrenid'] ?? payload['childrenid'] ?? hottestChildrenId ?? thread?.specialId ?? ''}';
@@ -289,6 +313,7 @@ class PlatformCommentsRepository {
   }
 
   Future<void> _write(String path, Map<String, String> query) async {
+    requireWritable();
     final result = await api.post(
       path,
       query: query,
@@ -315,6 +340,17 @@ class PlatformCommentsRepository {
     final text = content.trim();
     if (text.isEmpty || text.length > 1000) {
       throw const MusicPlatformException('评论请输入 1 至 1000 个字符');
+    }
+    requireWritable();
+    if (resource.kind == PlatformCommentKind.mv) {
+      await _write('/video/barrage/send', {
+        'video_id': resource.id,
+        'hash': resource.hash,
+        'name': resource.name,
+        'content': text,
+        if (replyTo != null || thread != null) 'pid': (replyTo ?? thread)!.id,
+      });
+      return;
     }
     final root = thread ?? replyTo;
     if (root != null && root.specialId.isEmpty) {

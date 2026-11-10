@@ -1,3 +1,4 @@
+import 'support/source187_paging_fixture.dart';
 // This historical fixture covers NetEase/Kugou; Soda is covered by qishui_* tests.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,8 @@ class _Account extends PlatformAccountController {
 }
 
 class _Queue extends Fake implements MestingAudioHandler {
+  @override
+  int get transportRevision => 0;
   List<Track> received = [];
   @override
   get manuallyQueuedItems => [];
@@ -99,6 +102,7 @@ void main() {
               audioHandler: queue,
               accountFactory: () => _Account(platform),
               extraOverrides: [
+                retainedPagingLogin187(),
                 platformExploreRepositoryProvider.overrideWithValue(_Pages()),
                 musicPlatformApiProvider.overrideWithValue(
                   api157(

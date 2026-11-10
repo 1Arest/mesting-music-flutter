@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/physics.dart';
 import 'beta_page_route_observer.dart';
 import 'beta_swipe_pages.dart';
 import 'beta_tab_motion.dart';
@@ -40,8 +41,10 @@ class BetaTabVisibility extends InheritedWidget {
               location != oldWidget.location));
 }
 
-/// Keeps branch state while painting at most the two actual slide endpoints.
-/// A shortcut to a distant tab never slides through unrelated intermediate pages.
+/// Keeps visited branches while moving only their paint transforms. Ordinary
+/// shortcuts use two endpoints. A burst retains any already visible tile until
+/// it leaves the viewport; a new destination enters from outside the viewport,
+/// so selecting a third tab cannot replace a partly visible page in one frame.
 class BetaRootTabViewport extends StatefulWidget {
   const BetaRootTabViewport({
     required this.index,
@@ -62,13 +65,13 @@ class BetaRootTabViewportState extends State<BetaRootTabViewport>
     with SingleTickerProviderStateMixin {
   late final _geometry = BetaTabMotion(widget.index);
   late final _visited = <int>{widget.index};
-  late final _controller = AnimationController(
+  late final _controller = AnimationController.unbounded(
     vsync: this,
     duration: const Duration(milliseconds: 360),
     value: 1,
   )..addStatusListener(_status);
 
-  double get _progress => Curves.easeInOutCubic.transform(_controller.value);
+  double get _progress => _controller.value;
   int get selectedIndex => widget.index;
   bool get motionSettled => !_controller.isAnimating;
   Set<int> get paintedIndices => {
@@ -86,13 +89,38 @@ class BetaRootTabViewportState extends State<BetaRootTabViewport>
   void didUpdateWidget(covariant BetaRootTabViewport oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.index == widget.index) return;
+    final interrupted = _controller.isAnimating;
+    // Every tile moves as one strip. Preserve its actual screen velocity when
+    // retargeting instead of restarting an ease-in curve at zero velocity.
+    final velocity = _geometry.distance * _controller.velocity;
     _geometry.retarget(widget.index, _progress);
     _visited.add(widget.index);
     if (MediaQuery.disableAnimationsOf(context)) {
       _controller.stop();
       _geometry.settle();
     } else {
-      _controller.forward(from: 0);
+      _controller.stop();
+      _controller.value = 0;
+      if (interrupted && _geometry.distance.abs() > .000001) {
+        final safeVelocity = _geometry.safeVelocity(velocity);
+        _controller.animateWith(
+          SpringSimulation(
+            const SpringDescription(mass: 1, stiffness: 400, damping: 40),
+            0,
+            1,
+            safeVelocity / _geometry.distance,
+            tolerance: const Tolerance(distance: .0001, velocity: .001),
+          ),
+        );
+      } else if (_geometry.distance.abs() > .000001) {
+        _controller.animateTo(
+          1,
+          duration: const Duration(milliseconds: 360),
+          curve: Curves.easeInOutCubic,
+        );
+      } else {
+        _geometry.settle();
+      }
     }
   }
 
@@ -185,12 +213,7 @@ class _RenderTabPaintMotion extends RenderProxyBox {
   Animation<double> animation;
   BetaTabMotion geometry;
   int index;
-  double get _dx =>
-      geometry.position(
-        index,
-        Curves.easeInOutCubic.transform(animation.value),
-      ) *
-      size.width;
+  double get _dx => geometry.position(index, animation.value) * size.width;
   void _changed() {
     markNeedsPaint();
     markNeedsSemanticsUpdate();

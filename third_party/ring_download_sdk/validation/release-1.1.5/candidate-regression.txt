@@ -1,0 +1,660 @@
+00:00 +0: loading ${SDK}/test/app_upgrade_download_recovery_test.dart
+00:00 +0: ${SDK}/test/app_upgrade_file_io_test.dart: HTTPS file diagnostics survive the closed export vocabulary
+00:00 +1: ${SDK}/test/app_upgrade_download_recovery_test.dart: a refreshed digest removes obsolete partial state and starts a verified new package
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.015319Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.087916Z","stage":"https","code":"http_response","http_status":200,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.150505Z","stage":"performance","code":"file_hash_profile","metrics":{"full_sha_us":26763,"full_sha_scans":1}}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.159627Z","stage":"final","code":"apk_verified","verified":true}
+00:00 +2: ${SDK}/test/app_upgrade_file_io_test.dart: background hash handles many stream chunks and leaves file unlocked
+00:00 +2: ${SDK}/test/app_upgrade_download_recovery_test.dart: recreated downloader retains persisted peer provenance on 206
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.215005Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.224652Z","stage":"https","code":"http_response","http_status":206,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.240603Z","stage":"performance","code":"file_hash_profile","metrics":{"full_sha_us":2859,"full_sha_scans":1}}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.246440Z","stage":"final","code":"apk_verified","verified":true}
+00:00 +3: ${SDK}/test/app_upgrade_file_io_test.dart: background hash handles many stream chunks and leaves file unlocked
+00:00 +3: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.274564Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.281849Z","stage":"https","code":"http_response","http_status":200,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.298076Z","stage":"https","code":"https_response_rejected","source":"service_main"}
+00:00 +4: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+00:00 +5: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+00:00 +6: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+00:00 +7: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+00:00 +8: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+00:00 +9: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:13.808781Z","stage":"https","code":"http_response","http_status":302,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:14.822062Z","stage":"https","code":"http_response","http_status":200,"source":"cos"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:14.827525Z","stage":"https","code":"https_response_rejected","source":"cos"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:14.833253Z","stage":"final","code":"download_failed","verified":false}
+00:02 +10: ${SDK}/test/app_upgrade_download_recovery_test.dart: unfinished error body is cancelled within its total read deadline
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:14.855596Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:14.861150Z","stage":"https","code":"http_response","http_status":409,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-06T10:37:16.868695Z","stage":"final","code":"download_failed","verified":false}
+00:04 +11: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in enabled preserves the real peer path
+00:06 +12: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cold leased sharing publishes capability in an immediate heartbeat
+00:06 +13: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in default_off preserves the real peer path
+00:07 +14: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in default_off preserves the real peer path
+00:09 +15: ${SDK}/test/app_upgrade_p2p_flow_test.dart: phone cache advertises and delivers leased frames within the original deadline
+00:10 +16: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in old_node preserves the real peer path
+00:11 +17: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in old_node preserves the real peer path
+00:11 +18: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in old_node preserves the real peer path
+00:12 +19: ${SDK}/test/app_upgrade_p2p_flow_test.dart: a fresh client can explicitly restore the retained checked file
+00:12 +20: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:12 +21: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:13 +22: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:13 +23: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:13 +24: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:14 +25: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in unknown preserves the real peer path
+00:14 +26: ${SDK}/test/app_upgrade_p2p_flow_test.dart: receive buffer ownership does not await signalling and retires before native RTC reuse
+00:14 +27: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in legacy preserves the real peer path
+00:15 +28: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in legacy preserves the real peer path
+00:15 +29: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in legacy preserves the real peer path
+00:16 +30: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: source diversity opt-in legacy preserves the real peer path
+00:17 +31: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer four-piece mode keeps startup single and verifies short tail
+00:20 +32: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer trial starts four offers before any answer
+00:21 +33: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer corrupt batch preserves only the persisted verified prefix
+00:22 +34: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer corrupt batch preserves only the persisted verified prefix
+00:22 +35: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer trial keeps two slots for unnegotiated policy
+00:23 +36: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer batch timeout resumes HTTPS with full final SHA verification
+00:24 +37: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer batch timeout resumes HTTPS with full final SHA verification
+00:25 +38: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer batch timeout resumes HTTPS with full final SHA verification
+00:26 +39: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer standby survives two hello-ready sources with zero body
+00:26 +40: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer standby survives two hello-ready sources with zero body
+00:27 +41: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed uses one startup piece then bounded four-piece batches
+00:30 +42: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed uses one startup piece then bounded four-piece batches
+00:30 +43: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer standby cancellation during retirement admits no body
+00:31 +44: ${SDK}/test/app_upgrade_p2p_flow_test.dart: corrupt batch preserves only the persisted prefix for HTTPS
+00:31 +45: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: four-peer standby failed native disposal cannot grant admission
+00:33 +46: ${SDK}/test/app_upgrade_p2p_flow_test.dart: healthy batch renews the timeout after each verified piece
+00:34 +47: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:35 +48: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:36 +49: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:37 +50: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:37 +51: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:38 +52: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:38 +53: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:38 +54: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:39 +55: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:39 +56: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:40 +57: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:40 +58: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:41 +59: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:41 +60: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:42 +61: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:43 +62: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:43 +63: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay respects legacy failure boundary
+00:44 +64: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:44 +65: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:45 +66: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:45 +67: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:45 +68: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:46 +69: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:46 +70: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:46 +71: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:46 +72: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:47 +73: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:47 +74: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:47 +75: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:47 +76: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:48 +77: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:48 +78: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:48 +79: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:48 +80: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:48 +81: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:50 +82: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:50 +83: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:52 +84: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:53 +85: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:54 +86: ${SDK}/test/app_upgrade_p2p_flow_test.dart: active download duration is checkpointed before a process can exit
+00:57 +87: ${SDK}/test/app_upgrade_p2p_flow_test.dart: active download duration is checkpointed before a process can exit
+00:59 +88: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:00 +89: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:00 +90: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:02 +91: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:04 +92: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:04 +93: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:05 +94: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:05 +95: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:05 +96: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:06 +97: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:06 +98: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:08 +99: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+01:09 +100: ${SDK}/test/app_upgrade_p2p_flow_test.dart: temporary concurrent_download_limit preserves HTTPS prefix and resumes after waiting
+01:10 +101: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P fills a retired slot while another candidate is still negotiating
+01:11 +102: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P fills a retired slot while another candidate is still negotiating
+01:11 +103: ${SDK}/test/app_upgrade_p2p_flow_test.dart: first-request contention does not poll or switch sources
+01:11 +104: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:11 +105: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +106: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +107: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +108: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +109: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +110: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:12 +111: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:13 +112: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:13 +113: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:13 +114: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:13 +115: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:13 +116: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:14 +117: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:14 +118: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:14 +119: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:15 +120: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+01:16 +121: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure retains one fixed three second drain budget
+01:18 +122: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+01:18 +123: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+01:19 +124: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+01:19 +125: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+01:19 +126: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+01:19 +127: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure rejects error queue observation
+01:19 +128: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:20 +129: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:21 +130: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:21 +131: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:21 +132: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:22 +133: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+01:22 +134: ${SDK}/test/app_upgrade_p2p_flow_test.dart: negotiated upload window accepts refill at piece-end without interleaving
+01:24 +135: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces two failed candidates and verifies the full file
+01:25 +136: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces two failed candidates and verifies the full file
+01:25 +137: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces two failed candidates and verifies the full file
+01:25 +138: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces two failed candidates and verifies the full file
+01:25 +139: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting excludes rejected native payload sends
+01:26 +140: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P does not replace candidates without server capability
+01:26 +141: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P does not replace candidates without server capability
+01:27 +142: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P does not replace candidates without server capability
+01:28 +143: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting retains the same receiver total across RTC reconnect
+01:28 +144: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P renewed registration cannot repeat an installation attempt
+01:29 +145: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting bounds stalled reports and still retires credentials
+01:31 +146: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting bounds stalled reports and still retires credentials
+01:33 +147: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting bounds stalled reports and still retires credentials
+01:36 +148: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting bounds stalled reports and still retires credentials
+01:37 +149: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P keeps failed native owners until actual disposal before replacement
+01:37 +150: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P keeps failed native owners until actual disposal before replacement
+01:38 +151: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P keeps failed native owners until actual disposal before replacement
+01:38 +152: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload file-read retirement joins actual IO before stop (false)
+01:39 +153: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload file-read retirement joins actual IO before stop (false)
+01:40 +154: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload file-read retirement joins actual IO before stop (false)
+01:41 +155: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P pending native creation blocks fresh candidate replacement
+01:44 +156: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P pending native creation blocks fresh candidate replacement
+01:45 +157: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P pending native creation blocks fresh candidate replacement
+01:45 +158: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P pending native creation blocks fresh candidate replacement
+01:47 +159: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime stalled close cannot prevent bounded disposal
+01:48 +160: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime stalled close cannot prevent bounded disposal
+01:48 +161: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:48 +162: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:52 +163: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:52 +164: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:52 +165: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:52 +166: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:52 +167: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:53 +168: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:53 +169: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:54 +170: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:54 +171: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:54 +172: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:55 +173: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:56 +174: ${SDK}/test/app_upgrade_p2p_flow_test.dart: ICE finishing after four seconds sends the complete seed offer
+01:59 +175: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+01:59 +176: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:00 +177: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:00 +178: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:00 +179: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:00 +180: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:01 +181: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:01 +182: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+02:01 +183: ${SDK}/test/app_upgrade_p2p_flow_test.dart: duplicate download calls share one session and file writer
+02:01 +184: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:01 +185: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:02 +186: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:02 +187: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +188: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +189: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +190: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +191: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +192: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:03 +193: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +194: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +195: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +196: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +197: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +198: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +199: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +200: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +201: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:04 +202: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:05 +203: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:05 +204: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:07 +205: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:07 +206: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:07 +207: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:08 +208: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:09 +209: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:09 +210: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:09 +211: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +212: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +213: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +214: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +215: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +216: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +217: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +218: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +219: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +220: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +221: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:10 +221: ${SDK}/test/native_probe_evidence_test.dart: actual Dart encoded cache fixture is consumable by the strict reader
+P8P_DART_EVIDENCE_FIXTURE {"version":1,"phases":[{"phase":"main_started","elapsed_ms":0},{"phase":"sharing_finish_received","elapsed_ms":1000},{"phase":"progress_subscription_cancel_begin","elapsed_ms":2000},{"phase":"progress_subscription_cancel_end","elapsed_ms":3000},{"phase":"sdk_dispose_begin","elapsed_ms":4000},{"phase":"sdk_dispose_end","elapsed_ms":5000},{"phase":"probe_storage_delete_begin","elapsed_ms":6000},{"phase":"probe_storage_delete_end","elapsed_ms":7000},{"phase":"final_native_owners_begin","elapsed_ms":8000},{"phase":"final_native_owners_end","elapsed_ms":9000},{"phase":"disposed_marker_queued","elapsed_ms":10000}],"native":{"queries":3,"initial":{"query":1,"elapsed_ms":5,"counts":{"peerConnections":0,"dataChannels":0,"channelObservers":0}},"final":{"query":3,"elapsed_ms":8500,"counts":{"peerConnections":0,"dataChannels":0,"channelObservers":0}},"positive_one":{"query":2,"elapsed_ms":200,"counts":{"peerConnections":1,"dataChannels":1,"channelObservers":1}},"positive_two":null},"lifecycle":[{"state":"paused","elapsed_ms":300},{"state":"resumed","elapsed_ms":700}],"buffers":{"queries_before_pause":1,"peak_bytes_before_pause":300000},"overlap":{"start":null,"end":null}}
+P8P_DART_TRANSPORT_FIXTURE P8P_NATIVE_EVIDENCE_GZIP H4sIAAAAAAAACq2UQW7bMBBF7zJrLqS4aVJtc4AeICgIihrZA9NDhUM6MAzdPaDYtLEoBCnQnUTN/4+c+eIVzhiEPEPXKpgORlCge76WR+jgZIi1RBMiDqAAnZkEB30S6JpZ/a2TgwnEez0Skxx0QIt0riRt09yopuD3AUW0pF5soCmSZ20NW3S6xz3xyuDuXwyQ1/zdSi7DUQ8kkxfcxH37pL52v68316OW6IPZox7QYdzGfP+KsOY9rGQjsXGaTaQzav/KGGQT9/gFXU37sVL97sOgTyYcMeiXhGlz4M38S0Fxh+4KLwkD5ZTtFBBTJOPely9LCm9aqsD6xFFyyYQYnjwz2jzlnEAFg4nm6WCY0ZUFW15+9oIhZzvndFbljB84u1VL7pvmf6EmL1RayfiBeFcl+VNguwa2W8D2BhhfPXScnJsVOBrRXqzD5XeWaOKSLJOkGtKuDPa9JqCkU1X0UObYp3FcyH8GqXscfUC9WJdrBM1R95dYfcu/X2aBP2NwZsouy91Sdq0gp64cYH4DjysqMpoEAAA=
+02:10 +222: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:12 +223: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:12 +224: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:12 +225: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:13 +226: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:14 +227: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:15 +228: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+02:15 +229: ${SDK}/test/p8p_coordinator_test.dart: a cold lookahead prefix window ends with verified
+02:16 +230: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P imports the full stopped HTTPS prefix before assigning network pieces
+02:18 +231: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P imports the full stopped HTTPS prefix before assigning network pieces
+02:19 +232: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P imports the full stopped HTTPS prefix before assigning network pieces
+02:20 +233: ${SDK}/test/p8p_coordinator_test.dart: shared-source queue time does not demote the faster source
+02:20 +234: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejects corrupt cached data after the initial import window
+02:22 +235: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejects corrupt cached data after the initial import window
+02:23 +236: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejects corrupt cached data after the initial import window
+02:24 +237: ${SDK}/test/p8p_coordinator_test.dart: remaining queue estimate handles negative progress
+02:25 +238: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:25 +239: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:25 +240: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:27 +241: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:27 +242: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:28 +243: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery stalled
+02:28 +244: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:30 +245: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:32 +246: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:33 +247: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:34 +248: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:35 +249: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:35 +250: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery oversized_advice
+02:37 +251: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejected peer generation is not reopened by legacy fallback
+02:38 +252: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery no_progress
+02:39 +253: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P closed probe cannot recreate the same peer generation
+02:40 +254: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P closed probe cannot recreate the same peer generation
+02:40 +255: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P closed probe cannot recreate the same peer generation
+02:41 +256: ${SDK}/test/p8p_coordinator_test.dart: startup probes share reservations and transfer into the running scheduler
+02:42 +257: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed peer does not block a fresh registration or live channel reuse
+02:42 +258: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed peer does not block a fresh registration or live channel reuse
+02:43 +259: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed peer does not block a fresh registration or live channel reuse
+02:47 +260: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed peer does not block a fresh registration or live channel reuse
+02:49 +261: ${SDK}/test/p8p_coordinator_test.dart: proven RTC prefix rescue waits for physical stop and preserves siblings: no_ack
+02:50 +262: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry waits for local and server close before fresh identity
+02:53 +263: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry waits for local and server close before fresh identity
+02:54 +264: ${SDK}/test/p8p_coordinator_test.dart: proven RTC prefix rescue waits for physical stop and preserves siblings: alternative
+02:55 +265: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: pending
+02:56 +266: ${SDK}/test/p8p_coordinator_test.dart: full-slot rescue snapshot preserves ownership with throwing logger=false
+02:57 +267: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: wrong_identity
+02:57 +268: ${SDK}/test/p8p_coordinator_test.dart: full-slot rescue snapshot preserves ownership with throwing logger=true
+02:58 +269: ${SDK}/test/p8p_coordinator_test.dart: full-slot rescue snapshot preserves ownership with throwing logger=true
+02:59 +270: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: old_server
+03:00 +271: ${SDK}/test/p8p_coordinator_test.dart: slow cold prefix is rescued before expiry and is not refilled
+03:00 +272: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: unknown_version
+03:01 +273: ${SDK}/test/p8p_coordinator_test.dart: different sources retain a bounded lookahead and one verified file
+03:02 +274: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry is bounded to two offers when both ICE attempts fail
+03:02 +275: ${SDK}/test/p8p_coordinator_test.dart: four origins share work concurrently and assemble one verified file
+03:04 +276: ${SDK}/test/p8p_coordinator_test.dart: four origins share work concurrently and assemble one verified file
+03:05 +277: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry polls pending closure once then uses its final ACK
+03:06 +278: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry polls pending closure once then uses its final ACK
+03:07 +279: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry polls pending closure once then uses its final ACK
+03:07 +280: ${SDK}/test/p8p_coordinator_test.dart: cancellation waits for the actual HTTP owner before releasing its slot
+03:07 +281: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:08 +282: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:09 +283: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:09 +284: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:09 +285: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:10 +286: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:10 +287: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:10 +288: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:11 +289: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:11 +290: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:11 +291: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:11 +292: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:12 +293: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+03:12 +294: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +295: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +296: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +297: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +298: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +299: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +300: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +301: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +302: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +303: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +304: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +305: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +306: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +307: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +308: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +309: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +310: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:13 +311: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+03:16 +312: ${SDK}/test/p8p_lifecycle_file_io_test.dart: piece read holds an actual regular-file owner across retirement
+03:17 +313: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry discards a late first Offer response after the fresh transfer
+03:20 +314: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry discards a late first Offer response after the fresh transfer
+03:22 +315: ${SDK}/test/p8p_lifecycle_file_io_test.dart: premature close is observed, never hidden by a helper close wait
+03:23 +316: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:23 +317: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:23 +318: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:23 +319: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:24 +320: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:24 +321: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:26 +322: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+03:26 +323: ${SDK}/test/p8p_ordered_writer_test.dart: cancel waits for an ongoing write and discards later ready pieces
+03:26 +324: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:27 +325: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:27 +326: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:27 +327: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:28 +328: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:28 +329: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:28 +330: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:29 +331: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:31 +332: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+03:31 +333: ${SDK}/test/p8p_receiver_test.dart: receiver slow consumer adaptive=true bounds queue and verifies every payload
+03:32 +334: ${SDK}/test/p8p_receiver_test.dart: receiver slow consumer adaptive=true bounds queue and verifies every payload
+03:32 +335: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:33 +336: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:33 +337: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:33 +338: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:33 +339: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:33 +340: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +341: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +342: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +343: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +344: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +345: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:34 +346: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:35 +347: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +348: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +349: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +350: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +351: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +352: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +353: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +354: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +355: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +356: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +357: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +358: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +359: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +360: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +361: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +362: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +363: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +364: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +365: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:35 +366: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +367: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +368: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +369: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +370: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +371: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:37 +372: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:38 +373: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:38 +374: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:38 +375: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:38 +376: ${SDK}/test/p8p_transfer_receiver_test.dart: lease expiry requests cancellation before accepting more data
+03:38 +377: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:38 +378: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:38 +379: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +380: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +381: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +382: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +383: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +384: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:40 +385: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:41 +386: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:41 +387: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:41 +388: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:41 +389: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +390: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +391: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +392: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +393: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +394: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +395: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +396: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +397: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +398: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +399: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +400: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +401: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +402: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +403: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +404: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +405: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +406: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +407: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +408: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +409: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +410: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +411: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +412: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +413: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +414: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +415: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +416: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +417: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:42 +418: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:43 +419: ${SDK}/test/p8p_writer_pipeline_test.dart: writing prefix permits bounded network prefetch
+03:44 +420: ${SDK}/test/p8p_writer_pipeline_test.dart: writing prefix permits bounded network prefetch
+03:44 +421: ${SDK}/test/p8p_writer_pipeline_test.dart: writing prefix permits bounded network prefetch
+03:45 +422: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:46 +423: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:47 +424: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:47 +425: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:48 +426: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:48 +427: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:48 +428: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:48 +429: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:48 +430: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:49 +431: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:49 +432: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:49 +433: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:50 +434: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:50 +435: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:50 +436: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:50 +437: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +438: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +439: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +440: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +441: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +442: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +443: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +444: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +445: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +446: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +447: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +448: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +449: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +450: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +451: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +452: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +453: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:51 +454: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback external COS requires no hosted metadata or control
+03:51 +455: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +456: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +457: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +458: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +459: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +460: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +461: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +462: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +463: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:52 +464: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +465: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +466: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +467: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +468: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +469: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +470: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +471: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +472: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +473: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +474: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +475: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +476: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +477: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +478: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +479: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +480: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +481: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:53 +482: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:54 +483: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:54 +484: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:54 +485: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:56 +486: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +487: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +488: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +489: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +490: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +491: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +492: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +493: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +494: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +495: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +496: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +497: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +498: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +499: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +500: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +501: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +502: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +503: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +504: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +505: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +506: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +507: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +508: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +509: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +510: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +511: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +512: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +513: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:56 +514: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +515: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +516: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +517: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +518: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +519: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +520: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +521: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:57 +522: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +523: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +524: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +525: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +526: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +527: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +528: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:58 +529: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:59 +530: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:59 +531: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+04:00 +532: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup cancellation closes every concurrent probe before handoff
+04:01 +533: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine resumes its verified prefix after cancellation
+04:05 +534: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine does not issue a full hash receipt after disk mutation
+04:07 +535: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine divides verified pieces between HTTPS and RTC peer=false
+04:11 +536: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine divides verified pieces between HTTPS and RTC peer=true
+04:14 +537: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine continues via HTTP after a corrupt RTC source
+04:17 +538: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine continues via HTTP after a close RTC source
+04:20 +539: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P diagnostics throwing during source failure cannot block HTTPS or disposal
+04:22 +540: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P new service with legacy user node keeps legacy transfer available
+04:25 +541: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract normal
+04:28 +542: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract cellular
+04:31 +543: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract range-mismatch
+04:35 +544: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract etag-mismatch
+04:38 +545: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract corrupt
+04:41 +546: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract oversized
+04:44 +547: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract truncated
+04:47 +548: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract ignored-range
+04:50 +549: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract redirect-cos
+04:53 +550: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-once
+04:59 +551: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-parallel
+05:05 +552: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-fallback
+05:11 +553: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-repeated
+05:20 +554: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-foreign
+05:27 +555: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-quota
+05:34 +556: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-long
+05:41 +557: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-cancel
+05:43 +558: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-external
+05:50 +559: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract cancel
+05:51 +560: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=false sender=false
+05:54 +561: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=false sender=true
+05:56 +562: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=true sender=false
+05:59 +563: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=true sender=true
+06:01 +564: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=false sender=false
+06:04 +565: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=false sender=true
+06:06 +566: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=true sender=false
+06:09 +567: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=true sender=true
+06:12 +568: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: SDK consent false receives data but never advertises upload availability
+06:12 +569: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel deadline opt-in=false preserves legacy timeout
+06:12 +570: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel deadline opt-in=true preserves legacy timeout
+06:13 +571: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: negotiating poll is opt-in fast and never overlaps a slow response
+06:14 +572: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel can open after 10 seconds within original 15 second budget
+06:27 +573: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel wait never extends original startup deadline
+06:27 +574: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: invalid optional startup policy cannot extend budgets or enable fast polls
+06:28 +575: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: fast candidates can arrive before a slow Offer acknowledgement
+06:28 +576: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: full-hash receipt is issued only after the closed file passes SHA
+06:29 +577: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: post-piece disk corruption cannot issue a full-hash receipt
+06:29 +578: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: first verified seed wins immediately even while users are connecting
+06:29 +579: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: silent users never delay a ready verified seed
+06:29 +580: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: negotiated user pipeline verifies the full file with one-piece replenishment
+06:33 +581: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: cancel before any verified source closes every parallel connection
+06:33 +582: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault no-answer keeps HTTPS advancing and verifies the full file
+06:36 +583: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault ice-stall keeps HTTPS advancing and verifies the full file
+06:39 +584: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault no-data keeps HTTPS advancing and verifies the full file
+06:42 +585: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault wrong-probe keeps HTTPS advancing and verifies the full file
+06:44 +586: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault closed-after-takeover keeps HTTPS advancing and verifies the full file
+06:47 +587: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault corrupt-after-takeover keeps HTTPS advancing and verifies the full file
+06:50 +588: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-1 preserves integrity and accounting
+06:51 +589: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed preserves integrity and accounting
+06:52 +590: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-2 preserves integrity and accounting
+06:53 +591: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed-repeat-2 preserves integrity and accounting
+06:54 +592: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-3 preserves integrity and accounting
+06:55 +593: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed-repeat-3 preserves integrity and accounting
+06:56 +594: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start p2p-fails preserves integrity and accounting
+06:59 +595: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-finishes-first preserves integrity and accounting
+07:00 +596: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-full-corrupt preserves integrity and accounting
+07:02 +597: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-full-truncated preserves integrity and accounting
+07:04 +598: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start cancel-after-https-body preserves integrity and accounting
+07:04 +599: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start multi-prefix preserves integrity and accounting
+07:05 +600: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start partial-handoff preserves integrity and accounting
+07:07 +601: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start p2p-fails-after-handoff preserves integrity and accounting
+07:08 +602: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-body-error preserves integrity and accounting
+07:09 +603: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start resume-partial preserves integrity and accounting
+07:10 +604: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start seed-handoff preserves integrity and accounting
+07:11 +605: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start range-ignored preserves integrity and accounting
+07:12 +606: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-partial preserves integrity and accounting
+07:13 +607: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-full preserves integrity and accounting
+07:14 +608: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-external preserves integrity and accounting
+07:15 +609: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-loop preserves integrity and accounting
+07:16 +610: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-unsafe preserves integrity and accounting
+07:17 +611: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-range-mismatch preserves integrity and accounting
+07:18 +612: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-etag-mismatch preserves integrity and accounting
+07:19 +613: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start corrupt-prefix preserves integrity and accounting
+07:20 +614: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-slow preserves integrity and accounting
+07:22 +615: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-stalls preserves integrity and accounting
+07:24 +616: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start cancel preserves integrity and accounting
+07:24 +617: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-user preserves integrity and accounting
+07:26 +618: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-seed preserves integrity and accounting
+07:28 +619: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-parallel preserves integrity and accounting
+07:30 +620: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-silent preserves integrity and accounting
+07:35 +621: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-http-first preserves integrity and accounting
+07:36 +622: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-cancel preserves integrity and accounting
+07:36 +623: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-late-seed preserves integrity and accounting
+07:47 +624: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-corrupt-http preserves integrity and accounting
+07:48 +625: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-near-complete preserves integrity and accounting
+07:53 +626: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users preserves integrity and accounting
+07:54 +627: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users-race preserves integrity and accounting
+07:56 +628: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users-seed preserves integrity and accounting
+07:58 +629: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-answer-grace preserves integrity and accounting
+08:04 +630: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-late-user preserves integrity and accounting
+08:14 +631: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: legacy candidates are serialized and keep end marker last
+08:15 +632: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: fast signaling cancellation starts no queued candidates or end marker
+08:15 +633: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: seed starts immediately while user discovery is stalled
+08:15 +634: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: batch candidates preserve order, bound payloads and flush EOC last
+08:15 +635: All tests passed!

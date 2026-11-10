@@ -7,15 +7,27 @@ import 'package:mesting_music/features/library/presentation/favorite_toggle_butt
 import 'support/test_tracks.dart';
 
 void main() {
-  testWidgets('confirmed unlike shows a broken heart then restores the empty glyph', (tester) async {
+  testWidgets('confirmed unlike restores empty glyph on the first frame', (
+    tester,
+  ) async {
     final track = testTracks.first;
-    final container = ProviderContainer(overrides: [favoriteTrackIdsProvider.overrideWithValue({track.id})]);
-    await tester.pumpWidget(UncontrolledProviderScope(container: container,
-      child: MaterialApp(home: Scaffold(body: FavoriteToggleButton(track: track)))));
+    final container = ProviderContainer(
+      overrides: [
+        favoriteTrackIdsProvider.overrideWithValue({track.id}),
+      ],
+    );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(body: FavoriteToggleButton(track: track)),
+        ),
+      ),
+    );
     container.updateOverrides([favoriteTrackIdsProvider.overrideWithValue({})]);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(find.byIcon(Icons.heart_broken_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.heart_broken_outlined), findsNothing);
     expect(find.byIcon(Icons.favorite_rounded), findsNothing);
     await tester.pump(const Duration(milliseconds: 650));
     expect(find.byIcon(Icons.heart_broken_outlined), findsNothing);

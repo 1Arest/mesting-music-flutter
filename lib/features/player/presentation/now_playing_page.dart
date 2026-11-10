@@ -184,7 +184,14 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
       );
       if (!allowed || !mounted) return;
       try {
-        await ref.read(libraryRepositoryProvider).toggleFavorite(track);
+        await ref
+            .read(favoriteMutationsProvider)
+            .toggle(
+              track,
+              wasFavorite: ref
+                  .read(favoriteTrackIdsProvider)
+                  .contains(track.id),
+            );
       } catch (error) {
         if (context.mounted) showPlatformFailure(context, error);
       }
@@ -582,7 +589,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                 top: safeTop + 8,
                 child: _RoundGlassButton(
                   tooltip: '酷狗歌曲评论',
-                  icon: Icons.comment_outlined,
+                  icon: Icons.chat_bubble_outline,
                   onTap: () => openPlatformSongComments(context, ref, track),
                   size: 42,
                   iconColor: Colors.white,

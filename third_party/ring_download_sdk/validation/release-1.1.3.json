@@ -1,0 +1,87 @@
+{
+  "version": "1.1.3",
+  "channel": "stable",
+  "released_at": "2026-11-05",
+  "candidate_version": "1.1.3-dev.5",
+  "formal_version_delta": {
+    "passed": true,
+    "version": "1.1.3",
+    "candidate": "1.1.3-dev.5",
+    "runtime_files": 48,
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "transmission_runtime_changes": []
+  },
+  "regression": {
+    "full_frozen_candidate_tests": 592,
+    "full_log_sha256": "121c74b289e7ae0d1a50cd138b263463c8a7ae36750ee20fc6c3eb69cdb5ca84",
+    "source_unchanged": true,
+    "static_analysis": "passed",
+    "formal_contract_tests": 43,
+    "counts_overlap": true
+  },
+  "native_acceptance": {
+    "candidate_sdk": "1.1.3-dev.5",
+    "private_APK_version": "0.0.17+17",
+    "private_APK_sha256": "13af3424f1a15d15479d5687f76e31fb537214e6d5db2683387c1eda82dbc03c",
+    "arm64_release_AOT": true,
+    "same_private_signer": true,
+    "alignment_16KiB_verified": true,
+    "full_file_bytes": 155305939,
+    "elapsed_ms": 31236,
+    "full_sha256": "3e85c2171647dccff7b59b4b68b462717f03426327081b774c77192cff50571a",
+    "independent_file_hash_verified": true,
+    "ordinary_peer_verified_bytes": 2097152,
+    "independent_upload_report_matched": true,
+    "ordinary_peer_attempt_alias": "peer1",
+    "peak_reserved_bytes": 4194304,
+    "peak_reservations": 4,
+    "repeat_reserved_bytes": 0,
+    "native_release_events": 5,
+    "SDK_disposal_observed": true,
+    "resource_observing_after": false,
+    "private_process_stopped": true,
+    "exact_download_leaf_reclaimed_bytes": 155305939,
+    "ADB_kept": true,
+    "global_device_settings_changed": false,
+    "tail_extra_wait_activation_proven": false,
+    "comparative_speedup_proven": false,
+    "Windows_public_path_proven": false,
+    "battery_observations": {
+      "before": {
+        "level": "42",
+        "temperature": "321"
+      },
+      "after": {
+        "level": "42",
+        "temperature": "323"
+      }
+    },
+    "entire_process_last_sample": {
+      "cpu_ms": 44747,
+      "pss_kib": 120067
+    },
+    "scope": "Independent private SDK receiver; no formal host update or signature installation. Short whole-process samples are not SDK incremental/peak/long-term energy evidence.",
+    "earlier_lock_interrupted_round_preserved": true
+  },
+  "ordinary_native_owner_limit": 2,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "original_deadlines_preserved": true,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "phone_sharing_policy_unchanged_from": "1.1.2",
+  "production_node_upgraded": false,
+  "production_server_transmission_changed": false,
+  "host_official_APK_built": false,
+  "limitations": [
+    "One ordinary provider delivered and verified 2 MiB in this cold run; not evidence for all providers or fixed bandwidth aggregation.",
+    "B was an early candidate and the historical tail stall did not recur. Extra tail-wait activation in this device run is not proven; bounded recovery/deadline/cancel rules are covered by controlled tests.",
+    "Windows public paths, official host update/signature installation, all NAT/cellular networks and long-term energy impact remain outside this acceptance.",
+    "Replacement after an admitted source fails during body transmission is not implemented."
+  ],
+  "previous_P2P_baseline": "40420f35e7bd41e8e9fef51eee55093bbed60283"
+}

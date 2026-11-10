@@ -14,6 +14,7 @@ import '../../../shared/widgets/track_artwork.dart';
 import '../../library/favorite_pins_provider.dart';
 import '../../library/library_providers.dart';
 import '../../library/presentation/library_access.dart';
+import '../../library/presentation/favorite_toggle_button.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../data/platform_category_search.dart';
@@ -207,13 +208,16 @@ Future<void> showSongActions(
             context.mounted &&
             current()) {
           final was = ref.read(favoriteTrackIdsProvider).contains(track.id);
-          await library.toggleFavorite(track);
-          if (context.mounted && current()) {
+          final next = await ref
+              .read(favoriteMutationsProvider)
+              .toggle(track, wasFavorite: was);
+          if (context.mounted && current() && next != null) {
             showMusicNotice(
               context,
-              icon: CupertinoIcons.heart,
+              icon: next ? Icons.favorite_rounded : Icons.heart_broken_outlined,
               title: was ? '已取消喜欢' : '已添加到喜欢',
               message: '',
+              iconColor: favoriteFeedbackColor(context),
             );
           }
         }
@@ -398,7 +402,7 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
                         'download',
                       ),
                     if (widget.platformAvailable)
-                      _action('评论', CupertinoIcons.text_bubble, 'comments'),
+                      _action('评论', Icons.chat_bubble_outline, 'comments'),
                     _action('分享', CupertinoIcons.share, 'share'),
                     FutureBuilder<SongMenuDetails>(
                       future: _details,

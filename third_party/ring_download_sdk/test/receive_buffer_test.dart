@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ring_download_sdk/src/sdk/receive_buffer.dart';
+import 'package:ring_download_sdk/ring_download_sdk.dart';
 
 const channel = MethodChannel('ring_download_sdk/test_receive_buffer');
 String candidate(
@@ -27,6 +28,95 @@ void main() {
     });
   });
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+  test(
+    'reports actual minimum buffer with only bounded numeric socket facts',
+    () async {
+      messenger.setMockMethodCallHandler(channel, (call) async {
+        if (call.method != 'tuneRtcReceiveBuffer') return true;
+        return {
+          'code': 'adjusted',
+          'matched': 2,
+          'minBufferBytes': 425984,
+          'address': 'PRIVATE-ADDRESS',
+          'owner': 'PRIVATE-OWNER',
+        };
+      });
+      final observations = <RingDownloadDiagnostic>[];
+      final legacy = <String>[];
+      final observed = Completer<void>();
+      final owner = RingRtcReceiveBufferOwner(
+        channel: channel,
+        onResult: legacy.add,
+        onDiagnostic: (event) {
+          observations.add(event);
+          observed.complete();
+          throw StateError('optional observer');
+        },
+      );
+      owner.addCandidate(candidate(45000));
+      await observed.future.timeout(const Duration(seconds: 1));
+      await owner.close();
+      expect(legacy, ['receive_buffer_adjusted']);
+      expect(observations.single.toJson(), {
+        'stage': 'rtc',
+        'code': 'receive_buffer_adjusted',
+        'minReceiveBufferBytes': 425984,
+        'matchedReceiveSockets': 2,
+      });
+    },
+  );
+
+  test(
+    'invalid or absent native measurements stay unknown in diagnostics',
+    () async {
+      for (final values in <Map<String, Object?>>[
+        {'code': 'adjusted'},
+        {'code': 'adjusted', 'matched': true, 'minBufferBytes': 2097152},
+        {'code': 'adjusted', 'matched': 9, 'minBufferBytes': 2097152},
+        {'code': 'adjusted', 'matched': -1, 'minBufferBytes': 2097152},
+        {'code': 'adjusted', 'matched': 0, 'minBufferBytes': 2097152},
+        {'code': 'adjusted', 'matched': 1, 'minBufferBytes': 0},
+        {'code': 'adjusted', 'matched': 1, 'minBufferBytes': 425984.0},
+        {'code': 'adjusted', 'matched': 1, 'minBufferBytes': 67108865},
+        {'code': 'PRIVATE-URL', 'matched': 1, 'minBufferBytes': 2097152},
+      ]) {
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          return call.method == 'tuneRtcReceiveBuffer' ? values : true;
+        });
+        final observed = Completer<RingDownloadDiagnostic>();
+        final owner = RingRtcReceiveBufferOwner(
+          channel: channel,
+          onDiagnostic: observed.complete,
+        );
+        owner.addCandidate(candidate(45000));
+        final event = await observed.future.timeout(const Duration(seconds: 1));
+        await owner.close();
+        expect(event.minReceiveBufferBytes, isNull, reason: values.toString());
+        expect(event.toJson().containsKey('minReceiveBufferBytes'), false);
+        expect(event.toJson().toString(), isNot(contains('PRIVATE')));
+      }
+    },
+  );
+
+  test(
+    'retirement from the legacy observer fences the numeric observation',
+    () async {
+      final observations = <RingDownloadDiagnostic>[];
+      final retired = Completer<void>();
+      late final RingRtcReceiveBufferOwner owner;
+      owner = RingRtcReceiveBufferOwner(
+        channel: channel,
+        onResult: (_) {
+          unawaited(owner.close().then((_) => retired.complete()));
+        },
+        onDiagnostic: observations.add,
+      );
+      owner.addCandidate(candidate(45000));
+      await retired.future.timeout(const Duration(seconds: 1));
+      expect(observations, isEmpty);
+    },
+  );
 
   test('only numeric, unicast host UDP candidates are eligible', () {
     expect(
@@ -67,9 +157,11 @@ void main() {
     'batches at most eight bindings, deduplicates a wildcard port, and exposes no SDP',
     () async {
       final events = <String>[];
+      final observations = <RingDownloadDiagnostic>[];
       final owner = RingRtcReceiveBufferOwner(
         channel: channel,
         onResult: events.add,
+        onDiagnostic: observations.add,
       );
       owner.addCandidate(candidate(45000));
       owner.addCandidate(candidate(45000, address: '192.0.2.11'));
@@ -180,6 +272,7 @@ void main() {
       final gate = Completer<Object?>();
       final started = Completer<void>();
       final events = <String>[];
+      final observations = <RingDownloadDiagnostic>[];
       messenger.setMockMethodCallHandler(channel, (call) async {
         calls.add(call);
         if (call.method == 'tuneRtcReceiveBuffer') {
@@ -191,6 +284,7 @@ void main() {
       final owner = RingRtcReceiveBufferOwner(
         channel: channel,
         onResult: events.add,
+        onDiagnostic: observations.add,
       );
       owner.addCandidate(candidate(45000));
       await started.future;
@@ -198,6 +292,7 @@ void main() {
       gate.complete({'code': 'adjusted'});
       await settle();
       expect(events, isEmpty);
+      expect(observations, isEmpty);
       final count = calls.length;
       owner.addCandidate(candidate(45002));
       await settle();

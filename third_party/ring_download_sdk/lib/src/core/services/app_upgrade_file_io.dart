@@ -2,11 +2,38 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:crypto/crypto.dart';
+import 'app_upgrade_native_hash.dart';
 
-/// Always reads the current file. Only its path crosses the isolate boundary;
-/// neither APK bytes nor caller state (Dio, channels, open handles) are sent.
-/// Callers retain their size checks, failure policy and installation-time scan.
-Future<String> appUpgradeFileSha256(String filePath) => Isolate.run(
+/// Always scans the current file. Android app-private files may use the native
+/// worker; unsupported paths/platforms retain the original isolated Dart scan.
+/// Callers retain their independent size/digest and installation-time checks.
+Future<String> appUpgradeFileSha256(
+  String filePath, {
+  Future<Object?>? cancelSignal,
+}) async {
+  var cancelled = false;
+  cancelSignal?.then<void>((_) {
+    cancelled = true;
+  }, onError: (Object _) {});
+  if (cancelSignal != null) await Future<void>.value();
+  if (cancelled) throw const FileSystemException('file_hash_cancelled');
+  if (Platform.isAndroid) {
+    final native = await const AppUpgradeNativeFileHash().tryHash(
+      filePath,
+      expectedBytes: await File(filePath).length(),
+      cancelSignal: cancelSignal,
+    );
+    if (cancelled) throw const FileSystemException('file_hash_cancelled');
+    if (native != null) return native;
+  }
+  if (cancelled) throw const FileSystemException('file_hash_cancelled');
+  final digest = await _dartFileSha256(filePath);
+  if (cancelled) throw const FileSystemException('file_hash_cancelled');
+  return digest;
+}
+
+// Keep this closure independent of channel/cancellation state in its caller.
+Future<String> _dartFileSha256(String filePath) => Isolate.run(
   () async => (await sha256.bind(File(filePath).openRead()).first).toString(),
   debugName: 'app-upgrade-sha256',
 );

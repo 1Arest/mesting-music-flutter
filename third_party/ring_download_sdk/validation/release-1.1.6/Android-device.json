@@ -1,0 +1,38 @@
+{
+  "file_bytes": 155305939,
+  "whole_file_verified": true,
+  "receipt_seconds": 17.01,
+  "traffic": {
+    "final_verified": true,
+    "https_body_bytes": 69206784,
+    "peer_body_bytes": 33554432,
+    "peer_verified_bytes": 33554432,
+    "seed_body_bytes": 53594067,
+    "seed_verified_bytes": 53594067
+  },
+  "P2P_verified_percent": 56.11,
+  "full_native_transports_released": 4,
+  "cancel": {
+    "actual_partial_transfer_cancelled": true,
+    "verified_bytes_at_cancel": 8388608,
+    "first_payload_ms": 605,
+    "interrupted_result_ms": 1669,
+    "last_native_release_ms": 1716,
+    "native_transports_released": 4,
+    "SDK_disposed": true,
+    "original_controller_assertion_failed": true,
+    "reason": "Expected UI cancel_requested fell outside bounded event list; actual partial cancellation independently checked in log plus final UI. No rerun required."
+  },
+  "cleanup": {
+    "test_cache_cleared": true,
+    "test_process_absent": true,
+    "screen_asleep": true,
+    "target_APK_not_installed": true,
+    "ADB": "device"
+  },
+  "limitations": [
+    "One home Wi-Fi sample; no stable speed or P2P ratio guarantee",
+    "C-Mac and D-Windows still failed ICE to home receiver",
+    "B closed SCTP snapshot retains sent_queue_chunks=1/flight_bytes=84; process has no RTC UDP sockets, so snapshot is not recorded as an all-zero queue"
+  ]
+}

@@ -5,6 +5,24 @@ import '../../../shared/widgets/beta_entrance_readiness.dart';
 import '../../../shared/widgets/beta_root_tab_viewport.dart';
 import '../discovery_startup_cache.dart';
 
+/// The opaque platform selector owns this short presentation transaction.
+/// Account publication still happens normally (including playback isolation),
+/// while covered catalog roots wait for their cache and final visit identity.
+/// Without the gate they mount for the new owner and then mount again when the
+/// visit increments, starting duplicate layout/image/provider work offscreen.
+class PlatformPresentationSwitch extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void hold() => state = true;
+  void release() => state = false;
+}
+
+final platformPresentationSwitchProvider =
+    NotifierProvider<PlatformPresentationSwitch, bool>(
+      PlatformPresentationSwitch.new,
+    );
+
 /// A visit is requested only by an explicit platform selection. Ordinary Tab
 /// navigation retains its scroll state and never restarts this entrance.
 class PlatformHomeVisit extends Notifier<int> {

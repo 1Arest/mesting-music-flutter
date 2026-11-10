@@ -1,3 +1,5 @@
+import '../membership_badge_provider.dart';
+import '../presentation/animated_membership_badge.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,31 +12,18 @@ import 'netease_fallback.dart';
 import 'netease_playback_options.dart';
 import '../../themes/music_typography.dart';
 
+/// Compatibility name for existing account surfaces. Official membership wins
+/// over the local display setting; missing/failed platform facts stay absent.
 class NeteaseLocalSvipBadge extends ConsumerWidget {
   const NeteaseLocalSvipBadge({this.inline = false, super.key});
   final bool inline;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(neteaseLocalSvipProvider)) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      label: '网易云本地 SVIP 已启用',
-      child: Container(
-        margin: inline ? EdgeInsets.zero : const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: scheme.primaryContainer,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          '本地 SVIP',
-          style: TextStyle(
-            color: scheme.onPrimaryContainer,
-            fontSize: MusicTypography.captionSize,
-            fontWeight: MusicTypography.bodyWeight,
-          ),
-        ),
-      ),
+    final tier = ref.watch(membershipPresentationTierProvider);
+    if (tier == null) return const SizedBox.shrink();
+    return Padding(
+      padding: inline ? EdgeInsets.zero : const EdgeInsets.only(top: 8),
+      child: AnimatedMembershipBadge(tier: tier),
     );
   }
 }
@@ -114,7 +103,7 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  enabled ? '本地黑胶 SVIP' : '本地会员已关闭',
+                  enabled ? '至尊SVIP' : '本地会员已关闭',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
@@ -127,7 +116,7 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
           const SizedBox(height: 16),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('当前账号启用本地 SVIP'),
+            title: const Text('当前账号启用至尊SVIP'),
             subtitle: Text(
               settings.allowedUids.isNotEmpty &&
                       !settings.allowedUids.contains(uid)
@@ -171,7 +160,7 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
           const ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.badge_outlined),
-            title: Text('本地 SVIP 标识与会员入口'),
+            title: Text('至尊SVIP 标识与会员入口'),
             subtitle: Text('切换账号后按对应 UID 的设置展示'),
           ),
           const SizedBox(height: 20),

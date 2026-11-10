@@ -15,6 +15,7 @@ import '../music_platform/netease/netease_library_repository.dart';
 import '../music_platform/data/platform_library_repository.dart';
 import '../music_platform/data/cloud_library_repository.dart';
 import 'data/library_repository.dart';
+import 'data/favorite_mutations.dart';
 import 'data/favorite_track_window.dart';
 import 'data/playlist_directory_window.dart';
 
@@ -107,13 +108,36 @@ final completeFavoriteIdsProvider = FutureProvider<Set<String>>((ref) async {
   return ref.watch(libraryRepositoryProvider).favoriteIds();
 });
 
-final favoriteTrackIdsProvider = Provider<Set<String>>((ref) {
+final confirmedFavoriteTrackIdsProvider = Provider<Set<String>>((ref) {
   final tracks = ref.watch(favoriteTracksProvider).value ?? const <Track>[];
   return {
     ...?ref.watch(completeFavoriteIdsProvider).value,
     ...tracks.map((track) => track.id),
   };
 });
+
+final favoriteMutationsProvider = ChangeNotifierProvider<FavoriteMutations>((
+  ref,
+) {
+  final repository = ref.watch(libraryRepositoryProvider);
+  final mutations = FavoriteMutations(
+    write: (track, next) => repository.setFavorite(track, favorite: next),
+    confirmed: () => ref.read(confirmedFavoriteTrackIdsProvider),
+  );
+  ref.listen(
+    confirmedFavoriteTrackIdsProvider,
+    (_, ids) => mutations.reconcile(ids),
+  );
+  return mutations;
+});
+
+/// Every favorite glyph sees the same immediate result, even when the cloud
+/// membership index and paginated detail list refresh at different times.
+final favoriteTrackIdsProvider = Provider<Set<String>>(
+  (ref) => ref
+      .watch(favoriteMutationsProvider)
+      .apply(ref.watch(confirmedFavoriteTrackIdsProvider)),
+);
 
 final favoriteCollectionCountProvider = Provider<int>((ref) {
   final tracks = ref.watch(favoriteTracksProvider).value ?? const <Track>[];

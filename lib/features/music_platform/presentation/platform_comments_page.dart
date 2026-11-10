@@ -1,3 +1,4 @@
+import 'source_comments_page.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'platform_lazy_list.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -34,22 +35,9 @@ Future<void> openPlatformSongComments(
   WidgetRef ref,
   Track track,
 ) async {
-  final session = ref.read(platformAccountProvider).value;
-  if (!ref.read(showPlatformFeaturesProvider) || session == null) return;
-  final repository = session.platform == MusicPlatform.netease
-      ? NeteaseCommentsRepository(
-          ref.read(musicPlatformApiProvider),
-          session,
-          ref.read(neteaseMusicRepositoryProvider),
-        )
-      : PlatformCommentsRepository(ref.read(musicPlatformApiProvider), session);
-  // The source can live inside the library's nested navigator. Comments own
-  // their composer and must cover the shell's persistent navigation/player.
+  if (!ref.read(showPlatformFeaturesProvider)) return;
   await Navigator.of(context, rootNavigator: true).push(
-    MestingPageRoute<void>(
-      builder: (_) =>
-          PlatformSongCommentsPage(track: track, repository: repository),
-    ),
+    MestingPageRoute<void>(builder: (_) => SourceCommentsPage(track: track)),
   );
 }
 
@@ -154,11 +142,20 @@ class PlatformCommentsPage extends ConsumerStatefulWidget {
     required this.resource,
     required this.repository,
     this.thread,
+    this.sourceCurrent,
+    this.embedded = false,
+    this.onSourceLogin,
     super.key,
   });
   final PlatformCommentResource resource;
   final PlatformCommentsRepository repository;
   final PlatformComment? thread;
+  final bool Function()? sourceCurrent;
+
+  /// Source tabs supply their single fixed frame. Standalone playlist/reply
+  /// routes continue to own a complete frame through the default value.
+  final bool embedded;
+  final VoidCallback? onSourceLogin;
   @override
   ConsumerState<PlatformCommentsPage> createState() =>
       _PlatformCommentsPageState();
@@ -193,10 +190,11 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
 
   bool get _current =>
       ref.read(showPlatformFeaturesProvider) &&
-      ref.read(platformAccountProvider).value?.ownerId ==
-          widget.repository.identity.ownerId &&
-      ref.read(platformAccountProvider).value?.token ==
-          widget.repository.identity.token;
+      (widget.sourceCurrent?.call() ??
+          (ref.read(platformAccountProvider).value?.ownerId ==
+                  widget.repository.identity.ownerId &&
+              ref.read(platformAccountProvider).value?.token ==
+                  widget.repository.identity.token));
 
   @override
   void initState() {
@@ -340,6 +338,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
   }
 
   Future<void> _send() async {
+    if (widget.repository.readOnly) return;
     if (_writing || !_current || _text.text.trim().isEmpty) return;
     setState(() => _writing = true);
     try {
@@ -406,64 +405,79 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
     }
   }
 
-  Widget _commentRow(
-    BuildContext context,
-    PlatformComment comment,
-  ) => BetaContentReveal(
-    key: ValueKey('comment-reveal-${comment.id}'),
-    child: PlatformCommentCard(
-      comment: comment,
-      onHug: widget.repository is NeteaseCommentsRepository && !_writing
-          ? () => Navigator.of(context, rootNavigator: true).push(
-              MestingPageRoute<void>(
-                builder: (_) => NeteaseCommentHugsPage(
-                  repository: widget.repository as NeteaseCommentsRepository,
-                  resource: widget.resource,
-                  comment: comment,
-                ),
-              ),
-            )
-          : null,
-      onReaction: widget.repository is NeteaseCommentsRepository && !_writing
-          ? () async {
-              if (!_current) return;
-              setState(() => _writing = true);
-              try {
-                await (widget.repository as NeteaseCommentsRepository).like(
-                  widget.resource,
-                  comment,
-                );
-                if (mounted && _current) {
-                  await _load(reset: true, silent: true);
+  Widget _commentRow(BuildContext context, PlatformComment comment) =>
+      BetaContentReveal(
+        key: ValueKey('comment-reveal-${comment.id}'),
+        child: PlatformCommentCard(
+          comment: comment,
+          onHug:
+              widget.repository is NeteaseCommentsRepository &&
+                  !_writing &&
+                  !widget.repository.readOnly
+              ? () => Navigator.of(context, rootNavigator: true).push(
+                  MestingPageRoute<void>(
+                    builder: (_) => NeteaseCommentHugsPage(
+                      repository:
+                          widget.repository as NeteaseCommentsRepository,
+                      resource: widget.resource,
+                      comment: comment,
+                    ),
+                  ),
+                )
+              : null,
+          onReaction:
+              widget.repository is NeteaseCommentsRepository &&
+                  !_writing &&
+                  !widget.repository.readOnly
+              ? () async {
+                  if (!_current) return;
+                  setState(() => _writing = true);
+                  try {
+                    await (widget.repository as NeteaseCommentsRepository).like(
+                      widget.resource,
+                      comment,
+                    );
+                    if (mounted && _current) {
+                      await _load(reset: true, silent: true);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      showPlatformFailure(context, e);
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _writing = false);
+                    }
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  showPlatformFailure(context, e);
-                }
-              } finally {
-                if (mounted) {
-                  setState(() => _writing = false);
-                }
-              }
-            }
-          : null,
-      onReply: _writing ? null : () => setState(() => _reply = comment),
-      onDelete: !_writing && comment.userId == widget.repository.identity.userId
-          ? () => _delete(comment)
-          : null,
-      onThread: widget.thread == null
-          ? () => Navigator.of(context, rootNavigator: true).push(
-              MestingPageRoute<void>(
-                builder: (_) => PlatformCommentsPage(
-                  resource: widget.resource,
-                  repository: widget.repository,
-                  thread: comment,
-                ),
-              ),
-            )
-          : null,
-    ),
-  );
+              : null,
+          onReply: _writing || widget.repository.readOnly
+              ? null
+              : () => setState(() => _reply = comment),
+          onDelete:
+              !_writing &&
+                  !widget.repository.readOnly &&
+                  comment.userId == widget.repository.identity.userId
+              ? () => _delete(comment)
+              : null,
+          onThread:
+              widget.thread == null &&
+                  (widget.resource.kind != PlatformCommentKind.mv ||
+                      widget.repository is NeteaseCommentsRepository)
+              ? () => Navigator.of(context, rootNavigator: true).push(
+                  MestingPageRoute<void>(
+                    builder: (_) => PlatformCommentsPage(
+                      resource: widget.resource,
+                      repository: widget.repository,
+                      thread: comment,
+                      sourceCurrent: widget.sourceCurrent,
+                      onSourceLogin: widget.onSourceLogin,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+      );
 
   List<PlatformComment> get _visibleComments {
     if (_derivedRevision == _commentRevision &&
@@ -516,6 +530,197 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
     ref.watch(showPlatformFeaturesProvider);
     ref.watch(platformAccountProvider);
     final entries = _visibleComments;
+    final body = !_current
+        ? const Center(child: Text('账号已变化，请返回当前账号页面'))
+        : Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        BetaAnchoredMenu<PlatformCommentSort>(
+                          tooltip: '评论排序',
+                          value: _sort,
+                          values: widget.repository is NeteaseCommentsRepository
+                              ? [
+                                  PlatformCommentSort.hottest,
+                                  PlatformCommentSort.newest,
+                                ]
+                              : PlatformCommentSort.values,
+                          label: (sort) => switch (sort) {
+                            PlatformCommentSort.hottest => '最热',
+                            PlatformCommentSort.newest => '最新',
+                            PlatformCommentSort.oldest => '最早',
+                          },
+                          onSelected: (sort) {
+                            if (_sort != sort) {
+                              setState(() => _sort = sort);
+                              _load(reset: true);
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        BetaAnchoredMenu<PlatformCommentScope>(
+                          tooltip: '评论范围',
+                          value: _scope,
+                          values: widget.repository is NeteaseCommentsRepository
+                              ? [
+                                  PlatformCommentScope.all,
+                                  if (!widget.repository.readOnly)
+                                    PlatformCommentScope.mine,
+                                ]
+                              : [
+                                  for (final scope
+                                      in PlatformCommentScope.values)
+                                    if (!widget.repository.readOnly ||
+                                        scope != PlatformCommentScope.mine)
+                                      scope,
+                                ],
+                          label: (scope) => switch (scope) {
+                            PlatformCommentScope.all => '全部',
+                            PlatformCommentScope.singer => '歌手',
+                            PlatformCommentScope.mine => '我的',
+                          },
+                          onSelected: (scope) => setState(() => _scope = scope),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _sortNotice ??
+                          (_sort != PlatformCommentSort.hottest ||
+                                  !_nativeHot ||
+                                  _scope != PlatformCommentScope.all
+                              ? '排序与筛选作用于已加载评论，可继续向下加载'
+                              : '按平台最热评论排序'),
+                      style: TextStyle(
+                        fontSize: MusicTypography.smallCaptionSize,
+                        color: context.musicThemeTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: MusicRefreshIndicator(
+                        onRefresh: () => _load(reset: true),
+                        child: buildPlatformLazyList(
+                          controller: _scroll,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 170),
+                          header: [
+                            if (widget.thread != null)
+                              PlatformPanel(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.thread!.nickname,
+                                      style: const TextStyle(
+                                        fontWeight: MusicTypography.titleWeight,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(widget.thread!.content),
+                                  ],
+                                ),
+                              ),
+                            if (_loading &&
+                                !_silentLoading &&
+                                _comments.isEmpty)
+                              const Padding(
+                                key: ValueKey('comments-initial-loading'),
+                                padding: EdgeInsets.symmetric(vertical: 36),
+                                child: Center(child: BetaActivityIndicator()),
+                              ),
+                            if (_error != null)
+                              PlatformFeedbackState(
+                                message: _error!,
+                                retry: () => _load(reset: _page == 0),
+                              ),
+                            if (!_loading && _error == null && entries.isEmpty)
+                              PlatformFeedbackState(
+                                message: _scope == PlatformCommentScope.all
+                                    ? '暂时没有评论，来写下你的感受'
+                                    : '已加载评论中暂无此类内容',
+                              ),
+                          ],
+                          itemCount: entries.length,
+                          findItemIndex: (key) => _derivedCommentIndices[key],
+                          itemBuilder: (context, index) =>
+                              _commentRow(context, entries[index]),
+                          footer: [
+                            if (_loading &&
+                                !_silentLoading &&
+                                _comments.isNotEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                  child: MusicActivityIndicator(
+                                    independent: true,
+                                  ),
+                                ),
+                              ),
+                            if (_hasMore && !_loading)
+                              TextButton.icon(
+                                onPressed: _load,
+                                icon: const Icon(Icons.expand_more_rounded),
+                                label: const Text('加载更多'),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: widget.repository.readOnly
+                          ? Material(
+                              // A wrapped accessibility label must not
+                              // overlap the scrolling comments beneath it.
+                              color: Theme.of(context).colorScheme.surface,
+                              child: SafeArea(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: TextButton.icon(
+                                    onPressed: widget.onSourceLogin,
+                                    icon: const Icon(Icons.login),
+                                    label: Text(
+                                      '登录${widget.repository.identity.platformLabel}后参与评论',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : KeyboardVisibilityBuilder(
+                              builder: (context, keyboardVisible) =>
+                                  PlatformCommentComposer(
+                                    keyboardVisible: keyboardVisible,
+                                    controller: _text,
+                                    sending: _writing,
+                                    onSend: _send,
+                                    reply: _reply?.nickname,
+                                    onCancelReply: () =>
+                                        setState(() => _reply = null),
+                                  ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+    if (widget.embedded) return body;
     return PlatformPageFrame(
       musicChrome: false,
       title: widget.thread != null
@@ -524,178 +729,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
           ? '网易云评论'
           : '酷狗评论',
       subtitle: widget.resource.name,
-      child: !_current
-          ? const Center(child: Text('账号已变化，请返回当前账号页面'))
-          : Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          BetaAnchoredMenu<PlatformCommentSort>(
-                            tooltip: '评论排序',
-                            value: _sort,
-                            values:
-                                widget.repository is NeteaseCommentsRepository
-                                ? [
-                                    PlatformCommentSort.hottest,
-                                    PlatformCommentSort.newest,
-                                  ]
-                                : PlatformCommentSort.values,
-                            label: (sort) => switch (sort) {
-                              PlatformCommentSort.hottest => '最热',
-                              PlatformCommentSort.newest => '最新',
-                              PlatformCommentSort.oldest => '最早',
-                            },
-                            onSelected: (sort) {
-                              if (_sort != sort) {
-                                setState(() => _sort = sort);
-                                _load(reset: true);
-                              }
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          BetaAnchoredMenu<PlatformCommentScope>(
-                            tooltip: '评论范围',
-                            value: _scope,
-                            values:
-                                widget.repository is NeteaseCommentsRepository
-                                ? [
-                                    PlatformCommentScope.all,
-                                    PlatformCommentScope.mine,
-                                  ]
-                                : PlatformCommentScope.values,
-                            label: (scope) => switch (scope) {
-                              PlatformCommentScope.all => '全部',
-                              PlatformCommentScope.singer => '歌手',
-                              PlatformCommentScope.mine => '我的',
-                            },
-                            onSelected: (scope) =>
-                                setState(() => _scope = scope),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _sortNotice ??
-                            (_sort != PlatformCommentSort.hottest ||
-                                    !_nativeHot ||
-                                    _scope != PlatformCommentScope.all
-                                ? '排序与筛选作用于已加载评论，可继续向下加载'
-                                : '按平台最热评论排序'),
-                        style: TextStyle(
-                          fontSize: MusicTypography.smallCaptionSize,
-                          color: context.musicThemeTokens.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: MusicRefreshIndicator(
-                          onRefresh: () => _load(reset: true),
-                          child: buildPlatformLazyList(
-                            controller: _scroll,
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(18, 8, 18, 170),
-                            header: [
-                              if (widget.thread != null)
-                                PlatformPanel(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.thread!.nickname,
-                                        style: const TextStyle(
-                                          fontWeight:
-                                              MusicTypography.titleWeight,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(widget.thread!.content),
-                                    ],
-                                  ),
-                                ),
-                              if (_loading &&
-                                  !_silentLoading &&
-                                  _comments.isEmpty)
-                                const Padding(
-                                  key: ValueKey('comments-initial-loading'),
-                                  padding: EdgeInsets.symmetric(vertical: 36),
-                                  child: Center(child: BetaActivityIndicator()),
-                                ),
-                              if (_error != null)
-                                PlatformFeedbackState(
-                                  message: _error!,
-                                  retry: () => _load(reset: _page == 0),
-                                ),
-                              if (!_loading &&
-                                  _error == null &&
-                                  entries.isEmpty)
-                                PlatformFeedbackState(
-                                  message: _scope == PlatformCommentScope.all
-                                      ? '暂时没有评论，来写下你的感受'
-                                      : '已加载评论中暂无此类内容',
-                                ),
-                            ],
-                            itemCount: entries.length,
-                            findItemIndex: (key) => _derivedCommentIndices[key],
-                            itemBuilder: (context, index) =>
-                                _commentRow(context, entries[index]),
-                            footer: [
-                              if (_loading &&
-                                  !_silentLoading &&
-                                  _comments.isNotEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Center(
-                                    child: MusicActivityIndicator(
-                                      independent: true,
-                                    ),
-                                  ),
-                                ),
-                              if (_hasMore && !_loading)
-                                TextButton.icon(
-                                  onPressed: _load,
-                                  icon: const Icon(Icons.expand_more_rounded),
-                                  label: const Text('加载更多'),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: KeyboardVisibilityBuilder(
-                          builder: (context, keyboardVisible) =>
-                              PlatformCommentComposer(
-                                keyboardVisible: keyboardVisible,
-                                controller: _text,
-                                sending: _writing,
-                                onSend: _send,
-                                reply: _reply?.nickname,
-                                onCancelReply: () =>
-                                    setState(() => _reply = null),
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+      child: body,
     );
   }
 }

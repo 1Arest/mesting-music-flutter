@@ -139,7 +139,20 @@ class _KugouAccountsPageState extends ConsumerState<KugouAccountsPage> {
                   data: (rows) => ListView(
                     padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
                     children: [
-                      for (final row in rows)
+                      // Stable view projection only: promote the current login
+                      // without rewriting secure-store order or sorting peers.
+                      for (final row in [
+                        ...rows.where(
+                          (row) =>
+                              selected?.platform == MusicPlatform.kugou &&
+                              selected?.userId == row.userId,
+                        ),
+                        ...rows.where(
+                          (row) =>
+                              selected?.platform != MusicPlatform.kugou ||
+                              selected?.userId != row.userId,
+                        ),
+                      ])
                         Builder(
                           builder: (context) {
                             final active =

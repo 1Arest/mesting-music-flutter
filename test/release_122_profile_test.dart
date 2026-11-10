@@ -15,6 +15,15 @@ import 'package:mesting_music/shared/widgets/beta_scroll_behavior.dart';
 import 'support/personal_profile_fixture.dart';
 import 'support/pump_artwork_ready.dart';
 
+/// The membership plate intentionally runs while visible. Sample a bounded
+/// settling window so scroll/route tests retain that real motion rather than
+/// waiting forever for an animation that is designed to keep running.
+Future<void> settle188(WidgetTester tester) async {
+  for (var frame = 0; frame < 12; frame++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
   setUpAll(() => LiquidGlassWidgets.initialize());
 
@@ -63,9 +72,10 @@ void main() {
           ),
           scrollBehavior: const BetaScrollBehavior(),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(narrow ? 1.3 : 1)),
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: true,
+              textScaler: TextScaler.linear(narrow ? 1.3 : 1),
+            ),
             child: child!,
           ),
         ),
@@ -75,7 +85,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     await pumpArtworkReady(tester);
-    await tester.pumpAndSettle();
+    await settle188(tester);
     return (fixture, router);
   }
 
@@ -106,7 +116,7 @@ void main() {
               await tester.pump(const Duration(milliseconds: 180));
             }
           }
-          await tester.pumpAndSettle();
+          await settle188(tester);
           expect(router.routeInformationProvider.value.uri.path, '/profile');
           expect(tester.takeException(), isNull);
         },
@@ -203,9 +213,9 @@ void main() {
         );
         await tester.pump(const Duration(milliseconds: 120));
         router.go('/music/library');
-        await tester.pumpAndSettle();
+        await settle188(tester);
         router.go('/profile');
-        await tester.pumpAndSettle();
+        await settle188(tester);
         expect(
           find.byKey(const ValueKey('netease-personal-statistics')),
           findsOneWidget,
@@ -227,7 +237,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
       expect(router.routeInformationProvider.value.uri.path, '/profile');
       await gesture.up();
-      await tester.pumpAndSettle();
+      await settle188(tester);
       expect(router.routeInformationProvider.value.uri.path, '/profile');
       expect(tester.takeException(), isNull);
     },

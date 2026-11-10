@@ -134,6 +134,8 @@ class RingDownloadConfig {
     required this.appId,
     this.enableP2P = true,
     this.enableP8P = false,
+    this.p8pPeerRaceLimit = 2,
+    this.p8pSourcePortDiversity = false,
     this.allowSharing = false,
     this.observeLifecycle = true,
     this.storageDirectory,
@@ -149,6 +151,15 @@ class RingDownloadConfig {
   /// Experimental additive P8P capabilities. Both remote capability and sender
   /// acknowledgement are required; old peers keep their original behavior.
   final bool enableP8P;
+
+  /// Outbound ordinary-peer connection race only, 2..4. Negotiated P8P is
+  /// required; at most two peers are admitted to the unchanged four-piece body.
+  final int p8pPeerRaceLimit;
+
+  /// Default-off node-side source-port experiment. It requests capability only;
+  /// fresh coordinator authorization and the node's own opt-in remain required.
+  /// It does not increase the phone's peer count or change HTTPS startup.
+  final bool p8pSourcePortDiversity;
   final Directory? storageDirectory;
   final Future<RingDownloadRequest?> Function(RingDownloadRequest current)?
   refreshRelease;
@@ -161,7 +172,9 @@ class RingDownloadConfig {
   final void Function(RingDownloadDiagnostic event)? onDiagnostic;
 
   void validate() {
-    if (!RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$').hasMatch(appId)) {
+    if (!RegExp(r'^[a-z0-9][a-z0-9-]{0,63}$').hasMatch(appId) ||
+        p8pPeerRaceLimit < 2 ||
+        p8pPeerRaceLimit > 4) {
       throw const RingDownloadException(RingDownloadError.invalidRequest);
     }
   }
@@ -220,7 +233,7 @@ class RingSdkStatus {
     required this.p2pEnabled,
     required this.sharingOptIn,
   });
-  static const sdkVersion = '1.1.2';
+  static const sdkVersion = '1.1.8';
   final String appId, platform, networkType;
   final bool p2pEnabled, sharingOptIn;
   Map<String, Object?> toJson() => {
@@ -244,11 +257,24 @@ class RingDownloadDiagnostic {
     this.seedBytes,
     this.elapsedMs,
     this.source,
+    this.minReceiveBufferBytes,
+    this.matchedReceiveSockets,
+    this.attempt,
+    this.durationMs,
+    this.connectionDetails = const {},
   });
   final String stage, code;
   final int? httpStatus, peerBytes, seedBytes, elapsedMs;
   final bool? verified;
   final String? source;
+
+  /// Minimum SO_RCVBUF read from successfully observed sockets in one batch.
+  /// The batch may include sockets other than the ultimately selected ICE pair.
+  final int? minReceiveBufferBytes;
+  final int? matchedReceiveSockets;
+  final String? attempt;
+  final int? durationMs;
+  final Map<String, int> connectionDetails;
   Map<String, Object?> toJson() => {
     'stage': stage,
     'code': code,
@@ -258,5 +284,12 @@ class RingDownloadDiagnostic {
     if (seedBytes != null) 'seedBytes': seedBytes,
     if (elapsedMs != null) 'elapsedMs': elapsedMs,
     if (source != null) 'source': source,
+    if (attempt != null) 'attempt': attempt,
+    if (durationMs != null) 'durationMs': durationMs,
+    if (connectionDetails.isNotEmpty) 'connectionDetails': connectionDetails,
+    if (minReceiveBufferBytes != null)
+      'minReceiveBufferBytes': minReceiveBufferBytes,
+    if (matchedReceiveSockets != null)
+      'matchedReceiveSockets': matchedReceiveSockets,
   };
 }

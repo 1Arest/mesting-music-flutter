@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
@@ -21,7 +22,12 @@ import '../../themes/music_typography.dart';
 /// Platform selection owns navigation only. Forms, glass controls and page
 /// movement are the same components used by the existing Kugou login.
 class PlatformLoginOptionsPage extends StatelessWidget {
-  const PlatformLoginOptionsPage({required this.platform, super.key});
+  const PlatformLoginOptionsPage({
+    required this.platform,
+    this.retainCurrentPlatform = false,
+    super.key,
+  });
+  final bool retainCurrentPlatform;
   final MusicPlatform platform;
 
   Future<void> _open(BuildContext context, Widget page) async {
@@ -48,7 +54,11 @@ class PlatformLoginOptionsPage extends StatelessWidget {
           BetaGlassButton(
             onPressed: () => _open(
               context,
-              PlatformAccountPage(initialMethod: item.$1, loginOnly: true),
+              PlatformAccountPage(
+                initialMethod: item.$1,
+                loginOnly: true,
+                retainCurrentPlatform: retainCurrentPlatform,
+              ),
             ),
             child: Text(item.$2),
           ),
@@ -63,6 +73,7 @@ class PlatformLoginOptionsPage extends StatelessWidget {
                 platform: platform,
                 neteaseMethod: method,
                 loginOnly: true,
+                retainCurrentPlatform: retainCurrentPlatform,
               ),
             ),
             child: Text(method.label),
@@ -106,6 +117,7 @@ class _MusicPlatformSwitchPageState
       _error = null;
       _unreadableTarget = null;
     });
+    final presentation = ref.read(platformPresentationSwitchProvider.notifier);
     try {
       final snapshots = ref.read(platformDisplaySnapshotsProvider);
       snapshots.captureArtwork(
@@ -114,6 +126,7 @@ class _MusicPlatformSwitchPageState
       final controller = ref.read(platformAccountProvider.notifier);
       final saved = await controller.retainedIdentity(platform);
       if (!mounted) return;
+      presentation.hold();
       if (saved == null) {
         final success = await Navigator.of(context).push<bool>(
           betaEntryRoute(PlatformLoginOptionsPage(platform: platform)),
@@ -139,6 +152,9 @@ class _MusicPlatformSwitchPageState
         });
       }
     } finally {
+      // Failure, cancelled login and a route removed during an async read must
+      // all release the same gate; it never owns or changes account storage.
+      presentation.release();
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -166,6 +182,9 @@ class _MusicPlatformSwitchPageState
     // rebuilt profile underneath this selection route.
     final router = GoRouter.of(context);
     router.go('/music/recommend');
+    // Publish the prepared visit and its root together, then paint once under
+    // the still-opaque selector before starting the existing reverse route.
+    container.read(platformPresentationSwitchProvider.notifier).release();
     await WidgetsBinding.instance.endOfFrame;
     // Keep the real selector visible until the cached destination is laid out.
     // Its normal reversible route exit then reveals the prepared home.
@@ -274,34 +293,39 @@ class _AccountChoiceFrame extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
-                  child: Row(
-                    children: [
-                      const BetaGlassBackButton(),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: MusicTypography.titleSize,
-                            fontWeight: MusicTypography.titleWeight,
+            // These controls are disjoint peers over one page surface. Share
+            // their backdrop read, retaining each lens, spring and shadow.
+            // Nested save layers/backers automatically opt out in the renderer.
+            child: GlassBackdropGroup(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+                    child: Row(
+                      children: [
+                        const BetaGlassBackButton(),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: MusicTypography.titleSize,
+                              fontWeight: MusicTypography.titleWeight,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: BetaGlassScrollBody(
-                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
-                    children: children,
+                  Expanded(
+                    child: BetaGlassScrollBody(
+                      padding: const EdgeInsets.fromLTRB(24, 30, 24, 32),
+                      children: children,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

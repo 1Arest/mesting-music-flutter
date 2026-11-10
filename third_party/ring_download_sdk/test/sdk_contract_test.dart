@@ -59,6 +59,28 @@ void main() {
     expect(status.toJson()['sdkVersion'], packageVersion);
   });
 
+  test('ordinary peer race configuration is bounded before engine work', () {
+    expect(const RingDownloadConfig(appId: 'alpha').p8pPeerRaceLimit, 2);
+    for (final limit in [2, 3, 4]) {
+      expect(
+        () => RingDownloadConfig(
+          appId: 'alpha',
+          p8pPeerRaceLimit: limit,
+        ).validate(),
+        returnsNormally,
+      );
+    }
+    for (final limit in [-1, 0, 1, 5, 100]) {
+      expect(
+        () => RingDownloadConfig(
+          appId: 'alpha',
+          p8pPeerRaceLimit: limit,
+        ).validate(),
+        throwsA(isA<RingDownloadException>()),
+      );
+    }
+  });
+
   test('sharing waits for a positively resumed lifecycle state', () async {
     final engine = _FakeEngine();
     final sdk = RingDownloadSdk.withEngine(

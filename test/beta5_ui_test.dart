@@ -1,3 +1,5 @@
+import 'package:mesting_music/shared/widgets/beta_page_motion.dart';
+import 'package:mesting_music/features/player/presentation/open_now_playing.dart';
 import 'package:mesting_music/features/music_platform/presentation/song_actions_sheet.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_action.dart';
 import 'package:mesting_music/features/experience/presentation/player_toolbar_glyphs.dart';
@@ -44,6 +46,10 @@ import 'package:mesting_music/features/music_platform/data/platform_explore.dart
 import 'package:mesting_music/features/search/presentation/music_search_page.dart';
 import 'package:mesting_music/features/search/presentation/apple_search_results.dart';
 import 'package:mesting_music/features/search/search_providers.dart';
+import 'package:mesting_music/features/music_platform/cross_platform_music_scope.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_api.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_music_repository.dart';
+import 'package:mesting_music/features/music_platform/data/platform_search_repository.dart';
 import 'package:mesting_music/shared/widgets/music_notice.dart';
 import 'package:mesting_music/shared/widgets/track_artwork.dart';
 import 'package:mesting_music/features/experience/presentation/listening_replay_page.dart';
@@ -205,6 +211,26 @@ class _Handler extends MestingAudioHandler {
 class _Server implements MusicServer {
   @override
   Future<Uri> start() async => Uri.parse('http://127.0.0.1:12345');
+}
+
+/// Navigation retains the production fusion assembly with a deterministic
+/// empty second source. It must not read a real keystore or public network.
+class _EmptySupplementarySongs extends NeteaseMusicRepository {
+  _EmptySupplementarySongs()
+    : super(
+        NeteaseApi(
+          MockClient(
+            (_) async =>
+                throw StateError('navigation fixture has no NetEase transport'),
+          ),
+        ),
+      );
+  @override
+  Future<PlatformSearchPage> search(
+    String query, {
+    int page = 1,
+    Future<void>? abort,
+  }) async => const PlatformSearchPage([], 0, false);
 }
 
 class _Store implements PlatformSessionStore {
@@ -421,6 +447,9 @@ void main() {
           _Store(guest ? null : _identity),
         ),
         musicPlatformApiProvider.overrideWithValue(api),
+        supplementaryNeteaseMusicProvider.overrideWith(
+          (_) async => _EmptySupplementarySongs(),
+        ),
         platformCategorySearchRepositoryProvider.overrideWithValue(
           _CategoryFixtures(api),
         ),
@@ -1391,7 +1420,9 @@ void main() {
         }
         // 1.0.5 removes the duplicate lyrics action and starts styles folded.
         expect(find.text('查看歌词'), findsNothing);
-        expect(find.text('黑胶唱片'), findsOneWidget);
+        // Style values live in their own selector, so they no longer widen
+        // the root menu's disclosure row.
+        expect(find.text('黑胶唱片'), findsNothing);
         expect(find.text('流光唱片'), findsNothing);
         final styles = find.byKey(const ValueKey('player-style-disclosure'));
         await tester.ensureVisible(styles);
@@ -2578,6 +2609,108 @@ void main() {
       } finally {
         await disposeFixture(tester);
       }
+    },
+    skip: !DistributionChannel.isBeta,
+  );
+
+  testWidgets(
+    'ui188 imperative chart opens exactly one player and returns to that chart',
+    (tester) async {
+      viewport(tester);
+      await prepare(playing: true);
+      production.appRouter.go('/music/recommend');
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: production.appRouter,
+            theme: buildMestingTheme(musicThemePresetById('classic')),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      final origin = tester.element(find.byType(FloatingPlaybackPill).first);
+      final navigator = Navigator.of(origin, rootNavigator: true);
+      unawaited(
+        navigator.push(
+          MestingPageRoute<void>(
+            builder: (_) => Scaffold(
+              key: const ValueKey('ui188-chart'),
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () {
+                    unawaited(openNowPlaying(context, ref));
+                    unawaited(openNowPlaying(context, ref));
+                  },
+                  child: const Text('ui188-open-player'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('ui188-open-player'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 650));
+      expect(
+        find.byType(BetaNowPlayingPage, skipOffstage: false),
+        findsOneWidget,
+      );
+      final close = find.byKey(const ValueKey('player-dismiss-glass'));
+      await tester.tap(close);
+      await tester.pump();
+      for (var frame = 0; frame < 7; frame++) {
+        await tester.pump(const Duration(milliseconds: 65));
+        expect(
+          find
+              .byType(BetaNowPlayingPage, skipOffstage: false)
+              .evaluate()
+              .length,
+          lessThanOrEqualTo(1),
+        );
+      }
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.byType(BetaNowPlayingPage, skipOffstage: false),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('ui188-chart')).hitTestable(),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      // The same source must also survive system Back and the real handle
+      // gesture, not just the close button used by the supplied recording.
+      for (final byHandle in [false, true]) {
+        await tester.tap(find.text('ui188-open-player'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 650));
+        if (byHandle) {
+          await tester.timedDrag(
+            find.byKey(const ValueKey('player-dismiss-handle')),
+            const Offset(0, 280),
+            const Duration(milliseconds: 300),
+          );
+        } else {
+          await tester.binding.handlePopRoute();
+        }
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 750));
+        expect(
+          find.byType(BetaNowPlayingPage, skipOffstage: false),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const ValueKey('ui188-chart')).hitTestable(),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      }
+      navigator.pop();
+      await tester.pump(const Duration(seconds: 1));
+      await disposeFixture(tester);
     },
     skip: !DistributionChannel.isBeta,
   );

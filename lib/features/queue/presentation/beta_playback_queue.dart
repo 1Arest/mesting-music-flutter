@@ -49,6 +49,7 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
     final order =
         ref.watch(playbackOrderProvider).value ?? handler.playbackOrder;
     final colors = Theme.of(context).colorScheme;
+    final randomUpcoming = ref.watch(randomUpcomingProvider).value ?? false;
     final ink = immersive ? Colors.white : colors.onSurface;
     final muted = immersive ? Colors.white70 : colors.onSurfaceVariant;
     Future<void> act(
@@ -183,6 +184,25 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                 ),
               ],
             ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const ValueKey('queue-random-upcoming'),
+                style: TextButton.styleFrom(
+                  foregroundColor: randomUpcoming ? colors.primary : ink,
+                ),
+                icon: Icon(
+                  randomUpcoming
+                      ? CupertinoIcons.shuffle
+                      : CupertinoIcons.arrow_up_arrow_down,
+                  size: 20,
+                ),
+                label: Text(randomUpcoming ? '随机待播：开' : '随机待播：关'),
+                onPressed: () => unawaited(
+                  act(() => handler.setRandomUpcoming(!handler.randomUpcoming)),
+                ),
+              ),
+            ),
             Expanded(
               child: items.isEmpty
                   ? Center(
@@ -285,7 +305,11 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                           ),
                           child: Semantics(
                             label:
-                                '${index == 0 ? '下一首' : '待播放'}，${item.title}，${item.artist ?? '未知歌手'}',
+                                '${randomUpcoming
+                                    ? '随机待播放'
+                                    : index == 0
+                                    ? '下一首'
+                                    : '待播放'}，${item.title}，${item.artist ?? '未知歌手'}',
                             customSemanticsActions: {
                               const CustomSemanticsAction(
                                 label: '从待播列表移除',

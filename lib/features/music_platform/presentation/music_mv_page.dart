@@ -1,3 +1,9 @@
+import '../../../shared/widgets/beta_page_motion.dart';
+import '../linked_music_providers.dart';
+import '../data/linked_music_mvs.dart';
+import 'source_login_prompt.dart';
+import 'source_comments_page.dart';
+import '../retained_kugou_scope.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +16,8 @@ import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_glass_scroll_body.dart';
 import '../../../shared/widgets/music_feature_page.dart';
 import '../data/platform_mv_repository.dart';
-import '../platform_mv_providers.dart';
 import 'music_mv_fullscreen.dart';
 import '../platform_backend_providers.dart';
-import '../netease/netease_mv_repository.dart';
 import '../netease/netease_features_page.dart';
 import '../netease/netease_features_repository.dart';
 import '../music_platform_providers.dart';
@@ -34,6 +38,13 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
   VideoPlayerController? _video;
   StreamSubscription<String>? _commands;
   MusicMv? _mv;
+  LinkedMvChoice? _choice;
+  List<LinkedMvChoice> _choices = const [];
+  StreamSubscription<LinkedMusicMvs>? _lookup;
+  int _lookupEpoch = 0, _sourceIntent = 0;
+  bool _discovering = false;
+  bool _previewVideo = false;
+  bool _initialSelectionStarted = false;
   MusicMvQuality? _quality;
   bool _loading = true,
       _absent = false,
@@ -79,7 +90,8 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
       unawaited(_video?.pause());
     } else if (state == AppLifecycleState.resumed &&
         _resumeVideo &&
-        _music.isCurrent) {
+        _music.isCurrent &&
+        (_choice?.current() ?? false)) {
       _resumeVideo = false;
       unawaited(_video?.play());
     }
@@ -87,46 +99,140 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
 
   Future<void> _load() async {
     if (!_current) return;
-    final generation = ++_generation;
-    if (mounted) {
-      setState(() {
-        _loading = true;
-        _error = null;
-        _absent = false;
-      });
-    }
+    final epoch = ++_lookupEpoch;
+    _initialSelectionStarted = _choice != null;
+    await _lookup?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _loading = _choice == null;
+      _error = null;
+      _absent = false;
+      _discovering = true;
+    });
+    await _music.acquire();
+    if (!mounted || epoch != _lookupEpoch || !_current) return;
+    _lookup =
+        discoverLinkedMusicMvs(
+          widget.track,
+          mvId: widget.mvId,
+          isCurrent: () => mounted && epoch == _lookupEpoch && _current,
+          repositories: (source) =>
+              ref.read(linkedMvSourceProvider(source).future),
+        ).listen(
+          (value) {
+            if (!mounted || epoch != _lookupEpoch || !_current) return;
+            setState(() {
+              _choices = value.choices;
+              if (_mv == null && _choices.isNotEmpty) _mv = _choices.first.mv;
+              _discovering = value.discovering;
+              if (!value.discovering && value.choices.isEmpty) {
+                _absent = true;
+                _loading = false;
+              }
+              if (value.warnings.isNotEmpty && value.choices.isEmpty) {
+                _error = value.warnings.join('；');
+                _absent = false;
+              }
+            });
+            if (!_initialSelectionStarted && value.choices.isNotEmpty) {
+              _initialSelectionStarted = true;
+              unawaited(_chooseSource(value.choices.first, autoplay: true));
+            }
+          },
+          onError: (Object error) {
+            if (mounted && epoch == _lookupEpoch) {
+              setState(() {
+                _loading = false;
+                _discovering = false;
+                _error = 'MV暂时无法加载，请重试';
+              });
+            }
+          },
+        );
+  }
+
+  Future<void> _chooseSource(
+    LinkedMvChoice choice, {
+    bool? autoplay,
+    MusicMvQuality? quality,
+  }) async {
+    if (!_current) return;
+    final intent = ++_sourceIntent;
     try {
-      await _music.acquire();
-      if (!mounted || generation != _generation || !_current) return;
-      final repository = ref.read(platformMvRepositoryProvider);
-      final mv = widget.mvId != null && repository is NeteaseMvRepository
-          ? await repository.byId(
-              widget.mvId!,
-              fallbackTitle: widget.track.title,
-            )
-          : await repository.lookup(widget.track);
-      if (!mounted || generation != _generation || !_current) return;
-      if (mv == null) {
-        setState(() {
-          _absent = true;
-          _loading = false;
-        });
-        return;
+      final account = ref.read(platformAccountProvider).value;
+      if (account != null && account.platform.name != choice.source.name) {
+        final accepted = await ensureSourceLogin(context, ref, choice.source);
+        if (!mounted || !_current || intent != _sourceIntent) return;
+        if (!accepted) {
+          if (_choice == null) {
+            setState(() {
+              _loading = false;
+              _error = '登录来源账号后可播放该MV';
+            });
+          }
+          return;
+        }
       }
-      _mv = mv;
-      await _select(mv.qualities.first, autoplay: true);
-    } on Object {
-      if (mounted && generation == _generation) {
+      final source = await ref.read(
+        linkedMvSourceProvider(choice.source).future,
+      );
+      if (!mounted || !_current || intent != _sourceIntent) return;
+      if (!source.current()) {
+        throw const MusicPlatformException('来源登录已变化，请重新选择MV音源');
+      }
+      final selected = LinkedMvChoice(
+        choice.track,
+        choice.mv,
+        source.videos,
+        source.current,
+      );
+      // Commit the displayed source and its comment default only after a real
+      // controller initializes. A failed source switch retains the old identity.
+      await _select(
+        quality ?? choice.mv.qualities.first,
+        autoplay: autoplay,
+        sourceChoice: selected,
+      );
+    } catch (error) {
+      if (mounted && _current && intent == _sourceIntent) {
         setState(() {
           _loading = false;
-          _error = 'MV 暂时无法加载，请重试。';
+          _error = error is MusicPlatformException
+              ? error.message
+              : '来源暂时无法加载，请重试';
         });
       }
     }
   }
 
-  Future<void> _select(MusicMvQuality quality, {bool? autoplay}) async {
-    if (!_current) return;
+  void _comments() {
+    if (_choices.isEmpty) return;
+    final selected = _choice ?? _choices.first;
+    // Comments are independent of play permission. Cancel a still-pending
+    // switch so an unseen completion cannot change the default behind the page.
+    _sourceIntent++;
+    _generation++;
+    if (_loading) setState(() => _loading = false);
+    Navigator.of(context, rootNavigator: true).push(
+      MestingPageRoute<void>(
+        builder: (_) => LinkedMvCommentsPage(
+          track: widget.track,
+          mvId: widget.mvId,
+          initialSource: selected.source,
+          seedChoices: _choices,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _select(
+    MusicMvQuality quality, {
+    bool? autoplay,
+    LinkedMvChoice? sourceChoice,
+  }) async {
+    if (sourceChoice == null) _sourceIntent++;
+    final choice = sourceChoice ?? _choice;
+    if (!_current || choice == null || !choice.current()) return;
     final generation = ++_generation;
     final previous = _video;
     final position = previous?.value.position ?? Duration.zero;
@@ -138,7 +244,7 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
       _error = null;
     });
     try {
-      final urls = await ref.read(platformMvRepositoryProvider).urls(quality);
+      final urls = await choice.repository.urls(quality);
       if (urls.isEmpty) {
         throw const MusicPlatformException('平台暂未提供此清晰度的 MV 地址，请选择其他清晰度或稍后重试');
       }
@@ -146,8 +252,20 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
         final candidate = VideoPlayerController.networkUrl(url);
         try {
           await candidate.initialize().timeout(const Duration(seconds: 15));
-          if (!mounted || generation != _generation || !_current) {
+          if (!mounted ||
+              generation != _generation ||
+              !_current ||
+              !choice.current()) {
             await candidate.dispose();
+            if (mounted &&
+                generation == _generation &&
+                _current &&
+                !choice.current()) {
+              setState(() {
+                _loading = false;
+                _error = '来源登录已变化，请重新选择MV音源';
+              });
+            }
             return;
           }
           if (position > Duration.zero) {
@@ -156,14 +274,37 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
             );
           }
           if (play && _music.isCurrent) await candidate.play();
-          if (!mounted || generation != _generation || !_current) {
+          if (!mounted ||
+              generation != _generation ||
+              !_current ||
+              !choice.current()) {
             await candidate.dispose();
+            if (mounted &&
+                generation == _generation &&
+                _current &&
+                !choice.current()) {
+              setState(() {
+                _loading = false;
+                _error = '来源登录已变化，请重新选择MV音源';
+              });
+            }
             return;
           }
           setState(() {
             _video = candidate;
+            _choice = choice;
+            _mv = choice.mv;
+            _choices = [
+              for (final entry in _choices)
+                entry.source == choice.source ? choice : entry,
+            ];
             _quality = quality;
             _loading = false;
+            _previewVideo =
+                choice.mv.duration > Duration.zero &&
+                candidate.value.duration > Duration.zero &&
+                candidate.value.duration + const Duration(seconds: 3) <
+                    choice.mv.duration;
           });
           unawaited(previous?.dispose());
           return;
@@ -204,7 +345,7 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
 
   Future<void> _toggleVideo() async {
     final video = _video;
-    if (video == null) return;
+    if (video == null || !_current || !(_choice?.current() ?? false)) return;
     if (video.value.isPlaying) {
       await video.pause();
       return;
@@ -224,6 +365,8 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
   @override
   void dispose() {
     _generation++;
+    _lookupEpoch++;
+    unawaited(_lookup?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_commands?.cancel());
     final video = _video;
@@ -240,6 +383,19 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(retainedKugouSessionProvider, (previous, next) {
+      if (_choice?.source == TrackSource.kugou &&
+          previous?.token != next?.token) {
+        unawaited(_video?.pause());
+        if (mounted) setState(() => _error = '酷狗登录已变化，请重新选择MV音源');
+      }
+    });
+    ref.listen(retainedNeteaseEpochProvider, (previous, next) {
+      if (_choice?.source == TrackSource.netease && previous != next) {
+        unawaited(_video?.pause());
+        if (mounted) setState(() => _error = '网易云登录已变化，请重新选择MV音源');
+      }
+    });
     ref.watch(platformAccountProvider);
     if (!_current) {
       unawaited(_video?.pause());
@@ -346,7 +502,12 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
                   ChoiceChip(
                     label: Text(quality.label),
                     selected: quality.hash == _quality?.hash,
-                    onSelected: _loading ? null : (_) => _select(quality),
+                    onSelected: _loading
+                        ? null
+                        : (_) => _chooseSource(
+                            _choice ?? _choices.first,
+                            quality: quality,
+                          ),
                   ),
               ],
             ),
@@ -359,9 +520,49 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
               child: const Text('全屏播放'),
             ),
           ],
+          const SizedBox(height: 12),
+          if (_choices.length > 1)
+            CupertinoSlidingSegmentedControl<TrackSource>(
+              groupValue: _choice?.source,
+              children: {
+                for (final choice in _choices)
+                  choice.source: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      choice.source == TrackSource.netease ? '网易云 MV' : '酷狗 MV',
+                    ),
+                  ),
+              },
+              onValueChanged: (source) {
+                if (source != null) {
+                  unawaited(
+                    _chooseSource(
+                      _choices.firstWhere((c) => c.source == source),
+                    ),
+                  );
+                }
+              },
+            )
+          else if (_choice != null)
+            Text('${_choice!.source == TrackSource.netease ? '网易云' : '酷狗'} MV'),
+          if (_discovering) const Text('正在核对另一平台MV'),
+          if (_previewVideo) const Text('当前来源提供试看片段，完整版需相应权限'),
+          if (_mv != null)
+            TextButton.icon(
+              onPressed: _comments,
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('查看评论'),
+            ),
           const SizedBox(height: 20),
-          if (ref.watch(usesNeteaseProvider) && _mv != null)
+          if (ref.watch(usesNeteaseProvider) &&
+              (_choice ?? _choices.firstOrNull)?.source ==
+                  TrackSource.netease &&
+              _mv != null)
             NeteaseResourceActions(
+              onComments: _comments,
               item: NeteaseItem(
                 id: _mv!.id,
                 name: _mv!.title,

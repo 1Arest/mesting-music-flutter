@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Root selection never waits for an animation. Remember the latest request so
 /// several taps within one frame can still return to the starting tab before
-/// the router has rebuilt its location. Motion belongs to BetaRootTabViewport.
+/// the router has rebuilt its location. BetaRootTabViewport presents that latest branch immediately.
 class BetaTabNavigation {
   int? _requested;
   final _branches = <int, _BetaTabBranch>{};

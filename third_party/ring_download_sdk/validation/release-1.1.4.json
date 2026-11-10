@@ -1,0 +1,77 @@
+{
+  "version": "1.1.4",
+  "channel": "stable",
+  "released_at": "2026-11-05",
+  "candidate_version": "1.1.4-dev.1",
+  "formal_version_delta": {
+    "version": "1.1.4",
+    "candidate": "1.1.4-dev.1",
+    "runtime_files": 48,
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "transmission_runtime_changes": []
+  },
+  "regression": {
+    "full_frozen_candidate_tests": 601,
+    "full_log_sha256": "313d2ac5138b1e94843e4a94abdc2734dbbaa31521ccbf737c2034e2de9ebbab",
+    "source_unchanged": true,
+    "static_analysis": "passed",
+    "formal_contract_tests": 43,
+    "counts_overlap": true
+  },
+  "native_acceptance": {
+    "cold_full_sha256": true,
+    "bytes": 155305939,
+    "elapsed_ms": 20239,
+    "cold_controller_exit": 0,
+    "cancel_at_bytes": 1048576,
+    "cancel_SDK_disposal_and_process_exit": true,
+    "cancel_controller_exit": 1,
+    "cancel_controller_failure": "Immediate sleep-state observation before normal transition completed",
+    "followup_readonly_screen_asleep": true,
+    "ADB_preserved": true,
+    "nonce_cache_files_remaining": 0,
+    "forced_body_failure_replacement_on_tablet": false,
+    "cancel_backend_final_telemetry_received": false,
+    "formal_host_upgrade": false,
+    "candidate_sdk": "1.1.4-dev.1",
+    "private_APK": {
+      "version": "0.0.18+18",
+      "bytes": 29805854,
+      "sha256": "108c1ceae9f51d5c43de2775aa90e7bf54688be1953be0486feaf32274e5cbd6",
+      "same_private_signature": true,
+      "alignment_16KiB": true
+    },
+    "full_sha256": "3e85c2171647dccff7b59b4b68b462717f03426327081b774c77192cff50571a",
+    "peer_verified_bytes": 91226112,
+    "seed_verified_bytes": 3145728,
+    "independent_peer_upload_report_matched": true,
+    "formal_host_installed": false,
+    "cancel_backend_expired_as_unreported": true,
+    "cancel_before_credentials_received": true,
+    "global_device_settings_changed": false
+  },
+  "ordinary_native_owner_limit": 2,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "live_source_limit": 4,
+  "lifetime_source_record_limit": 6,
+  "original_deadlines_preserved": true,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "phone_sharing_policy_unchanged_from": "1.1.2",
+  "production_node_upgraded": false,
+  "production_server_transmission_changed": false,
+  "host_official_APK_built": false,
+  "limitations": [
+    "Dynamic replacement after admitted-source body failure is covered by deterministic failure/retirement/budget tests; the cold tablet run did not force that branch.",
+    "Only B supplied ordinary verified payload in this cold run; it does not prove all providers or fixed bandwidth aggregation.",
+    "Cancellation controller exited 1 at its final immediate sleep observation; SDK cancellation and retirement passed, and separate readonly follow-up confirmed Asleep, no private process and empty nonce cache. Initial failure is preserved.",
+    "Cancellation before credentials had no authenticated final outcome; server expiry correctly classified it as unreported, not verified or failed.",
+    "Official host update/signature installation, all NAT/cellular environments and long-term energy remain outside this acceptance."
+  ],
+  "previous_P2P_baseline": "40420f35e7bd41e8e9fef51eee55093bbed60283"
+}

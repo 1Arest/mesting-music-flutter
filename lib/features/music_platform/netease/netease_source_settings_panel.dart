@@ -48,7 +48,7 @@ class _NeteaseSourceSettingsPanelState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                ref.watch(neteaseLocalSvipProvider) ? '本地黑胶 SVIP 已启用' : '本地会员',
+                ref.watch(neteaseLocalSvipProvider) ? '至尊SVIP 已启用' : '本地会员',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),

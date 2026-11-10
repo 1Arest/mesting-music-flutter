@@ -3,7 +3,7 @@ import '../../../shared/widgets/beta_glass_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../player/presentation/open_now_playing.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../../core/audio/playback_providers.dart';
@@ -140,7 +140,7 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
               if (ref.read(qishuiNavigationProvider)) {
                 openQishuiMusicTab(context, ref);
               } else {
-                context.push('/player');
+                openNowPlaying(context, ref);
               }
             },
             quality: GlassQuality.premium,

@@ -18,13 +18,16 @@ import 'app_upgrade_receive_buffer.dart';
 import 'app_upgrade_upload_budget.dart';
 import 'app_upgrade_cache_verifier.dart';
 import '../../p8p/window.dart';
+import '../../p8p/source_diversity.dart';
 import '../../p8p/leases.dart';
+import '../../p8p/lifecycle_trace.dart';
 import '../../p8p/ordered_writer.dart';
 import '../../p8p/sources.dart';
 import '../../p8p/coordinator.dart';
 import '../../p8p/transfer_protocol.dart';
 import '../../p8p/transfer_receiver.dart';
 import '../../p8p/transfer_sender.dart';
+import '../../sdk/models.dart' show RingSdkStatus;
 
 typedef AppUpgradeP2PNetworkReader = Future<AppUpgradeP2PNetwork> Function();
 typedef AppUpgradeP2PPeerFactory =
@@ -53,6 +56,8 @@ class AppUpgradeV40P2PClient {
     this.hybridStartup = false,
     this.allowSharing = true,
     this.enableP8P = false,
+    this.p8pPeerRaceLimit = 2,
+    this.p8pSourcePortDiversity = false,
   }) : _dio =
            dio ??
            Dio(
@@ -66,7 +71,11 @@ class AppUpgradeV40P2PClient {
        _networkEvents = networkEvents,
        _peerFactory = peerFactory ?? createPeerConnection,
        _diagnosticObserver = diagnostic ?? AppUpgradeP2PDiagnostics.record,
-       _isAndroid = isAndroid ?? Platform.isAndroid;
+       _isAndroid = isAndroid ?? Platform.isAndroid {
+    if (p8pPeerRaceLimit < 2 || p8pPeerRaceLimit > 4) {
+      throw RangeError.range(p8pPeerRaceLimit, 2, 4, 'p8pPeerRaceLimit');
+    }
+  }
 
   static const _networkChannel = MethodChannel('auralink/app_upgrade_network');
   static const _eventsChannel = EventChannel(
@@ -79,6 +88,7 @@ class AppUpgradeV40P2PClient {
   final AppUpgradeReceiveBufferFactory? receiveBufferFactory;
   final AppUpgradeUploadBudget? uploadBudget;
   final _cacheVerifier = AppUpgradeCacheVerifier();
+  final _candidateHistory = _P2PCandidateHistory();
   final void Function(AppUpgradeP2PDiagnostic) _diagnosticObserver;
   void _diagnostic(AppUpgradeP2PDiagnostic event) {
     try {
@@ -102,6 +112,8 @@ class AppUpgradeV40P2PClient {
   final bool sharedStartupDeadline;
   final bool hybridStartup;
   final bool enableP8P;
+  final int p8pPeerRaceLimit;
+  final bool p8pSourcePortDiversity;
   bool allowSharing;
   _P2PDownloadSession? _downloadSession;
   _P2PDownloadSession? _sharingSession;
@@ -400,6 +412,7 @@ class AppUpgradeV40P2PClient {
     receiveBufferFactory: receiveBufferFactory,
     uploadBudget: uploadBudget,
     cacheVerifier: _cacheVerifier,
+    candidateHistory: _candidateHistory,
     diagnostic: _diagnostic,
     timeouts: timeouts,
     preferredSeedBatchPieces: preferredSeedBatchPieces.clamp(1, 6),
@@ -409,6 +422,8 @@ class AppUpgradeV40P2PClient {
     sharedStartupDeadline: sharedStartupDeadline,
     hybridStartup: hybridStartup,
     enableP8P: enableP8P,
+    p8pPeerRaceLimit: p8pPeerRaceLimit,
+    p8pSourcePortDiversity: p8pSourcePortDiversity,
     allowSharing: allowSharing && _foreground && _resourcesAllowed,
   );
 
@@ -785,6 +800,7 @@ class _P2PDownloadSession {
     required this.receiveBufferFactory,
     required this.uploadBudget,
     required this.cacheVerifier,
+    required this.candidateHistory,
     required this.diagnostic,
     required this.timeouts,
     required this.preferredSeedBatchPieces,
@@ -795,6 +811,8 @@ class _P2PDownloadSession {
     required this.hybridStartup,
     required this.allowSharing,
     required this.enableP8P,
+    required this.p8pPeerRaceLimit,
+    required this.p8pSourcePortDiversity,
   });
   final Dio dio;
   final File file;
@@ -804,6 +822,7 @@ class _P2PDownloadSession {
   final AppUpgradeReceiveBufferFactory? receiveBufferFactory;
   final AppUpgradeUploadBudget? uploadBudget;
   final AppUpgradeCacheVerifier cacheVerifier;
+  final _P2PCandidateHistory candidateHistory;
   final void Function(AppUpgradeP2PDiagnostic) diagnostic;
   final AppUpgradeP2PTimeouts timeouts;
   final int preferredSeedBatchPieces;
@@ -815,6 +834,16 @@ class _P2PDownloadSession {
   bool allowSharing;
   final bool enableP8P;
   bool get _p8p => enableP8P && manifest?.p8pAdaptiveWindow == true;
+  final int p8pPeerRaceLimit;
+  final bool p8pSourcePortDiversity;
+  int get _ordinaryPeerRaceLimit =>
+      _p8p &&
+          _multiCoordinator != null &&
+          manifest?.peerCandidateReplacement == true &&
+          !_cacheSharing
+      ? p8pPeerRaceLimit
+      : 2;
+  int _peakOrdinaryPeerOwners = 0;
   P8POrderedWriter? _multiWriter;
   P8PCoordinator? _multiCoordinator;
   bool _multiHandoff = false;
@@ -860,6 +889,9 @@ class _P2PDownloadSession {
   String _deviceId = '';
   final _httpCancel = CancelToken();
   final Map<String, _P2PPeer> _peers = {};
+  // Removing a closed peer from signaling does not free its native owner.
+  // Pending creation or failed native disposal keeps this slot occupied.
+  final Set<_P2PPeer> _ordinaryPeerOwners = {};
   // Counters belong to a receiver session, including a later RTC reconnect.
   // Bound long-lived cache sessions rather than evicting counters and reporting
   // a smaller total to the server's idempotent MAX-based endpoint.
@@ -873,6 +905,8 @@ class _P2PDownloadSession {
   final Set<String> _loggedSuccess = {};
   final Set<String> _failedPeers = {};
   final Set<String> _outboundPeerIds = {};
+  final Set<String> _attemptedCandidateKeys = {};
+  int? _p8pCandidateAttemptLimit;
   final List<Map<String, Object?>> _attempts = [];
   int _peerAlias = 0;
 
@@ -890,6 +924,13 @@ class _P2PDownloadSession {
     final attempt = peer.attempt;
     if (attempt == null || peer.closed || attempt.containsKey(stage)) return;
     attempt.putIfAbsent(stage, () => _sessionElapsed() ?? 0);
+    if (stage == 'first_piece_ms' && peer.id != 'server' && peer.leased) {
+      candidateHistory.record(
+        manifest!.apiBase,
+        peer.id,
+        firstPieceMs: peer.connectWatch.elapsedMilliseconds,
+      );
+    }
     _emit(
       'attempt',
       stage == 'first_piece_ms'
@@ -1202,6 +1243,7 @@ class _P2PDownloadSession {
         ...payload,
         'role': 'download',
         'sha256': manifest!.sha256,
+        'sdk_version': RingSdkStatus.sdkVersion,
         if (manifest!.trickleIce) 'trickle_ice_supported': true,
         if (enableP8P && manifest!.serverTrickle)
           'server_trickle_supported': true,
@@ -1353,6 +1395,7 @@ class _P2PDownloadSession {
       writer,
       clockMicros: () => clock.elapsedMicroseconds,
       requestTimeout: timeouts.transfer,
+      onLifecycle: (event) => _emitLifecycle(event),
       onDiagnostic: (event) => _emit(
         'transfer',
         event.reason.code,
@@ -1368,7 +1411,15 @@ class _P2PDownloadSession {
     );
     final ready = <P8PRtcPieceSource>[];
     var branches = 0;
+    var startupPieceProven = false;
     final discoveredPeerIds = <String>{};
+    final admittedPeerIds = <String>{};
+    final admittedPeers = <String, _P2PPeer>{};
+    final retiringPeers = <String, Future<void>>{};
+    final candidateLimit = manifest!.peerCandidateReplacement ? 4 : 2;
+    if (manifest!.peerCandidateReplacement) {
+      _p8pCandidateAttemptLimit = candidateLimit;
+    }
     final discoveryCancel = CancelToken();
     Timer? discoveryTimer;
     Completer<void>? discoveryWait;
@@ -1385,23 +1436,87 @@ class _P2PDownloadSession {
       if (changed?.isCompleted == false) changed!.complete();
     }
 
-    Future<void> add(_P2PPeer peer, Set<int>? pieces) async {
-      final receiver = peer.transfer;
-      if (receiver == null) throw const AppUpgradeP2PFailure('channel_closed');
-      await receiver.connect(_remaining(peer));
-      _checkPeer(peer);
-      final source = P8PRtcPieceSource(receiver, pieces: pieces);
-      if (!coordinator.add(
-        source,
-        diagnosticAlias: peer.id == 'server'
-            ? 'seed'
-            : peer.attempt?['alias'] as String?,
-      )) {
-        await source.close();
-        return;
+    void retireFailedPeers() {
+      if (!manifest!.peerCandidateReplacement) return;
+      for (final entry in admittedPeers.entries.toList()) {
+        if (retiringPeers.containsKey(entry.key)) continue;
+        late final Future<void> retiring;
+        retiring = () async {
+          if (!await coordinator.retireFailedSource(entry.key)) return;
+          _closePeer(entry.value);
+          await _retireOrdinaryPeer(entry.value);
+          if (!_ordinaryPeerOwners.contains(entry.value)) {
+            admittedPeerIds.remove(entry.key);
+            admittedPeers.remove(entry.key);
+            notify();
+          }
+        }().whenComplete(() => retiringPeers.remove(entry.key));
+        retiringPeers[entry.key] = retiring;
+        unawaited(retiring.catchError((Object _) {}));
       }
-      ready.add(source);
-      notify();
+    }
+
+    Future<void> add(_P2PPeer peer, Set<int>? pieces) async {
+      try {
+        final receiver = peer.transfer;
+        if (receiver == null) {
+          throw const AppUpgradeP2PFailure('channel_closed');
+        }
+        await receiver.connect(_remaining(peer));
+        _checkPeer(peer);
+        if (_ordinaryPeerRaceLimit > 2 && peer.id != 'server') {
+          final standby = Stopwatch()..start();
+          final standbyBudget =
+              coordinator.requestTimeout + coordinator.stopGrace;
+          while (admittedPeerIds.length >= 2) {
+            _checkPeer(peer);
+            if (book.closed ||
+                book.complete ||
+                discoveryCancel.isCancelled ||
+                admittedPeerIds.every(coordinator.hasVerifiedSource) ||
+                standby.elapsed >= standbyBudget) {
+              _closePeer(peer, reason: 'race_lost');
+              await _closeTransport(peer);
+              return;
+            }
+            // Keep a bounded, control-ready reserve until body health is
+            // proven. Admission waits for actual failed-owner disposal.
+            retireFailedPeers();
+            await Future.any([
+              _httpCancel.whenCancel,
+              Future<void>.delayed(const Duration(milliseconds: 25)),
+            ]);
+          }
+          _checkPeer(peer);
+          if (book.closed || book.complete || discoveryCancel.isCancelled) {
+            _closePeer(peer, reason: 'race_lost');
+            await _closeTransport(peer);
+            return;
+          }
+        }
+        final source = P8PRtcPieceSource(receiver, pieces: pieces);
+        if (!coordinator.add(
+          source,
+          diagnosticAlias: peer.id == 'server'
+              ? 'seed'
+              : peer.attempt?['alias'] as String?,
+        )) {
+          await source.close();
+          return;
+        }
+        ready.add(source);
+        if (peer.id != 'server') {
+          admittedPeerIds.add(peer.id);
+          admittedPeers[peer.id] = peer;
+        }
+        notify();
+      } catch (_) {
+        // A channel can open but fail its transfer identity handshake. Retire
+        // signaling and the native owner before trying a different candidate.
+        _closePeer(peer);
+        await _closeTransport(peer);
+        rethrow;
+      }
     }
 
     final opening = <Future<void>>[];
@@ -1421,6 +1536,19 @@ class _P2PDownloadSession {
           discoveryCancel.isCancelled) {
         return;
       }
+      final connecting = <Future<void>>{};
+      // The explicit three-owner mode starts with two attempts. An extra
+      // candidate may race after a short delay if no source has verified a
+      // piece. A control-ready channel can still stall before useful data.
+      final stagger = !late && _ordinaryPeerRaceLimit == 3;
+      final hedgeDelay = const Duration(seconds: 2);
+      Stopwatch? raceWatch;
+      var hedgeStarted = false;
+      bool canHedge() =>
+          stagger &&
+          !hedgeStarted &&
+          !startupPieceProven &&
+          !_httpsNearlyComplete;
       try {
         await _refreshPeers(operationCancel: discoveryCancel);
         if (!_active ||
@@ -1429,46 +1557,125 @@ class _P2PDownloadSession {
             discoveryCancel.isCancelled) {
           return;
         }
-        final seen = <String>{};
-        final candidates = _candidates
-            .where(
-              (candidate) =>
-                  _canUsePeer(candidate['peer_id']) &&
-                  candidate['peer_id'] != _selfId &&
-                  !discoveredPeerIds.contains(candidate['peer_id']) &&
-                  seen.add(candidate['peer_id'] as String) &&
-                  candidate['pieces'] is List &&
-                  (candidate['pieces'] as List).contains(
-                    book.persistedPieces,
-                  ) &&
-                  P8PTransferProtocol.advertised({
-                    'version': 1,
-                    'transfer': candidate['p8p_transfer'],
-                  }),
-            )
-            .take(2 - discoveredPeerIds.length)
-            .toList();
-        discoveredPeerIds.addAll(
-          candidates.map((candidate) => candidate['peer_id'] as String),
-        );
-        await Future.wait(
-          candidates.map((candidate) async {
+        while (_active &&
+            !book.closed &&
+            !book.complete &&
+            !discoveryCancel.isCancelled &&
+            (admittedPeerIds.length < 2 || canHedge()) &&
+            discoveredPeerIds.length < candidateLimit) {
+          // A verified source has already handed off startup. Replacements
+          // use the existing bounded late-discovery clock, not the remainder
+          // of the original startup batch. HTTPS never waits for this clock.
+          final background =
+              late || manifest!.peerCandidateReplacement && _multiHandoff;
+          if (!background &&
+              (_connectWatch?.elapsed ?? Duration.zero) >= _connectBudget) {
+            break;
+          }
+          final untilHedge = hedgeDelay - (raceWatch?.elapsed ?? Duration.zero);
+          final allowHedge =
+              canHedge() && raceWatch != null && untilHedge <= Duration.zero;
+          final raceLimit = stagger && !allowHedge ? 2 : _ordinaryPeerRaceLimit;
+          final available = min(
+            raceLimit - admittedPeerIds.length,
+            raceLimit - _ordinaryPeerOwners.length,
+          );
+          if (available <= 0) {
+            final waitForHedge =
+                canHedge() && raceWatch != null && untilHedge > Duration.zero;
+            if (connecting.isEmpty && !waitForHedge) break;
+            final waiting = <Future<void>>[
+              ...connecting,
+              discoveryCancel.whenCancel.then<void>((_) {}),
+            ];
+            Timer? timer;
+            if (waitForHedge) {
+              final alarm = Completer<void>();
+              timer = Timer(untilHedge, alarm.complete);
+              waiting.add(alarm.future);
+            }
             try {
-              final peer = await _openPeer(
-                candidate['peer_id'] as String,
-                trickle: candidate['trickle_ice_supported'] == true,
-                leased: true,
-                lateDiscovery: late,
-              );
-              await add(
-                peer,
-                (candidate['pieces'] as List).whereType<int>().toSet(),
-              );
-            } catch (_) {}
-          }),
-        );
+              await Future.any(waiting);
+            } finally {
+              timer?.cancel();
+            }
+            continue;
+          }
+          final seen = <String>{};
+          final candidates = candidateHistory
+              .order(manifest!.apiBase, _candidates)
+              .where(
+                (candidate) =>
+                    _canUsePeer(candidate['peer_id']) &&
+                    candidate['peer_id'] != _selfId &&
+                    !discoveredPeerIds.contains(candidate['peer_id']) &&
+                    seen.add(_candidateKey(candidate['peer_id'] as String)) &&
+                    candidate['pieces'] is List &&
+                    (candidate['pieces'] as List).contains(
+                      book.persistedPieces,
+                    ) &&
+                    P8PTransferProtocol.advertised({
+                      'version': 1,
+                      'transfer': candidate['p8p_transfer'],
+                    }),
+              )
+              .take(min(available, candidateLimit - discoveredPeerIds.length))
+              .toList();
+          if (candidates.isEmpty) {
+            if (connecting.isEmpty) break;
+            await Future.any(connecting.toList());
+            continue;
+          }
+          discoveredPeerIds.addAll(
+            candidates.map((candidate) => candidate['peer_id'] as String),
+          );
+          raceWatch ??= Stopwatch()..start();
+          if (allowHedge && _ordinaryPeerOwners.length >= 2) {
+            hedgeStarted = true;
+            _emit('p8p', 'peer_staggered_probe', peerCount: 3);
+          }
+          for (final candidate in candidates) {
+            late final Future<void> connection;
+            connection = () async {
+              try {
+                final peer = await _openPeer(
+                  candidate['peer_id'] as String,
+                  trickle: candidate['trickle_ice_supported'] == true,
+                  leased: true,
+                  lateDiscovery: background,
+                );
+                await add(
+                  peer,
+                  (candidate['pieces'] as List).whereType<int>().toSet(),
+                );
+              } catch (_) {
+                // A failed signaling attempt can still own a native close.
+                // Observe that owner before considering a different identity.
+                final retiring = _ordinaryPeerOwners
+                    .where((peer) => peer.id == candidate['peer_id'])
+                    .toList();
+                try {
+                  await Future.wait(retiring.map(_closeTransport));
+                  for (final peer in retiring) {
+                    // A returned factory is already bounded by native close.
+                    // Wait for its slot retirement too, so a free slot cannot
+                    // be mistaken for a still occupied one on this iteration.
+                    if (peer.pc != null) await _retireOrdinaryPeer(peer);
+                  }
+                } catch (_) {
+                  // Failed native disposal still retains its physical slot.
+                }
+              }
+            }().whenComplete(() => connecting.remove(connection));
+            connecting.add(connection);
+          }
+        }
       } catch (_) {
         // Discovery is optional and cannot stop HTTPS or existing sources.
+      } finally {
+        // Every branch remains owned even if the ledger completes or the
+        // receiver cancels while another candidate is still negotiating.
+        await Future.wait(connecting.toList());
       }
     }
 
@@ -1511,6 +1718,7 @@ class _P2PDownloadSession {
               if (peer != null) _attemptStage(peer, 'first_piece_ms');
               if (selected == null) {
                 selected = source;
+                startupPieceProven = true;
                 _emit(
                   'hybrid',
                   'probe_verified',
@@ -1520,6 +1728,12 @@ class _P2PDownloadSession {
             }
           } catch (_) {
             // Coordinator owns source retirement and physical cleanup.
+            if (_ordinaryPeerRaceLimit > 2 &&
+                source.id != 'server' &&
+                _active &&
+                !book.closed) {
+              coordinator.rejectUnprovenSource(source.id);
+            }
           } finally {
             pendingProbes--;
             notify();
@@ -1632,7 +1846,9 @@ class _P2PDownloadSession {
       _emit('p8p', 'multisource_started');
       // A newly published APK can reach permanent nodes after startup. Keep
       // one bounded discovery task beside the running writer, with no extra
-      // startup wait, no overlapping GETs and at most two outbound peer IDs.
+      // startup wait or overlapping GETs. Two live admitted peers remain the
+      // limit; a failed body's slot is reusable only after physical disposal.
+      // Negotiated replacements still spend at most four distinct identities.
       lateDiscovery = () async {
         await initialPeers;
         for (final seconds in const [2, 4, 6, 8, 10, 10, 10, 10]) {
@@ -1640,7 +1856,9 @@ class _P2PDownloadSession {
               book.closed ||
               book.complete ||
               discoveryCancel.isCancelled ||
-              discoveredPeerIds.length >= 2 ||
+              (!manifest!.peerCandidateReplacement &&
+                  admittedPeerIds.length >= 2) ||
+              discoveredPeerIds.length >= candidateLimit ||
               book.fileBytes - book.persistedBytes <=
                   2 * AppUpgradeP2PManifest.chunkSize) {
             break;
@@ -1657,7 +1875,11 @@ class _P2PDownloadSession {
               discoveryCancel.isCancelled) {
             break;
           }
-          await discoverPeers(late: true);
+          retireFailedPeers();
+          // Already stopped owners can finish their bookkeeping now. An
+          // unrelated pending native close must not hold a reusable slot.
+          await Future<void>.delayed(Duration.zero);
+          if (admittedPeerIds.length < 2) await discoverPeers(late: true);
         }
       }();
       final complete = await coordinator.run(active: () => _active);
@@ -1677,9 +1899,21 @@ class _P2PDownloadSession {
         if (peer.leased) _closePeer(peer);
       }
       await lateDiscovery;
+      await Future.wait(retiringPeers.values.toList());
       await Future.wait(probes);
       await Future.wait(opening);
       _multiWriter = null;
+      if (_ordinaryPeerRaceLimit > 2) {
+        _emit(
+          'performance',
+          'peer_race_profile',
+          metrics: {
+            'peer_race_limit': _ordinaryPeerRaceLimit,
+            'peak_ordinary_peer_owners': _peakOrdinaryPeerOwners,
+            'admitted_peer_limit': 2,
+          },
+        );
+      }
       final profile = coordinator.metrics;
       _emit(
         'performance',
@@ -1690,13 +1924,22 @@ class _P2PDownloadSession {
                 const {
                   'source_failures',
                   'source_deferred',
+                  'source_recoveries',
+                  'source_rejoins',
                 }.contains(entry.key))
               entry.key: entry.value,
         },
       );
-      // At most four small local records. A single combined profile can
+      // At most six fixed local records. A single combined profile can
       // exceed OEM logcat line limits and hide precisely the evidence needed.
-      for (final alias in const ['peer1', 'peer2', 'seed', 'https']) {
+      for (final alias in const [
+        'peer1',
+        'peer2',
+        'peer3',
+        'peer4',
+        'seed',
+        'https',
+      ]) {
         final prefix = 'source_${alias}_';
         final values = {
           for (final entry in profile.entries)
@@ -2047,9 +2290,15 @@ class _P2PDownloadSession {
   }
 
   Future<void> _refreshPeers({CancelToken? operationCancel}) async {
+    final p8p =
+        enableP8P && (manifest!.p8pAdaptiveWindow || manifest!.p8pTransfer);
+    final identity =
+        p8p &&
+        manifest!.peerCandidateReplacement &&
+        manifest!.peerCandidateIdentity;
     final json = await _request(
       'peers',
-      '${manifest!.apiBase}/peers${enableP8P && (manifest!.p8pAdaptiveWindow || manifest!.p8pTransfer) ? '?p8p=1' : ''}',
+      '${manifest!.apiBase}/peers${p8p ? '?p8p=1${identity ? '&candidate_identity=1' : ''}${p8pSourcePortDiversity && manifest!.p8pTransfer && _sessionTrickle ? '&ice_diversity=1' : ''}' : ''}',
       operationCancel: operationCancel,
     );
     final values = json['peers'];
@@ -2197,12 +2446,26 @@ class _P2PDownloadSession {
     AppUpgradeUploadSlot? uploadSlot,
   }) async {
     _checkActive();
+    if (id != 'server' &&
+        _ordinaryPeerOwners.length >= (inbound ? 2 : _ordinaryPeerRaceLimit)) {
+      throw const AppUpgradeP2PFailure('peer_capacity');
+    }
     final peer = _P2PPeer(id, inbound);
+    if (id != 'server') _ordinaryPeerOwners.add(peer);
+    _peakOrdinaryPeerOwners = max(
+      _peakOrdinaryPeerOwners,
+      _ordinaryPeerOwners.length,
+    );
     peer.uploadSlot = uploadSlot;
     peer.startupLimit = startupLimit;
     peer.lateDiscovery = lateDiscovery;
     peer.leased = leased;
-    if (!inbound && _attempts.length < (manifest!.serverOfferCancel ? 4 : 3)) {
+    final attemptLimit = _p8p && manifest!.peerCandidateReplacement
+        ? 6
+        : manifest!.serverOfferCancel
+        ? 4
+        : 3;
+    if (!inbound && _attempts.length < attemptLimit) {
       peer.attempt = {
         'alias': id == 'server'
             ? manifest!.serverOfferCancel && _serverAttempts > 1
@@ -2223,23 +2486,25 @@ class _P2PDownloadSession {
     }
     _armPeerDeadline(peer);
     try {
-      final creation = peerFactory({
-        'iceServers': manifest!.stunUrls
-            .map((url) => <String, dynamic>{'urls': url})
-            .toList(),
-      });
+      final creation =
+          peerFactory({
+            'iceServers': manifest!.stunUrls
+                .map((url) => <String, dynamic>{'urls': url})
+                .toList(),
+          }).then((pc) {
+            // Register the native owner before _rtc can reject an interrupted
+            // negotiation. A factory that finishes after retirement still owns
+            // its native connection and must release it here.
+            peer.pc = pc;
+            if (peer.closed || !_active) {
+              unawaited(_trackTransportRetirement(_releaseNativePeer(pc)));
+            }
+            return pc;
+          });
       peer.creation = creation;
-      // Native calls cannot be cancelled. Dispose a connection that arrives after
-      // its owner timed out; it must never signal or upload for a finished task.
-      unawaited(
-        creation.then<void>((pc) {
-          if (peer.closed || !_active) {
-            unawaited(_trackTransportRetirement(_releaseNativePeer(pc)));
-          }
-        }, onError: (Object _) {}),
-      );
+      // Keep factory rejection observed even if _rtc exits before awaiting it.
+      unawaited(creation.then<void>((_) {}, onError: (Object _) {}));
       final pc = await _rtc(peer, () => creation);
-      peer.pc = pc;
       for (final candidate in _earlyCandidates.remove(id) ?? <Map>[]) {
         _queueRemoteCandidate(candidate);
       }
@@ -2287,24 +2552,40 @@ class _P2PDownloadSession {
       };
       pc.onIceConnectionState = (state) {
         if (!_active || peer.closed) return;
+        peer.iceState = state;
+        if (state == RTCIceConnectionState.RTCIceConnectionStateChecking &&
+            !peer.inbound &&
+            peer.iceStatsAttempts == 0 &&
+            peer.iceStatsTimer == null) {
+          peer.iceStatsTimer = Timer(
+            const Duration(milliseconds: 400),
+            () => unawaited(_sampleIceChecks(peer)),
+          );
+        }
         if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
             state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
           _iceConnectMs ??= _sessionElapsed();
           _attemptStage(peer, 'ice_connect_ms');
         }
-        _emit('ice_connection', switch (state) {
-          RTCIceConnectionState.RTCIceConnectionStateNew => 'ice_new',
-          RTCIceConnectionState.RTCIceConnectionStateChecking => 'ice_checking',
-          RTCIceConnectionState.RTCIceConnectionStateConnected =>
-            'ice_connected',
-          RTCIceConnectionState.RTCIceConnectionStateCompleted =>
-            'ice_completed',
-          RTCIceConnectionState.RTCIceConnectionStateDisconnected =>
-            'ice_disconnected',
-          RTCIceConnectionState.RTCIceConnectionStateFailed => 'ice_failed',
-          RTCIceConnectionState.RTCIceConnectionStateClosed => 'ice_closed',
-          _ => 'unknown_error',
-        }, source: _source(peer));
+        _emit(
+          'ice_connection',
+          switch (state) {
+            RTCIceConnectionState.RTCIceConnectionStateNew => 'ice_new',
+            RTCIceConnectionState.RTCIceConnectionStateChecking =>
+              'ice_checking',
+            RTCIceConnectionState.RTCIceConnectionStateConnected =>
+              'ice_connected',
+            RTCIceConnectionState.RTCIceConnectionStateCompleted =>
+              'ice_completed',
+            RTCIceConnectionState.RTCIceConnectionStateDisconnected =>
+              'ice_disconnected',
+            RTCIceConnectionState.RTCIceConnectionStateFailed => 'ice_failed',
+            RTCIceConnectionState.RTCIceConnectionStateClosed => 'ice_closed',
+            _ => 'unknown_error',
+          },
+          source: _source(peer),
+          attempt: peer.attempt?['alias'] as String?,
+        );
         if (state == RTCIceConnectionState.RTCIceConnectionStateFailed ||
             state == RTCIceConnectionState.RTCIceConnectionStateClosed) {
           peer.failure = 'ice_failed';
@@ -2318,6 +2599,19 @@ class _P2PDownloadSession {
     }
   }
 
+  String _candidateKey(String id) {
+    if (_p8pCandidateAttemptLimit != null && manifest!.peerCandidateIdentity) {
+      for (final candidate in _candidates) {
+        if (candidate['peer_id'] != id) continue;
+        final key = candidate['candidate_key'];
+        if (key is String && RegExp(r'^[a-f0-9]{64}$').hasMatch(key)) {
+          return 'installation:$key';
+        }
+      }
+    }
+    return 'session:$id';
+  }
+
   bool _canUsePeer(Object? id) {
     if (!_isPeerId(id)) return false;
     final peer = _peers[id];
@@ -2326,7 +2620,9 @@ class _P2PDownloadSession {
         peer.channel?.state == RTCDataChannelState.RTCDataChannelOpen) {
       return true;
     }
-    return !_outboundPeerIds.contains(id) && _outboundPeerIds.length < 64;
+    return !_outboundPeerIds.contains(id) &&
+        !_attemptedCandidateKeys.contains(_candidateKey(id as String)) &&
+        _outboundPeerIds.length < (_p8pCandidateAttemptLimit ?? 64);
   }
 
   Future<_P2PPeer> _openPeer(
@@ -2347,15 +2643,19 @@ class _P2PDownloadSession {
     // reset an end marker or distinguish delayed candidates for a fresh RTC.
     // Keep a live channel reusable, but never reopen a consumed peer identity
     // when P8P falls back to the v1 path. Fresh registrations remain eligible.
-    if (_outboundPeerIds.contains(id)) {
+    if (_outboundPeerIds.contains(id) ||
+        _attemptedCandidateKeys.contains(_candidateKey(id))) {
       throw const AppUpgradeP2PFailure('peer_not_available');
     }
-    if (_outboundPeerIds.length >= 64) {
+    if (_outboundPeerIds.length >= (_p8pCandidateAttemptLimit ?? 64)) {
       throw const AppUpgradeP2PFailure('peer_capacity');
     }
     _closePeer(existing);
-    if (_peers.length >= 2) throw const AppUpgradeP2PFailure('peer_capacity');
+    if (_peers.length >= _ordinaryPeerRaceLimit) {
+      throw const AppUpgradeP2PFailure('peer_capacity');
+    }
     _outboundPeerIds.add(id);
+    _attemptedCandidateKeys.add(_candidateKey(id));
     final peer = await _makePeer(
       id,
       trickle: trickle,
@@ -2372,6 +2672,21 @@ class _P2PDownloadSession {
     try {
       return await _connect(peer, () async {
         final sdp = await _localOffer(peer);
+        Map<String, Object>? diversity;
+        if (p8pSourcePortDiversity &&
+            enableP8P &&
+            peer.leased &&
+            peer.trickle) {
+          for (final candidate in _candidates) {
+            if (candidate['peer_id'] == id) {
+              diversity = P8PSourceDiversity.offer(
+                candidate['ice_diversity'],
+                sdp,
+              );
+              break;
+            }
+          }
+        }
         _peerEvent(peer, 'offer_post_started');
         // The existing service and nodes buffer pre-SDP candidates. In the
         // candidate policy, do not spend an extra Offer HTTP RTT before trickle.
@@ -2383,6 +2698,7 @@ class _P2PDownloadSession {
             'peer_id': id,
             'type': 'offer',
             'sdp': sdp,
+            'ice_diversity': ?diversity,
             if (manifest!.attemptDiagnostics && peer.attempt != null)
               'attempt_alias': peer.attempt!['alias'],
             if (peer.trickle) 'trickle_ice': true,
@@ -2572,6 +2888,7 @@ class _P2PDownloadSession {
             RTCSessionDescription(answer['sdp'] as String, 'answer'),
           ),
         );
+        peer.remoteIceTypes |= _iceCandidateTypes(answer['sdp'] as String);
         peer.remoteReady = true;
         _drainRemoteCandidates(peer);
         _peerEvent(peer, 'remote_description_applied');
@@ -2641,6 +2958,7 @@ class _P2PDownloadSession {
     _emit('ice_gather', 'started', source: _source(peer));
     await _rtc(peer, () => peer.pc!.setLocalDescription(offer));
     final sdp = await _localSdp(peer);
+    peer.localIceTypes |= _iceCandidateTypes(sdp);
     _emit('rtc', 'offer_ready', source: _source(peer));
     return sdp;
   }
@@ -2755,6 +3073,7 @@ class _P2PDownloadSession {
       return;
     }
     peer.localCandidatesSeen.add(key);
+    if (value != null) peer.localIceTypes |= _iceCandidateTypes(value);
     if (value != null && value.isNotEmpty) {
       final kind = RegExp(
         r'\btyp (host|srflx|relay)\b',
@@ -2901,7 +3220,12 @@ class _P2PDownloadSession {
           // already added and must not fail on a synthetic empty candidate.
           if (candidate == null) continue;
           await _rtc(peer, () => peer.pc!.addCandidate(candidate));
+          peer.remoteTrickleApplied++;
+          peer.remoteIceTypes |= _iceCandidateTypes(candidate.candidate ?? '');
           _peerEvent(peer, 'remote_candidate_applied');
+          if (_iceCandidateTypes(candidate.candidate ?? '') != 0) {
+            peer.remoteIceProgress?.call();
+          }
         }
       } catch (error) {
         if (_active && !peer.closed) {
@@ -3056,16 +3380,63 @@ class _P2PDownloadSession {
           : attemptLimited
           ? 'seed_connect_retry_timeout'
           : 'p2p_budget_exhausted';
-      await channel.stateChangeStream
-          .firstWhere(
-            (state) =>
-                state == RTCDataChannelState.RTCDataChannelOpen ||
-                state == RTCDataChannelState.RTCDataChannelClosed,
-          )
-          .timeout(
-            _channelWaitLimit(peer),
-            onTimeout: () => throw AppUpgradeP2PFailure(timeoutCode),
+      final states = channel.stateChangeStream.firstWhere(
+        (state) =>
+            state == RTCDataChannelState.RTCDataChannelOpen ||
+            state == RTCDataChannelState.RTCDataChannelClosed,
+      );
+      final expired = Completer<RTCDataChannelState>();
+      final watch = Stopwatch()..start();
+      var softLimit = _channelWaitLimit(peer);
+      final allowCandidateGrace =
+          _p8p && peer.leased && peer.trickle && peer.id != 'server';
+      final hardLimit = allowCandidateGrace ? _remaining(peer) : softLimit;
+      Timer? timer;
+      void arm(Duration left) {
+        timer?.cancel();
+        timer = Timer(left, () {
+          if (!expired.isCompleted) {
+            expired.completeError(AppUpgradeP2PFailure(timeoutCode));
+          }
+        });
+      }
+
+      arm(softLimit);
+      var graceUsed = false;
+      if (allowCandidateGrace) {
+        // Only a newly applied candidate can renew the shorter channel wait,
+        // once. The original startup clock and outer connect timeout still win.
+        peer.remoteIceProgress = () {
+          if (graceUsed ||
+              expired.isCompleted ||
+              !_active ||
+              peer.closed ||
+              channel.state == RTCDataChannelState.RTCDataChannelOpen) {
+            return;
+          }
+          final elapsed = watch.elapsed;
+          final next = _shorter(
+            elapsed + const Duration(seconds: 1),
+            hardLimit,
           );
+          if (next <= softLimit || next <= elapsed) return;
+          graceUsed = true;
+          softLimit = next;
+          arm(next - elapsed);
+          _emit(
+            'attempt',
+            'ice_candidate_grace',
+            source: _source(peer),
+            attempt: peer.attempt?['alias'] as String?,
+          );
+        };
+      }
+      try {
+        await Future.any([states, expired.future]);
+      } finally {
+        timer?.cancel();
+        peer.remoteIceProgress = null;
+      }
     }
     _checkPeer(peer);
     if (channel.state != RTCDataChannelState.RTCDataChannelOpen) {
@@ -3189,6 +3560,7 @@ class _P2PDownloadSession {
           RTCSessionDescription(filtered, 'answer'),
         ),
       );
+      peer.remoteIceTypes |= _iceCandidateTypes(filtered);
       _peerEvent(peer, 'remote_description_applied');
       peer.remoteReady = true;
       _drainRemoteCandidates(peer);
@@ -3321,6 +3693,7 @@ class _P2PDownloadSession {
         source: peer.id,
         writer: writer,
         send: (body) => _control(peer, body),
+        onLifecycle: (event) => _emitLifecycle(event, peer: peer),
         onDiagnostic: (event) => _emit(
           'transfer',
           event.reason.code,
@@ -4344,19 +4717,161 @@ class _P2PDownloadSession {
         );
   }
 
+  Future<void> _sampleIceChecks(_P2PPeer peer) async {
+    peer.iceStatsTimer = null;
+    final pc = peer.pc;
+    if (!_active ||
+        peer.closed ||
+        pc == null ||
+        peer.iceState != RTCIceConnectionState.RTCIceConnectionStateChecking) {
+      return;
+    }
+    // Sample at most twice during checking. Never join this optional platform
+    // call from a transfer, cancellation or native transport retirement.
+    peer.iceStatsAttempts++;
+    try {
+      final reports = await pc.getStats().timeout(
+        const Duration(milliseconds: 150),
+      );
+      if (!_active || peer.closed || !identical(pc, peer.pc)) return;
+      peer.iceStats = _iceCheckMetrics(reports);
+      peer.iceStatsAt = peer.connectWatch.elapsedMilliseconds;
+    } catch (_) {
+      // Optional platform statistics cannot delay negotiation or disposal.
+    } finally {
+      if (_active &&
+          !peer.closed &&
+          peer.iceStatsAttempts < 2 &&
+          peer.iceState ==
+              RTCIceConnectionState.RTCIceConnectionStateChecking) {
+        peer.iceStatsTimer = Timer(
+          const Duration(milliseconds: 1500),
+          () => unawaited(_sampleIceChecks(peer)),
+        );
+      }
+    }
+  }
+
+  static Map<String, int> _iceCheckMetrics(List<StatsReport> reports) {
+    final pairs = reports
+        .where((report) => report.type == 'candidate-pair')
+        .take(65)
+        .toList();
+    final retained = pairs.take(64).toList();
+    final result = <String, int>{
+      'ice_stats_sampled': 1,
+      'ice_pair_count': retained.length,
+      'ice_pairs_truncated': pairs.length > 64 ? 1 : 0,
+      'ice_pairs_succeeded': retained
+          .where((pair) => pair.values['state'] == 'succeeded')
+          .length,
+    };
+    for (final field in const {
+      'requestsSent': 'ice_requests_sent',
+      'requestsReceived': 'ice_requests_received',
+      'responsesSent': 'ice_responses_sent',
+      'responsesReceived': 'ice_responses_received',
+    }.entries) {
+      var total = 0;
+      var complete = retained.isNotEmpty && pairs.length <= 64;
+      for (final pair in retained) {
+        final raw = pair.values[field.key];
+        final value = raw is num
+            ? raw
+            : raw is String && RegExp(r'^[0-9]{1,15}$').hasMatch(raw)
+            ? int.tryParse(raw)
+            : null;
+        if (value == null ||
+            !value.isFinite ||
+            value < 0 ||
+            value != value.truncateToDouble()) {
+          complete = false;
+          break;
+        }
+        total = (total + value.toInt()).clamp(0, 1000000);
+      }
+      // Missing fields mean unknown, including on older platform adapters.
+      // A partial or truncated sum must never look like a proven zero.
+      if (complete) result[field.value] = total;
+    }
+    return result;
+  }
+
   void _closePeer(_P2PPeer? peer, {String? reason}) {
     if (peer == null || peer.closed) return;
+    peer.iceStatsTimer?.cancel();
+    peer.remoteIceProgress = null;
     if (peer.attempt != null) {
       peer.attempt!['ended_ms'] = _sessionElapsed() ?? 0;
       peer.attempt!['reason'] = AppUpgradeP2PDiagnostic.safeCode(
         reason ?? peer.failure,
       );
+      final failure = reason ?? peer.failure;
       _emit(
         'attempt',
-        reason ?? peer.failure,
+        failure,
         source: _source(peer),
         attempt: peer.attempt!['alias'] as String,
       );
+      if (!peer.attempt!.containsKey('first_piece_ms') &&
+          const {
+            'peer_connect_timeout',
+            'p2p_budget_exhausted',
+            'ice_failed',
+            'channel_wait_timeout',
+            'source_timeout',
+            'network_error',
+            'http_timeout',
+            'rtc_operation_timeout',
+          }.contains(failure)) {
+        if (peer.id != 'server' && peer.leased) {
+          candidateHistory.record(manifest!.apiBase, peer.id);
+        }
+        _emit(
+          'attempt',
+          'peer_failure_detail',
+          source: _source(peer),
+          attempt: peer.attempt!['alias'] as String,
+          durationMs: peer.connectWatch.elapsedMilliseconds,
+          metrics: {
+            'ice_stats_sampled': 0,
+            ...peer.iceStats,
+            if (peer.iceStatsAt != null)
+              'ice_stats_age_ms':
+                  (peer.connectWatch.elapsedMilliseconds - peer.iceStatsAt!)
+                      .clamp(0, 120000),
+            'attempt_native_ready': peer.pc == null ? 0 : 1,
+            'attempt_offer_accepted':
+                peer.diagnosticStages.contains('offer_accepted') ? 1 : 0,
+            'attempt_answer_seen': peer.attempt!.containsKey('answer_ms')
+                ? 1
+                : 0,
+            'attempt_remote_sdp_applied': peer.remoteReady ? 1 : 0,
+            'attempt_local_trickle_posted': peer.firstLocalCandidatePosted
+                ? 1
+                : 0,
+            'attempt_remote_trickle_applied': peer.remoteTrickleApplied,
+            'attempt_local_candidate_types': peer.localIceTypes,
+            'attempt_remote_candidate_types': peer.remoteIceTypes,
+            'attempt_ice_state': switch (peer.iceState) {
+              RTCIceConnectionState.RTCIceConnectionStateChecking => 1,
+              RTCIceConnectionState.RTCIceConnectionStateConnected ||
+              RTCIceConnectionState.RTCIceConnectionStateCompleted => 2,
+              RTCIceConnectionState.RTCIceConnectionStateDisconnected => 3,
+              RTCIceConnectionState.RTCIceConnectionStateFailed => 4,
+              RTCIceConnectionState.RTCIceConnectionStateClosed => 5,
+              _ => 0,
+            },
+            'attempt_channel_opened': peer.attempt!.containsKey('channel_ms')
+                ? 1
+                : 0,
+            'attempt_first_body_seen':
+                peer.diagnosticStages.contains('first_payload_received')
+                ? 1
+                : 0,
+          },
+        );
+      }
     }
     peer.closed = true;
     _retireUpload(peer);
@@ -4382,9 +4897,35 @@ class _P2PDownloadSession {
     if (!peer.iceComplete.isCompleted) peer.iceComplete.complete();
     _failPiece(peer, const AppUpgradeP2PFailure('channel_closed'));
     unawaited(_closeTransport(peer).catchError((_) {}));
+    unawaited(_retireOrdinaryPeer(peer));
     if (peer.transfer != null) {
       unawaited(peer.transfer!.close().catchError((_) {}));
     }
+  }
+
+  Future<void> _retireOrdinaryPeer(_P2PPeer peer) {
+    if (peer.ordinaryRetirement != null) return peer.ordinaryRetirement!;
+    if (!_ordinaryPeerOwners.contains(peer)) return Future<void>.value();
+    final creation = peer.creation;
+    if (creation == null) {
+      _ordinaryPeerOwners.remove(peer);
+      return Future<void>.value();
+    }
+    return peer.ordinaryRetirement = creation
+        .then<void>(
+          (pc) async {
+            await _closeTransport(peer);
+            await _releaseNativePeer(pc);
+            if (_releasedNativePeers[pc] == true) {
+              _ordinaryPeerOwners.remove(peer);
+            }
+          },
+          onError: (Object _, StackTrace _) {
+            // A rejected factory returned no native object to retain.
+            _ordinaryPeerOwners.remove(peer);
+          },
+        )
+        .catchError((_) {});
   }
 
   Future<void> _trackTransportRetirement(Future<void> closing) {
@@ -4479,6 +5020,23 @@ class _P2PDownloadSession {
     if (peer.closed) throw AppUpgradeP2PFailure(peer.failure);
   }
 
+  void _emitLifecycle(P8PLifecycleEvent event, {_P2PPeer? peer}) {
+    final alias = peer?.attempt?['alias'] as String? ?? event.alias;
+    _emit(
+      'transfer',
+      event.code.code,
+      source: peer != null
+          ? _source(peer)
+          : alias == 'https'
+          ? 'https'
+          : alias == 'seed'
+          ? 'seed'
+          : 'peer',
+      attempt: alias == 'https' ? null : alias,
+      metrics: event.metrics,
+    );
+  }
+
   void _emit(
     String stage,
     String code, {
@@ -4530,6 +5088,24 @@ class _P2PDownloadSession {
             : null,
       ),
     );
+  }
+
+  static final _iceType = RegExp(
+    r'(?:^|\n)(?:a=)?candidate:[^\r\n]*?\btyp (host|srflx|prflx|relay)\b',
+  );
+
+  static int _iceCandidateTypes(String sdpOrCandidate) {
+    var types = 0;
+    for (final match in _iceType.allMatches(sdpOrCandidate)) {
+      types |= switch (match.group(1)) {
+        'host' => 1,
+        'srflx' => 2,
+        'prflx' => 4,
+        'relay' => 8,
+        _ => 0,
+      };
+    }
+    return types;
   }
 
   static bool _isPeerId(Object? value) =>
@@ -4609,6 +5185,47 @@ class _P2PDownloadSession {
   }
 }
 
+/// Short-lived observations of the exact live peer registration, local to
+/// this SDK instance. No stable device identifiers, disk or telemetry.
+class _P2PCandidateHistory {
+  static const _lifetimeMs = 120000;
+  final _clock = Stopwatch()..start();
+  final _scores = <(String, String), ({int expires, int? firstPieceMs})>{};
+
+  void record(String scope, String id, {int? firstPieceMs}) {
+    final key = (scope, id);
+    _scores.remove(key);
+    if (_scores.length >= 32) _scores.remove(_scores.keys.first);
+    _scores[key] = (
+      expires: _clock.elapsedMilliseconds + _lifetimeMs,
+      firstPieceMs: firstPieceMs,
+    );
+  }
+
+  Iterable<Map> order(String scope, List<Map> candidates) {
+    final now = _clock.elapsedMilliseconds;
+    _scores.removeWhere((_, observation) => observation.expires <= now);
+    if (_scores.isEmpty) return candidates;
+    (int, int) priority(Map candidate) {
+      final id = candidate['peer_id'];
+      final score = id is String ? _scores[(scope, id)] : null;
+      if (score == null) return (1, 0);
+      final elapsed = score.firstPieceMs;
+      return elapsed == null ? (2, 0) : (0, elapsed);
+    }
+
+    final ranked = candidates.indexed.toList();
+    ranked.sort((a, b) {
+      final pa = priority(a.$2), pb = priority(b.$2);
+      final group = pa.$1.compareTo(pb.$1);
+      if (group != 0) return group;
+      final time = pa.$2.compareTo(pb.$2);
+      return time != 0 ? time : a.$1.compareTo(b.$1);
+    });
+    return ranked.map((entry) => entry.$2);
+  }
+}
+
 class _P2PPeer {
   _P2PPeer(this.id, this.inbound);
   final String id;
@@ -4619,6 +5236,11 @@ class _P2PPeer {
   Duration? startupLimit;
   final signalingCancel = CancelToken();
   Timer? deadline;
+  Timer? iceStatsTimer;
+  int iceStatsAttempts = 0;
+  int? iceStatsAt;
+  Map<String, int> iceStats = const {};
+  void Function()? remoteIceProgress;
   final localCandidates = <Map<String, Object?>?>[];
   final localCandidatesSeen = <String>{};
   final remoteCandidates = <RTCIceCandidate?>[];
@@ -4633,6 +5255,8 @@ class _P2PPeer {
       candidateFailed = false;
   bool remoteReady = false, remoteBusy = false;
   bool answerReceived = false;
+  RTCIceConnectionState? iceState;
+  int remoteTrickleApplied = 0, localIceTypes = 0, remoteIceTypes = 0;
   bool trickle = false;
   Stopwatch? gatherWatch;
   RTCPeerConnection? pc;
@@ -4648,6 +5272,7 @@ class _P2PPeer {
   bool lateDiscovery = false;
   P8PTransferReceiver? transfer;
   Future<void>? transportClosing;
+  Future<void>? ordinaryRetirement;
   Future<RTCPeerConnection>? creation;
   AppUpgradeUploadSlot? uploadSlot;
   P8PTransferSender? sender;

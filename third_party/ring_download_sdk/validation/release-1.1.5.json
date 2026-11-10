@@ -1,0 +1,218 @@
+{
+  "version": "1.1.5",
+  "channel": "stable",
+  "released_at": "2026-11-07",
+  "candidate_version": "1.1.5-dev.5",
+  "formal_version_delta": {
+    "version": "1.1.5",
+    "candidate": "1.1.5-dev.5",
+    "runtime_files": 50,
+    "version_literal_only": [
+      "lib/src/sdk/models.dart"
+    ],
+    "transmission_runtime_changes": [],
+    "candidate_full_tests": 635,
+    "three_native_rescue_cases": true,
+    "unrelated_working_source_preserved": true,
+    "published": false
+  },
+  "regression": {
+    "full_frozen_candidate_tests": 635,
+    "full_log_sha256": "fbcea92bf36d3a79d6cb4be8ea5357608175dde6e4004e5b006de8111829bf0b",
+    "candidate_source_unchanged": true,
+    "static_analysis": "passed",
+    "formal_contract_tests": 44,
+    "formal_contract_log_sha256": "cade3416d9697cbcef611f56204b0c27dd2a65120a2ef9254ea947f81eaa6b04",
+    "counts_overlap": true
+  },
+  "native_acceptance": {
+    "cold_full_SHA256": true,
+    "cold_file_bytes": 155305939,
+    "cold_peer_verified_bytes": 3145728,
+    "cold_seed_verified_bytes": 16893907,
+    "cancel_through_App": true,
+    "SDK_disposed": true,
+    "native_rescue_cases": {
+      "ack": {
+        "passed": true,
+        "milestones_ms": {
+          "channel_open": 394,
+          "hello_ready": 395,
+          "native_first_piece_verified": 460,
+          "http_first_piece_verified": 610,
+          "prefix_cancel_received": 1653,
+          "prefix_ack_sent": 1722,
+          "native_rejoin_verified": 1865,
+          "late_ack_successor_still_owned": 1936,
+          "whole_file_sha_verified": 2184
+        },
+        "metrics": {
+          "requests": 11,
+          "verified_bytes": 9437215,
+          "peak_reservations": 4,
+          "peak_reserved_bytes": 4194304,
+          "repeat_reserved_bytes": 1048576,
+          "source_recoveries": 1,
+          "prefix_rescues": 1,
+          "source_rejoins": 1,
+          "source_peer1_requests": 5,
+          "source_peer1_verified_bytes": 3145759,
+          "source_peer1_busy_us": 1410308,
+          "source_peer1_cancelled": 1,
+          "source_peer1_failures": 0,
+          "source_https_requests": 6,
+          "source_https_verified_bytes": 6291456,
+          "source_https_busy_us": 503860,
+          "source_https_cancelled": 0,
+          "source_https_failures": 0
+        },
+        "reservations_after": 0,
+        "native_owners_connected": {
+          "peerConnections": 2,
+          "dataChannels": 2,
+          "channelObservers": 2
+        },
+        "native_owners_after": {
+          "peerConnections": 0,
+          "dataChannels": 0,
+          "channelObservers": 0
+        },
+        "errors": [],
+        "fixture_withheld_cancel_ids": [
+          3
+        ],
+        "file_sha256": "9355be024821381cf45431ccb8a5dc6d17d9101f9083175a42073cfcf018ce7a",
+        "verified_file_bytes": 9437215
+      },
+      "no_ack": {
+        "passed": true,
+        "milestones_ms": {
+          "channel_open": 443,
+          "hello_ready": 450,
+          "native_first_piece_verified": 550,
+          "http_first_piece_verified": 697,
+          "prefix_cancel_received": 1742,
+          "native_close_waiting": 2746,
+          "whole_file_sha_verified": 3355
+        },
+        "metrics": {
+          "requests": 12,
+          "verified_bytes": 9437215,
+          "peak_reservations": 4,
+          "peak_reserved_bytes": 4194304,
+          "repeat_reserved_bytes": 2097152,
+          "source_recoveries": 1,
+          "prefix_rescues": 1,
+          "source_peer1_requests": 3,
+          "source_peer1_verified_bytes": 1048576,
+          "source_peer1_busy_us": 2283008,
+          "source_peer1_cancelled": 2,
+          "source_peer1_failures": 0,
+          "source_https_requests": 9,
+          "source_https_verified_bytes": 8388639,
+          "source_https_busy_us": 428301,
+          "source_https_cancelled": 0,
+          "source_https_failures": 0
+        },
+        "reservations_after": 0,
+        "native_owners_connected": {
+          "peerConnections": 2,
+          "dataChannels": 2,
+          "channelObservers": 2
+        },
+        "native_owners_after": {
+          "peerConnections": 0,
+          "dataChannels": 0,
+          "channelObservers": 0
+        },
+        "errors": [],
+        "fixture_withheld_cancel_ids": [
+          3,
+          5
+        ],
+        "file_sha256": "9355be024821381cf45431ccb8a5dc6d17d9101f9083175a42073cfcf018ce7a",
+        "verified_file_bytes": 9437215
+      },
+      "repeat": {
+        "passed": true,
+        "milestones_ms": {
+          "channel_open": 438,
+          "hello_ready": 439,
+          "native_first_piece_verified": 507,
+          "http_first_piece_verified": 656,
+          "prefix_cancel_received": 1688,
+          "prefix_ack_sent": 1755,
+          "native_rejoin_verified": 2008,
+          "late_ack_successor_still_owned": 2068,
+          "whole_file_sha_verified": 3406
+        },
+        "metrics": {
+          "requests": 12,
+          "verified_bytes": 9437215,
+          "peak_reservations": 4,
+          "peak_reserved_bytes": 4194304,
+          "repeat_reserved_bytes": 1048607,
+          "source_recoveries": 1,
+          "prefix_rescues": 2,
+          "source_rejoins": 1,
+          "hedges": 1,
+          "source_peer1_requests": 5,
+          "source_peer1_verified_bytes": 3145728,
+          "source_peer1_busy_us": 2584614,
+          "source_peer1_cancelled": 2,
+          "source_peer1_failures": 0,
+          "source_https_requests": 7,
+          "source_https_verified_bytes": 6291487,
+          "source_https_busy_us": 587533,
+          "source_https_cancelled": 0,
+          "source_https_failures": 0
+        },
+        "reservations_after": 0,
+        "native_owners_connected": {
+          "peerConnections": 2,
+          "dataChannels": 2,
+          "channelObservers": 2
+        },
+        "native_owners_after": {
+          "peerConnections": 0,
+          "dataChannels": 0,
+          "channelObservers": 0
+        },
+        "errors": [],
+        "fixture_withheld_cancel_ids": [
+          3,
+          11
+        ],
+        "file_sha256": "9355be024821381cf45431ccb8a5dc6d17d9101f9083175a42073cfcf018ce7a",
+        "verified_file_bytes": 9437215
+      }
+    },
+    "rescue_scope": "native_loopback_fixture",
+    "rescue_APK_sha256": "e91e722836912578f4b1d4fe03a66a2d5a9a5614d091924ed9ac2c2be020fcd0",
+    "no_production_API_in_rescue": true,
+    "device_owners_released": true,
+    "raw_UDP_rebind_proven": false
+  },
+  "ordinary_native_owner_default": 2,
+  "ordinary_native_owner_configurable_max": 4,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "request_deadline_seconds": 8,
+  "stop_grace_seconds": 1,
+  "source_port_diversity_default": false,
+  "sharing_default": false,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "phone_sharing_policy_unchanged_from": "1.1.2",
+  "host_official_APK_built": false,
+  "limitations": [
+    "Native rescue uses synthetic data and two local Android PeerConnections; it is not full-API/public-NAT rescue evidence.",
+    "Historical public first-body zero cause and C/D specific ICE failures remain unresolved.",
+    "Only B supplied ordinary verified body in the recorded cold tablet download.",
+    "Four-way racing and source-port diversity require explicit opt-in and capability; two ordinary payload sources remain the limit.",
+    "No all-network/fixed-throughput/long-term-energy guarantee, formal host signature upgrade, or automatic update of installed apps.",
+    "r4 fixture failures and r5 build wrapper metadata assertion are retained; only the fixture/control collection was corrected, no SDK behavior was relaxed."
+  ]
+}

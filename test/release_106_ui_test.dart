@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -256,8 +258,11 @@ void main() {
   testWidgets(
     'real birthday picker uses Chinese and keeps edits local until save',
     (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
         overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
           platformAccountProvider.overrideWith(_Account.new),
           platformEditableProfileProvider(_owner).overrideWith(
             (ref) async =>

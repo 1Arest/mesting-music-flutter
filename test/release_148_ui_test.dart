@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:mesting_music/shared/widgets/beta_glass_action.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -462,12 +463,9 @@ void main() {
       final playRect = tester.getRect(
         find.byKey(const ValueKey('platform-play-all')),
       );
-      final download = find
-          .ancestor(
-            of: find.text('下载已加载歌曲'),
-            matching: find.byWidgetPredicate((widget) => widget is TextButton),
-          )
-          .first;
+      final download = find.byWidgetPredicate(
+        (widget) => widget is BetaGlassAction && widget.label == '下载已加载歌曲',
+      );
       final downloadRect = tester.getRect(download);
       expect(downloadRect.left, greaterThanOrEqualTo(playRect.right));
       expect((downloadRect.center.dy - playRect.center.dy).abs(), lessThan(1));

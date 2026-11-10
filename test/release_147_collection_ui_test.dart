@@ -87,7 +87,7 @@ void main() {
   });
   for (final dark in [false, true]) {
     testWidgets(
-      '3000 favorites page/search/membership use the complete owner collection dark=$dark',
+      '3000 favorites page and complete-owner APIs retain paging without removed search dark=$dark',
       (tester) async {
         final db = AppDatabase(NativeDatabase.memory());
         final repository = _Library(db);
@@ -131,17 +131,17 @@ void main() {
           contains('netease_10999'),
         );
         await shot(tester, 'paged-favorites-${dark ? 'dark' : 'light'}');
-        await tester.tap(find.byTooltip('搜索我的喜欢'));
-        await tester.pump();
-        await tester.enterText(find.byType(TextField), '2999');
-        await tester.pump(const Duration(milliseconds: 240));
-        await tester.pump();
-        await ready146(tester);
-        expect(find.text('测试歌曲 2999'), findsOneWidget);
-        expect(find.text('测试歌曲 0'), findsNothing);
+        expect(find.byTooltip('搜索我的喜欢'), findsNothing);
+        expect(find.byType(TextField), findsNothing);
+        // Complete-owner queries remain available to existing non-cover
+        // consumers, independently of the removed Beta page search control.
+        final query = await tester.runAsync(
+          () => repository.favoritePage(query: '2999'),
+        );
+        expect(query!.items.single.title, '测试歌曲 2999');
         expect(repository.requests.last, (0, '2999'));
         expect(window.items, hasLength(30));
-        await shot(tester, 'paged-favorites-search-${dark ? 'dark' : 'light'}');
+        await shot(tester, 'paged-favorites-owner-${dark ? 'dark' : 'light'}');
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
       },
@@ -189,7 +189,7 @@ void main() {
               .widget<ListView>(find.byType(ListView))
               .childrenDelegate
               .estimatedChildCount,
-          31,
+          33, // Thirty songs, cover masthead, play-all row and paging footer.
         );
         expect(find.byType(MusicListEnd), findsNothing);
         await shot(tester, 'new-songs-first-window-${dark ? 'dark' : 'light'}');
@@ -206,7 +206,7 @@ void main() {
               .widget<ListView>(find.byType(ListView))
               .childrenDelegate
               .estimatedChildCount,
-          greaterThan(31),
+          greaterThan(33),
         );
         expect(repository.tracks, hasLength(3000));
         expect(tester.takeException(), isNull);

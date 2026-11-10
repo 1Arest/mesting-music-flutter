@@ -1,0 +1,9 @@
+{
+  "version": "1.1.4",
+  "candidate": "1.1.4-dev.1",
+  "runtime_files": 48,
+  "version_literal_only": [
+    "lib/src/sdk/models.dart"
+  ],
+  "transmission_runtime_changes": []
+}

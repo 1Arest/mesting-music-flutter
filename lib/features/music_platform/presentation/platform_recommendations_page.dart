@@ -1,3 +1,6 @@
+import 'library_collection_masthead.dart';
+import 'platform_ranking_header.dart';
+import '../../../shared/widgets/collection_play_all_button.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/music_list_footer.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -343,131 +346,180 @@ class _PlatformRecommendationDetailState
     }
     return PlatformPageFrame(
       title: widget.title,
-      child: value.when(
-        // Keep the mounted list and its scroll offset during a refresh. The
-        // refresh owner paints the top indicator; continuation/artwork waits
-        // remain at the trailing frontier of this same viewport.
-        skipLoadingOnRefresh: true,
-        loading: () => const _RecommendationLoading(),
-        error: (_, _) =>
-            EditorialEmpty('推荐暂时无法读取', onRetry: () => ref.invalidate(provider)),
-        data: (base) {
-          if (widget.kind == PlatformRecommendationKind.fm &&
-              !identical(base, _initialBase)) {
-            _generation++;
-            _extra.clear();
-            _loading = false;
-            _more = true;
-            _resetFirstScreen();
-            _initialBase = base;
-          }
-          if (widget.kind == PlatformRecommendationKind.fm &&
-              !_firstScreenReady) {
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                if (_initialError != null) {
-                  return EditorialEmpty(
-                    _initialError!,
-                    onRetry: () {
-                      setState(() {
-                        _generation++;
-                        _resetFirstScreen();
-                      });
-                      ref.invalidate(provider);
-                    },
-                  );
-                }
-                if (!_preparingFirstScreen) {
-                  _preparingFirstScreen = true;
-                  // Rows are at least 70dp (52dp artwork + 18dp padding).
-                  // Reserve the same 180dp as the list for floating controls.
-                  // At larger text sizes fewer rows fit, so this is conservative.
-                  final minimum = ((constraints.maxHeight - 180) / 70)
-                      .ceil()
-                      .clamp(1, 40);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted && identical(_initialBase, base)) {
-                      unawaited(_prepareFirstScreen(base, minimum));
-                    }
-                  });
-                }
-                return const _RecommendationLoading();
-              },
-            );
-          }
-          // Revealing thirty more rows must not re-index a fixed response of
-          // thousands of songs. Only a changed source snapshot/FM batch does.
-          if (!identical(base, _mergedBase) ||
-              _extra.length != _mergedExtraCount ||
-              _mergedGeneration != _generation) {
-            _mergedBase = base;
-            _mergedExtraCount = _extra.length;
-            _mergedGeneration = _generation;
-            _mergedSnapshot = <String, Track>{
-              for (final t in [...base, ..._extra]) t.id: t,
-            }.values.toList();
-            _baseIds = base.map((track) => track.id).toSet();
-          }
-          final tracks = _mergedSnapshot;
-          final visibleCount = widget.kind == null
-              ? _fixedVisible.clamp(0, tracks.length)
-              : tracks.length;
-          return MusicRefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _generation++;
-                _loading = false;
-                _extra.clear();
-                _more = true;
-                _resetFirstScreen();
-              });
-              ref.invalidate(provider);
-              await ref.read(provider.future);
-            },
-            child: AutomaticSongPaging(
-              songListId:
-                  'recommendations:${widget.kind?.name ?? 'daily'}:${widget.newSongs}',
-              fillInitialViewport: widget.kind != PlatformRecommendationKind.fm,
-              enabled: widget.kind == null
-                  ? visibleCount < tracks.length
-                  : _more && !_loading && _error == null,
-              onLoadMore: widget.kind == null
-                  ? () async {
-                      if (mounted) setState(() => _fixedVisible += 30);
-                    }
-                  : _load,
-              child: ListView.builder(
-                cacheExtent: MediaQuery.sizeOf(context).height,
-                padding: BetaContentInsets.musicPaddingOf(
-                  context,
-                  EdgeInsets.only(bottom: 180),
-                ),
-                itemCount: visibleCount + 1,
-                itemBuilder: (context, index) {
-                  if (index < visibleCount) {
-                    return EditorialTrackRow(
-                      track: tracks[index],
-                      contextTracks: tracks,
-                      onPlay: () =>
-                          _play(context, ref, tracks, index, widget.kind),
+      headerInScroll: true,
+      child: PlatformRankingScrollShell(
+        title: widget.title,
+        child: value.when(
+          // Keep the mounted list and its scroll offset during a refresh. The
+          // refresh owner paints the top indicator; continuation/artwork waits
+          // remain at the trailing frontier of this same viewport.
+          skipLoadingOnRefresh: true,
+          loading: () => const _RecommendationLoading(),
+          error: (_, _) => EditorialEmpty(
+            '推荐暂时无法读取',
+            onRetry: () => ref.invalidate(provider),
+          ),
+          data: (base) {
+            if (widget.kind == PlatformRecommendationKind.fm &&
+                !identical(base, _initialBase)) {
+              _generation++;
+              _extra.clear();
+              _loading = false;
+              _more = true;
+              _resetFirstScreen();
+              _initialBase = base;
+            }
+            if (widget.kind == PlatformRecommendationKind.fm &&
+                !_firstScreenReady) {
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  if (_initialError != null) {
+                    return EditorialEmpty(
+                      _initialError!,
+                      onRetry: () {
+                        setState(() {
+                          _generation++;
+                          _resetFirstScreen();
+                        });
+                        ref.invalidate(provider);
+                      },
                     );
                   }
-                  if (_loading) {
-                    return const _RecommendationLoading();
+                  if (!_preparingFirstScreen) {
+                    _preparingFirstScreen = true;
+                    // Rows are at least 70dp (52dp artwork + 18dp padding).
+                    // Reserve the same 180dp as the list for floating controls.
+                    // At larger text sizes fewer rows fit, so this is conservative.
+                    final minimum = ((constraints.maxHeight - 180) / 70)
+                        .ceil()
+                        .clamp(1, 40);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted && identical(_initialBase, base)) {
+                        unawaited(_prepareFirstScreen(base, minimum));
+                      }
+                    });
                   }
-                  if (_error != null) {
-                    return TextButton(onPressed: _load, child: Text(_error!));
-                  }
-                  if (tracks.isEmpty) return const EditorialEmpty('平台暂未返回歌曲');
-                  return (widget.kind != null && _more) ||
-                          visibleCount < tracks.length
-                      ? const SizedBox(height: 12)
-                      : const MusicListEnd();
+                  return const _RecommendationLoading();
                 },
+              );
+            }
+            // Revealing thirty more rows must not re-index a fixed response of
+            // thousands of songs. Only a changed source snapshot/FM batch does.
+            if (!identical(base, _mergedBase) ||
+                _extra.length != _mergedExtraCount ||
+                _mergedGeneration != _generation) {
+              _mergedBase = base;
+              _mergedExtraCount = _extra.length;
+              _mergedGeneration = _generation;
+              _mergedSnapshot = <String, Track>{
+                for (final t in [...base, ..._extra]) t.id: t,
+              }.values.toList();
+              _baseIds = base.map((track) => track.id).toSet();
+            }
+            final tracks = _mergedSnapshot;
+            final visibleCount = widget.kind == null
+                ? _fixedVisible.clamp(0, tracks.length)
+                : tracks.length;
+            return MusicRefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  _generation++;
+                  _loading = false;
+                  _extra.clear();
+                  _more = true;
+                  _resetFirstScreen();
+                });
+                ref.invalidate(provider);
+                await ref.read(provider.future);
+              },
+              child: AutomaticSongPaging(
+                songListId:
+                    'recommendations:${widget.kind?.name ?? 'daily'}:${widget.newSongs}',
+                fillInitialViewport:
+                    widget.kind != PlatformRecommendationKind.fm,
+                enabled: widget.kind == null
+                    ? visibleCount < tracks.length
+                    : _more && !_loading && _error == null,
+                onLoadMore: widget.kind == null
+                    ? () async {
+                        if (mounted) setState(() => _fixedVisible += 30);
+                      }
+                    : _load,
+                child: ListView.builder(
+                  cacheExtent: MediaQuery.sizeOf(context).height,
+                  padding: EdgeInsets.only(
+                    bottom: BetaContentInsets.musicBottomOf(context, 180),
+                  ),
+                  itemCount: visibleCount + 3,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return LibraryCollectionMasthead(
+                        title: widget.title,
+                        cover: tracks.firstOrNull?.coverAsset ?? '',
+                        total: tracks.length,
+                        countLabel: widget.kind == null
+                            ? null
+                            : '已加载 ${tracks.length} 首歌曲',
+                      );
+                    }
+                    if (index == 1) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 8, 22, 12),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: CollectionPlayAllButton(
+                            key: const ValueKey('recommendation-play-all'),
+                            // A radio/discovery feed has no finite "all". Start
+                            // its existing continuation session without turning
+                            // the preview into a manually queued playlist.
+                            label: widget.kind == null ? '播放全部' : '播放推荐',
+                            total: widget.kind == null ? tracks.length : null,
+                            onPressed: tracks.isEmpty
+                                ? null
+                                : widget.kind != null
+                                ? () => _play(
+                                    context,
+                                    ref,
+                                    tracks,
+                                    0,
+                                    widget.kind,
+                                  )
+                                : () => playBetaSelection(
+                                    context,
+                                    ref,
+                                    tracks.first,
+                                    playAll: tracks,
+                                  ),
+                          ),
+                        ),
+                      );
+                    }
+                    index -= 2;
+                    if (index < visibleCount) {
+                      return EditorialTrackRow(
+                        track: tracks[index],
+                        contextTracks: tracks,
+                        onPlay: () =>
+                            _play(context, ref, tracks, index, widget.kind),
+                      );
+                    }
+                    if (_loading) {
+                      return const _RecommendationLoading();
+                    }
+                    if (_error != null) {
+                      return TextButton(onPressed: _load, child: Text(_error!));
+                    }
+                    if (tracks.isEmpty) return const EditorialEmpty('平台暂未返回歌曲');
+                    return (widget.kind != null && _more) ||
+                            visibleCount < tracks.length
+                        ? const SizedBox(height: 12)
+                        : const MusicListEnd();
+                  },
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

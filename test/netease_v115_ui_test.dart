@@ -158,7 +158,7 @@ void main() {
             dark: dark,
             compact: compact,
           );
-          expect(find.text('本地黑胶 SVIP'), findsOneWidget);
+          expect(find.text('至尊SVIP'), findsOneWidget);
           await capture(tester, 'membership-$dark-$compact');
           await reveal(
             tester,
@@ -178,7 +178,7 @@ void main() {
             dark: dark,
             compact: compact,
           );
-          expect(find.text('本地黑胶 SVIP 已启用'), findsOneWidget);
+          expect(find.text('至尊SVIP 已启用'), findsOneWidget);
           await capture(tester, 'settings-$dark-$compact');
           await reveal(tester, find.text('GD Studio'));
           await settle(tester);
@@ -196,7 +196,7 @@ void main() {
     'membership toggle saves per account and enables fallback on activation',
     (tester) async {
       final c = await mount(tester, const NeteaseMembershipPage());
-      final toggle = find.widgetWithText(SwitchListTile, '当前账号启用本地 SVIP');
+      final toggle = find.widgetWithText(SwitchListTile, '当前账号启用至尊SVIP');
       await tester.tap(toggle);
       await settle(tester);
       expect(c.read(neteaseLocalSvipProvider), isFalse);

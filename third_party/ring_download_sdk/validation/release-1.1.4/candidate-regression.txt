@@ -1,0 +1,651 @@
+00:00 +0: loading ${SDK}/test/app_upgrade_download_recovery_test.dart
+00:00 +0: ${SDK}/test/app_upgrade_download_recovery_test.dart: a refreshed digest removes obsolete partial state and starts a verified new package
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.510638Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.556007Z","stage":"https","code":"http_response","http_status":200,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.592906Z","stage":"performance","code":"file_hash_profile","metrics":{"full_sha_us":16811,"full_sha_scans":1}}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.599706Z","stage":"final","code":"apk_verified","verified":true}
+00:00 +1: ${SDK}/test/app_upgrade_download_recovery_test.dart: recreated downloader retains persisted peer provenance on 206
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.636856Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.642138Z","stage":"https","code":"http_response","http_status":206,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.654007Z","stage":"performance","code":"file_hash_profile","metrics":{"full_sha_us":2176,"full_sha_scans":1}}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.657131Z","stage":"final","code":"apk_verified","verified":true}
+00:00 +2: ${SDK}/test/app_upgrade_download_recovery_test.dart: COS interruption cannot report site session bytes or duration
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.676484Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.681164Z","stage":"https","code":"http_response","http_status":200,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:22.690497Z","stage":"https","code":"https_response_rejected","source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:23.196814Z","stage":"https","code":"http_response","http_status":302,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:24.221197Z","stage":"https","code":"http_response","http_status":200,"source":"cos"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:24.224412Z","stage":"https","code":"https_response_rejected","source":"cos"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:24.227453Z","stage":"final","code":"download_failed","verified":false}
+00:01 +3: ${SDK}/test/app_upgrade_download_recovery_test.dart: unfinished error body is cancelled within its total read deadline
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:24.243756Z","stage":"routing","code":"platform_unsupported"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:24.247004Z","stage":"https","code":"http_response","http_status":409,"source":"service_main"}
+[AppUpgradeP2P] {"at":"2026-11-05T02:32:26.252126Z","stage":"final","code":"download_failed","verified":false}
+00:03 +4: loading ${SDK}/test/app_upgrade_file_io_test.dart
+00:04 +4: ${SDK}/test/app_upgrade_file_io_test.dart: HTTPS file diagnostics survive the closed export vocabulary
+00:04 +5: ${SDK}/test/app_upgrade_file_io_test.dart: background hash handles many stream chunks and leaves file unlocked
+00:05 +6: ${SDK}/test/app_upgrade_file_io_test.dart: every hash reads disk again even when path and size are unchanged
+00:05 +7: ${SDK}/test/app_upgrade_file_io_test.dart: empty file has its real digest and missing file propagates failure
+00:05 +8: ${SDK}/test/app_upgrade_file_io_test.dart: rename replaces the old prefix with the exact verified source
+00:05 +9: ${SDK}/test/app_upgrade_file_io_test.dart: rename failure copies bytes but cannot transfer hash verification
+00:05 +10: ${SDK}/test/app_upgrade_file_io_test.dart: copy failure is propagated rather than reporting a promoted file
+00:05 +11: loading ${SDK}/test/app_upgrade_hybrid_flow_test.dart
+00:07 +11: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces admitted peers that fail during body transfer
+00:17 +12: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces a failed admitted peer while another native close is pending
+00:28 +13: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation during admitted source retirement starts no replacement
+00:32 +14: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P body replacement requires the negotiated optional capability
+00:43 +15: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P fills a retired slot while another candidate is still negotiating
+00:45 +16: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement after verified handoff uses the bounded background clock
+00:50 +17: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replacement without a verified handoff retains the startup deadline
+00:53 +18: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation retires a background replacement awaiting its handshake
+00:56 +19: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces two failed candidates and verifies the full file
+00:59 +20: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P does not replace candidates without server capability
+01:01 +21: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P renewed registration cannot repeat an installation attempt
+01:04 +22: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P duplicate candidate keys do not occupy both physical slots
+01:08 +23: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P malformed identity hints preserve session-based fallback
+01:10 +24: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P replaces failed handshake candidates after actual disposal
+01:13 +25: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P keeps failed native owners until actual disposal before replacement
+01:15 +26: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P candidate attempt budget stops after four failed identities
+01:16 +27: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed native disposal cannot admit a replacement
+01:18 +28: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P pending native creation blocks fresh candidate replacement
+01:25 +29: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation during candidate retirement starts no replacement
+01:26 +30: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P adds a late peer after the initial connection budget expires
+01:35 +31: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation stops a stalled late discovery without another RTC owner
+01:41 +32: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P late peer timeout leaves HTTPS and the seed completing normally
+01:56 +33: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P imports the full stopped HTTPS prefix before assigning network pieces
+02:01 +34: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejects corrupt cached data after the initial import window
+02:05 +35: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P cancellation while importing a later cached piece leaves the verified prefix
+02:08 +36: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P completed multisource download preserves foreground user sharing
+02:13 +37: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P rejected peer generation is not reopened by legacy fallback
+02:14 +38: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P closed probe cannot recreate the same peer generation
+02:16 +39: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P failed peer does not block a fresh registration or live channel reuse
+02:19 +40: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry waits for local and server close before fresh identity
+02:23 +41: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: pending
+02:24 +42: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: wrong_identity
+02:25 +43: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: unavailable
+02:26 +44: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: old_server
+02:27 +45: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry refuses unsafe or unsupported cancellation: unknown_version
+02:28 +46: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry is bounded to two offers when both ICE attempts fail
+02:29 +47: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry cannot restart after task cancellation while awaiting ACK
+02:30 +48: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry polls pending closure once then uses its final ACK
+02:32 +49: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry shares the original deadline while ICE never opens
+02:36 +50: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed channel deadline preserves budget reason before delayed task timers
+02:41 +51: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry discards a late first Offer response after the fresh transfer
+02:47 +52: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: recovered
+02:52 +53: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry retains a progressing HTTP bootstrap: unavailable
+02:58 +54: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P seed retry requires an explicit supported integer capability
+02:59 +55: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery control-outage
+03:05 +56: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery range-truncated
+03:08 +57: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery node-and-range-loss
+03:11 +58: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback HTTP recovery cancel
+03:13 +59: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime waits for completed receive and final traffic before HTTP close
+03:13 +60: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime cancels active receiving while retaining its outcome owner
+03:13 +61: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: engine lifetime bounded final traffic failure cannot strand disposal
+03:20 +62: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback external COS requires no hosted metadata or control
+03:20 +63: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P loopback concurrent task cancellation leaves another download running
+03:23 +64: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup uses a later fast source before the first probe times out
+03:29 +65: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P startup cancellation closes every concurrent probe before handoff
+03:30 +66: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine resumes its verified prefix after cancellation
+03:35 +67: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine does not issue a full hash receipt after disk mutation
+03:37 +68: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine divides verified pieces between HTTPS and RTC peer=false
+03:40 +69: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine divides verified pieces between HTTPS and RTC peer=true
+03:44 +70: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine continues via HTTP after a corrupt RTC source
+03:49 +71: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P engine continues via HTTP after a close RTC source
+03:53 +72: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P diagnostics throwing during source failure cannot block HTTPS or disposal
+03:58 +73: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P new service with legacy user node keeps legacy transfer available
+04:03 +74: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract normal
+04:08 +75: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract cellular
+04:11 +76: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract range-mismatch
+04:15 +77: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract etag-mismatch
+04:19 +78: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract corrupt
+04:23 +79: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract oversized
+04:27 +80: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract truncated
+04:31 +81: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract ignored-range
+04:35 +82: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract redirect-cos
+04:39 +83: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-once
+04:46 +84: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-parallel
+04:52 +85: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-fallback
+04:59 +86: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-repeated
+05:08 +87: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-foreign
+05:16 +88: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-quota
+05:23 +89: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-long
+05:30 +90: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-cancel
+05:33 +91: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract contention-external
+05:42 +92: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P whole download HTTP contract cancel
+05:45 +93: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=false sender=false
+05:50 +94: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=false sender=true
+05:53 +95: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=true sender=false
+05:55 +96: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=false service=true sender=true
+05:59 +97: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=false sender=false
+06:02 +98: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=false sender=true
+06:04 +99: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=true sender=false
+06:08 +100: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: P8P compatibility sdk=true service=true sender=true
+06:11 +101: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: SDK consent false receives data but never advertises upload availability
+06:11 +102: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel deadline opt-in=false preserves legacy timeout
+06:12 +103: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel deadline opt-in=true preserves legacy timeout
+06:13 +104: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: negotiating poll is opt-in fast and never overlaps a slow response
+06:14 +105: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel can open after 10 seconds within original 15 second budget
+06:26 +106: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: shared channel wait never extends original startup deadline
+06:27 +107: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: invalid optional startup policy cannot extend budgets or enable fast polls
+06:28 +108: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: fast candidates can arrive before a slow Offer acknowledgement
+06:28 +109: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: full-hash receipt is issued only after the closed file passes SHA
+06:29 +110: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: post-piece disk corruption cannot issue a full-hash receipt
+06:30 +111: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: first verified seed wins immediately even while users are connecting
+06:30 +112: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: silent users never delay a ready verified seed
+06:30 +113: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: negotiated user pipeline verifies the full file with one-piece replenishment
+06:36 +114: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: cancel before any verified source closes every parallel connection
+06:36 +115: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault no-answer keeps HTTPS advancing and verifies the full file
+06:39 +116: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault ice-stall keeps HTTPS advancing and verifies the full file
+06:42 +117: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault no-data keeps HTTPS advancing and verifies the full file
+06:45 +118: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault wrong-probe keeps HTTPS advancing and verifies the full file
+06:48 +119: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault closed-after-takeover keeps HTTPS advancing and verifies the full file
+06:51 +120: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: hybrid fault corrupt-after-takeover keeps HTTPS advancing and verifies the full file
+06:54 +121: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-1 preserves integrity and accounting
+06:55 +122: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed preserves integrity and accounting
+06:56 +123: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-2 preserves integrity and accounting
+06:57 +124: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed-repeat-2 preserves integrity and accounting
+06:58 +125: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start baseline-3 preserves integrity and accounting
+07:00 +126: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start mixed-repeat-3 preserves integrity and accounting
+07:01 +127: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start p2p-fails preserves integrity and accounting
+07:04 +128: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-finishes-first preserves integrity and accounting
+07:05 +129: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-full-corrupt preserves integrity and accounting
+07:07 +130: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-full-truncated preserves integrity and accounting
+07:09 +131: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start cancel-after-https-body preserves integrity and accounting
+07:09 +132: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start multi-prefix preserves integrity and accounting
+07:12 +133: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start partial-handoff preserves integrity and accounting
+07:13 +134: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start p2p-fails-after-handoff preserves integrity and accounting
+07:15 +135: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-body-error preserves integrity and accounting
+07:16 +136: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start resume-partial preserves integrity and accounting
+07:17 +137: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start seed-handoff preserves integrity and accounting
+07:19 +138: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start range-ignored preserves integrity and accounting
+07:19 +139: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-partial preserves integrity and accounting
+07:21 +140: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-full preserves integrity and accounting
+07:22 +141: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-external preserves integrity and accounting
+07:23 +142: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-loop preserves integrity and accounting
+07:24 +143: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-unsafe preserves integrity and accounting
+07:25 +144: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-range-mismatch preserves integrity and accounting
+07:27 +145: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start redirect-etag-mismatch preserves integrity and accounting
+07:28 +146: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start corrupt-prefix preserves integrity and accounting
+07:29 +147: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-slow preserves integrity and accounting
+07:31 +148: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start https-stalls preserves integrity and accounting
+07:33 +149: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start cancel preserves integrity and accounting
+07:33 +150: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-user preserves integrity and accounting
+07:36 +151: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-seed preserves integrity and accounting
+07:38 +152: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-parallel preserves integrity and accounting
+07:40 +153: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-silent preserves integrity and accounting
+07:45 +154: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-http-first preserves integrity and accounting
+07:47 +155: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-cancel preserves integrity and accounting
+07:48 +156: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-late-seed preserves integrity and accounting
+07:58 +157: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-corrupt-http preserves integrity and accounting
+08:01 +158: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-near-complete preserves integrity and accounting
+08:06 +159: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users preserves integrity and accounting
+08:09 +160: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users-race preserves integrity and accounting
+08:11 +161: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-two-users-seed preserves integrity and accounting
+08:14 +162: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-answer-grace preserves integrity and accounting
+08:20 +163: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: HTTPS head start adaptive-late-user preserves integrity and accounting
+08:31 +164: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: legacy candidates are serialized and keep end marker last
+08:31 +165: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: fast signaling cancellation starts no queued candidates or end marker
+08:31 +166: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: seed starts immediately while user discovery is stalled
+08:31 +167: ${SDK}/test/app_upgrade_hybrid_flow_test.dart: batch candidates preserve order, bound payloads and flush EOC last
+08:31 +168: loading ${SDK}/test/app_upgrade_p2p_flow_test.dart
+08:33 +168: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cold leased sharing publishes capability in an immediate heartbeat
+08:33 +169: ${SDK}/test/app_upgrade_p2p_flow_test.dart: metered change during phone pacing permits no late payload
+08:34 +170: ${SDK}/test/app_upgrade_p2p_flow_test.dart: phone cache advertises and delivers leased frames within the original deadline
+08:37 +171: ${SDK}/test/app_upgrade_p2p_flow_test.dart: phone receiver slot survives revocation until native retirement
+08:38 +172: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cold cache restore registers sharing without any receiving/body request
+08:38 +173: ${SDK}/test/app_upgrade_p2p_flow_test.dart: a fresh client can explicitly restore the retained checked file
+08:39 +174: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cold restore refuses corrupt bytes without modifying the cache
+08:39 +175: ${SDK}/test/app_upgrade_p2p_flow_test.dart: sharing never truncates a cache when piece hashes disagree with full SHA
+08:40 +176: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cold restore does no HTTP when consent, foreground or Wi-Fi denies sharing
+08:40 +177: ${SDK}/test/app_upgrade_p2p_flow_test.dart: revocation while restoring manifest cannot register a late seed
+08:40 +178: ${SDK}/test/app_upgrade_p2p_flow_test.dart: main HTTPS source uses backup P2P endpoints and STUN
+08:41 +179: ${SDK}/test/app_upgrade_p2p_flow_test.dart: receive buffer ownership does not await signalling and retires before native RTC reuse
+08:42 +180: ${SDK}/test/app_upgrade_p2p_flow_test.dart: optional receive buffer factory failure preserves verified download
+08:42 +181: ${SDK}/test/app_upgrade_p2p_flow_test.dart: optional candidate and close failures cannot prevent signalling or native disposal
+08:43 +182: ${SDK}/test/app_upgrade_p2p_flow_test.dart: backup download source remains eligible and accepts backup API metadata
+08:43 +183: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer four-piece mode keeps startup single and verifies short tail
+08:47 +184: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer corrupt batch preserves only the persisted verified prefix
+08:50 +185: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer batch timeout resumes HTTPS with full final SHA verification
+08:54 +186: ${SDK}/test/app_upgrade_p2p_flow_test.dart: standard opaque STUN URI accepts the production manifest grammar
+08:54 +187: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed uses one startup piece then bounded four-piece batches
+08:59 +188: ${SDK}/test/app_upgrade_p2p_flow_test.dart: corrupt batch preserves only the persisted prefix for HTTPS
+09:00 +189: ${SDK}/test/app_upgrade_p2p_flow_test.dart: healthy batch renews the timeout after each verified piece
+09:03 +190: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cancellation during a batch releases it without persisting later pieces
+09:03 +191: ${SDK}/test/app_upgrade_p2p_flow_test.dart: batch timeout preserves the first piece and releases the session
+09:05 +192: ${SDK}/test/app_upgrade_p2p_flow_test.dart: manifest mismatch and disabled auto-start never create a session
+09:06 +193: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cellular creates download-only session and receives verified seed pieces
+09:07 +194: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Wi-Fi metered also receives without publishing share pieces
+09:07 +195: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle submits seed offer and candidates before ICE completes
+09:07 +196: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle remote candidates wait for SDP and are deduplicated
+09:08 +197: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle caps candidate posts and preserves IPv6
+09:08 +198: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate signaling HTTP failures are not counted as ICE candidate errors
+09:08 +199: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed trickle queues before Answer and acknowledges repeated delivery once
+09:09 +200: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed trickle ignores an unsupported manifest protocol version
+09:10 +201: ${SDK}/test/app_upgrade_p2p_flow_test.dart: seed trickle stays disabled when the session refuses capability
+09:10 +202: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay recovers one lost seed ACK without reordering
+09:11 +203: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay recovers one lost peer ACK without reordering
+09:12 +204: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay respects bounded failure boundary
+09:13 +205: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay respects legacy failure boundary
+09:13 +206: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay respects semantic failure boundary
+09:14 +207: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay respects cancelled failure boundary
+09:14 +208: ${SDK}/test/app_upgrade_p2p_flow_test.dart: candidate replay binds pending request to closed peer owner
+09:15 +209: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle shared deadline falls back once and ignores late answer
+09:15 +210: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle owner deadline wins delayed task timers and freezes late answer
+09:15 +211: ${SDK}/test/app_upgrade_p2p_flow_test.dart: pending seed request preserves ICE failure ownership reason
+09:15 +212: ${SDK}/test/app_upgrade_p2p_flow_test.dart: pending seed request preserves channel closure ownership reason
+09:15 +213: ${SDK}/test/app_upgrade_p2p_flow_test.dart: unsupported Trickle version retains complete SDP negotiation
+09:16 +214: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle provider sends an answer without waiting for gathering
+09:16 +215: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle cancellation stops candidate posts and releases one session
+09:16 +216: ${SDK}/test/app_upgrade_p2p_flow_test.dart: optional diagnostics rejection retries the terminal result without it
+09:16 +217: ${SDK}/test/app_upgrade_p2p_flow_test.dart: legacy user peer receives complete SDP without candidate posts
+09:17 +218: ${SDK}/test/app_upgrade_p2p_flow_test.dart: session delay consumes the original startup budget
+09:17 +219: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peers delay consumes the original startup budget
+09:17 +220: ${SDK}/test/app_upgrade_p2p_flow_test.dart: open channel without first piece cannot extend startup
+09:17 +221: ${SDK}/test/app_upgrade_p2p_flow_test.dart: complete SDP also obeys manifest startup and gather limits
+09:18 +222: ${SDK}/test/app_upgrade_p2p_flow_test.dart: peer provenance is saved before the first piece reaches disk
+09:18 +223: ${SDK}/test/app_upgrade_p2p_flow_test.dart: user peer is preferred and only verified peer bytes count
+09:19 +224: ${SDK}/test/app_upgrade_p2p_flow_test.dart: failed user peer is deduplicated, then tries the seed
+09:19 +225: ${SDK}/test/app_upgrade_p2p_flow_test.dart: batch timeout after a verified prefix resumes HTTPS at the exact offset
+09:22 +226: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle transfer timeout resumes HTTPS at the exact verified offset
+09:23 +227: ${SDK}/test/app_upgrade_p2p_flow_test.dart: active download duration is checkpointed before a process can exit
+09:28 +228: ${SDK}/test/app_upgrade_p2p_flow_test.dart: Trickle seed negotiation timeout downloads full APK over HTTPS
+09:29 +229: ${SDK}/test/app_upgrade_p2p_flow_test.dart: HTTPS fallback follows explicit COS redirect without leaking service headers
+09:29 +230: ${SDK}/test/app_upgrade_p2p_flow_test.dart: COS interrupted transfer resumes with its own ETag and no service identity
+09:31 +231: ${SDK}/test/app_upgrade_p2p_flow_test.dart: oversized APK response is stopped before writing beyond release size
+09:33 +232: ${SDK}/test/app_upgrade_p2p_flow_test.dart: unfinished redirect body cannot block HTTPS fallback
+09:33 +233: ${SDK}/test/app_upgrade_p2p_flow_test.dart: health build is independent of the business offer threshold
+09:33 +234: ${SDK}/test/app_upgrade_p2p_flow_test.dart: health and manifest build mismatch never starts P2P
+09:34 +235: ${SDK}/test/app_upgrade_p2p_flow_test.dart: stale size refreshes same-build metadata once before retrying P2P
+09:35 +236: ${SDK}/test/app_upgrade_p2p_flow_test.dart: fresh health may change version name without changing business selection
+09:35 +237: ${SDK}/test/app_upgrade_p2p_flow_test.dart: rejected HTTP 200 transport is cancelled before requesting backup
+09:36 +238: ${SDK}/test/app_upgrade_p2p_flow_test.dart: temporary duplicate_in_flight preserves HTTPS prefix and resumes after waiting
+09:38 +239: ${SDK}/test/app_upgrade_p2p_flow_test.dart: temporary concurrent_download_limit preserves HTTPS prefix and resumes after waiting
+09:39 +240: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cancelling during temporary 429 wait sends no second request
+09:40 +241: ${SDK}/test/app_upgrade_p2p_flow_test.dart: first-request contention does not poll or switch sources
+09:40 +242: ${SDK}/test/app_upgrade_p2p_flow_test.dart: HTTPS handles 409 with bounded recovery and final integrity
+09:40 +243: ${SDK}/test/app_upgrade_p2p_flow_test.dart: HTTPS handles 416 with bounded recovery and final integrity
+09:41 +244: ${SDK}/test/app_upgrade_p2p_flow_test.dart: HTTPS handles 429 with bounded recovery and final integrity
+09:41 +245: ${SDK}/test/app_upgrade_p2p_flow_test.dart: corrupt piece is not persisted or advertised as a shareable prefix
+09:41 +246: ${SDK}/test/app_upgrade_p2p_flow_test.dart: disabled service closes P2P immediately rather than polling
+09:41 +247: ${SDK}/test/app_upgrade_p2p_flow_test.dart: COS source never queries manifest, session or WebRTC
+09:41 +248: ${SDK}/test/app_upgrade_p2p_flow_test.dart: outcome failure never delays HTTPS fallback and still attempts leave
+09:41 +249: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cancel keeps verified prefix and reports client_interrupted
+09:42 +250: ${SDK}/test/app_upgrade_p2p_flow_test.dart: complete cache verifies the short last piece; partial HTTPS tail is retained
+09:42 +251: ${SDK}/test/app_upgrade_p2p_flow_test.dart: receiver requires start, exact index/end/length and checksum
+09:42 +252: ${SDK}/test/app_upgrade_p2p_flow_test.dart: batch parser rejects duplicates, fractions, overflow and invalid indices
+09:42 +253: ${SDK}/test/app_upgrade_p2p_flow_test.dart: verified cache provides ordered batches and switching to cellular withdraws sharing
+09:42 +254: ${SDK}/test/app_upgrade_p2p_flow_test.dart: runtime consent revocation closes an existing cache upload immediately
+09:43 +255: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure ignores a stale low cached amount
+09:43 +256: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure ignores a stale high cached amount
+09:44 +257: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure bounds a burst without cached events
+09:44 +258: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure retains one fixed three second drain budget
+09:47 +259: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure query times out without queuing payload
+09:48 +260: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure revocation blocks a late query result
+09:48 +261: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure closure during policy read blocks the next send
+09:48 +262: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure rejects negative queue observation
+09:48 +263: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native upload backpressure rejects error queue observation
+09:49 +264: ${SDK}/test/app_upgrade_p2p_flow_test.dart: revocation during session creation preserves receiving and advertises zero pieces
+09:49 +265: ${SDK}/test/app_upgrade_p2p_flow_test.dart: diagnostics contain no tokens, SDP, addresses or identifiers
+09:50 +266: ${SDK}/test/app_upgrade_p2p_flow_test.dart: expired bearer authorization ends P2P before seed negotiation
+09:50 +267: ${SDK}/test/app_upgrade_p2p_flow_test.dart: unknown server error text cannot escape into diagnostic logs
+09:51 +268: ${SDK}/test/app_upgrade_p2p_flow_test.dart: batch busy guard prevents concurrent uploads from interleaving
+09:51 +269: ${SDK}/test/app_upgrade_p2p_flow_test.dart: negotiated upload window accepts refill at piece-end without interleaving
+09:55 +270: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting reports payload and retransmission cumulatively
+09:55 +271: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting revokes immediately and joins report before leave
+09:56 +272: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting joins an accepted in-flight send on revocation
+09:56 +273: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting excludes rejected native payload sends
+09:56 +274: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting optional 404 keeps subsequent batches working
+09:57 +275: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting retries the final snapshot without adding twice
+09:57 +276: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting retains the same receiver total across RTC reconnect
+09:59 +277: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload accounting bounds stalled reports and still retires credentials
+10:08 +278: ${SDK}/test/app_upgrade_p2p_flow_test.dart: continuous cache stops immediately in background and rejoins in foreground
+10:08 +279: ${SDK}/test/app_upgrade_p2p_flow_test.dart: continuous cache resumes only on unmetered Wi-Fi and explicit stop forgets it
+10:08 +280: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload file-read retirement joins actual IO before stop (false)
+10:12 +281: ${SDK}/test/app_upgrade_p2p_flow_test.dart: upload file-read retirement joins actual IO before stop (true)
+10:15 +282: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime stop joins dispose before outcome and leave
+10:15 +283: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime dispose runs even after native close rejects
+10:15 +284: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime stalled close cannot prevent bounded disposal
+10:19 +285: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime dispose failure stays visible and permits leave
+10:19 +286: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime stalled disposal is bounded and stays visible
+10:22 +287: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cache sharing stop waits for its final outcome and leave
+10:22 +288: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cache sharing stop joins an already paused session cleanup
+10:23 +289: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cache sharing stop during pending session cannot rejoin later
+10:23 +290: ${SDK}/test/app_upgrade_p2p_flow_test.dart: background during receive-session creation revokes upload without cancelling receive
+10:23 +291: ${SDK}/test/app_upgrade_p2p_flow_test.dart: explicit stop during cache handoff cannot rejoin a late sharing session
+10:23 +292: ${SDK}/test/app_upgrade_p2p_flow_test.dart: background lifecycle prevents completed-cache sharing
+10:23 +293: ${SDK}/test/app_upgrade_p2p_flow_test.dart: mixed peer and seed transfer reports only verified user bytes
+10:25 +294: ${SDK}/test/app_upgrade_p2p_flow_test.dart: receiving continues across Wi-Fi to cellular while sharing is withdrawn
+10:25 +295: ${SDK}/test/app_upgrade_p2p_flow_test.dart: incomplete ICE never submits SDP and quickly preserves HTTPS fallback
+10:25 +296: ${SDK}/test/app_upgrade_p2p_flow_test.dart: server may revoke sharing without disabling reception on Wi-Fi
+10:25 +297: ${SDK}/test/app_upgrade_p2p_flow_test.dart: ICE finishing after four seconds sends the complete seed offer
+10:30 +298: ${SDK}/test/app_upgrade_p2p_flow_test.dart: completion callback wakes ICE even if state query lags
+10:30 +299: ${SDK}/test/app_upgrade_p2p_flow_test.dart: state query recovers an ICE completion whose callback was lost
+10:30 +300: ${SDK}/test/app_upgrade_p2p_flow_test.dart: ICE callback wakes a stalled native state query
+10:30 +301: ${SDK}/test/app_upgrade_p2p_flow_test.dart: cancel during ICE closes connection without publishing any offer
+10:30 +302: ${SDK}/test/app_upgrade_p2p_flow_test.dart: native lifetime late connection creation is disposed after its deadline
+10:31 +303: ${SDK}/test/app_upgrade_p2p_flow_test.dart: provider answer waits for its own ICE and uses complete local SDP
+10:31 +304: ${SDK}/test/app_upgrade_p2p_flow_test.dart: ICE timeout has one immutable outcome; late completion cannot send offer
+10:32 +305: ${SDK}/test/app_upgrade_p2p_flow_test.dart: duplicate download calls share one session and file writer
+10:32 +306: ${SDK}/test/app_upgrade_p2p_flow_test.dart: session transport retry reuses body, installation identity and key
+10:32 +307: ${SDK}/test/app_upgrade_p2p_flow_test.dart: pending session metadata retains original body across network changes
+10:32 +308: ${SDK}/test/app_upgrade_p2p_flow_test.dart: outcome timeout retries exact snapshot and conflict stops retries
+10:33 +309: loading ${SDK}/test/app_upgrade_seed_candidates_test.dart
+10:34 +309: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates retain order and replay advances no duplicate work
+10:34 +310: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates invalid batch leaves acknowledgement and queue unchanged
+10:34 +311: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates ignore retired generation while accepting new sequence gaps
+10:34 +312: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates reject foreign generation future bound and reversed order
+10:34 +313: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates keep fixed candidate budget and reserve final marker
+10:34 +314: ${SDK}/test/app_upgrade_seed_candidates_test.dart: seed candidates invalid native payload cannot be acknowledged
+10:34 +315: loading ${SDK}/test/app_upgrade_upload_diagnostics_test.dart
+10:36 +315: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: all source stop reasons survive JSON without identities or exception text
+10:36 +316: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: each fixed source profile is a small complete JSON record
+10:36 +317: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: fixed per-source metrics cross the closed diagnostic boundary
+10:36 +318: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: upload_send_timeout survives the actual diagnostic JSON boundary
+10:36 +319: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: upload_queue_timeout survives the actual diagnostic JSON boundary
+10:36 +320: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: upload_buffer_query_timeout survives the actual diagnostic JSON boundary
+10:36 +321: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: upload_buffer_unavailable survives the actual diagnostic JSON boundary
+10:36 +322: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: upload_timeout survives the actual diagnostic JSON boundary
+10:36 +323: ${SDK}/test/app_upgrade_upload_diagnostics_test.dart: untrusted values remain excluded by the closed vocabulary
+10:36 +324: loading ${SDK}/test/app_upgrade_v40_contract_test.dart
+10:37 +324: ${SDK}/test/app_upgrade_v40_contract_test.dart: v40 download URL boundary accepts only HTTPS download paths on configured service hosts
+10:37 +325: ${SDK}/test/app_upgrade_v40_contract_test.dart: v40 download URL boundary accepts a well-formed single byte range only
+10:37 +326: loading ${SDK}/test/cache_verifier_test.dart
+10:38 +326: ${SDK}/test/cache_verifier_test.dart: one isolate scan checks full identity and every piece and releases file
+10:38 +327: ${SDK}/test/cache_verifier_test.dart: concurrent same-file restorations serialize and reuse one valid receipt
+10:39 +328: ${SDK}/test/cache_verifier_test.dart: changed file stamp invalidates receipt even at the same path and size
+10:39 +329: ${SDK}/test/cache_verifier_test.dart: piece identity cannot reuse a matching full-file receipt or truncate file
+10:40 +330: loading ${SDK}/test/mobile_upload_budget_test.dart
+10:41 +330: ${SDK}/test/mobile_upload_budget_test.dart: payload budget survives receiver reconnection without a new burst
+10:41 +331: ${SDK}/test/mobile_upload_budget_test.dart: revocation wakes pacing immediately and keeps receiver ownership
+10:42 +332: ${SDK}/test/mobile_upload_budget_test.dart: policy recheck rejects payload before consuming credit
+10:42 +333: loading ${SDK}/test/native_probe_evidence_test.dart
+10:43 +333: ${SDK}/test/native_probe_evidence_test.dart: owner samples are copied and zero final values remain actual values
+10:43 +334: ${SDK}/test/native_probe_evidence_test.dart: zero-only and nonzero initial samples are never repaired or invented
+10:43 +335: ${SDK}/test/native_probe_evidence_test.dart: two-owner evidence requires simultaneous counts in the same query
+10:43 +336: ${SDK}/test/native_probe_evidence_test.dart: buffer peak preserves every sample before actual first pause
+10:43 +337: ${SDK}/test/native_probe_evidence_test.dart: invalid owner inputs poison final evidence instead of hiding errors
+10:43 +338: ${SDK}/test/native_probe_evidence_test.dart: out of order time and lifecycle overflow cannot leave a valid subset
+10:43 +339: ${SDK}/test/native_probe_evidence_test.dart: overlap copies the actual incomplete and cancelled task samples
+10:43 +340: ${SDK}/test/native_probe_evidence_test.dart: raw evidence has a fixed encoded size bound
+10:43 +341: ${SDK}/test/native_probe_evidence_test.dart: log record stays below the observed tablet limit without data loss
+10:43 +342: ${SDK}/test/native_probe_evidence_test.dart: maximum lifecycle and overlap observations fit the log transport
+10:43 +343: ${SDK}/test/native_probe_evidence_test.dart: actual Dart encoded cache fixture is consumable by the strict reader
+P8P_DART_EVIDENCE_FIXTURE {"version":1,"phases":[{"phase":"main_started","elapsed_ms":0},{"phase":"sharing_finish_received","elapsed_ms":1000},{"phase":"progress_subscription_cancel_begin","elapsed_ms":2000},{"phase":"progress_subscription_cancel_end","elapsed_ms":3000},{"phase":"sdk_dispose_begin","elapsed_ms":4000},{"phase":"sdk_dispose_end","elapsed_ms":5000},{"phase":"probe_storage_delete_begin","elapsed_ms":6000},{"phase":"probe_storage_delete_end","elapsed_ms":7000},{"phase":"final_native_owners_begin","elapsed_ms":8000},{"phase":"final_native_owners_end","elapsed_ms":9000},{"phase":"disposed_marker_queued","elapsed_ms":10000}],"native":{"queries":3,"initial":{"query":1,"elapsed_ms":5,"counts":{"peerConnections":0,"dataChannels":0,"channelObservers":0}},"final":{"query":3,"elapsed_ms":8500,"counts":{"peerConnections":0,"dataChannels":0,"channelObservers":0}},"positive_one":{"query":2,"elapsed_ms":200,"counts":{"peerConnections":1,"dataChannels":1,"channelObservers":1}},"positive_two":null},"lifecycle":[{"state":"paused","elapsed_ms":300},{"state":"resumed","elapsed_ms":700}],"buffers":{"queries_before_pause":1,"peak_bytes_before_pause":300000},"overlap":{"start":null,"end":null}}
+P8P_DART_TRANSPORT_FIXTURE P8P_NATIVE_EVIDENCE_GZIP H4sIAAAAAAAACq2UQW7bMBBF7zJrLqS4aVJtc4AeICgIihrZA9NDhUM6MAzdPaDYtLEoBCnQnUTN/4+c+eIVzhiEPEPXKpgORlCge76WR+jgZIi1RBMiDqAAnZkEB30S6JpZ/a2TgwnEez0Skxx0QIt0riRt09yopuD3AUW0pF5soCmSZ20NW3S6xz3xyuDuXwyQ1/zdSi7DUQ8kkxfcxH37pL52v68316OW6IPZox7QYdzGfP+KsOY9rGQjsXGaTaQzav/KGGQT9/gFXU37sVL97sOgTyYcMeiXhGlz4M38S0Fxh+4KLwkD5ZTtFBBTJOPely9LCm9aqsD6xFFyyYQYnjwz2jzlnEAFg4nm6WCY0ZUFW15+9oIhZzvndFbljB84u1VL7pvmf6EmL1RayfiBeFcl+VNguwa2W8D2BhhfPXScnJsVOBrRXqzD5XeWaOKSLJOkGtKuDPa9JqCkU1X0UObYp3FcyH8GqXscfUC9WJdrBM1R95dYfcu/X2aBP2NwZsouy91Sdq0gp64cYH4DjysqMpoEAAA=
+10:43 +344: loading ${SDK}/test/p8p_coordinator_test.dart
+10:44 +344: ${SDK}/test/p8p_coordinator_test.dart: source diagnostic counters keep fixed aliases and exclude raw IDs
+10:45 +345: ${SDK}/test/p8p_coordinator_test.dart: invalid and duplicate diagnostic aliases do not change source admission
+10:45 +346: ${SDK}/test/p8p_coordinator_test.dart: failed source diagnostics cannot credit verified bytes
+10:45 +347: ${SDK}/test/p8p_coordinator_test.dart: admission wait releases the prefix and HTTP rejoins after Retry-After
+10:47 +348: ${SDK}/test/p8p_coordinator_test.dart: a faster late user peer wins work from an already warm seed
+10:48 +349: ${SDK}/test/p8p_coordinator_test.dart: a late cold source probes ahead of a proven writable prefix
+10:49 +350: ${SDK}/test/p8p_coordinator_test.dart: a cold lookahead prefix window ends with verified
+10:50 +351: ${SDK}/test/p8p_coordinator_test.dart: a cold lookahead prefix window ends with stalled
+10:51 +352: ${SDK}/test/p8p_coordinator_test.dart: a cold lookahead prefix window ends with deadline
+10:52 +353: ${SDK}/test/p8p_coordinator_test.dart: shared-source queue time does not demote the faster source
+10:53 +354: ${SDK}/test/p8p_coordinator_test.dart: remaining queue estimate handles contiguous progress
+10:55 +355: ${SDK}/test/p8p_coordinator_test.dart: remaining queue estimate handles oversized progress
+10:57 +356: ${SDK}/test/p8p_coordinator_test.dart: remaining queue estimate handles negative progress
+10:58 +357: ${SDK}/test/p8p_coordinator_test.dart: partial body cannot claim a bodyless admission release
+10:58 +358: ${SDK}/test/p8p_coordinator_test.dart: cancellation closes a deferred source without waiting or retrying
+10:59 +359: ${SDK}/test/p8p_coordinator_test.dart: a progressing prefix is not rescued solely because its whole piece is old
+11:00 +360: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery verified
+11:00 +361: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery stalled
+11:01 +362: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery deadline
+11:02 +363: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery cancelled
+11:02 +364: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery capped
+11:03 +365: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery not_tail
+11:04 +366: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery no_advice
+11:04 +367: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery oversized_advice
+11:05 +368: ${SDK}/test/p8p_coordinator_test.dart: bounded RTC tail recovery no_progress
+11:06 +369: ${SDK}/test/p8p_coordinator_test.dart: a prefix that stops progressing is still rescued before expiry
+11:07 +370: ${SDK}/test/p8p_coordinator_test.dart: continuous body progress never extends the hard request deadline
+11:07 +371: ${SDK}/test/p8p_coordinator_test.dart: startup probes share reservations and transfer into the running scheduler
+11:08 +372: ${SDK}/test/p8p_coordinator_test.dart: startup timeout retains its reservation until the physical owner stops
+11:08 +373: ${SDK}/test/p8p_coordinator_test.dart: partial piece reports the original eight second deadline and one second stop grace
+11:08 +374: ${SDK}/test/p8p_coordinator_test.dart: slow cold prefix is rescued before expiry and is not refilled
+11:10 +375: ${SDK}/test/p8p_coordinator_test.dart: different sources retain a bounded lookahead and one verified file
+11:11 +376: ${SDK}/test/p8p_coordinator_test.dart: four origins share work concurrently and assemble one verified file
+11:13 +377: ${SDK}/test/p8p_coordinator_test.dart: slow tail hedges only within the total duplicate and slot budget
+11:13 +378: ${SDK}/test/p8p_coordinator_test.dart: budget zero falls back after timeout without unbudgeted retransmission
+11:14 +379: ${SDK}/test/p8p_coordinator_test.dart: cancellation waits for the actual HTTP owner before releasing its slot
+11:14 +380: ${SDK}/test/p8p_coordinator_test.dart: bad source is retired while another completes its missing pieces
+11:15 +381: ${SDK}/test/p8p_coordinator_test.dart: RTC cancellation acknowledged before poll does not retire its source
+11:15 +382: ${SDK}/test/p8p_coordinator_test.dart: HTTP completion after ledger expiry does not retire its live source
+11:16 +383: ${SDK}/test/p8p_coordinator_test.dart: ordinary source errors cannot claim cancellation by copying its text
+11:16 +384: ${SDK}/test/p8p_coordinator_test.dart: failed source admission waits for physical close and retains metrics
+11:16 +385: ${SDK}/test/p8p_coordinator_test.dart: healthy sources cannot be retired for replacement
+11:16 +386: ${SDK}/test/p8p_coordinator_test.dart: retired sources keep a six-record lifetime admission bound
+11:17 +387: ${SDK}/test/p8p_coordinator_test.dart: task close during failed source retirement cannot reopen admission
+11:17 +388: ${SDK}/test/p8p_coordinator_test.dart: failed source close cannot release an admission slot
+11:17 +389: ${SDK}/test/p8p_coordinator_test.dart: paused proof cannot write until HTTPS has yielded ownership
+11:17 +390: loading ${SDK}/test/p8p_leases_test.dart
+11:19 +390: ${SDK}/test/p8p_leases_test.dart: bodyless admission keeps capacity until physical stop without using a body attempt
+11:19 +391: ${SDK}/test/p8p_leases_test.dart: admission release never refunds earlier payload or ordinary cancellation
+11:19 +392: ${SDK}/test/p8p_leases_test.dart: invalid local bounds cannot create unbounded reservations
+11:19 +393: ${SDK}/test/p8p_leases_test.dart: bodyless admission exemptions are bounded across the entire task
+11:19 +394: ${SDK}/test/p8p_leases_test.dart: invalid indices and identities never reserve a slot
+11:19 +395: ${SDK}/test/p8p_leases_test.dart: ready and writing pieces count until contiguous commit
+11:19 +396: ${SDK}/test/p8p_leases_test.dart: expiry reserves its slot until actual transport stop
+11:19 +397: ${SDK}/test/p8p_leases_test.dart: a cancel frame alone does not create free capacity
+11:19 +398: ${SDK}/test/p8p_leases_test.dart: foreign generation objects cannot complete equal request IDs
+11:19 +399: ${SDK}/test/p8p_leases_test.dart: hedging needs age, another source, a slot and repeat bytes
+11:19 +400: ${SDK}/test/p8p_leases_test.dart: retry cannot refund reserved duplicate traffic
+11:19 +401: ${SDK}/test/p8p_leases_test.dart: attempt count stays bounded even with a larger traffic budget
+11:19 +402: ${SDK}/test/p8p_leases_test.dart: task deadline cancels active work and rejects late responses
+11:19 +403: ${SDK}/test/p8p_leases_test.dart: verified resume prefix cannot be leased again
+11:19 +404: ${SDK}/test/p8p_leases_test.dart: clock going backwards is rejected
+11:19 +405: ${SDK}/test/p8p_leases_test.dart: random cancellation, arrival and write order preserve bounds
+11:19 +406: loading ${SDK}/test/p8p_lifecycle_file_io_test.dart
+11:20 +406: ${SDK}/test/p8p_lifecycle_file_io_test.dart: piece read holds an actual regular-file owner across retirement
+11:23 +407: ${SDK}/test/p8p_lifecycle_file_io_test.dart: write has real persisted bytes and keeps its handle until return
+11:26 +408: ${SDK}/test/p8p_lifecycle_file_io_test.dart: premature close is observed, never hidden by a helper close wait
+11:29 +409: ${SDK}/test/p8p_lifecycle_file_io_test.dart: late transfer IO is counted while its real behavior stays visible
+11:29 +410: ${SDK}/test/p8p_lifecycle_file_io_test.dart: unrelated native files are never delayed by an armed gate
+11:29 +411: ${SDK}/test/p8p_lifecycle_file_io_test.dart: native open failure reaches the caller without a fabricated owner
+11:29 +412: loading ${SDK}/test/p8p_ordered_writer_test.dart
+11:30 +412: ${SDK}/test/p8p_ordered_writer_test.dart: out of order sources produce one contiguous verified file
+11:31 +413: ${SDK}/test/p8p_ordered_writer_test.dart: cancel waits for an ongoing write and discards later ready pieces
+11:32 +414: ${SDK}/test/p8p_ordered_writer_test.dart: late old callbacks cannot enter a new writer for the same file
+11:32 +415: ${SDK}/test/p8p_ordered_writer_test.dart: corrupt or partial bodies never become ready or touch the file
+11:33 +416: ${SDK}/test/p8p_ordered_writer_test.dart: mismatched content hash is rejected before opening the file
+11:33 +417: ${SDK}/test/p8p_ordered_writer_test.dart: unverified or partial resume cannot silently become a full prefix
+11:33 +418: ${SDK}/test/p8p_ordered_writer_test.dart: task deadline during write clears ready payloads after that write
+11:34 +419: ${SDK}/test/p8p_ordered_writer_test.dart: disk failure fences future arrivals and reports cleanup failure
+11:34 +420: loading ${SDK}/test/p8p_receiver_test.dart
+11:36 +420: ${SDK}/test/p8p_receiver_test.dart: P8P cancellation fails queued pieces without issuing replacement work
+11:36 +421: ${SDK}/test/p8p_receiver_test.dart: receiver slow consumer adaptive=false bounds queue and verifies every payload
+11:37 +422: ${SDK}/test/p8p_receiver_test.dart: receiver slow consumer adaptive=true bounds queue and verifies every payload
+11:39 +423: loading ${SDK}/test/p8p_source_goodput_test.dart
+11:40 +423: ${SDK}/test/p8p_source_goodput_test.dart: serial delivery over two queued requests retains aggregate link rate
+11:40 +424: ${SDK}/test/p8p_source_goodput_test.dart: parallel completions at the same instant share their elapsed time
+11:40 +425: ${SDK}/test/p8p_source_goodput_test.dart: idle gaps without physical requests do not lower source goodput
+11:40 +426: ${SDK}/test/p8p_source_goodput_test.dart: unverified or cancelled work cannot produce a positive sample
+11:40 +427: ${SDK}/test/p8p_source_goodput_test.dart: an idle source with stale samples starts a new measurement epoch
+11:40 +428: ${SDK}/test/p8p_source_goodput_test.dart: old slow completions leave the bounded recent-goodput window
+11:40 +429: loading ${SDK}/test/p8p_transfer_protocol_test.dart
+11:42 +429: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector hello
+11:42 +430: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector get
+11:42 +431: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector cancel
+11:42 +432: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector future_version
+11:42 +433: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector boolean_version
+11:42 +434: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector fractional_generation
+11:42 +435: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector zero_id
+11:42 +436: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector large_id
+11:42 +437: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector negative_index
+11:42 +438: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector index_outside_manifest
+11:42 +439: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector unknown_type
+11:42 +440: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector invalid_sha
+11:42 +441: ${SDK}/test/p8p_transfer_protocol_test.dart: shared control vector not_an_object
+11:42 +442: ${SDK}/test/p8p_transfer_protocol_test.dart: shared frame vector body
+11:42 +443: ${SDK}/test/p8p_transfer_protocol_test.dart: shared frame vector bad_magic
+11:42 +444: ${SDK}/test/p8p_transfer_protocol_test.dart: shared frame vector zero_id
+11:42 +445: ${SDK}/test/p8p_transfer_protocol_test.dart: shared frame vector offset_outside_piece
+11:42 +446: ${SDK}/test/p8p_transfer_protocol_test.dart: shared frame vector empty_body
+11:42 +447: ${SDK}/test/p8p_transfer_protocol_test.dart: optional transfer capability has strict independent bounds
+11:42 +448: loading ${SDK}/test/p8p_transfer_receiver_test.dart
+11:44 +448: ${SDK}/test/p8p_transfer_receiver_test.dart: framed out of order pieces use the existing verified prefix writer
+11:44 +449: ${SDK}/test/p8p_transfer_receiver_test.dart: cancel frees buffers but keeps reservation until ordered ack
+11:44 +450: ${SDK}/test/p8p_transfer_receiver_test.dart: old generation and completed request frames cannot allocate
+11:45 +451: ${SDK}/test/p8p_transfer_receiver_test.dart: unowned request and malformed size cannot allocate beyond budget
+11:45 +452: ${SDK}/test/p8p_transfer_receiver_test.dart: wrong binary offset closes the source and never writes a piece
+11:45 +453: ${SDK}/test/p8p_transfer_receiver_test.dart: checksum failure cannot become ready or persisted
+11:45 +454: ${SDK}/test/p8p_transfer_receiver_test.dart: lease expiry requests cancellation before accepting more data
+11:45 +455: ${SDK}/test/p8p_transfer_receiver_test.dart: failed transport cleanup retains capacity instead of admitting work
+11:45 +456: ${SDK}/test/p8p_transfer_receiver_test.dart: source failure preserves another source ready piece and writer
+11:46 +457: loading ${SDK}/test/p8p_transfer_sender_test.dart
+11:47 +457: ${SDK}/test/p8p_transfer_sender_test.dart: paced phone requires capacity support before body: false
+11:47 +458: ${SDK}/test/p8p_transfer_sender_test.dart: paced phone requires capacity support before body: true
+11:48 +459: ${SDK}/test/p8p_transfer_sender_test.dart: two queued leases preserve identities offsets and the full SHA
+11:48 +460: ${SDK}/test/p8p_transfer_sender_test.dart: close waits for a physical read and never queues its late payload
+11:48 +461: ${SDK}/test/p8p_transfer_sender_test.dart: active cancel is acknowledged only after the read owner ends
+11:48 +462: ${SDK}/test/p8p_transfer_sender_test.dart: cancel during a pacing send admits no late body before acknowledgement
+11:48 +463: ${SDK}/test/p8p_transfer_sender_test.dart: queued cancellation has no file read and no payload owner
+11:48 +464: ${SDK}/test/p8p_transfer_sender_test.dart: request identity reuse stops the source while joining its read
+11:48 +465: ${SDK}/test/p8p_transfer_sender_test.dart: sender integrates with actual SDK leases writer and full file verification
+11:49 +466: loading ${SDK}/test/p8p_window_test.dart
+11:50 +466: ${SDK}/test/p8p_window_test.dart: P8P diagnostics preserve closed names and bounded window metrics
+11:50 +467: ${SDK}/test/p8p_window_test.dart: P8P shared request vector legacy
+11:50 +468: ${SDK}/test/p8p_window_test.dart: P8P shared request vector disabled
+11:50 +469: ${SDK}/test/p8p_window_test.dart: P8P shared request vector unknown-version
+11:50 +470: ${SDK}/test/p8p_window_test.dart: P8P shared request vector boolean-version
+11:50 +471: ${SDK}/test/p8p_window_test.dart: P8P shared request vector float-version
+11:50 +472: ${SDK}/test/p8p_window_test.dart: P8P shared request vector string-version
+11:50 +473: ${SDK}/test/p8p_window_test.dart: P8P shared request vector non-object
+11:50 +474: ${SDK}/test/p8p_window_test.dart: P8P shared request vector window-one
+11:50 +475: ${SDK}/test/p8p_window_test.dart: P8P shared request vector window-two
+11:50 +476: ${SDK}/test/p8p_window_test.dart: P8P shared request vector window-four
+11:50 +477: ${SDK}/test/p8p_window_test.dart: P8P shared request vector zero
+11:50 +478: ${SDK}/test/p8p_window_test.dart: P8P shared request vector negative
+11:50 +479: ${SDK}/test/p8p_window_test.dart: P8P shared request vector too-large
+11:50 +480: ${SDK}/test/p8p_window_test.dart: P8P shared request vector missing
+11:50 +481: ${SDK}/test/p8p_window_test.dart: P8P shared request vector boolean
+11:50 +482: ${SDK}/test/p8p_window_test.dart: P8P shared request vector float
+11:50 +483: ${SDK}/test/p8p_window_test.dart: P8P shared request vector string
+11:50 +484: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector absent
+11:50 +485: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector valid
+11:50 +486: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector future
+11:50 +487: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector boolean
+11:50 +488: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector oversized
+11:50 +489: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector different-limit
+11:50 +490: ${SDK}/test/p8p_window_test.dart: P8P shared capability vector missing-feature
+11:50 +491: ${SDK}/test/p8p_window_test.dart: P8P grows only after sustained network pressure and keeps a hard bound
+11:50 +492: ${SDK}/test/p8p_window_test.dart: P8P bounds ready buffers when the actual consumer is slow
+11:50 +493: ${SDK}/test/p8p_window_test.dart: P8P ignores timer noise and isolated pressure spikes
+11:50 +494: ${SDK}/test/p8p_window_test.dart: P8P rejects impossible samples before changing policy
+11:50 +495: loading ${SDK}/test/p8p_writer_pipeline_test.dart
+11:51 +495: ${SDK}/test/p8p_writer_pipeline_test.dart: writing prefix permits bounded network prefetch
+11:53 +496: ${SDK}/test/p8p_writer_pipeline_test.dart: blocked write does not postpone network expiry or physical stop
+11:53 +497: ${SDK}/test/p8p_writer_pipeline_test.dart: cancel discards prefetched buffers and awaits the physical writer
+11:54 +498: ${SDK}/test/p8p_writer_pipeline_test.dart: write failure remains observable after bounded prefetch
+11:55 +499: loading ${SDK}/test/receive_buffer_test.dart
+11:56 +499: ${SDK}/test/receive_buffer_test.dart: only numeric, unicast host UDP candidates are eligible
+11:56 +500: ${SDK}/test/receive_buffer_test.dart: batches at most eight bindings, deduplicates a wildcard port, and exposes no SDP
+11:56 +501: ${SDK}/test/receive_buffer_test.dart: a candidate arriving while a batch is pending gets only one remaining batch
+11:56 +502: ${SDK}/test/receive_buffer_test.dart: retirement fences a delayed begin and old candidates cannot tune a new owner
+11:56 +503: ${SDK}/test/receive_buffer_test.dart: missing plugin, rejected native capability and host diagnostics cannot fail close
+11:56 +504: ${SDK}/test/receive_buffer_test.dart: stalled native replies have a fixed bound and late replies emit no result
+11:57 +505: ${SDK}/test/receive_buffer_test.dart: an unresponsive tuning call reports a bounded optional failure while the owner stays live
+11:57 +506: loading ${SDK}/test/sdk_cache_sharing_test.dart
+11:58 +506: ${SDK}/test/sdk_cache_sharing_test.dart: public restore delegates a hosted authorized snapshot without downloading
+11:58 +507: ${SDK}/test/sdk_cache_sharing_test.dart: external COS and explicit opt-out never invoke cache sharing
+11:58 +508: ${SDK}/test/sdk_cache_sharing_test.dart: a restore cannot compete with the active receive owner
+11:58 +509: ${SDK}/test/sdk_cache_sharing_test.dart: disposed SDK refuses restoring a retained file
+11:58 +510: ${SDK}/test/sdk_cache_sharing_test.dart: explicit stop forgets the artifact and requires a new opt-in
+11:58 +511: loading ${SDK}/test/sdk_contract_test.dart
+11:59 +511: ${SDK}/test/sdk_contract_test.dart: SDK status version matches source package metadata
+11:59 +512: ${SDK}/test/sdk_contract_test.dart: sharing waits for a positively resumed lifecycle state
+11:59 +513: ${SDK}/test/sdk_contract_test.dart: invalid applications and insecure requests fail before transfer
+11:59 +514: ${SDK}/test/sdk_contract_test.dart: task resolves only after exact file size and SHA are verified
+11:59 +515: ${SDK}/test/sdk_contract_test.dart: a transport returning corrupt bytes never produces a successful receipt
+11:59 +516: ${SDK}/test/sdk_contract_test.dart: truncated files and an over-optimistic progress callback are rejected
+11:59 +517: ${SDK}/test/sdk_contract_test.dart: cancellation before scheduled start performs no engine or network work
+11:59 +518: ${SDK}/test/sdk_contract_test.dart: active tenant is exclusive even across SDK instances; other tenants proceed
+11:59 +519: ${SDK}/test/sdk_contract_test.dart: dispose cancels a running transfer, awaits cleanup, and is idempotent
+11:59 +520: ${SDK}/test/sdk_contract_test.dart: transport errors expose no signed URL or raw exception text
+11:59 +521: ${SDK}/test/sdk_contract_test.dart: standalone SDK uses actual HTTPS engine for a business-selected CDN URL
+11:59 +522: ${SDK}/test/sdk_contract_test.dart: sharing is opt-in and does not follow a metered or unknown network
+11:59 +523: ${SDK}/test/sdk_contract_test.dart: installation revalidation rejects a file changed after successful download
+11:59 +524: ${SDK}/test/sdk_contract_test.dart: missing verification file returns a stable storage error
+11:59 +525: ${SDK}/test/sdk_contract_test.dart: hosted service URLs cannot cross the configured application boundary
+11:59 +526: loading ${SDK}/test/sdk_external_https_test.dart
+12:00 +526: ${SDK}/test/sdk_external_https_test.dart: COS URL alone completes while hosted metadata is unavailable
+12:01 +527: ${SDK}/test/sdk_external_https_test.dart: P8P opt-in never makes external COS depend on hosted health
+12:01 +528: ${SDK}/test/sdk_external_https_test.dart: LifeRing COS response accepts absent size/hash and stale protocol
+12:01 +529: ${SDK}/test/sdk_external_https_test.dart: provided SHA remains enforced for external downloads
+12:01 +530: ${SDK}/test/sdk_external_https_test.dart: known size without SHA is a size-only receipt
+12:01 +531: ${SDK}/test/sdk_external_https_test.dart: SHA without known size is supported for an external source
+12:01 +532: ${SDK}/test/sdk_external_https_test.dart: wrong supplied SHA cannot yield download success
+12:01 +533: ${SDK}/test/sdk_external_https_test.dart: wrong supplied size cannot yield download success
+12:01 +534: ${SDK}/test/sdk_external_https_test.dart: chunked unknown-length body reports real bytes and final actual total
+12:01 +535: ${SDK}/test/sdk_external_https_test.dart: truncated HTTP body fails after bounded recovery attempts
+12:01 +536: ${SDK}/test/sdk_external_https_test.dart: cancelled COS transfer resumes with source-scoped strong ETag
+12:01 +537: ${SDK}/test/sdk_external_https_test.dart: unknown identity without ETag restarts safely after cancellation
+12:01 +538: ${SDK}/test/sdk_external_https_test.dart: server ignoring Range replaces the partial instead of appending
+12:01 +539: ${SDK}/test/sdk_external_https_test.dart: wrong Content-Range cannot splice a resumed file
+12:01 +540: ${SDK}/test/sdk_external_https_test.dart: changed ETag on 206 cannot splice a resumed file
+12:01 +541: ${SDK}/test/sdk_external_https_test.dart: HTTPS redirects stay on the direct route with clean headers
+12:01 +542: ${SDK}/test/sdk_external_https_test.dart: HTTP downgrade redirect is rejected before destination request
+12:01 +543: ${SDK}/test/sdk_external_https_test.dart: redirect loops have a bounded request count
+12:01 +544: ${SDK}/test/sdk_external_https_test.dart: expired COS URL refreshes through business callback without health
+12:01 +545: ${SDK}/test/sdk_external_https_test.dart: refresh callback cannot change expected file identity
+12:01 +546: ${SDK}/test/sdk_external_https_test.dart: stale hosted backup never becomes a COS health dependency
+12:01 +547: ${SDK}/test/sdk_external_https_test.dart: business-provided external backup works without hosted service
+12:01 +548: ${SDK}/test/sdk_external_https_test.dart: hosted sources still require complete metadata before transfer
+12:01 +549: ${SDK}/test/sdk_external_https_test.dart: host boundary uses exact domain instead of substring matching
+12:01 +550: ${SDK}/test/sdk_external_https_test.dart: LifeRing adapter keeps actual APK build separate from business code
+12:01 +551: ${SDK}/test/sdk_external_https_test.dart: external receipt revalidation detects later file mutation
+12:01 +552: ${SDK}/test/sdk_external_https_test.dart: invalid supplied metadata remains an explicit input error
+12:01 +553: loading ${SDK}/test/sdk_installation_events_test.dart
+12:02 +553: ${SDK}/test/sdk_installation_events_test.dart: host installation events retain actual build reconciliation
+12:03 +554: ${SDK}/test/sdk_installation_events_test.dart: COS install never depends on hosted events even with empty metadata
+12:03 +555: ${SDK}/test/sdk_installation_events_test.dart: unavailable installation telemetry never blocks the host installer
+12:03 +556: loading ${SDK}/test/sdk_release_test.dart
+12:04 +556: ${SDK}/test/sdk_release_test.dart: discovers alpha without a LifeRing-specific URL or host credentials
+12:04 +557: ${SDK}/test/sdk_release_test.dart: discovers beta without a LifeRing-specific URL or host credentials
+12:04 +558: ${SDK}/test/sdk_release_test.dart: rejects cross application before making a download task
+12:04 +559: ${SDK}/test/sdk_release_test.dart: rejects missing SHA before making a download task
+12:04 +560: ${SDK}/test/sdk_release_test.dart: rejects fractional size before making a download task
+12:04 +561: ${SDK}/test/sdk_release_test.dart: rejects string size before making a download task
+12:04 +562: ${SDK}/test/sdk_release_test.dart: rejects oversized artifact before making a download task
+12:04 +563: ${SDK}/test/sdk_release_test.dart: rejects bad version before making a download task
+12:04 +564: ${SDK}/test/sdk_release_test.dart: rejects inactive status before making a download task
+12:04 +565: ${SDK}/test/sdk_release_test.dart: rejects unsupported Android major before making a download task
+12:04 +566: ${SDK}/test/sdk_release_test.dart: rejects build mismatch before making a download task
+12:04 +567: ${SDK}/test/sdk_release_test.dart: rejects ETag header injection before making a download task
+12:04 +568: ${SDK}/test/sdk_release_test.dart: rejects cross-app primary and canonical before making a download task
+12:04 +569: ${SDK}/test/sdk_release_test.dart: rejects cross-app backup before making a download task
+12:04 +570: ${SDK}/test/sdk_release_test.dart: rejects HTTP backup before making a download task
+12:04 +571: ${SDK}/test/sdk_release_test.dart: rejects URL credentials before making a download task
+12:04 +572: ${SDK}/test/sdk_release_test.dart: rejects wrong port before making a download task
+12:04 +573: ${SDK}/test/sdk_release_test.dart: rejects fragment before making a download task
+12:04 +574: ${SDK}/test/sdk_release_test.dart: legacy omitted build stays absent and stable artifact ID follows SHA
+12:04 +575: ${SDK}/test/sdk_release_test.dart: no cached metadata is used after a lookup failure
+12:04 +576: ${SDK}/test/sdk_release_test.dart: HTTP 302 has a stable code and never follows a redirect
+12:04 +577: ${SDK}/test/sdk_release_test.dart: HTTP 429 has a stable code and never follows a redirect
+12:04 +578: ${SDK}/test/sdk_release_test.dart: HTTP 503 has a stable code and never follows a redirect
+12:04 +579: ${SDK}/test/sdk_release_test.dart: metadata response has a strict body limit
+12:04 +580: ${SDK}/test/sdk_release_test.dart: dispose cancels an in-flight metadata lookup
+12:04 +581: ${SDK}/test/sdk_release_test.dart: one-call download uses one exact metadata snapshot and verifies all bytes
+12:04 +582: ${SDK}/test/sdk_release_test.dart: disposing during a business lookup fences its late response
+12:04 +583: ${SDK}/test/sdk_release_test.dart: business resolver exceptions cannot expose a signed URL
+12:04 +584: loading ${SDK}/test/sdk_verified_piece_test.dart
+12:05 +584: ${SDK}/test/sdk_verified_piece_test.dart: receiver to writer hashes once and final file still gets full SHA
+12:05 +585: ${SDK}/test/sdk_verified_piece_test.dart: caller mutation cannot alter verified owned bytes
+12:05 +586: ${SDK}/test/sdk_verified_piece_test.dart: typed list buffer and byte-data mutation paths stay read only
+12:05 +587: ${SDK}/test/sdk_verified_piece_test.dart: untrusted append snapshots bytes before asynchronous file work
+12:05 +588: ${SDK}/test/sdk_verified_piece_test.dart: payload from another store is independently verified
+12:05 +589: ${SDK}/test/sdk_verified_piece_test.dart: changed manifest hashes cannot reuse an old receipt
+12:05 +590: ${SDK}/test/sdk_verified_piece_test.dart: disk changes are found by the retained whole-file verification
+12:05 +591: ${SDK}/test/sdk_verified_piece_test.dart: corrupt and truncated untrusted pieces are never written
+12:05 +592: loading ${SDK}/test/sharing_resources_test.dart
+12:06 +592: ${SDK}/test/sharing_resources_test.dart: observations require consent and foreground and pause synchronously
+12:06 +593: ${SDK}/test/sharing_resources_test.dart: battery and temperature recover with bounded hysteresis
+12:06 +594: ${SDK}/test/sharing_resources_test.dart: power saver unhealthy battery and system thermal state stop admission
+12:06 +595: ${SDK}/test/sharing_resources_test.dart: cellular metered and unknown events never grant sharing
+12:06 +596: ${SDK}/test/sharing_resources_test.dart: late read cannot overwrite a newer power saver event
+12:06 +597: ${SDK}/test/sharing_resources_test.dart: late Wi-Fi read cannot overwrite a newer cellular event
+12:06 +598: ${SDK}/test/sharing_resources_test.dart: rapid pause and resume do not revive an older generation
+12:06 +599: ${SDK}/test/sharing_resources_test.dart: closed owner releases subscriptions and performs no background poll
+12:07 +600: ${SDK}/test/sharing_resources_test.dart: malformed or missing facts never become an upload grant
+12:07 +601: All tests passed!

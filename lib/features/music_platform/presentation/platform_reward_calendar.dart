@@ -435,6 +435,44 @@ class PlatformRewardCalendar extends ConsumerWidget {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          _InsetGroup(
+                            child: ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text(
+                                '自动广告领取',
+                                style: TextStyle(
+                                  fontSize: MusicTypography.calloutSize,
+                                  fontWeight: MusicTypography.bodyWeight,
+                                ),
+                              ),
+                              subtitle: const Text(
+                                '启动后自动领取，切换音乐平台仍生效',
+                                style: TextStyle(
+                                  fontSize: MusicTypography.captionSize,
+                                ),
+                              ),
+                              trailing: CupertinoSwitch(
+                                key: const ValueKey('reward-auto-ads'),
+                                activeTrackColor: scheme.primary,
+                                value: state.autoAds,
+                                onChanged: (value) async {
+                                  try {
+                                    await controller.setAutoAds(value);
+                                  } on Object {
+                                    if (context.mounted) {
+                                      showMusicNotice(
+                                        context,
+                                        icon: Icons.warning_amber_rounded,
+                                        title: '设置未保存，请重试',
+                                        message: '',
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 24),
                           Text(
                             '会员到期时间',

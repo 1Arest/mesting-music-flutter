@@ -40,6 +40,10 @@ final upcomingQueueProvider = StreamProvider<List<MediaItem>>((ref) {
   return ref.watch(audioHandlerProvider).upcomingQueueStream;
 });
 
+final randomUpcomingProvider = StreamProvider<bool>(
+  (ref) => ref.watch(audioHandlerProvider).randomUpcomingStream,
+);
+
 final positionProvider = StreamProvider<Duration>((ref) {
   return ref.watch(audioHandlerProvider).positionStream;
 });

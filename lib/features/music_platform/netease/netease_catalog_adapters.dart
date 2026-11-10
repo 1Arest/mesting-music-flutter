@@ -6,12 +6,20 @@ import '../data/platform_explore.dart';
 import '../data/platform_recommendations.dart';
 import '../data/platform_search_repository.dart';
 import 'netease_music_repository.dart';
+import '../../../shared/models/song_search_facts.dart';
 
 /// Thin adapters retain the existing presentation interfaces. Protocol fields
 /// and IDs remain in NeteaseMusicRepository; no widget imitates a Kugou payload.
 class NeteaseSearchAdapter extends PlatformSearchRepository {
   NeteaseSearchAdapter(super.api, this.music);
   final NeteaseMusicRepository music;
+  @override
+  Future<SongSearchFacts> inspectAvailability(
+    Track track,
+    SongSearchFacts facts, {
+    Future<void>? abortTrigger,
+  }) =>
+      music.inspectSearchAvailability(track, facts, abortTrigger: abortTrigger);
   @override
   Future<PlatformSearchPage> search(
     String query, {

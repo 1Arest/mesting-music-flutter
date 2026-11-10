@@ -37,6 +37,14 @@ class _TotalSource implements OfficialFootprintSource {
       throw UnimplementedError();
 }
 
+/// The account badge is intentionally continuous; bound settling without
+/// disabling the motion that the scroll/action cases are exercising.
+Future<void> settle188(WidgetTester tester) async {
+  for (var frame = 0; frame < 12; frame++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
   setUpAll(initialize145QA);
   Future<void> mount(
@@ -69,9 +77,10 @@ void main() {
           builder: (context, child) => capture145Builder(
             context,
             MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(narrow ? 1.3 : 1)),
+              data: MediaQuery.of(context).copyWith(
+                disableAnimations: true,
+                textScaler: TextScaler.linear(narrow ? 1.3 : 1),
+              ),
               child: child!,
             ),
           ),
@@ -83,7 +92,7 @@ void main() {
       ),
     );
     await pumpArtworkReady(tester);
-    await tester.pumpAndSettle();
+    await settle188(tester);
   }
 
   for (final dark in [false, true]) {
@@ -111,7 +120,7 @@ void main() {
         await fixture.container
             .read(officialFootprintReaderProvider)!
             .refreshTotalOnly();
-        await tester.pumpAndSettle();
+        await settle188(tester);
         expect(find.text('5610 小时'), findsOneWidget);
         expect(
           find.byTooltip('官方总时长 5610 小时 2 分钟，刷新失败，保留上次结果'),
@@ -192,10 +201,10 @@ void main() {
         await tester.tap(
           find.byKey(const ValueKey('resource-action-download')),
         );
-        await tester.pumpAndSettle();
+        await settle188(tester);
         expect(downloads, 1);
         await tester.tap(find.byKey(const ValueKey('resource-action-save')));
-        await tester.pumpAndSettle();
+        await settle188(tester);
         expect(find.text('已收藏'), findsOneWidget);
         expect(
           tester

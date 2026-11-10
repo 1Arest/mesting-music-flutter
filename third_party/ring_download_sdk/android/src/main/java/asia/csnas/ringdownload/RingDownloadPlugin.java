@@ -26,8 +26,10 @@ public final class RingDownloadPlugin implements FlutterPlugin,
   private RingRtcReceiveBuffer receiveBuffer;
   private RingSharingResources sharingResources;
   private EventChannel resourceEvents;
+  private RingFileHashBridge fileHash;
 
   @Override public void onAttachedToEngine(FlutterPluginBinding binding) {
+    fileHash = new RingFileHashBridge(new RingFileHashAndroid(binding.getApplicationContext()), main::post);
     receiveBuffer = new RingRtcReceiveBuffer();
     manager = (ConnectivityManager) binding.getApplicationContext()
         .getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -41,7 +43,25 @@ public final class RingDownloadPlugin implements FlutterPlugin,
   }
 
   @Override public void onMethodCall(MethodCall call, MethodChannel.Result result) {
-    if ("getNetworkType".equals(call.method)) result.success(current());
+    if ("hashFile".equals(call.method)) {
+      Object id = call.argument("id"), path = call.argument("path");
+      final RingFileHashBridge owner = fileHash;
+      if (!(id instanceof String) || !(path instanceof String)) {
+        result.success(hashResult(RingFileHashWorker.Result.status("error")));
+      } else if (owner == null) {
+        result.success(hashResult(RingFileHashWorker.Result.status("unavailable")));
+      } else owner.hash((String)id, (String)path, value -> {
+        // Result captures the ORIGINAL messenger/reply ID. Never substitute
+        // this.methods or another engine's result. The old engine may be gone.
+        try { result.success(hashResult(value)); }
+        catch (RuntimeException ignored) { /* Original engine is already detached. */ }
+      });
+    } else if ("cancelFileHash".equals(call.method)) {
+      Object id = call.argument("id");
+      // This marks cancellation. Only the original hashFile completion proves
+      // the reader has closed; Dart waits for that instead of racing fallback.
+      result.success(fileHash != null && id instanceof String && fileHash.cancel((String)id));
+    } else if ("getNetworkType".equals(call.method)) result.success(current());
     else if ("getSharingResources".equals(call.method)) {
       result.success(sharingResources == null ? null : sharingResources.snapshot());
     }
@@ -59,6 +79,13 @@ public final class RingDownloadPlugin implements FlutterPlugin,
       } else result.success(receiveBuffer.tune((String)owner,(java.util.List<?>)bindings,((Number)expires).longValue()));
     }
     else result.notImplemented();
+  }
+
+  private static java.util.Map<String, Object> hashResult(RingFileHashWorker.Result value) {
+    java.util.Map<String, Object> result = new java.util.HashMap<>();
+    result.put("code", value.code);
+    if ("ok".equals(value.code)) { result.put("sha256", value.sha256); result.put("bytes", value.bytes); }
+    return result;
   }
 
   private String current() {
@@ -113,6 +140,9 @@ public final class RingDownloadPlugin implements FlutterPlugin,
   @Override public void onCancel(Object arguments) { stop(); }
 
   @Override public void onDetachedFromEngine(FlutterPluginBinding binding) {
+    RingFileHashBridge hashOwner = fileHash;
+    fileHash = null;
+    if (hashOwner != null) hashOwner.close();
     if (sharingResources != null) sharingResources.stop();
     if (resourceEvents != null) resourceEvents.setStreamHandler(null);
     sharingResources = null;

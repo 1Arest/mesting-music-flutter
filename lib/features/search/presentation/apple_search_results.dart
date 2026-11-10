@@ -14,6 +14,9 @@ import '../../library/presentation/favorite_toggle_button.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../search_providers.dart';
 import '../../themes/music_typography.dart';
+import '../../../shared/widgets/liquid_glass_sheet.dart';
+import '../../music_platform/music_platform_providers.dart';
+import '../../../shared/models/song_search_facts.dart';
 
 /// A single lazy scroll view owns pagination and row construction. Avoid a
 /// shrink-wrapped list inside another list: later search pages can contain
@@ -41,7 +44,12 @@ class AppleSearchResults extends ConsumerWidget {
             ),
           ),
           const Spacer(),
-          Text('共 ${state.total ?? count} 首', style: theme.textTheme.bodySmall),
+          Text(
+            state.sourceChoices.isNotEmpty
+                ? '已加载 $count 首'
+                : '共 ${state.total ?? count} 首',
+            style: theme.textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -54,6 +62,13 @@ class AppleSearchResults extends ConsumerWidget {
         controller: controller,
         physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
+          for (final warning in state.warnings)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 8, 22, 4),
+                child: Text(warning, style: theme.textTheme.bodySmall),
+              ),
+            ),
           if (state.errorMessage != null)
             SliverToBoxAdapter(
               child: Padding(
@@ -82,8 +97,12 @@ class AppleSearchResults extends ConsumerWidget {
               SliverList.builder(
                 itemCount: group.tracks.length,
                 itemBuilder: (_, index) => _SearchSongRow(
+                  key: ValueKey(group.tracks[index].id),
                   track: group.tracks[index],
                   contextTracks: group.tracks,
+                  sources:
+                      state.sourceChoices[group.tracks[index].id] ?? const [],
+                  facts: state.songFacts,
                 ),
               ),
             ],
@@ -126,15 +145,92 @@ class AppleSearchResults extends ConsumerWidget {
 }
 
 class _SearchSongRow extends ConsumerWidget {
-  const _SearchSongRow({required this.track, required this.contextTracks});
+  const _SearchSongRow({
+    required this.track,
+    required this.contextTracks,
+    this.sources = const [],
+    this.facts = const {},
+    super.key,
+  });
   final Track track;
   final List<Track> contextTracks;
+  final List<Track> sources;
+  final Map<String, SongSearchFacts> facts;
+
+  String _source(Track value) =>
+      value.source == TrackSource.netease ? '网易云' : '酷狗';
+
+  Future<void> _chooseSource(BuildContext context, WidgetRef ref) async {
+    final query = ref.read(musicSearchControllerProvider).query;
+    final owner = ref.read(platformAccountProvider).value;
+    final identity = (owner?.ownerId, owner?.token);
+    final selected = await showLiquidGlassBottomSheet<Track>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(padding: EdgeInsets.all(20), child: Text('选择音源')),
+          for (final value in sources)
+            ListTile(
+              title: Text(
+                [
+                  _source(value),
+                  facts[value.id]?.label ?? '',
+                ].where((s) => s.isNotEmpty).join(' · '),
+              ),
+              subtitle: Text('${value.artist} · ${value.album}'),
+              trailing: value.id == track.id
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              onTap: () => Navigator.of(sheet).pop(value),
+            ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+    if (!context.mounted ||
+        selected == null ||
+        ref.read(musicSearchControllerProvider).query != query) {
+      return;
+    }
+    final now = ref.read(platformAccountProvider).value;
+    if ((now?.ownerId, now?.token) != identity) return;
+    // A stale sheet cannot insert a song after its account/query was replaced.
+    if (!(ref.read(musicSearchControllerProvider).sourceChoices[track.id] ??
+            const <Track>[])
+        .any((t) => t.id == selected.id)) {
+      return;
+    }
+    ref
+        .read(musicSearchControllerProvider.notifier)
+        .chooseSongSource(track.id, selected);
+    await playBetaSelection(context, ref, selected);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(
       currentTrackProvider.select((current) => current.id == track.id),
     );
     final theme = Theme.of(context);
+    // At narrow accessibility sizes, keep all 48dp action targets while giving
+    // the source label enough width to remain readable in the song details.
+    final stackedActions =
+        sources.length > 1 &&
+        MediaQuery.sizeOf(context).width < 360 &&
+        MediaQuery.textScalerOf(context).scale(14) > 21;
+    final actions = <Widget>[
+      if (sources.length > 1)
+        IconButton(
+          tooltip: '选择音源（${sources.length}）',
+          onPressed: () => _chooseSource(context, ref),
+          icon: const Icon(Icons.library_music_outlined, size: 21),
+        ),
+      FavoriteToggleButton(track: track, compact: true),
+      SongActionsButton(track: track),
+    ];
     return SongListEntry(
       track: track,
       tracks: contextTracks,
@@ -191,6 +287,19 @@ class _SearchSongRow extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
+                                if (sources.isNotEmpty)
+                                  Text(
+                                    [
+                                      _source(track),
+                                      facts[track.id]?.label ?? '',
+                                    ].where((s) => s.isNotEmpty).join(' · '),
+                                    // Provenance and access status remain
+                                    // readable at accessibility font sizes.
+                                    style: TextStyle(
+                                      fontSize: MusicTypography.footnoteSize,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
                                 Text(
                                   [
                                     track.artist,
@@ -207,8 +316,16 @@ class _SearchSongRow extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        FavoriteToggleButton(track: track, compact: true),
-                        SongActionsButton(track: track),
+                        if (stackedActions)
+                          SizedBox(
+                            width: 96,
+                            child: Wrap(
+                              alignment: WrapAlignment.end,
+                              children: actions,
+                            ),
+                          )
+                        else
+                          ...actions,
                       ],
                     ),
                   ),

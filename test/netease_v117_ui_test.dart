@@ -199,9 +199,10 @@ void main() {
           ),
           scrollBehavior: const BetaScrollBehavior(),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: true,
+              textScaler: TextScaler.linear(textScale),
+            ),
             child: child!,
           ),
           home: RepaintBoundary(

@@ -14,6 +14,8 @@ import 'data/platform_playback_resolver.dart';
 import 'data/playback_quality_catalog.dart';
 import '../../shared/models/track.dart';
 import 'retained_kugou_scope.dart';
+import 'cross_platform_music_scope.dart';
+import 'domain/platform_session.dart';
 
 /// Only successful provider states are retained. Each state still watches the
 /// account future, so logout/login/token replacement invalidates its catalog.
@@ -54,15 +56,23 @@ final platformSongQualitiesProvider = FutureProvider.autoDispose
         return ref.watch(qishuiRepositoryProvider).qualities(id);
       }
       if (id.startsWith('netease_')) {
-        return ref.watch(neteaseMusicRepositoryProvider).qualities(id);
+        final music = session?.platform == MusicPlatform.netease
+            ? ref.watch(neteaseMusicRepositoryProvider)
+            : await ref.watch(supplementaryNeteaseMusicProvider.future);
+        return music.qualities(id);
       }
-      final payload = await ref
-          .watch(musicPlatformApiProvider)
-          .get(
-            '/audio',
-            query: {'hash': id.substring('kugou_'.length)},
-            expectedSession: session,
-          );
+      // Song provenance, rather than the page's selected platform, owns the
+      // quality request. Fusion must never send the current platform's jar to
+      // another source or silently switch the library owner.
+      final supplementary = session?.platform == MusicPlatform.netease;
+      final api = supplementary
+          ? await ref.watch(supplementaryKugouApiProvider.future)
+          : ref.watch(musicPlatformApiProvider);
+      final payload = await api.get(
+        '/audio',
+        query: {'hash': id.substring('kugou_'.length)},
+        expectedSession: supplementary ? api.session : session,
+      );
       final result = PlatformQualityCatalog.parse(payload);
       if (ref.mounted) {
         final retained = ref.read(_qualityRetentionsProvider);
@@ -107,8 +117,18 @@ final platformPlaybackQualitiesProvider = FutureProvider.autoDispose
               origin.recordingId.isNotEmpty
           ? ref.watch(neteaseFallbackResolverProvider)
           : null;
-      final music = ref.watch(neteaseMusicRepositoryProvider);
-      final api = ref.watch(musicPlatformApiProvider);
+      final foreignNetease =
+          track.source == TrackSource.netease &&
+          owner?.platform != MusicPlatform.netease;
+      final foreignKugou =
+          track.source == TrackSource.kugou &&
+          owner?.platform == MusicPlatform.netease;
+      final music = foreignNetease
+          ? await ref.watch(supplementaryNeteaseMusicProvider.future)
+          : ref.watch(neteaseMusicRepositoryProvider);
+      final api = foreignKugou
+          ? await ref.watch(supplementaryKugouApiProvider.future)
+          : ref.watch(musicPlatformApiProvider);
       final timer = Timer(const Duration(seconds: 35), () {
         if (!abort.isCompleted) abort.complete();
       });

@@ -16,11 +16,18 @@ import 'package:mesting_music/features/music_platform/netease/messages/netease_m
 import 'package:mesting_music/shared/models/track.dart';
 import 'package:mesting_music/shared/utils/media_uri.dart';
 import 'support/deterministic_audio_player.dart';
+import 'package:mesting_music/shared/models/song_search_facts.dart';
 import 'netease_v116_recovery_test.dart' show localSong, mp3Response;
 import 'netease_v115_sources_test.dart' show SourceFixture, TestAccount;
 import 'netease_v112_fallback_download_test.dart' show recording, until;
 
 class _DeferredSearch implements PlatformSearchRepository {
+  @override
+  Future<SongSearchFacts> inspectAvailability(
+    Track track,
+    SongSearchFacts facts, {
+    Future<void>? abortTrigger,
+  }) async => facts;
   final pending = <String, Completer<PlatformSearchPage>>{};
   @override
   MusicPlatformApi get api =>

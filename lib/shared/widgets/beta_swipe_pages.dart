@@ -39,11 +39,16 @@ class BetaSwipePages extends StatefulWidget {
     required this.length,
     required this.onChanged,
     required this.itemBuilder,
+    this.swipeEnabled = true,
     super.key,
   });
   final int index, length;
   final ValueChanged<int> onChanged;
   final IndexedWidgetBuilder itemBuilder;
+
+  /// Temporarily unavailable source slots keep their identity without letting
+  /// a drag select an empty page. Programmatic selection remains available.
+  final bool swipeEnabled;
 
   @override
   State<BetaSwipePages> createState() => _BetaSwipePagesState();
@@ -119,6 +124,9 @@ class _BetaSwipePagesState extends State<BetaSwipePages> {
         },
         child: PageView.builder(
           controller: _pages,
+          physics: widget.swipeEnabled
+              ? null
+              : const NeverScrollableScrollPhysics(),
           itemCount: widget.length,
           onPageChanged: (index) {
             _reportedIndex = index;

@@ -1,6 +1,7 @@
 import '../../../shared/models/track.dart';
 import 'music_platform_api.dart';
 import 'platform_song_identity.dart';
+import 'platform_track_duration.dart';
 
 class MusicMvQuality {
   const MusicMvQuality(this.hash, this.label);
@@ -12,9 +13,15 @@ class MusicMv {
     required this.id,
     required this.title,
     required this.qualities,
+    this.artist = '',
+    this.duration = Duration.zero,
+    this.source = TrackSource.kugou,
   });
   final String id, title;
   final List<MusicMvQuality> qualities;
+  final String artist;
+  final Duration duration;
+  final TrackSource source;
 }
 
 /// md3Music v6.1.0's real lookup chain, using the existing embedded routes.
@@ -47,6 +54,7 @@ class PlatformMvRepository {
       orElse: () => videos.first,
     );
     final id = '${video['video_id'] ?? video['id'] ?? ''}';
+    var merged = Map<String, dynamic>.from(video);
     final title =
         '${video['mv_name'] ?? video['video_name'] ?? video['title'] ?? track.title}';
     final qualities = parseQualities(video);
@@ -58,6 +66,7 @@ class PlatformMvRepository {
       );
       final rows = parseRecords(detail);
       if (rows.isNotEmpty) {
+        merged = {...video, ...rows.first};
         final known = qualities.map((q) => q.hash.toLowerCase()).toSet();
         for (final quality in parseQualities(rows.first)) {
           if (known.add(quality.hash.toLowerCase())) qualities.add(quality);
@@ -69,6 +78,9 @@ class PlatformMvRepository {
       id: id,
       title: title,
       qualities: List.unmodifiable(qualities),
+      artist:
+          '${merged['singername'] ?? merged['singer_name'] ?? track.artist}',
+      duration: PlatformTrackDuration.fromFields(merged) ?? Duration.zero,
     );
   }
 
