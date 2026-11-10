@@ -1,4 +1,4 @@
-package com.mesting.mesting_music
+package com.mesting.music
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
