@@ -71,7 +71,10 @@ void main() {
             MediaQuery(
               data: MediaQuery.of(
                 context,
-              ).copyWith(textScaler: TextScaler.linear(narrow ? 1.3 : 1)),
+              ).copyWith(
+                disableAnimations: true,
+                textScaler: TextScaler.linear(narrow ? 1.3 : 1),
+              ),
               child: child!,
             ),
           ),

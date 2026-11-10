@@ -77,7 +77,15 @@ void main() {
               await tester.pumpWidget(
                 UncontrolledProviderScope(
                   container: fixture.container,
-                  child: MaterialApp.router(routerConfig: router),
+                  child: MaterialApp.router(
+                    routerConfig: router,
+                    builder: (context, child) => MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).copyWith(disableAnimations: true),
+                      child: child!,
+                    ),
+                  ),
                 ),
               );
               for (var i = 0; i < 20; i++) {
