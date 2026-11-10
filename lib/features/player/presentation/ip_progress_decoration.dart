@@ -6,6 +6,7 @@ import '../../themes/mesting_palette.dart';
 import '../../themes/music_theme_preset.dart';
 import 'shinchan_progress_walker.dart';
 import 'ip_progress_motifs.dart';
+import 'nailong_progress.dart';
 import 'uploaded_progress_portrait.dart';
 
 const _helloKittyAsset =
@@ -16,6 +17,7 @@ const double ipProgressTrackHeight = 6;
 const double ipProgressLeadingDotDiameter = 9;
 
 Color progressTrackColorForIp(MusicThemeIp ip) => switch (ip) {
+  MusicThemeIp.nailong => const Color(0xFFE8AA25),
   MusicThemeIp.classic => const Color(0xFF5F75DE),
   MusicThemeIp.shinchan => const Color(0xFFF2A72E),
   MusicThemeIp.helloKitty => MestingPalette.dangerBright,
@@ -30,15 +32,22 @@ Color progressTrackColorForIp(MusicThemeIp ip) => switch (ip) {
   MusicThemeIp.sleepingKirby => const Color(0xFFB283D9),
 };
 
-Size progressCompanionSize(MusicThemeIp ip) => switch (ip) {
-  MusicThemeIp.helloKitty => const Size(24, 24),
-  MusicThemeIp.kuromi => const Size(24, 24),
-  MusicThemeIp.shinchan => ShinchanProgressWalker.sizeForWidth(56),
-  MusicThemeIp.classic => Size.zero,
-  MusicThemeIp.cinnamoroll => const Size(36, 24),
-  MusicThemeIp.puppyWhite || MusicThemeIp.puppyGray => const Size(30, 24),
-  _ => const Size(28, 28),
-};
+Size progressCompanionSize(MusicThemeIp ip, {double shinchanWidth = 56}) =>
+    switch (ip) {
+      // Match Shinchan's 236px opaque height in a 502px-wide sprite.
+      // Account for the 282px opaque body inside Nailong's 301px canvas.
+      MusicThemeIp.nailong => Size(
+        shinchanWidth * 236 / 502 * 301 / 282 * 194 / 301,
+        shinchanWidth * 236 / 502 * 301 / 282,
+      ),
+      MusicThemeIp.helloKitty => const Size(24, 24),
+      MusicThemeIp.kuromi => const Size(24, 24),
+      MusicThemeIp.shinchan => ShinchanProgressWalker.sizeForWidth(56),
+      MusicThemeIp.classic => Size.zero,
+      MusicThemeIp.cinnamoroll => const Size(36, 24),
+      MusicThemeIp.puppyWhite || MusicThemeIp.puppyGray => const Size(30, 24),
+      _ => const Size(28, 28),
+    };
 
 /// Heads replace the thumb at its center; full bodies stand on the rail's top.
 /// Use the actual slider geometry rather than a player-specific negative inset.
@@ -54,7 +63,8 @@ double progressCompanionTop(
     // Kuromi's long ears sit above the face. Its PNG canvas midpoint therefore
     // leaves the perceived head below the rail; use a 3dp optical lift at 24dp.
     MusicThemeIp.kuromi => trackCenterY - size.height * .625,
-    MusicThemeIp.shinchan => trackCenterY - trackHeight / 2 - size.height,
+    MusicThemeIp.shinchan ||
+    MusicThemeIp.nailong => trackCenterY - trackHeight / 2 - size.height,
     MusicThemeIp.classic => 0,
     // The hat and bubbles raise the PNG bounds above Kirby's main body.
     // Lift by 3.9dp at 28dp so the body, rather than that canvas, is centered.
@@ -81,7 +91,9 @@ double progressCompanionLeft({
 /// The character remains a separate widget so playback motion can be paused
 /// independently while the rail stays cheap to repaint.
 class IpProgressTrackShape extends SliderTrackShape with BaseSliderTrackShape {
-  const IpProgressTrackShape({required this.ip});
+  const IpProgressTrackShape({required this.ip, this.motionPhase = 0});
+
+  final double motionPhase;
 
   final MusicThemeIp ip;
 
@@ -149,6 +161,16 @@ class IpProgressTrackShape extends SliderTrackShape with BaseSliderTrackShape {
           );
     if (activeRect.width <= 0) return;
 
+    if (ip == MusicThemeIp.nailong) {
+      paintNailongProgressRail(
+        canvas,
+        trackRect,
+        activeRect,
+        textDirection,
+        motionPhase,
+      );
+      return;
+    }
     final activeTrack = RRect.fromRectAndRadius(activeRect, radius);
     canvas.drawRRect(
       activeTrack,
@@ -227,6 +249,7 @@ class IpProgressTrackShape extends SliderTrackShape with BaseSliderTrackShape {
   }
 
   Color _inactiveTint(MusicThemeIp ip) => switch (ip) {
+    MusicThemeIp.nailong => const Color(0xFFFFE28A),
     MusicThemeIp.classic => const Color(0xFF5F75DE),
     MusicThemeIp.shinchan => const Color(0xFFFFD35B),
     MusicThemeIp.helloKitty => MestingPalette.dangerSoft,
@@ -242,6 +265,7 @@ class IpProgressTrackShape extends SliderTrackShape with BaseSliderTrackShape {
   };
 
   Color _activeStart(MusicThemeIp ip) => switch (ip) {
+    MusicThemeIp.nailong => const Color(0xFFFFE28A),
     MusicThemeIp.classic => const Color(0xFF7187F1),
     MusicThemeIp.shinchan => const Color(0xFFFFD65A),
     MusicThemeIp.helloKitty => MestingPalette.dangerBright,
@@ -257,6 +281,7 @@ class IpProgressTrackShape extends SliderTrackShape with BaseSliderTrackShape {
   };
 
   Color _activeEnd(MusicThemeIp ip) => switch (ip) {
+    MusicThemeIp.nailong => const Color(0xFFE8AA25),
     MusicThemeIp.classic => const Color(0xFF5368D2),
     MusicThemeIp.shinchan => const Color(0xFFEF782D),
     MusicThemeIp.helloKitty => MestingPalette.danger,
@@ -276,11 +301,13 @@ class IpProgressCompanion extends StatefulWidget {
   const IpProgressCompanion({
     required this.ip,
     required this.playing,
+    this.shinchanWidth = 56,
     super.key,
   }) : assert(ip != MusicThemeIp.classic && ip != MusicThemeIp.shinchan);
 
   final MusicThemeIp ip;
   final bool playing;
+  final double shinchanWidth;
 
   @override
   State<IpProgressCompanion> createState() => _IpProgressCompanionState();
@@ -316,7 +343,7 @@ class _IpProgressCompanionState extends State<IpProgressCompanion>
   }
 
   void _syncAnimation() {
-    if (widget.playing && !_reduceMotion) {
+    if (widget.playing && !_reduceMotion && widget.ip != MusicThemeIp.nailong) {
       if (!_controller.isAnimating) _controller.repeat();
     } else {
       _controller.stop();
@@ -332,7 +359,10 @@ class _IpProgressCompanionState extends State<IpProgressCompanion>
 
   @override
   Widget build(BuildContext context) {
-    final size = progressCompanionSize(widget.ip);
+    final size = progressCompanionSize(
+      widget.ip,
+      shinchanWidth: widget.shinchanWidth,
+    );
     return RepaintBoundary(
       key: ValueKey('ip-progress-companion-${widget.ip.name}'),
       child: SizedBox.fromSize(
@@ -342,6 +372,9 @@ class _IpProgressCompanionState extends State<IpProgressCompanion>
           builder: (context, _) {
             final phase = _controller.value * math.pi * 2;
             return switch (widget.ip) {
+              MusicThemeIp.nailong => NailongProgressCompanion(
+                playing: widget.playing,
+              ),
               MusicThemeIp.helloKitty => _HelloKittyCompanion(phase: phase),
               MusicThemeIp.kuromi => _KuromiCompanion(phase: phase),
               _ => Transform.rotate(

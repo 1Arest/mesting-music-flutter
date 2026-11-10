@@ -165,6 +165,7 @@ enum ProgressDecoration {
   puppyGray,
   cinnamoroll,
   sleepingKirby,
+  nailong,
 }
 
 class ThemeVisualSettings {
@@ -291,6 +292,7 @@ MusicThemeIp decorationIp(
     ProgressDecoration.puppyGray => MusicThemeIp.puppyGray,
     ProgressDecoration.cinnamoroll => MusicThemeIp.cinnamoroll,
     ProgressDecoration.sleepingKirby => MusicThemeIp.sleepingKirby,
+    ProgressDecoration.nailong => MusicThemeIp.nailong,
   };
 }
 
@@ -316,6 +318,7 @@ String progressDecorationLabel(ProgressDecoration decoration) =>
       ProgressDecoration.puppyGray => '小灰',
       ProgressDecoration.cinnamoroll => '大耳狗',
       ProgressDecoration.sleepingKirby => '睡帽卡比',
+      ProgressDecoration.nailong => '雷霆奶龙',
     };
 
 String progressDecorationSeries(ProgressDecoration value) => switch (value) {
@@ -330,4 +333,5 @@ String progressDecorationSeries(ProgressDecoration value) => switch (value) {
   ProgressDecoration.hachiware => '吉伊卡哇',
   ProgressDecoration.puppyWhite || ProgressDecoration.puppyGray => '线条小狗',
   ProgressDecoration.sleepingKirby => '星之卡比',
+  ProgressDecoration.nailong => '奶龙',
 };

@@ -13,6 +13,7 @@ import '../../themes/music_theme_preset.dart';
 import '../../queue/presentation/queue_page.dart';
 import '../player_visual_style.dart';
 import 'ip_progress_decoration.dart';
+import 'nailong_progress.dart';
 import 'shinchan_progress_walker.dart';
 import '../../themes/music_typography.dart';
 
@@ -155,7 +156,9 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
                       )
                     else
                       Positioned.fill(
-                        child: SliderTheme(
+                        child: IpProgressSliderTheme(
+                          ip: progressIp,
+                          playing: playing,
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: progressIp == MusicThemeIp.classic
                                 ? 2
@@ -223,13 +226,21 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
                           availableWidth: constraints.maxWidth,
                           companionWidth: progressCompanionSize(
                             characterIp,
+                            shinchanWidth: 104,
                           ).width,
                         ),
-                        top: progressCompanionTop(characterIp),
+                        top: progressCompanionTop(
+                          characterIp,
+                          companionSize: progressCompanionSize(
+                            characterIp,
+                            shinchanWidth: 104,
+                          ),
+                        ),
                         child: IgnorePointer(
                           child: IpProgressCompanion(
                             ip: characterIp,
                             playing: playing,
+                            shinchanWidth: 104,
                           ),
                         ),
                       ),

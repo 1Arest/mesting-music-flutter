@@ -15,6 +15,7 @@ enum MusicThemeIp {
   puppyGray,
   cinnamoroll,
   sleepingKirby,
+  nailong,
 }
 
 /// Only these IPs have background skins; other IPs are progress companions.
@@ -26,6 +27,7 @@ const musicThemeCategories = [
 ];
 
 String? companionAssetForIp(MusicThemeIp ip) => switch (ip) {
+  MusicThemeIp.nailong => 'assets/images/theme_gallery/nailong-progress.png',
   MusicThemeIp.classic || MusicThemeIp.shinchan => null,
   MusicThemeIp.helloKitty =>
     'assets/images/theme_gallery/hello-kitty-progress-head.png',
@@ -103,6 +105,7 @@ class MusicThemePreset {
     MusicThemeIp.puppyGray => '小灰',
     MusicThemeIp.cinnamoroll => '大耳狗',
     MusicThemeIp.sleepingKirby => '睡帽卡比',
+    MusicThemeIp.nailong => '雷霆奶龙',
   };
 
   String? get progressCharacterAsset => companionAssetForIp(ip);

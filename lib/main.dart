@@ -120,6 +120,7 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
       final audioReady = AudioService.init<MestingAudioHandler>(
         builder: () => MestingAudioHandler(tracks: const <Track>[]),
         config: AudioServiceConfig(
+          androidNotificationIcon: 'drawable/ic_stat_mesting',
           androidNotificationChannelId: 'com.mesting.music.playback',
           androidNotificationChannelName: DistributionChannel.isBeta
               ? 'Mesting Music'

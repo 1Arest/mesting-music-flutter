@@ -1221,6 +1221,7 @@ class _IpCategoryCard extends StatelessWidget {
       MusicThemeIp.puppyGray => ('小灰', 'PROGRESS COMPANION'),
       MusicThemeIp.cinnamoroll => ('大耳狗', 'PROGRESS COMPANION'),
       MusicThemeIp.sleepingKirby => ('睡帽卡比', 'PROGRESS COMPANION'),
+      MusicThemeIp.nailong => ('雷霆奶龙', 'LAUGHING COMPANION'),
     };
     return Material(
       color: active
@@ -1929,6 +1930,17 @@ class _DecorationChoiceIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ip = decorationIp(value, musicThemePresets.first);
+    if (ip == MusicThemeIp.nailong) {
+      return SizedBox(
+        width: 26,
+        height: 26,
+        child: Image.asset(
+          companionAssetForIp(ip)!,
+          fit: BoxFit.contain,
+          cacheHeight: 96,
+        ),
+      );
+    }
     if (isUploadedProgressIp(ip)) {
       return SizedBox(
         width: 26,

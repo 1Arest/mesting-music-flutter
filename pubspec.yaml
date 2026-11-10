@@ -266,6 +266,8 @@ flutter:
     - assets/images/theme_gallery/puppy-gray-progress.png
     - assets/images/theme_gallery/cinnamoroll-progress.png
     - assets/images/theme_gallery/sleeping-kirby-progress.png
+    - assets/images/theme_gallery/nailong-progress.png
+    - assets/images/theme_gallery/nailong-laugh.webp
     # The existing classic-turntable preview still uses this single cover.
     - assets/images/theme_playlists/shinchan/cover-01.jpg
 

@@ -16,6 +16,7 @@ import '../../music_platform/presentation/platform_comments_page.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import '../../../core/audio/audio_output_controller.dart';
 import '../../player/presentation/ip_progress_decoration.dart';
+import '../../player/presentation/nailong_progress.dart';
 import '../../player/presentation/shinchan_progress_walker.dart';
 import '../../queue/presentation/queue_page.dart';
 import '../../themes/theme_controller.dart';
@@ -115,7 +116,9 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                   clipBehavior: Clip.none,
                   children: [
                     Positioned.fill(
-                      child: SliderTheme(
+                      child: IpProgressSliderTheme(
+                        ip: railIp,
+                        playing: playing,
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: classic ? 5 : ipProgressTrackHeight,
                           trackShape: classic

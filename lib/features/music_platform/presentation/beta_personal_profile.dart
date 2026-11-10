@@ -346,7 +346,6 @@ class _PersonalIdentity extends ConsumerWidget {
             onOpenOfficial: (uri) =>
                 openKugouOfficialPage(context, ref, session, uri),
           ),
-          const _PersonalCounts(),
         ],
       ],
     );
@@ -365,29 +364,6 @@ final _personalFavoriteSummary = Provider((ref) {
     }),
   );
 });
-
-class _PersonalCounts extends ConsumerWidget {
-  const _PersonalCounts();
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final favorites = ref.watch(
-      _personalFavoriteSummary.select((s) => s.count),
-    );
-    final playlists = ref.watch(
-      playlistsProvider.select((s) => s.value?.length ?? 0),
-    );
-    final directory = ref.exists(playlistDirectoryWindowProvider)
-        ? ref.watch(playlistDirectoryWindowProvider)
-        : null;
-    final playlistLabel = directory?.hasMore == true && directory?.total == null
-        ? '已加载 $playlists 个歌单'
-        : '${directory?.total ?? playlists} 个歌单';
-    return Text(
-      '$favorites 首喜欢  ·  $playlistLabel',
-      style: Theme.of(context).textTheme.bodyMedium,
-    );
-  }
-}
 
 class _PersonalQuickActions extends StatelessWidget {
   const _PersonalQuickActions({
