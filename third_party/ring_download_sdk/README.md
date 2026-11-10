@@ -6,9 +6,9 @@ Flutter Android APK 下载 SDK。已有更新后台选版本和来源，SDK 自�
 
 ## 当前版本
 
-当前正式源码发布版本为 **1.1.8**。服务端声明候补能力时，建连或握手失败后整轮最多尝试4个不同普通身份；默认同时最多2个普通原生所有者，显式四路竞速时最多4个，已接纳普通正文仍最多2路，共享4片/4MiB。创建未返回或释放失败继续占位，前缀优先和既有请求预算保持。
+当前正式源码发布版本为 **1.1.9**。服务端声明候补能力时，建连或握手失败后整轮最多尝试4个不同普通身份；默认同时最多2个普通原生所有者，显式四路竞速时最多4个，已接纳普通正文仍最多2路，共享4片/4MiB。创建未返回或释放失败继续占位，前缀优先和既有请求预算保持。
 
-将 `p8pPeerRaceLimit` 显式设为 3 且服务端支持候补时，SDK 先尝试两路普通节点，约 2 秒尚无普通节点交付校验首片时可补试第三路，已打开但没有校验首片的通道也可触发补位。默认两路，普通节点正文最多两路。SDK 实例内短期优先尝试已交付校验首片的在线登记，并输出建连和首片失败的分阶段诊断。源端口增强默认关闭。晚到的有效 Trickle 候选可获得一次至多 1 秒的检查余量，仍受原始总期限约束。失败诊断可提供不含地址、端口和候选标识的 ICE 检查收发计数。 本版验证记录见 `validation/release-1.1.8.json`。
+将 `p8pPeerRaceLimit` 显式设为 3 且服务端支持候补时，SDK 先尝试两路普通节点，约 2 秒尚无普通节点交付校验首片时可补试第三路，已打开但没有校验首片的通道也可触发补位。默认两路，普通节点正文最多两路。SDK 实例内短期优先尝试已交付校验首片的在线登记，并输出建连和首片失败的分阶段诊断。源端口增强默认关闭。晚到的有效 Trickle 候选可获得一次至多 1 秒的检查余量，仍受原始总期限约束。失败诊断可提供不含地址、端口和候选标识的 ICE 检查收发计数。 两路和三路模式下，握手后未交付校验首片的普通节点可在实际释放后补位。正文传输中，失败节点释放出的名额会立即唤醒候补发现，另一条仍在协商的 ICE 连接可继续。种子重试会并行关闭旧连接的两端，等待双方确认后再建立新连接。协商批量候选后，候选队列暂满或处理超时可重发同一批一次。沿用原建连期限、并发上限和发现次数预算。本版验证记录见 `validation/release-1.1.9.json`。
 
 1.1.5 对已供过校验片的 RTC 来源增加一次请求级软救援：仅取消卡住前缀，不误伤同源其他请求；真实取消确认或关闭前仍占槽位，完成一次试片SHA后才重新加入，重复停滞退役。默认 `p8pPeerRaceLimit: 2`；显式设为4时只扩大建连竞速，普通正文仍最多两路，原整轮四身份、四槽/4MiB及服务端种子独立计数不变。`p8pSourcePortDiversity: false` 保持默认，开启需要对端及服务端协商和预算支持，不能保证穿透或绕过VPN。
 
@@ -16,13 +16,13 @@ Flutter Android APK 下载 SDK。已有更新后台选版本和来源，SDK 自�
 
 1.1.5 历史验收：精确候选1.1.5-dev.5完整635项回归和静态检查通过，正式版只调整版本文字。平板实际冷下载155305939字节并通过整包SHA、App取消与资源释放；另以真实Android原生WebRTC和本机HTTP完成三种9MiB+31字节合成文件救援场景，均通过整文件SHA、槽位和原生对象归零。原诊断夹具在扣住get后错误地转发cancel的失败和修正、构建器仅因声明版本元数据写回而失败的记录均保留。详见`validation/release-1.1.5.json`；这些结果不证明历史公网0B根因、所有NAT、固定速度、长期能耗或正式宿主签名安装。
 
-源码包：[1.1.8](https://download.csnas.asia/static/ring-download-sdk-1.1.8.zip)。`enableP8P`默认false，由接入方明确开启。
+源码包：[1.1.9](https://download.csnas.asia/static/ring-download-sdk-1.1.9.zip)。`enableP8P`默认false，由接入方明确开启。
 
 Android分享仅在明确前台、非计费Wi-Fi、业务许可、文件校验和资源状态都允许时运行。手机进程共享1个接收方、正文256KiB/s预算及最多256KiB突发；信令、协议头和重传另计。低电量、省电或温度异常暂停，退后台停止资源观察，不创建后台常驻。B/Linux不采用手机限速。宿主仍须保存收据、重新授权并调用`restoreSharing`；开启配置不会自动找到分享文件。
 
 新接收器按手机的单片容量调度。旧端边界和本版固定输入验收见`validation/release-1.1.5.json`；源码、实验室和单台平板通过不代表正式宿主、所有公网或蜂窝已验收。App开发者替换依赖、执行flutter pub get并沿用原签名打包，已安装App不会因SDK发布自动更新。
 
-历史 [1.1.7](https://download.csnas.asia/static/ring-download-sdk-1.1.7.zip)、[1.1.4](https://download.csnas.asia/static/ring-download-sdk-1.1.4.zip)、[1.1.3](https://download.csnas.asia/static/ring-download-sdk-1.1.3.zip)、[1.1.2](https://download.csnas.asia/static/ring-download-sdk-1.1.2.zip)、[1.1.1](https://download.csnas.asia/static/ring-download-sdk-1.1.1.zip)、[1.1.0](https://download.csnas.asia/static/ring-download-sdk-1.1.0.zip) 与 [1.0.3原P2P](https://download.csnas.asia/static/ring-download-sdk-1.0.3.zip) 归档保留原文件和摘要。
+历史 [1.1.8](https://download.csnas.asia/static/ring-download-sdk-1.1.8.zip)、[1.1.7](https://download.csnas.asia/static/ring-download-sdk-1.1.7.zip)、[1.1.4](https://download.csnas.asia/static/ring-download-sdk-1.1.4.zip)、[1.1.3](https://download.csnas.asia/static/ring-download-sdk-1.1.3.zip)、[1.1.2](https://download.csnas.asia/static/ring-download-sdk-1.1.2.zip)、[1.1.1](https://download.csnas.asia/static/ring-download-sdk-1.1.1.zip)、[1.1.0](https://download.csnas.asia/static/ring-download-sdk-1.1.0.zip) 与 [1.0.3原P2P](https://download.csnas.asia/static/ring-download-sdk-1.0.3.zip) 归档保留原文件和摘要。
 
 新 App 使用下载平台分配的自己的 `appId/slug`、Android 包名和发布 APK。App 开发者准备原安装签名、业务更新响应及 UI/安装入口；业务后台准备可修改的完整主下载链接和自己的 COS/CDN 地址。新 App 沿用 LifeRing 相同的下载字段契约，无需复制其业务后台或其他功能。
 
