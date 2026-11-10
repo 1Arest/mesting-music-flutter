@@ -130,7 +130,12 @@ class _SongShareSheetState extends State<SongShareSheet> {
                 onPressed: _busy
                     ? null
                     : () => _perform(() async {
-                        final image = await generateSongPoster(widget.track);
+                        final image = await generateSongPoster(
+                          widget.track,
+                          fontFamily: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.fontFamily,
+                        );
                         if (mounted) setState(() => _poster = image);
                       }),
                 icon: const Icon(CupertinoIcons.photo),

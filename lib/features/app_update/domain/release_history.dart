@@ -2,6 +2,13 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  "1.0.90": [
+    "播放器新增歌曲分享，可生成封面、歌名与二维码海报，保存到相册或分享歌曲公开链接给微信好友。",
+    "会员个人页新增金色头像光环、光束花瓣及昵称和ID扫光，网易云与酷狗沿用统一会员判断。",
+    "官方有效会员优先显示VIP或SVIP，本地会员继续显示至尊SVIP；离屏、后台和减少动画时停止循环动效。",
+    "保留窄播放器菜单、双平台个人页玻璃菜单、评论局部过渡、收藏连点合并及SDK1.1.8。",
+  ],
+
   "1.0.89": [
     "双平台评论切换采用下载管理同款内容过渡，固定标题、返回和平台栏，保留各来源滚动位置与草稿。",
     "网易云和酷狗个人页账号菜单改为汽水同款锚定玻璃浮层，保留原有账号功能。",

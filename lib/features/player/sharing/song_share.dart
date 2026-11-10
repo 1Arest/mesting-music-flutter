@@ -33,7 +33,7 @@ String? songShareUrl(Track track) {
 }
 
 /// Render once at export resolution. Preview and saved PNG use identical pixels.
-Future<Uint8List> generateSongPoster(Track track) async {
+Future<Uint8List> generateSongPoster(Track track, {String? fontFamily}) async {
   final cover = await _loadCover(track.coverAsset);
   final recorder = ui.PictureRecorder();
   final canvas = Canvas(recorder)..scale(3);
@@ -62,6 +62,9 @@ Future<Uint8List> generateSongPoster(Track track) async {
       text: TextSpan(
         text: value,
         style: TextStyle(
+          // Canvas paragraphs have no inherited TextTheme. Use the caller's
+          // configured font so exported text matches the visible application.
+          fontFamily: fontFamily,
           color: color,
           fontSize: fontSize,
           height: 1.22,
