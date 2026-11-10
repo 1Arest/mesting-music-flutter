@@ -15,6 +15,8 @@ class DiagnosticActivity extends Notifier<bool> {
 
   void setRunning(bool running) {
     diagnosticRunActive.value = running;
-    state = running;
+    // Timing drains may finish after the hosting ProviderScope has exited.
+    // Release the process latch without updating an already retired provider.
+    if (ref.mounted) state = running;
   }
 }

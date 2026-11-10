@@ -29,7 +29,7 @@ void main() {
   });
 
   test('每个角色分类只包含自己的静态与动态主题', () {
-    for (final ip in MusicThemeIp.values) {
+    for (final ip in musicThemeCategories) {
       final presets = musicThemePresets.where((preset) => preset.ip == ip);
       expect(presets, isNotEmpty, reason: '$ip 分类不能为空');
       expect(

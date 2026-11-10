@@ -2,7 +2,50 @@ import 'package:flutter/material.dart';
 
 import 'mesting_palette.dart';
 
-enum MusicThemeIp { classic, shinchan, helloKitty, kuromi }
+enum MusicThemeIp {
+  classic,
+  shinchan,
+  helloKitty,
+  kuromi,
+  myMelody,
+  usagi,
+  chiikawa,
+  hachiware,
+  puppyWhite,
+  puppyGray,
+  cinnamoroll,
+  sleepingKirby,
+  nailong,
+}
+
+/// Only these IPs have background skins; other IPs are progress companions.
+const musicThemeCategories = [
+  MusicThemeIp.classic,
+  MusicThemeIp.shinchan,
+  MusicThemeIp.helloKitty,
+  MusicThemeIp.kuromi,
+];
+
+String? companionAssetForIp(MusicThemeIp ip) => switch (ip) {
+  MusicThemeIp.nailong => 'assets/images/theme_gallery/nailong-progress.png',
+  MusicThemeIp.classic || MusicThemeIp.shinchan => null,
+  MusicThemeIp.helloKitty =>
+    'assets/images/theme_gallery/hello-kitty-progress-head.png',
+  MusicThemeIp.kuromi => 'assets/images/theme_gallery/kuromi-progress-head.png',
+  MusicThemeIp.myMelody => 'assets/images/theme_gallery/my-melody-progress.png',
+  MusicThemeIp.usagi => 'assets/images/theme_gallery/usagi-progress.png',
+  MusicThemeIp.chiikawa => 'assets/images/theme_gallery/chiikawa-progress.png',
+  MusicThemeIp.hachiware =>
+    'assets/images/theme_gallery/hachiware-progress.png',
+  MusicThemeIp.puppyWhite =>
+    'assets/images/theme_gallery/puppy-white-progress.png',
+  MusicThemeIp.puppyGray =>
+    'assets/images/theme_gallery/puppy-gray-progress.png',
+  MusicThemeIp.cinnamoroll =>
+    'assets/images/theme_gallery/cinnamoroll-progress.png',
+  MusicThemeIp.sleepingKirby =>
+    'assets/images/theme_gallery/sleeping-kirby-progress.png',
+};
 
 enum ThemeMotion {
   none,
@@ -54,16 +97,18 @@ class MusicThemePreset {
     MusicThemeIp.shinchan => '蜡笔小新',
     MusicThemeIp.helloKitty => 'Hello Kitty',
     MusicThemeIp.kuromi => '库洛米',
+    MusicThemeIp.myMelody => '美乐蒂',
+    MusicThemeIp.usagi => '乌萨奇',
+    MusicThemeIp.chiikawa => '吉伊卡哇',
+    MusicThemeIp.hachiware => '小八',
+    MusicThemeIp.puppyWhite => '小白',
+    MusicThemeIp.puppyGray => '小灰',
+    MusicThemeIp.cinnamoroll => '大耳狗',
+    MusicThemeIp.sleepingKirby => '睡帽卡比',
+    MusicThemeIp.nailong => '雷霆奶龙',
   };
 
-  String? get progressCharacterAsset => switch (ip) {
-    MusicThemeIp.classic => null,
-    MusicThemeIp.shinchan => null,
-    MusicThemeIp.helloKitty =>
-      'assets/images/theme_gallery/hello-kitty-progress-head.png',
-    MusicThemeIp.kuromi =>
-      'assets/images/theme_gallery/kuromi-progress-head.png',
-  };
+  String? get progressCharacterAsset => companionAssetForIp(ip);
 }
 
 const _shinchanCovers = 'assets/images/theme_playlists/shinchan';
@@ -396,5 +441,6 @@ String themedPlaylistCover({
       'assets/images/theme_playlists/hello_kitty/cover-$suffix.png',
     MusicThemeIp.kuromi =>
       'assets/images/theme_playlists/kuromi/cover-$suffix.png',
+    _ => fallback,
   };
 }

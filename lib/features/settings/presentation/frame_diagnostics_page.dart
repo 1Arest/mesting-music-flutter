@@ -17,6 +17,7 @@ import '../../auth/beta_account_choice.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/presentation/platform_design.dart';
 import 'production_diagnostic_driver.dart';
+import 'glass_lab_page.dart';
 import '../../themes/music_typography.dart';
 
 /// This provider survives real route changes. Reading a crash checkpoint alone
@@ -39,6 +40,7 @@ class FrameDiagnosticsPage extends ConsumerStatefulWidget {
 
 class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
   bool _copied = false;
+  bool _openingGlassLab = false;
   String? _exportState;
 
   Future<Map<String, Object>> _environment() async {
@@ -160,6 +162,35 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
     }
   }
 
+  Future<void> _openGlassLab() async {
+    if (_openingGlassLab ||
+        diagnosticRunActive.value ||
+        FrameTimingProbe.recording.value ||
+        FrameTimingProbe.draining.value) {
+      return;
+    }
+    _openingGlassLab = true;
+    try {
+      final environment = await _environment();
+      if (!mounted ||
+          diagnosticRunActive.value ||
+          FrameTimingProbe.recording.value ||
+          FrameTimingProbe.draining.value) {
+        return;
+      }
+      await Navigator.of(context).push(
+        betaContentRoute<void>(
+          GlassLabPage(
+            environment: environment,
+            displayHz: View.of(context).display.refreshRate,
+          ),
+        ),
+      );
+    } finally {
+      _openingGlassLab = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) => PlatformPageFrame(
     title: '流畅度诊断',
@@ -178,12 +209,15 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
               controller,
               FrameTimingProbe.recording,
               FrameTimingProbe.draining,
+              diagnosticRunActive,
             ]),
             builder: (context, _) {
               final busy =
                   controller.running ||
                   FrameTimingProbe.recording.value ||
-                  FrameTimingProbe.draining.value;
+                  FrameTimingProbe.draining.value ||
+                  diagnosticRunActive.value;
+              final labBusy = busy || diagnosticRunActive.value;
               final records = controller.records;
               final passed = records
                   .where((r) => r['status'] == 'passed')
@@ -200,6 +234,14 @@ class _FrameDiagnosticsPageState extends ConsumerState<FrameDiagnosticsPage> {
                   EdgeInsets.fromLTRB(24, 24, 24, 210),
                 ),
                 children: [
+                  BetaGlassButton(
+                    key: const ValueKey('open-glass-render-lab'),
+                    onPressed: labBusy ? null : _openGlassLab,
+                    child: const Text('八场景渲染实验室'),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('使用固定合成内容，分别比较背景、玻璃共享、菜单形变和切页绘制；与下方真实页面巡检分开记录。'),
+                  const SizedBox(height: 24),
                   Text(
                     '三平台连续巡检',
                     style: Theme.of(context).textTheme.headlineSmall,

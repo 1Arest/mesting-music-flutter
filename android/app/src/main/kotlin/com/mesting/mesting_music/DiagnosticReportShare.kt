@@ -22,6 +22,7 @@ object DiagnosticReportShare {
         val maximumBytes: Long?,
     ) {
         FLOW("flow_diagnostics", "mesting-flow-report.json", "Mesting flow report", "导出流畅度诊断 JSON", null),
+        GLASS_LAB("glass_lab_diagnostics", "mesting-glass-lab-report.json", "Mesting glass lab report", "导出八场景实验报告", 16_777_216L),
         QISHUI("qishui_diagnostics", "mesting-qishui-report.json", "Mesting Qishui report", "导出汽水诊断 JSON", 1_048_576L),
         NETEASE_AD("netease_ad_diagnostics", "mesting-netease-ad-report.json", "Mesting NetEase ad configuration", "导出网易云广告配置 JSON", 65_536L),
     }
@@ -33,6 +34,10 @@ object DiagnosticReportShare {
     /** A separate method and exact path keep the previous flow export intact. */
     fun shareQishui(activity: Activity, call: MethodCall, result: MethodChannel.Result) {
         shareFixed(activity, call, result, Report.QISHUI)
+    }
+
+    fun shareGlassLab(activity: Activity, call: MethodCall, result: MethodChannel.Result) {
+        shareFixed(activity, call, result, Report.GLASS_LAB)
     }
 
     fun shareNeteaseAd(activity: Activity, call: MethodCall, result: MethodChannel.Result) {

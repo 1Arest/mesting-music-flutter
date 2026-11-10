@@ -11,7 +11,6 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import 'app/branded_launch_screen.dart';
 import 'app/mesting_music_app.dart';
-import 'app/startup_video_surface.dart';
 import 'app/startup_image_surface.dart';
 import 'app/startup_visibility_gate.dart';
 import 'core/audio/mesting_audio_handler.dart';
@@ -81,7 +80,6 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
   late final StartupStyle _startupStyle;
   bool _startupFinished = false;
   bool _persistenceStarted = false;
-  bool _videoAborted = false;
   bool _imageAborted = false;
   late final _staticVisibility = StartupVisibilityGate(
     onElapsed: () {
@@ -94,8 +92,7 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
     super.initState();
     _startupStyle = savedStartupStyle(widget.preferences);
     _startupFinished =
-        !DistributionChannel.isBeta ||
-        (!_startupStyle.isVideo && !_startupStyle.staticImage);
+        !DistributionChannel.isBeta || !_startupStyle.staticImage;
     _dependencies = _initializeDependencies();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => StartupTimingProbe.mark('startup_frame'),
@@ -123,6 +120,7 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
       final audioReady = AudioService.init<MestingAudioHandler>(
         builder: () => MestingAudioHandler(tracks: const <Track>[]),
         config: AudioServiceConfig(
+          androidNotificationIcon: 'drawable/ic_stat_mesting',
           androidNotificationChannelId: 'com.mesting.music.playback',
           androidNotificationChannelName: DistributionChannel.isBeta
               ? 'Mesting Music'
@@ -188,9 +186,8 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
   void _retry() {
     _staticVisibility.dispose();
     setState(() {
-      // Retry dependency initialization, not the already attempted startup film.
+      // Retry dependency initialization, not the already presented startup artwork.
       _startupFinished = true;
-      _videoAborted = true;
       _dependencies = _initializeDependencies();
     });
   }
@@ -237,22 +234,6 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
                     },
                   ),
                 )
-              : DistributionChannel.isBeta &&
-                    _startupStyle.isVideo &&
-                    !_videoAborted &&
-                    !snapshot.hasError
-              ? MaterialApp(
-                  key: const ValueKey('startup-video-app'),
-                  debugShowCheckedModeBanner: false,
-                  home: StartupVideoSurface(
-                    style: _startupStyle,
-                    onFinished: () {
-                      if (mounted && !_startupFinished) {
-                        setState(() => _startupFinished = true);
-                      }
-                    },
-                  ),
-                )
               : MestingBrandedLaunchApp(
                   key: const ValueKey('branded-launch-app'),
                   brandStyle: widget.brandStyle,
@@ -265,7 +246,7 @@ class _MestingBootstrapState extends State<_MestingBootstrap> {
           if (!_persistenceStarted) {
             _persistenceStarted = true;
             // Only the real app's first frame starts persistence/restoration.
-            // In particular the startup film cannot race a restored track.
+            // In particular the startup artwork cannot race a restored track.
             WidgetsBinding.instance.addPostFrameCallback((_) {
               StartupTimingProbe.mark('bootstrap_app_frame');
               dependencies.playbackPersistence.start();

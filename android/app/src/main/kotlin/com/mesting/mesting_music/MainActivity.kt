@@ -283,6 +283,7 @@ open class MainActivity : AudioServiceActivity() {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "shareDiagnosticJson" -> DiagnosticReportShare.share(this, call, result)
+                "shareGlassLabDiagnosticJson" -> DiagnosticReportShare.shareGlassLab(this, call, result)
                 "shareQishuiDiagnosticJson" -> DiagnosticReportShare.shareQishui(this, call, result)
                 "shareNeteaseAdDiagnosticJson" -> DiagnosticReportShare.shareNeteaseAd(this, call, result)
                 "shareToWeChat" -> SongLinkShare.openWeChat(this, call, result)

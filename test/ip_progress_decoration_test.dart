@@ -67,11 +67,7 @@ void main() {
   testWidgets('themed progress rails paint at empty, partial and full values', (
     tester,
   ) async {
-    for (final ip in [
-      MusicThemeIp.shinchan,
-      MusicThemeIp.helloKitty,
-      MusicThemeIp.kuromi,
-    ]) {
+    for (final ip in MusicThemeIp.values) {
       for (final value in [0.0, .5, 1.0]) {
         await tester.pumpWidget(
           MaterialApp(

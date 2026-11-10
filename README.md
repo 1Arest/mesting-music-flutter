@@ -1,5 +1,7 @@
 # Mesting Music
 
+`beta`源码以1.0.90/code111为基础，新增装扮角色与[八场景渲染实验室](docs/glass-render-lab.md)。这些源码改动尚未作为新的APK发布，实际设备表现仍需验收。下方版本交接与归档说明保留历史记录。
+
 **当前维护代码：1.0.24 / Android code45，开发分支 beta，待手机验收。** 新电脑先读[跨电脑总交接](HANDOFF-GITHUB-2026-10-31-v1.0.24.md)、[接续入口](docs/CONTINUE-BETA.md)与AGENTS.md。
 
 [1.0.23 R2 正式归档](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.23)和[1.0.24 预发布](https://github.com/Mesting42/mesting-music-flutter/releases/tag/v1.0.24)均附原签名APK、完整源码ZIP及校验资料，全部31个附件摘要已回读核验。1.0.23源码为本次恢复且通过回归/构建的资料，业务二进制完全重现未证明；1.0.24直接采用原冻结交付。详情见[归档来源](docs/version-archive/RELEASE-ARCHIVE-2026-10-31-v123-v124.md)。
