@@ -1,3 +1,4 @@
+import '../../player/sharing/song_share_sheet.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import '../../music_platform/presentation/platform_quality_button.dart';
 import '../../music_platform/presentation/platform_comments_page.dart';
@@ -509,6 +510,10 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     final track = ref.read(currentTrackProvider);
     return PlayerMoreMenu(
       onSelected: (value) async {
+        if (value == 'share') {
+          await showSongShareSheet(context, track);
+          return;
+        }
         if (value == 'netease-together-exit') {
           final controller = ref.read(neteaseTogetherControllerProvider);
           if (controller != null) {
@@ -621,6 +626,11 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
           ),
           const PlayerMenuAction('quality', '音质选择', CupertinoIcons.waveform),
           const PlayerMenuAction('comments', '歌曲评论', CupertinoIcons.text_quote),
+          const PlayerMenuAction(
+            'share',
+            '分享歌曲',
+            CupertinoIcons.square_arrow_up,
+          ),
           if (track.source == TrackSource.netease && !track.hasLocalAudio)
             const PlayerMenuAction(
               'choose-source',
