@@ -1,3 +1,5 @@
+import '../../profile/presentation/vip_profile_effects.dart';
+import '../membership_badge_provider.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'netease_personal_statistics.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -49,6 +51,7 @@ class BetaPersonalProfile extends ConsumerStatefulWidget {
 class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
   final _accountAnchor = GlobalKey(debugLabel: 'personal-account-menu-anchor');
   bool _menuOpen = false;
+  final _vipAvatarKey = VipEffectAnchorHandle();
   void _open(Widget page) =>
       Navigator.of(context).push(betaContentRoute<void>(page));
   Future<void> _sign() async => _open(const UnifiedRewardPage());
@@ -132,49 +135,61 @@ class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
     final session = ref.watch(platformAccountProvider).value;
     final netease = ref.watch(usesNeteaseProvider);
     return PlatformStyle(
-      child: CustomScrollView(
-        key: PageStorageKey('personal-profile:${session?.ownerId ?? 'guest'}'),
-        slivers: [
-          _ProfilePart(
-            key: const ValueKey('profile-heading-sliver'),
-            child: _PersonalHeading(
-              signedIn: session != null,
-              accountAnchor: _accountAnchor,
-              onAccount: openAccountMenu,
-            ),
+      // Keep the scroll/sliver tree stable when membership facts arrive.
+      child: Consumer(
+        builder: (context, ref, child) => VipProfileEffects(
+          enabled: ref.watch(membershipPresentationTierProvider) != null,
+          avatarKey: _vipAvatarKey,
+          child: child!,
+        ),
+        child: CustomScrollView(
+          key: PageStorageKey(
+            'personal-profile:${session?.ownerId ?? 'guest'}',
           ),
-          _ProfilePart(
-            key: const ValueKey('profile-identity-sliver'),
-            child: session == null
-                ? const Padding(
-                    padding: EdgeInsets.all(22),
-                    child: BetaAccountCard(),
-                  )
-                : _PersonalIdentity(session),
-          ),
-          _ProfilePart(
-            key: const ValueKey('profile-quick-sliver'),
-            child: _PersonalQuickActions(
-              signedIn: session != null,
-              netease: netease,
-              signing: false,
-              onSign: _sign,
-            ),
-          ),
-          _ProfilePart(child: _PersonalMusicHeading(signedIn: session != null)),
-          const _ProfilePart(child: _PersonalLikedPlaylist()),
-          const _PersonalPlaylists(),
-          if (netease)
-            const _ProfilePart(child: NeteaseFullNavigation(tab: '我的')),
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: BetaContentInsets.musicBottomOf(
-                context,
-                editorialBottomClearance,
+          slivers: [
+            _ProfilePart(
+              key: const ValueKey('profile-heading-sliver'),
+              child: _PersonalHeading(
+                signedIn: session != null,
+                accountAnchor: _accountAnchor,
+                onAccount: openAccountMenu,
               ),
             ),
-          ),
-        ],
+            _ProfilePart(
+              key: const ValueKey('profile-identity-sliver'),
+              child: session == null
+                  ? const Padding(
+                      padding: EdgeInsets.all(22),
+                      child: BetaAccountCard(),
+                    )
+                  : _PersonalIdentity(session, avatarKey: _vipAvatarKey),
+            ),
+            _ProfilePart(
+              key: const ValueKey('profile-quick-sliver'),
+              child: _PersonalQuickActions(
+                signedIn: session != null,
+                netease: netease,
+                signing: false,
+                onSign: _sign,
+              ),
+            ),
+            _ProfilePart(
+              child: _PersonalMusicHeading(signedIn: session != null),
+            ),
+            const _ProfilePart(child: _PersonalLikedPlaylist()),
+            const _PersonalPlaylists(),
+            if (netease)
+              const _ProfilePart(child: NeteaseFullNavigation(tab: '我的')),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: BetaContentInsets.musicBottomOf(
+                  context,
+                  editorialBottomClearance,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -246,11 +261,23 @@ class _PersonalHeading extends StatelessWidget {
 }
 
 class _PersonalIdentity extends ConsumerWidget {
-  const _PersonalIdentity(this.session);
+  const _PersonalIdentity(this.session, {required this.avatarKey});
+  final VipEffectAnchorHandle avatarKey;
   final PlatformSession session;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(platformProfileProvider).value;
+    final membership = ref.watch(membershipPresentationTierProvider);
+    final nickname = Text(
+      profile?.nickname ?? session.nickname,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontSize: MusicTypography.titleSize,
+        fontWeight: MusicTypography.titleWeight,
+      ),
+    );
     return Column(
       children: [
         GestureDetector(
@@ -260,9 +287,12 @@ class _PersonalIdentity extends ConsumerWidget {
           child: Semantics(
             button: true,
             label: '编辑个人资料',
-            child: PlatformAvatar(
-              url: profile?.avatarUrl ?? session.avatarUrl,
-              size: 104,
+            child: VipEffectAnchor(
+              handle: avatarKey,
+              child: PlatformAvatar(
+                url: profile?.avatarUrl ?? session.avatarUrl,
+                size: 104,
+              ),
             ),
           ),
         ),
@@ -275,20 +305,23 @@ class _PersonalIdentity extends ConsumerWidget {
             spacing: 10,
             runSpacing: 8,
             children: [
-              Text(
-                profile?.nickname ?? session.nickname,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: MusicTypography.titleSize,
-                  fontWeight: MusicTypography.titleWeight,
-                ),
-              ),
+              if (membership != null)
+                VipGoldText(child: nickname)
+              else
+                nickname,
               const NeteaseLocalSvipBadge(inline: true),
             ],
           ),
         ),
+        if (membership != null) ...[
+          const SizedBox(height: 6),
+          VipGoldText(
+            child: Text(
+              'ID ${session.userId}',
+              style: const TextStyle(fontSize: MusicTypography.captionSize),
+            ),
+          ),
+        ],
         const SizedBox(height: 9),
         Text(
           '${session.platformLabel}账号',

@@ -1,5 +1,4 @@
 import '../membership_badge_provider.dart';
-import '../domain/membership_badge.dart';
 import '../presentation/animated_membership_badge.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
@@ -20,12 +19,7 @@ class NeteaseLocalSvipBadge extends ConsumerWidget {
   final bool inline;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(officialMembershipBadgeProvider);
-    // An account change may retain an AsyncValue's previous payload during
-    // refresh. Never label the new account with that old account's tier.
-    final official = status.isLoading ? null : status.value;
-    final local = ref.watch(neteaseLocalSvipProvider);
-    final tier = official ?? (local ? MembershipBadgeTier.supreme : null);
+    final tier = ref.watch(membershipPresentationTierProvider);
     if (tier == null) return const SizedBox.shrink();
     return Padding(
       padding: inline ? EdgeInsets.zero : const EdgeInsets.only(top: 8),

@@ -72,9 +72,10 @@ void main() {
           ),
           scrollBehavior: const BetaScrollBehavior(),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: TextScaler.linear(narrow ? 1.3 : 1)),
+            data: MediaQuery.of(context).copyWith(
+              disableAnimations: true,
+              textScaler: TextScaler.linear(narrow ? 1.3 : 1),
+            ),
             child: child!,
           ),
         ),
