@@ -34,6 +34,7 @@ import '../../themes/beta_appearance.dart';
 import '../../music_platform/platform_recommendation_providers.dart';
 import 'apple_player_controls.dart';
 import 'immersive_lyrics.dart';
+import '../../lyrics/presentation/lyric_timing_tools.dart';
 import 'player_pull_to_dismiss.dart';
 import 'player_more_menu.dart';
 import 'player_glass_button.dart';
@@ -78,6 +79,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
   late bool _lyrics = widget.lyricsInitially;
   late bool _queue = widget.queueInitially;
   double _direction = 1;
+  bool _verticalTransition = false;
   StreamSubscription<String>? _commands;
   bool _routeExitRequested = false;
   late final PlayerChromeReveal _chromeReveal;
@@ -92,6 +94,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
 
   void _showLyrics(bool show) => setState(() {
     _direction = show ? 1 : -1;
+    _verticalTransition = true;
     _lyrics = show;
     _queue = false;
   });
@@ -160,7 +163,10 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     super.dispose();
   }
 
-  void _toggleQueue() => setState(() => _queue = !_queue);
+  void _toggleQueue() => setState(() {
+    _verticalTransition = _lyrics;
+    _queue = !_queue;
+  });
   void _close() {
     if (_queue) {
       _toggleQueue();
@@ -377,6 +383,9 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                   Expanded(
                                     child: SizedBox(
                                       child: PlayerContentTransition(
+                                        axis: _verticalTransition
+                                            ? Axis.vertical
+                                            : Axis.horizontal,
                                         direction: _direction,
                                         child: _queue
                                             ? const PlayerQueuePanel(
@@ -595,6 +604,10 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
           _toggleQueue();
           return;
         }
+        if (value == 'lyric-timing') {
+          await showLyricTimingSheet(context);
+          return;
+        }
         if (value == 'quality') {
           await showPlatformQualityPicker(context, ref);
           return;
@@ -642,6 +655,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
             CupertinoIcons.list_bullet,
           ),
           const PlayerMenuAction('quality', '音质选择', CupertinoIcons.waveform),
+          const PlayerMenuAction('lyric-timing', '歌词时间调整', CupertinoIcons.time),
           const PlayerMenuAction('comments', '歌曲评论', Icons.chat_bubble_outline),
           const PlayerMenuAction(
             'share',

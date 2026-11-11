@@ -7,7 +7,6 @@ import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/presentation/lyric_scroll_preview.dart';
 import '../../lyrics/lyric_timing.dart';
-import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../../themes/personal_style.dart';
 
@@ -286,19 +285,17 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     },
                   ),
                 );
-                return LyricTimingTools(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (event) =>
-                        document.isSynced &&
-                        _preview.handleScroll(
-                          event,
-                          lineCount: document.lines.length,
-                          topPadding: topPadding,
-                          lineAtOffset: (offset) =>
-                              lyricLineAtOffset(_offsets, offset),
-                        ),
-                    child: lyrics,
-                  ),
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (event) =>
+                      document.isSynced &&
+                      _preview.handleScroll(
+                        event,
+                        lineCount: document.lines.length,
+                        topPadding: topPadding,
+                        lineAtOffset: (offset) =>
+                            lyricLineAtOffset(_offsets, offset),
+                      ),
+                  child: lyrics,
                 );
               },
             );
