@@ -1,3 +1,5 @@
+import 'playback_preferences.dart';
+import 'playback_transition.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
@@ -21,6 +23,8 @@ import '../platform/distribution_channel.dart';
 import '../network/music_network_diagnostics.dart';
 import '../network/system_music_io_client.dart';
 
+part 'prepared_playback.dart';
+
 typedef RadioTrackLoader =
     Future<List<Track>> Function(Set<String> excludedTrackKeys);
 typedef TrackPlaybackResolver = Future<Track> Function(Track track);
@@ -28,7 +32,8 @@ typedef TrackLoadFailurePolicy = bool Function(Track track, Object error);
 
 /// The only owner of the active `just_audio` source and media-session state.
 ///
-/// The logical queue is held separately from the player's one active source.
+/// The logical queue is separate from the active decoder. A silent prepared
+/// decoder and a brief draining tail remain private to this same owner.
 /// In particular, removing a track from the upcoming queue after one second of
 /// real playback must not recreate the current audio source, which would cause
 /// an audible pause on some devices.
@@ -38,6 +43,7 @@ class MestingAudioHandler extends BaseAudioHandler
     required List<Track> tracks,
     Random? random,
     AudioPlayer? player,
+    AudioPlayer Function()? preparedPlayerFactory,
   }) : _libraryTracks = List.of(tracks),
        _player =
            player ??
@@ -49,14 +55,15 @@ class MestingAudioHandler extends BaseAudioHandler
                  ? 'mesting-music'
                  : null,
            ),
+       _preparedPlayerFactory = preparedPlayerFactory,
        _random = random ?? Random(),
        _knownTracks = <String, Track>{
          for (final track in tracks) track.id: track,
        },
        _tracks = tracks.isEmpty ? <Track>[] : <Track>[tracks.first] {
     _pauseFadeController = PauseFadeController(
-      setVolume: _player.setVolume,
-      pause: _player.pause,
+      setVolume: (volume) => _player.setVolume(volume),
+      pause: () => _player.pause(),
     );
     sleepTimer.addListener(_syncSleepBoundary);
     if (!kIsWeb && Platform.isAndroid) {
@@ -65,43 +72,14 @@ class MestingAudioHandler extends BaseAudioHandler
       LockCachingAudioSource.networkClientFactory =
           MusicSystemNetwork.shared.cacheClient;
     }
-    _player.playbackEventStream.listen(
-      _broadcastState,
-      onError: (Object error, StackTrace stackTrace) {
-        // Source preparation owns its own failure. Native events from the
-        // previous stream must not auto-skip a newly visible selection.
-        if (_pendingQueueEpoch != null ||
-            mediaItem.value?.id != _loadedTrackId) {
-          return;
-        }
-        unawaited(
-          _handlePlaybackFailure(
-            error,
-            stackTrace: stackTrace,
-            origin: 'playback-event',
-          ),
-        );
-      },
-    );
-    _player.currentIndexStream.listen(_handleCurrentIndex);
-    _player.positionStream.listen(_handlePosition);
-    _player.durationStream.listen(_handleDuration);
-    _player.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) {
-        if (_sleepStoppedAtCompletion || _pendingQueueEpoch != null) return;
-        final completedTrack = trackForId(mediaItem.value?.id ?? '');
-        if (_completionGate.takeCompletion() && completedTrack != null) {
-          _completedTrackController.add(completedTrack);
-        }
-        if (sleepTimer.consumeTrackCompletion()) {
-          _sleepStoppedAtCompletion = true;
-          return;
-        }
-        unawaited(_advancePlayback(forward: true, automatic: true));
-      }
-    });
+    _bindPlayer(_player);
     _ready = _initialize();
   }
+
+  void configurePlaybackPreferences(PlaybackPreferences value) =>
+      _setPlaybackPreferences(value);
+  void configureSynchronizedPlayback(bool Function() active) =>
+      _setSynchronizedPlayback(active);
 
   final List<Track> _libraryTracks;
   List<Track> _playbackContextTracks = const <Track>[];
@@ -109,7 +87,104 @@ class MestingAudioHandler extends BaseAudioHandler
   List<Track> _radioFallbackTracks = const <Track>[];
   final Map<String, Track> _knownTracks;
   List<Track> _tracks;
-  final AudioPlayer _player;
+  AudioPlayer _player;
+  final AudioPlayer Function()? _preparedPlayerFactory;
+  final _transition = PlaybackTransition();
+  StreamSubscription<AudioInterruptionEvent>? _transitionInterruptions;
+  double _interruptionGain = 1;
+  PlaybackPreferences _playbackPreferences = const PlaybackPreferences();
+  bool Function()? _synchronizedPlayback;
+  String? _effectConfig;
+  final _nativeSubscriptions = <StreamSubscription<dynamic>>[];
+  final _positions = StreamController<Duration>.broadcast();
+  final _durations = StreamController<Duration?>.broadcast();
+  final _sessions = StreamController<int?>.broadcast();
+  final _repeatBoundaries = StreamController<void>.broadcast();
+  void _bindPlayer(AudioPlayer player) {
+    for (final subscription in _nativeSubscriptions) {
+      unawaited(subscription.cancel());
+    }
+    _nativeSubscriptions.clear();
+    _nativeSubscriptions.add(
+      player.playbackEventStream.listen(
+        (event) {
+          if (identical(_player, player)) _broadcastState(event);
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          // Source preparation owns its own failure. Native events from the
+          // previous stream must not auto-skip a newly visible selection.
+          if (!identical(_player, player) ||
+              _pendingQueueEpoch != null ||
+              mediaItem.value?.id != _loadedTrackId) {
+            return;
+          }
+          unawaited(
+            _handlePlaybackFailure(
+              error,
+              stackTrace: stackTrace,
+              origin: 'playback-event',
+            ),
+          );
+        },
+      ),
+    );
+    _nativeSubscriptions.add(
+      player.currentIndexStream.listen((index) {
+        if (identical(_player, player)) _handleCurrentIndex(index);
+      }),
+    );
+    _nativeSubscriptions.add(
+      player.positionStream.listen((position) {
+        if (identical(_player, player)) {
+          _positions.add(position);
+          _handlePosition(position);
+        }
+      }),
+    );
+    _nativeSubscriptions.add(
+      player.durationStream.listen((duration) {
+        if (identical(_player, player)) {
+          _durations.add(duration);
+          _handleDuration(duration);
+        }
+      }),
+    );
+    _nativeSubscriptions.add(
+      player.processingStateStream.listen((state) {
+        if (!identical(_player, player)) return;
+        if (state == ProcessingState.completed) {
+          if (_sleepStoppedAtCompletion ||
+              _pendingQueueEpoch != null ||
+              _transition.crossing) {
+            return;
+          }
+          final completedTrack = trackForId(mediaItem.value?.id ?? '');
+          if (_completionGate.takeCompletion() && completedTrack != null) {
+            _completedTrackController.add(completedTrack);
+          }
+          if (sleepTimer.consumeTrackCompletion()) {
+            _sleepStoppedAtCompletion = true;
+            return;
+          }
+          unawaited(_advancePlayback(forward: true, automatic: true));
+        }
+      }),
+    );
+    _nativeSubscriptions.add(
+      player.androidAudioSessionIdStream.listen((id) {
+        if (identical(_player, player)) _sessions.add(id);
+      }),
+    );
+    _nativeSubscriptions.add(
+      player.positionDiscontinuityStream.listen((event) {
+        if (identical(_player, player) &&
+            event.reason == PositionDiscontinuityReason.autoAdvance) {
+          _repeatBoundaries.add(null);
+        }
+      }),
+    );
+  }
+
   late final MusicSleepTimer sleepTimer = MusicSleepTimer(onExpire: pause);
   bool _sleepStoppedAtCompletion = false;
   bool _sleepBoundaryRequested = false;
@@ -239,6 +314,7 @@ class MestingAudioHandler extends BaseAudioHandler
     TrackPlaybackResolver? resolver, {
     TrackLoadFailurePolicy? skipUnplayableTrack,
   }) {
+    _invalidatePreparation();
     _trackPlaybackResolver = resolver;
     _skipUnplayableTrack = skipUnplayableTrack;
   }
@@ -347,7 +423,7 @@ class MestingAudioHandler extends BaseAudioHandler
       if (++completed == 2) events.close();
     }
 
-    final native = _player.positionStream.listen(
+    final native = _positions.stream.listen(
       (position) => events.add(_deferredPosition ?? position),
       onError: events.addError,
       onDone: done,
@@ -357,7 +433,7 @@ class MestingAudioHandler extends BaseAudioHandler
       onError: events.addError,
       onDone: done,
     );
-    if (_deferredPosition case final position?) events.add(position);
+    events.add(_deferredPosition ?? currentPosition);
     events.onCancel = () async {
       await native.cancel();
       await restored.cancel();
@@ -367,26 +443,32 @@ class MestingAudioHandler extends BaseAudioHandler
   Duration? get _deferredPosition => _deferredRestore?.id == mediaItem.value?.id
       ? _deferredRestore?.position
       : null;
-  Stream<Duration?> get durationStream => _player.durationStream;
+  Stream<Duration?> get durationStream async* {
+    yield _player.duration;
+    yield* _durations.stream;
+  }
 
   /// Explicit seek work can leave just_audio's playing flag true. Listening
   /// accounting observes this edge instead of charging decoder seek latency.
   Stream<bool> get seekingStream => _seekingController.stream;
   bool get isSeeking => _isSeeking;
-  Stream<void> get nativeRepeatBoundaryStream => _player
-      .positionDiscontinuityStream
-      .where((event) => event.reason == PositionDiscontinuityReason.autoAdvance)
-      .map<void>((_) {});
+  Stream<void> get nativeRepeatBoundaryStream => _repeatBoundaries.stream;
   int? get androidAudioSessionId => _player.androidAudioSessionId;
 
   /// The existing single player owns this PCM effect and its native lifetime.
   /// Account/entitlement checks belong to the Soda effect controller.
-  Future<Map<String, Object?>> setQishuiAudioEffect(String? config) =>
-      _player.setSodaAudioEffect(config);
+  Future<Map<String, Object?>> setQishuiAudioEffect(String? config) {
+    _effectConfig = config;
+    _invalidatePreparation();
+    return _player.setSodaAudioEffect(config);
+  }
+
   Future<Map<String, Object?>> qishuiAudioEffectStatus() =>
       _player.sodaAudioEffectStatus();
-  Stream<int?> get androidAudioSessionIdStream =>
-      _player.androidAudioSessionIdStream;
+  Stream<int?> get androidAudioSessionIdStream async* {
+    yield _player.androidAudioSessionId;
+    yield* _sessions.stream;
+  }
 
   /// A modal MV may resume only while no later transport command supersedes it.
   int get transportRevision => _userCommandEpoch;
@@ -454,10 +536,22 @@ class MestingAudioHandler extends BaseAudioHandler
 
   @visibleForTesting
   Future<void> debugDispose() async {
+    _transition.invalidate();
+    await _cancelTransition();
+    await _transition.clearPreparation();
+    for (final sub in _nativeSubscriptions) {
+      await sub.cancel();
+    }
+    await _positions.close();
+    await _durations.close();
+    await _sessions.close();
+    await _repeatBoundaries.close();
+    await _transitionInterruptions?.cancel();
     sleepTimer.dispose();
     _cancelPlaybackStartGuard();
     _consumptionTimer?.cancel();
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     await _userCommandController.close();
     await _togetherUserCommandController.close();
     await _seekingController.close();
@@ -494,6 +588,18 @@ class MestingAudioHandler extends BaseAudioHandler
   Future<void> _initialize() async {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration.music());
+    _transitionInterruptions = session.interruptionEventStream.listen((event) {
+      _interruptionGain =
+          event.begin && event.type == AudioInterruptionType.duck ? .5 : 1;
+      if (event.begin) {
+        _invalidatePreparation();
+        // Let each decoder process its ordinary session interruption first.
+        // An envelope must not undo system ducking or revive paused audio.
+        unawaited(
+          Future<void>.microtask(_cancelTransition).catchError((Object _) {}),
+        );
+      }
+    });
     await _loadQueue(_tracks);
     await _applyPlaybackOrder();
   }
@@ -590,6 +696,13 @@ class MestingAudioHandler extends BaseAudioHandler
             requiredUserCommandEpoch != _userCommandEpoch)) {
       return false;
     }
+    await _cancelTransition();
+    if (transportEpoch != _transportIntentEpoch ||
+        ownerCurrent?.call() == false ||
+        (requiredUserCommandEpoch != null &&
+            requiredUserCommandEpoch != _userCommandEpoch)) {
+      return false;
+    }
     final loadEpoch = ++_queueLoadEpoch;
     bool isCurrent() =>
         ownerCurrent?.call() != false &&
@@ -654,6 +767,30 @@ class MestingAudioHandler extends BaseAudioHandler
     _pendingQueueEpoch = loadEpoch;
     _resetConsumptionConfirmation();
     _completionGate.reset();
+    final prepared = _transition.ready;
+    if (initialPosition == Duration.zero &&
+        prepared != null &&
+        prepared.track.id == orderedTracks.first.id) {
+      _transition.ready = null;
+      final previous = _player;
+      _player = prepared.player;
+      _bindPlayer(_player);
+      _currentSourceFromCache = false;
+      final restore = _player.setVolume(_interruptionGain);
+      orderedTracks[0] = prepared.track;
+      final publication = _publishPrepared(
+        orderedTracks,
+        isCurrent,
+      ).catchError((Object _) => false);
+      await previous.stop();
+      await previous.dispose();
+      await restore;
+      final published = await publication;
+      if (!isCurrent()) return false;
+      await _player.setMusicOutputOwner('mesting-music');
+      return published;
+    }
+    _invalidatePreparation();
     // Stop is issued before any network work. Publish loading before changing
     // identity so listening reporters never attribute the old audio to it.
     final stopped = _player.stop();
@@ -704,6 +841,7 @@ class MestingAudioHandler extends BaseAudioHandler
       queue.add(mediaItems);
       _upcomingMediaItems = mediaItems.skip(1).toList(growable: false);
       mediaItem.add(mediaItems.first);
+      await _configureLoudness(_player, orderedTracks.first);
       try {
         await _player.setAudioSources(
           <AudioSource>[activeSource],
@@ -1026,6 +1164,10 @@ class MestingAudioHandler extends BaseAudioHandler
       ];
     }
     _upcomingQueueController.add(upcomingQueue);
+    if (_transition.ready?.queueKey != null &&
+        _transition.ready!.queueKey != _nextQueueKey()) {
+      _invalidatePreparation();
+    }
   }
 
   void _handleDuration(Duration? duration) {
@@ -1056,6 +1198,7 @@ class MestingAudioHandler extends BaseAudioHandler
 
   void _handlePosition(Duration position) {
     sleepTimer.checkDeadline();
+    _tickPreparation(position);
     if (position <= Duration.zero) return;
     _cancelPlaybackStartGuard();
     // Source replacement can update the current index before any bytes have
@@ -1373,6 +1516,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _ready;
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (restartAfterSleep) {
       _completionGate.reset();
@@ -1432,12 +1576,14 @@ class MestingAudioHandler extends BaseAudioHandler
       // A received pause is already a settled peer intent. Apply it directly
       // rather than keeping the room's command queue behind a UI-style fade.
       await _pauseFadeController.cancel();
+      await _cancelTransition();
       if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
       await _player.pause();
       return;
     }
     if (!_player.playing || _player.processingState != ProcessingState.ready) {
       await _pauseFadeController.cancel();
+      await _cancelTransition();
       _trace(
         'command-pause-immediate id=${mediaItem.value?.id} '
         'processing=${_player.processingState.name}',
@@ -1459,6 +1605,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _ready;
     _cancelPlaybackStartGuard();
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     _resetConsumptionConfirmation();
     _trace('command-stop id=${mediaItem.value?.id}');
     await _player.stop();
@@ -1473,6 +1620,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _ready;
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     if (_deferredPosition != null && _pendingQueueEpoch == null) {
       // A lyric/progress selection before Play changes only the resume point.
@@ -1504,6 +1652,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _markUserCommand('skipToQueueItem');
     await _ready;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (index < 0 || index >= _tracks.length) return;
     if (index == 0) {
       await _seekPlayer(Duration.zero);
@@ -1523,6 +1672,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _ready;
     _consecutiveLoadFailures = 0;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (!_continueAfterExplicitQueue) {
       await _advancePlayback(forward: forward);
       return;
@@ -1629,8 +1779,13 @@ class MestingAudioHandler extends BaseAudioHandler
         final forcedIndex = candidates.indexWhere(
           (item) => item.id == _explicitNextId,
         );
+        final preparedIndex = candidates.indexWhere(
+          (item) => item.id == _transition.ready?.track.id,
+        );
         final targetIndex = forcedIndex >= 0
             ? forcedIndex
+            : preparedIndex >= 0
+            ? preparedIndex
             : QueueEngine.resolveUpcomingIndex(
                 length: candidates.length,
                 // Shuffle is materialized in the visible queue when enabled, so
@@ -2123,6 +2278,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _knownTracks[track.id] = track;
     await _ready;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (isCurrent?.call() == false) return;
     // Returning the current recording to the head makes Previous then Next
     // reversible without mutating the live queue before source resolution.
@@ -2241,6 +2397,7 @@ class MestingAudioHandler extends BaseAudioHandler
     _replacePlaybackContext(tracks);
     await _ready;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     final current = tracks.first;
     final safePosition = Duration(
       milliseconds: position.inMilliseconds.clamp(
@@ -2271,6 +2428,7 @@ class MestingAudioHandler extends BaseAudioHandler
     if (_pauseFadeController.isFading) {
       _markUserCommand('cancelPauseFade');
       await _pauseFadeController.cancel();
+      await _cancelTransition();
       return;
     }
     if (_player.playing) {
@@ -2311,6 +2469,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _ready;
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
     final applied = await _loadQueue(
       tracks,
@@ -2379,6 +2538,7 @@ class MestingAudioHandler extends BaseAudioHandler
     invalidateRadioRecommendations();
     await _ready;
     await _pauseFadeController.cancel();
+    await _cancelTransition();
     await _player.stop();
     await _loadQueue(const <Track>[]);
     await setPlaybackMode(PlaybackMode.list);
@@ -2493,6 +2653,26 @@ class MestingAudioHandler extends BaseAudioHandler
   }
 
   void _markUserCommand(String command, {bool together = false}) {
+    // Immediate invalidation prevents a late envelope from reversing a tap.
+    _transition.invalidate();
+    unawaited(_cancelTransition().catchError((Object _) {}));
+    if (command != 'skipNext' &&
+        command != 'playSingleTrack' &&
+        command != 'appendUpcoming') {
+      _invalidatePreparation();
+    }
+    if (command == 'seek') {
+      unawaited(
+        _player
+            .configureMusicLoudness(
+              key: '',
+              enabled: _playbackPreferences.balance,
+              durationMs: 0,
+              invalidate: true,
+            )
+            .catchError((Object _) {}),
+      );
+    }
     if (command != 'pause') _sleepStoppedAtCompletion = false;
     if (const {
       'play',
