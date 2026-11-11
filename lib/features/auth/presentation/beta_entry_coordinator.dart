@@ -7,6 +7,7 @@ import '../../../core/persistence/app_preferences.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../../shared/widgets/beta_success_feedback.dart';
 import '../beta_entry_flow.dart';
+import '../beta_entry_back_state.dart';
 import '../../music_platform/music_platform_providers.dart';
 import 'beta_welcome_page.dart';
 import 'beta_onboarding_page.dart';
@@ -35,6 +36,7 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
   final _navigator = GlobalKey<NavigatorState>();
   final _guide = GlobalKey<BetaOnboardingPageState>();
   ChildBackButtonDispatcher? _back;
+  late final _backState = ref.read(betaEntryBackStateProvider);
 
   @override
   void initState() {
@@ -66,6 +68,7 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
 
   @override
   void dispose() {
+    _backState.update(active: false, guide: false);
     _back?.removeCallback(_handleBack);
     if (_back != null) widget.backDispatcher?.forget(_back!);
     super.dispose();
@@ -114,6 +117,7 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
               // to the app Navigator. Its spatial routes animate themselves.
               child: Navigator(
                 key: _navigator,
+                observers: [_backState],
                 onGenerateRoute: (_) =>
                     betaEntryRoute<void>(const BetaWelcomePage()),
               ),
@@ -161,6 +165,10 @@ class _BetaEntryCoordinatorState extends ConsumerState<BetaEntryCoordinator> {
         stage == BetaEntryStage.guide ||
         platform.isLoading ||
         platform.hasError;
+    _backState.update(
+      active: active,
+      guide: stage == BetaEntryStage.success || stage == BetaEntryStage.guide,
+    );
     return Stack(
       fit: StackFit.expand,
       children: [

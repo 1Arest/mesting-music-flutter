@@ -22,6 +22,7 @@ import '../features/themes/app_theme.dart';
 import '../features/themes/music_application_theme.dart';
 import '../features/themes/theme_controller.dart';
 import '../features/auth/presentation/first_launch_auth_coordinator.dart';
+import '../features/auth/beta_entry_back_state.dart';
 import '../features/legal/presentation/disclaimer_dialog.dart';
 import '../features/lyrics/presentation/lyrics_overlay_coordinator.dart';
 import '../features/app_update/presentation/app_update_coordinator.dart';
@@ -221,7 +222,10 @@ class MestingMusicApp extends ConsumerWidget {
       builder: (context, child) => MusicApplicationTheme(
         data: Theme.of(context),
         child: SystemBackCoordinator(
-          canPop: appRouter.canPop,
+          // Entry is above Router and owns Back while its overlay is visible.
+          canPop: () =>
+              ref.read(betaEntryBackStateProvider).canHandlePop ??
+              appRouter.canPop(),
           navigationChanges: appRouter.routerDelegate,
           child: FirstLaunchDisclaimerCoordinator(
             child: FirstLaunchAuthCoordinator(
