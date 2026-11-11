@@ -219,7 +219,12 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                           ],
                                         ),
                                       ),
-                                      const Expanded(child: ImmersiveLyrics()),
+                                      Expanded(
+                                        child: ImmersiveLyrics(
+                                          onReturnToCover: () =>
+                                              setState(() => _lyrics = false),
+                                        ),
+                                      ),
                                     ],
                                   )
                                 : Center(

@@ -395,6 +395,8 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                               )
                                             : _lyrics
                                             ? ImmersiveLyrics(
+                                                onReturnToCover: () =>
+                                                    _showLyrics(false),
                                                 referenceDesign: true,
                                                 key: ValueKey(
                                                   'immersive-lyrics-${track.id}',

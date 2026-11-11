@@ -22,6 +22,59 @@ import 'package:mesting_music/shared/models/track.dart';
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  for (final immersive in [true, false]) {
+    for (final synced in [true, false]) {
+      testWidgets(
+        'normal lyric tap returns to cover without seeking: immersive=$immersive synced=$synced',
+        (tester) async {
+          var returns = 0;
+          final widget = immersive
+              ? ImmersiveLyrics(
+                  referenceDesign: true,
+                  onReturnToCover: () => returns++,
+                )
+              : LyricsPanel(immersive: true, onReturnToCover: () => returns++);
+          final player = await _mount(tester, widget, synced: synced);
+          await tester.tap(find.text(_lines.first.text));
+          await tester.pumpAndSettle();
+          expect(returns, 1);
+          expect(player.seeks, isEmpty);
+          expect(player.plays, 0);
+          expect(find.byType(LyricSeekRow), findsNothing);
+        },
+      );
+    }
+    testWidgets(
+      'only manually selected lyric text seeks: immersive=$immersive',
+      (tester) async {
+        var returns = 0;
+        final widget = immersive
+            ? ImmersiveLyrics(
+                referenceDesign: true,
+                onReturnToCover: () => returns++,
+              )
+            : LyricsPanel(immersive: true, onReturnToCover: () => returns++);
+        final player = await _mount(tester, widget);
+        await _dragLyrics(tester);
+        final preview = find.byType(LyricSeekRow);
+        final time = tester.widget<LyricSeekRow>(preview).time;
+        final line = _lines.singleWhere((line) => line.time == time);
+        expect(player.seeks, isEmpty);
+        await tester.tap(
+          find.descendant(of: preview, matching: find.text(line.text)),
+        );
+        await tester.pumpAndSettle();
+        expect(player.seeks, [time]);
+        expect(player.plays, 1);
+        expect(returns, 0);
+        await tester.tap(find.text(line.text));
+        await tester.pumpAndSettle();
+        expect(returns, 1);
+        expect(player.seeks, [time]);
+      },
+    );
+  }
+
   test('歌词偏移按歌曲保存，连续操作和重启后恢复，清零仅还原当前歌', () async {
     final first = ProviderContainer();
     final key = lyricTimingKey(_track);

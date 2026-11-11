@@ -12,9 +12,10 @@ import 'lyric_scroll_preview.dart';
 import '../lyric_timing.dart';
 
 class LyricsPanel extends ConsumerStatefulWidget {
-  const LyricsPanel({this.immersive = false, super.key});
+  const LyricsPanel({this.immersive = false, this.onReturnToCover, super.key});
 
   final bool immersive;
+  final VoidCallback? onReturnToCover;
 
   @override
   ConsumerState<LyricsPanel> createState() => _LyricsPanelState();
@@ -82,18 +83,18 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
             topPadding: topPadding,
             lineAtOffset: (offset) => (offset / _itemExtent).floor(),
           ),
-      child: list,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _preview.index == null ? widget.onReturnToCover : null,
+        child: list,
+      ),
     );
   }
 
   VoidCallback? _lineTap(LyricsDocument document, int index) {
+    if (_preview.index == null) return widget.onReturnToCover;
     if (!document.isSynced) return null;
     final time = document.lines[index].time;
-    if (_preview.index == null) {
-      return () => ref
-          .read(audioHandlerProvider)
-          .seek(time.isNegative ? Duration.zero : time);
-    }
     return _preview.index == index && !_preview.seeking
         ? () => _preview.playFrom(context, ref, time)
         : null;
