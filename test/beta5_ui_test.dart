@@ -3534,8 +3534,8 @@ void main() {
         await tester.pump(const Duration(milliseconds: 650));
         expect(find.byType(PlayerQueuePanel), findsOneWidget);
         expect(find.text('下一段旋律'), findsOneWidget);
-        expect(find.byKey(const ValueKey('player-shuffle')), findsOneWidget);
-        expect(find.byKey(const ValueKey('player-repeat')), findsOneWidget);
+        expect(find.byKey(const ValueKey('queue-playback-mode')), findsOneWidget);
+        expect(find.byKey(const ValueKey('player-repeat')), findsNothing);
         await captureScreenshot(
           tester,
           'beta16-inline-queue-${sample.$1.width.toInt()}',

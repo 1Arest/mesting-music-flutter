@@ -10,6 +10,7 @@ import '../../../core/platform/distribution_channel.dart';
 import '../../../shared/models/track.dart';
 import 'queue_track_duration.dart';
 import 'beta_playback_queue.dart';
+import 'playback_mode_button.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
@@ -51,6 +52,7 @@ double playbackQueueSheetHeightFactorForCount({
 }
 
 IconData playbackModeIcon(PlaybackMode mode) => switch (mode) {
+  PlaybackMode.sequential => Icons.format_list_numbered_rounded,
   PlaybackMode.list => Icons.repeat_rounded,
   PlaybackMode.single => Icons.repeat_one_rounded,
   PlaybackMode.random => Icons.shuffle_rounded,
@@ -129,7 +131,8 @@ class QueuePage extends ConsumerWidget {
     }
     final tokens = context.musicThemeTokens;
     final queue = ref.watch(upcomingQueueProvider).value ?? const [];
-    final mode = ref.watch(playbackModeProvider).value ?? PlaybackMode.list;
+    final mode =
+        ref.watch(playbackModeProvider).value ?? PlaybackMode.sequential;
     final handler = ref.watch(audioHandlerProvider);
     final manual = queue
         .where((item) => !handler.isAutomaticallyQueued(item.id))
@@ -161,7 +164,7 @@ class QueuePage extends ConsumerWidget {
               onClose: sheet
                   ? Navigator.of(context).pop
                   : () => context.go('/music'),
-              onCycleMode: handler.cyclePlaybackMode,
+              onSelectMode: handler.setPlaybackMode,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 7, 4, 0),
@@ -260,14 +263,14 @@ class _QueueHeader extends StatelessWidget {
     required this.count,
     required this.mode,
     required this.onClose,
-    required this.onCycleMode,
+    required this.onSelectMode,
   });
 
   final bool sheet;
   final int count;
   final PlaybackMode mode;
   final VoidCallback onClose;
-  final VoidCallback onCycleMode;
+  final ValueChanged<PlaybackMode> onSelectMode;
 
   @override
   Widget build(BuildContext context) {
@@ -309,7 +312,7 @@ class _QueueHeader extends StatelessWidget {
               ],
             ),
           ),
-          _PlaybackModeControl(mode: mode, onTap: onCycleMode),
+          PlaybackModeButton(mode: mode, onSelected: onSelectMode),
           const SizedBox(width: 8),
           _QueueCircleButton(
             tooltip: sheet ? '关闭播放列表' : '返回音乐页面',
@@ -319,57 +322,6 @@ class _QueueHeader extends StatelessWidget {
             onTap: onClose,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PlaybackModeControl extends StatelessWidget {
-  const _PlaybackModeControl({required this.mode, required this.onTap});
-
-  final PlaybackMode mode;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.musicThemeTokens;
-    final accent = Theme.of(context).colorScheme.primary;
-    return Semantics(
-      button: true,
-      label: '当前${mode.label}，点击切换播放模式',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Ink(
-            height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 11),
-            decoration: BoxDecoration(
-              color: Color.alphaBlend(
-                accent.withValues(alpha: .1),
-                tokens.glassSubtle,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: accent.withValues(alpha: .22)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(playbackModeIcon(mode), size: 17, color: accent),
-                const SizedBox(width: 6),
-                Text(
-                  mode.label,
-                  style: TextStyle(
-                    color: tokens.textPrimary,
-                    fontSize: MusicTypography.smallCaptionSize,
-                    fontWeight: MusicTypography.bodyWeight,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
