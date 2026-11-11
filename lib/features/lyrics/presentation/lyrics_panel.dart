@@ -10,7 +10,6 @@ import '../../themes/music_theme_tokens.dart';
 import '../../themes/music_typography.dart';
 import 'lyric_scroll_preview.dart';
 import '../lyric_timing.dart';
-import 'lyric_timing_tools.dart';
 
 class LyricsPanel extends ConsumerStatefulWidget {
   const LyricsPanel({this.immersive = false, super.key});
@@ -220,9 +219,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
               );
             },
           );
-          return LyricTimingTools(
-            child: _previewScroll(document, topPadding, lyrics),
-          );
+          return _previewScroll(document, topPadding, lyrics);
         }
 
         const topPadding = 90.0;
@@ -306,9 +303,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
             ),
           ],
         );
-        return LyricTimingTools(
-          child: _previewScroll(document, topPadding, lyrics),
-        );
+        return _previewScroll(document, topPadding, lyrics);
       },
     );
   }

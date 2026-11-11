@@ -13,7 +13,6 @@ import '../../experience/presentation/immersive_lyrics.dart'
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/lyric_timing.dart';
-import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../music_platform_providers.dart';
 import '../presentation/platform_feedback.dart';
@@ -44,12 +43,7 @@ class QishuiLyricsContent extends ConsumerWidget {
           ),
           data: (document) => document.lines.isEmpty
               ? const Center(child: Text('汽水暂未提供这首歌的歌词'))
-              : LyricTimingTools(
-                  child: QishuiLyricLines(
-                    key: ValueKey(track.id),
-                    document: document,
-                  ),
-                ),
+              : QishuiLyricLines(key: ValueKey(track.id), document: document),
         );
   }
 }
