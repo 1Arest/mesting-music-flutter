@@ -12,12 +12,16 @@ import '../../experience/presentation/immersive_lyrics.dart'
     show activeLyricIndexProvider;
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/lyrics_providers.dart';
+import '../../lyrics/lyric_timing.dart';
+import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../music_platform_providers.dart';
 import '../presentation/platform_feedback.dart';
 
-String qishuiLyricTime(Duration time) =>
-    '${time.inMinutes.toString().padLeft(2, '0')}:${(time.inSeconds % 60).toString().padLeft(2, '0')}';
+String qishuiLyricTime(Duration time) {
+  final safe = time.isNegative ? Duration.zero : time;
+  return '${safe.inMinutes.toString().padLeft(2, '0')}:${(safe.inSeconds % 60).toString().padLeft(2, '0')}';
+}
 
 /// Loading/retry belongs to the lyrics repository. Selection and scrolling
 /// below are presentation state and never resolve a second audio stream.
@@ -27,8 +31,9 @@ class QishuiLyricsContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final track = ref.watch(currentTrackProvider);
     return ref
-        .watch(lyricsProvider(track.resolvedLyricsAsset))
+        .watch(currentTimedLyricsProvider)
         .when(
+          skipLoadingOnReload: true,
           loading: () => const Center(child: MusicActivityIndicator()),
           error: (_, _) => Center(
             child: BetaGlassButton(
@@ -39,7 +44,12 @@ class QishuiLyricsContent extends ConsumerWidget {
           ),
           data: (document) => document.lines.isEmpty
               ? const Center(child: Text('汽水暂未提供这首歌的歌词'))
-              : QishuiLyricLines(key: ValueKey(track.id), document: document),
+              : LyricTimingTools(
+                  child: QishuiLyricLines(
+                    key: ValueKey(track.id),
+                    document: document,
+                  ),
+                ),
         );
   }
 }
@@ -123,7 +133,8 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
     if (_jumping || !widget.document.isSynced) return;
     final track = ref.read(currentTrackProvider);
     final owner = ref.read(platformAccountProvider).value;
-    final time = widget.document.lines[index].time;
+    final selectedTime = widget.document.lines[index].time;
+    final time = selectedTime.isNegative ? Duration.zero : selectedTime;
     bool current() =>
         mounted &&
         ref.read(currentTrackProvider).id == track.id &&

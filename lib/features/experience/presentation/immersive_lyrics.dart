@@ -6,6 +6,8 @@ import '../../../core/audio/playback_providers.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/presentation/lyric_scroll_preview.dart';
+import '../../lyrics/lyric_timing.dart';
+import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
@@ -56,8 +58,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
       _preview.clear(notify: false);
     }
     return ref
-        .watch(lyricsProvider(track.resolvedLyricsAsset))
+        .watch(currentTimedLyricsProvider)
         .when(
+          skipLoadingOnReload: true,
           loading: () => const Center(
             child: Text('正在寻找歌词…', style: TextStyle(color: Colors.white70)),
           ),
@@ -216,8 +219,13 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       return GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: document.isSynced && _preview.index == null
-                            ? () =>
-                                  ref.read(audioHandlerProvider).seek(line.time)
+                            ? () => ref
+                                  .read(audioHandlerProvider)
+                                  .seek(
+                                    line.time.isNegative
+                                        ? Duration.zero
+                                        : line.time,
+                                  )
                             : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -260,17 +268,19 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     },
                   ),
                 );
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (event) =>
-                      document.isSynced &&
-                      _preview.handleScroll(
-                        event,
-                        lineCount: document.lines.length,
-                        topPadding: topPadding,
-                        lineAtOffset: (offset) =>
-                            lyricLineAtOffset(_offsets, offset),
-                      ),
-                  child: lyrics,
+                return LyricTimingTools(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (event) =>
+                        document.isSynced &&
+                        _preview.handleScroll(
+                          event,
+                          lineCount: document.lines.length,
+                          topPadding: topPadding,
+                          lineAtOffset: (offset) =>
+                              lyricLineAtOffset(_offsets, offset),
+                        ),
+                    child: lyrics,
+                  ),
                 );
               },
             );

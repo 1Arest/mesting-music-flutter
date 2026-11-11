@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mesting_music/features/lyrics/lyric_timing.dart';
 import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/features/experience/presentation/immersive_lyrics.dart';
@@ -13,6 +15,93 @@ import 'package:mesting_music/features/lyrics/presentation/lyrics_panel.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('歌词偏移按歌曲保存，连续操作和重启后恢复，清零仅还原当前歌', () async {
+    final first = ProviderContainer();
+    final key = lyricTimingKey(_track);
+    await first.read(lyricTimingProvider(key).future);
+    await Future.wait([
+      first.read(lyricTimingProvider(key).notifier).adjust(500),
+      first.read(lyricTimingProvider(key).notifier).adjust(500),
+    ]);
+    expect(first.read(lyricTimingProvider(key)).value, 1000);
+    await first
+        .read(lyricTimingProvider('netease:other').notifier)
+        .adjust(-500);
+    first.dispose();
+    final restored = ProviderContainer();
+    addTearDown(restored.dispose);
+    expect(await restored.read(lyricTimingProvider(key).future), 1000);
+    expect(
+      await restored.read(lyricTimingProvider('netease:other').future),
+      -500,
+    );
+    await restored.read(lyricTimingProvider(key).notifier).reset();
+    expect(restored.read(lyricTimingProvider(key)).value, 0);
+    expect(restored.read(lyricTimingProvider('netease:other')).value, -500);
+  });
+
+  test('正偏移延后歌词时间，负偏移提前，跨零时间保持句子顺序', () async {
+    final document = LyricsDocument(lines: _lines, isSynced: true);
+    final container = ProviderContainer(
+      overrides: [
+        currentTrackProvider.overrideWithValue(_track),
+        lyricsProvider.overrideWith((ref, path) async => document),
+      ],
+    );
+    addTearDown(container.dispose);
+    final timing = lyricTimingProvider(lyricTimingKey(_track));
+    final controller = container.read(timing.notifier);
+    await controller.adjust(500);
+    final delayed = await container.read(currentTimedLyricsProvider.future);
+    expect(
+      delayed.lines[1].time,
+      _lines[1].time + const Duration(milliseconds: 500),
+    );
+    await controller.adjust(-1000);
+    final early = await container.read(currentTimedLyricsProvider.future);
+    expect(early.lines.first.time, const Duration(milliseconds: -500));
+    expect(early.activeIndexAt(Duration.zero), 0);
+  });
+
+  testWidgets('在歌词旁调整半秒会保存，关闭面板仍沿用偏移', (tester) async {
+    final player = await _mount(
+      tester,
+      const ImmersiveLyrics(referenceDesign: true),
+    );
+    await tester.tap(find.byTooltip('歌词时间调整'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('＋0.5 秒'));
+    await tester.pumpAndSettle();
+    expect(find.text('+0.5 秒'), findsOneWidget);
+    await tester.tap(find.byTooltip('关闭歌词时间调整'));
+    await tester.pumpAndSettle();
+    await _dragLyrics(tester);
+    final selected = tester.widget<LyricSeekRow>(find.byType(LyricSeekRow));
+    expect(
+      _lines.any(
+        (line) =>
+            line.time + const Duration(milliseconds: 500) == selected.time,
+      ),
+      isTrue,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(LyricSeekRow),
+        matching: find.byType(IconButton),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(player.seeks, [selected.time]);
+    await tester.tap(find.byTooltip('歌词时间调整'));
+    await tester.pumpAndSettle();
+    expect(find.text('+0.5 秒'), findsOneWidget);
+    await tester.tap(find.text('还原'));
+    await tester.pumpAndSettle();
+    expect(find.text('0.0 秒'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('模糊歌词滚动时提亮居中的换行歌词并按准确时间播放', (tester) async {
     final player = await _mount(
       tester,

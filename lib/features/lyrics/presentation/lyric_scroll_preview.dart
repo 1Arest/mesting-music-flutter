@@ -95,7 +95,7 @@ class LyricScrollPreview {
     onChanged();
     try {
       final handler = ref.read(audioHandlerProvider);
-      final pendingSeek = handler.seek(time);
+      final pendingSeek = handler.seek(time.isNegative ? Duration.zero : time);
       final revision = handler.transportRevision;
       await pendingSeek;
       if (!context.mounted ||

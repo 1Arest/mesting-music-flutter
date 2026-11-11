@@ -6,10 +6,11 @@ import '../../../core/audio/playback_providers.dart';
 import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/widgets/mesting_loading_indicator.dart';
 import '../domain/lyrics_document.dart';
-import '../lyrics_providers.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../../themes/music_typography.dart';
 import 'lyric_scroll_preview.dart';
+import '../lyric_timing.dart';
+import 'lyric_timing_tools.dart';
 
 class LyricsPanel extends ConsumerStatefulWidget {
   const LyricsPanel({this.immersive = false, super.key});
@@ -90,7 +91,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
     if (!document.isSynced) return null;
     final time = document.lines[index].time;
     if (_preview.index == null) {
-      return () => ref.read(audioHandlerProvider).seek(time);
+      return () => ref
+          .read(audioHandlerProvider)
+          .seek(time.isNegative ? Duration.zero : time);
     }
     return _preview.index == index && !_preview.seeking
         ? () => _preview.playFrom(context, ref, time)
@@ -105,11 +108,12 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
       _lastActiveIndex = -2;
       _preview.clear(notify: false);
     }
-    final lyrics = ref.watch(lyricsProvider(track.resolvedLyricsAsset));
+    final lyrics = ref.watch(currentTimedLyricsProvider);
     final tokens = context.musicThemeTokens;
     const immersiveHalo = Color(0xE6000000);
 
     return lyrics.when(
+      skipLoadingOnReload: true,
       loading: () => _LyricsLoadingState(immersive: widget.immersive),
       error: (error, stackTrace) => Center(
         child: Padding(
@@ -216,7 +220,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
               );
             },
           );
-          return _previewScroll(document, topPadding, lyrics);
+          return LyricTimingTools(
+            child: _previewScroll(document, topPadding, lyrics),
+          );
         }
 
         const topPadding = 90.0;
@@ -300,7 +306,9 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
             ),
           ],
         );
-        return _previewScroll(document, topPadding, lyrics);
+        return LyricTimingTools(
+          child: _previewScroll(document, topPadding, lyrics),
+        );
       },
     );
   }
