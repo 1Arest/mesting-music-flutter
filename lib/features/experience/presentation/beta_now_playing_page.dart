@@ -1,3 +1,4 @@
+import 'player_swipe_to_comments.dart';
 import '../../player/sharing/song_share_sheet.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import '../../music_platform/presentation/platform_quality_button.dart';
@@ -203,7 +204,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         ),
       ),
     );
-    return BetaMusicChromeCover(
+    final page = BetaMusicChromeCover(
       player: true,
       child: Theme(
         data: darkTheme,
@@ -502,6 +503,25 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         ),
       ),
     );
+    return PlayerSwipeToComments(
+      enabled: !detail,
+      onOpenComments: () => _openComments(context),
+      child: page,
+    );
+  }
+
+  Future<void> _openComments(BuildContext context) async {
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+    if (ref.read(platformAccountProvider).value == null) {
+      await openBetaLogin(context, redirect: '/player');
+    }
+    if (context.mounted && ref.read(platformAccountProvider).value != null) {
+      await openPlatformSongComments(
+        context,
+        ref,
+        ref.read(currentTrackProvider),
+      );
+    }
   }
 
   Widget _more(BuildContext context) {
@@ -577,13 +597,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
           return;
         }
         if (value == 'comments') {
-          if (ref.read(platformAccountProvider).value == null) {
-            await openBetaLogin(context, redirect: '/player');
-          }
-          if (context.mounted &&
-              ref.read(platformAccountProvider).value != null) {
-            await openPlatformSongComments(context, ref, track);
-          }
+          await _openComments(context);
           return;
         }
         if (value == 'netease-together') {
