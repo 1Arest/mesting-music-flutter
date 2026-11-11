@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
+import '../../lyrics/presentation/lyric_scroll_preview.dart';
+import '../../lyrics/lyric_timing.dart';
+import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../../themes/personal_style.dart';
 
@@ -27,15 +30,22 @@ class ImmersiveLyrics extends ConsumerStatefulWidget {
 
 class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   final _scroll = ScrollController();
+  late final LyricScrollPreview _preview = LyricScrollPreview(() {
+    setState(() {
+      if (_preview.index == null) _active = -2;
+    });
+  });
   int _active = -2;
   String _track = '';
   LyricsDocument? _measured;
   double _measuredWidth = 0;
-  TextStyle? _measuredStyle;
   TextScaler? _measuredScaler;
-  final _heights = <double>[];
+  TextStyle? _measuredStyle;
+  TextDirection? _measuredDirection;
+  final _offsets = <double>[];
   @override
   void dispose() {
+    _preview.clear(notify: false);
     _scroll.dispose();
     super.dispose();
   }
@@ -47,10 +57,12 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
+      _preview.clear(notify: false);
     }
     return ref
-        .watch(lyricsProvider(track.resolvedLyricsAsset))
+        .watch(currentTimedLyricsProvider)
         .when(
+          skipLoadingOnReload: true,
           loading: () => const Center(
             child: Text('正在寻找歌词…', style: TextStyle(color: Colors.white70)),
           ),
@@ -99,17 +111,23 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                   double.infinity,
                 );
                 final scaler = MediaQuery.textScalerOf(context);
+                final direction = Directionality.of(context);
                 // Position ticks only update the active line; measuring every
                 // paragraph at audio frequency wastes frames on long songs.
                 if (!identical(_measured, document) ||
                     _measuredWidth != textWidth ||
+                    _measuredScaler != scaler ||
                     _measuredStyle != style ||
-                    _measuredScaler != scaler) {
+                    _measuredDirection != direction) {
                   _measured = document;
                   _measuredWidth = textWidth;
-                  _measuredStyle = style;
                   _measuredScaler = scaler;
-                  _heights.clear();
+                  _measuredStyle = style;
+                  _measuredDirection = direction;
+                  _offsets
+                    ..clear()
+                    ..add(0);
+                  _preview.clear(notify: false);
                   _active = -2;
                   for (final line in document.lines) {
                     final painter = TextPainter(
@@ -117,35 +135,43 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                         text: line.text.isEmpty ? ' ' : line.text,
                         style: style,
                       ),
-                      textDirection: TextDirection.ltr,
+                      textDirection: direction,
                       textScaler: scaler,
                     )..layout(maxWidth: textWidth);
-                    _heights.add(painter.height + 28);
+                    _offsets.add(_offsets.last + painter.height + 28);
                     painter.dispose();
                   }
                 }
-                if (_active != active) {
+                if (_preview.index == null && _active != active) {
                   _active = active;
-                  final target = _heights
-                      .take(active.clamp(0, _heights.length))
-                      .fold(0.0, (a, b) => a + b);
+                  final target =
+                      _offsets[active.clamp(0, document.lines.length - 1)];
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted ||
                         !_scroll.hasClients ||
+                        _preview.index != null ||
+                        _track != track.id ||
                         !identical(_measured, document) ||
                         _active != active) {
                       return;
                     }
-                    _scroll.animateTo(
-                      target.clamp(0.0, _scroll.position.maxScrollExtent),
-                      duration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : const Duration(milliseconds: 460),
-                      curve: Curves.easeOutCubic,
+                    final offset = target.clamp(
+                      0.0,
+                      _scroll.position.maxScrollExtent,
                     );
+                    if (MediaQuery.disableAnimationsOf(context)) {
+                      _scroll.jumpTo(offset);
+                    } else {
+                      _scroll.animateTo(
+                        offset,
+                        duration: const Duration(milliseconds: 460),
+                        curve: Curves.easeOutCubic,
+                      );
+                    }
                   });
                 }
-                return ShaderMask(
+                final topPadding = constraints.maxHeight * .2;
+                final lyrics = ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -163,7 +189,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     controller: _scroll,
                     padding: EdgeInsets.fromLTRB(
                       24,
-                      constraints.maxHeight * .2,
+                      topPadding,
                       24,
                       constraints.maxHeight * .7,
                     ),
@@ -171,56 +197,107 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       parent: BouncingScrollPhysics(),
                     ),
                     itemCount: document.lines.length,
-                    itemBuilder: (context, index) => GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: document.isSynced
-                          ? () => ref
-                                .read(audioHandlerProvider)
-                                .seek(document.lines[index].time)
-                          : null,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: TweenAnimationBuilder<double>(
-                          tween: Tween(
-                            end: !document.isSynced || index == active ? 0 : 1,
+                    itemExtentBuilder: (index, _) =>
+                        index < document.lines.length
+                        ? _offsets[index + 1] - _offsets[index]
+                        : null,
+                    itemBuilder: (context, index) {
+                      final line = document.lines[index];
+                      final text = Text(
+                        line.text,
+                        style: style.copyWith(
+                          color:
+                              (!document.isSynced ||
+                                      index == (_preview.index ?? active)) &&
+                                  personal.lyricColor != null
+                              ? Color(personal.lyricColor!)
+                              : Colors.white,
+                        ),
+                      );
+                      if (_preview.index == index) {
+                        final play = _preview.seeking
+                            ? null
+                            : () => _preview.playFrom(
+                                this.context,
+                                ref,
+                                line.time,
+                              );
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: play,
+                          child: LyricSeekRow(
+                            time: line.time,
+                            foreground: Colors.white,
+                            alignment: Alignment.centerLeft,
+                            onPlay: play,
+                            child: text,
                           ),
-                          duration: MediaQuery.disableAnimationsOf(context)
-                              ? Duration.zero
-                              : const Duration(milliseconds: 460),
-                          curve: Curves.easeOutCubic,
-                          child: Text(
-                            document.lines[index].text,
-                            style: style.copyWith(
-                              color:
-                                  (index == active || !document.isSynced) &&
-                                      personal.lyricColor != null
-                                  ? Color(personal.lyricColor!)
-                                  : Colors.white,
+                        );
+                      }
+                      return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: document.isSynced && _preview.index == null
+                            ? () => ref
+                                  .read(audioHandlerProvider)
+                                  .seek(
+                                    line.time.isNegative
+                                        ? Duration.zero
+                                        : line.time,
+                                  )
+                            : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(
+                              end:
+                                  !document.isSynced ||
+                                      index == (_preview.index ?? active)
+                                  ? 0
+                                  : 1,
                             ),
-                          ),
-                          builder: (_, distance, child) => ImageFiltered(
-                            imageFilter: ImageFilter.blur(
-                              sigmaX: distance * 3.4,
-                              sigmaY: distance * 3.4,
-                            ),
-                            enabled: widget.referenceDesign && distance > .01,
-                            child: Opacity(
-                              opacity:
-                                  1 -
-                                  distance *
-                                      (widget.referenceDesign ? .55 : .35),
-                              child: Transform.scale(
-                                scale: widget.referenceDesign
-                                    ? 1 - distance * .035
-                                    : 1,
-                                alignment: Alignment.centerLeft,
-                                child: child,
+                            duration: MediaQuery.disableAnimationsOf(context)
+                                ? Duration.zero
+                                : const Duration(milliseconds: 460),
+                            curve: Curves.easeOutCubic,
+                            child: text,
+                            builder: (_, distance, child) => ImageFiltered(
+                              imageFilter: ImageFilter.blur(
+                                sigmaX: distance * 3.4,
+                                sigmaY: distance * 3.4,
+                              ),
+                              enabled: widget.referenceDesign && distance > .01,
+                              child: Opacity(
+                                opacity:
+                                    1 -
+                                    distance *
+                                        (widget.referenceDesign ? .55 : .35),
+                                child: Transform.scale(
+                                  scale: widget.referenceDesign
+                                      ? 1 - distance * .035
+                                      : 1,
+                                  alignment: Alignment.centerLeft,
+                                  child: child,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
+                );
+                return LyricTimingTools(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (event) =>
+                        document.isSynced &&
+                        _preview.handleScroll(
+                          event,
+                          lineCount: document.lines.length,
+                          topPadding: topPadding,
+                          lineAtOffset: (offset) =>
+                              lyricLineAtOffset(_offsets, offset),
+                        ),
+                    child: lyrics,
                   ),
                 );
               },

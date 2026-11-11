@@ -1,3 +1,4 @@
+import '../../library/presentation/song_favorite_count_badge.dart';
 import '../../auth/account_capabilities.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -1358,7 +1359,16 @@ class _NeteaseTrackResult extends ConsumerWidget {
                   Row(
                     children: [
                       if (favorite) ...[
-                        Icon(Icons.favorite_rounded, color: accent, size: 14),
+                        SongFavoriteCountBadge(
+                          track: track,
+                          color: accent,
+                          inline: true,
+                          child: Icon(
+                            Icons.favorite_rounded,
+                            color: accent,
+                            size: 14,
+                          ),
+                        ),
                         const SizedBox(width: 4),
                       ],
                       Expanded(

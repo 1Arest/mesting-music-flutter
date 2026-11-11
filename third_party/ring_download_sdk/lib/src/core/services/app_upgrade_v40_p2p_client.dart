@@ -1391,10 +1391,12 @@ class _P2PDownloadSession {
         _scheduleHeartbeat();
       },
     );
+    void Function(String)? onBodySourceFailed;
     final coordinator = _multiCoordinator = P8PCoordinator(
       writer,
       clockMicros: () => clock.elapsedMicroseconds,
       requestTimeout: timeouts.transfer,
+      onSourceFailed: (id) => onBodySourceFailed?.call(id),
       onLifecycle: (event) => _emitLifecycle(event),
       onDiagnostic: (event) => _emit(
         'transfer',
@@ -1421,8 +1423,11 @@ class _P2PDownloadSession {
       _p8pCandidateAttemptLimit = candidateLimit;
     }
     final discoveryCancel = CancelToken();
+    final yieldInitialDiscovery = Completer<void>();
+    final initialSelectionStopped = Completer<void>();
     Timer? discoveryTimer;
     Completer<void>? discoveryWait;
+    var bodyReplacementPending = false;
     Future<void>? lateDiscovery;
     unawaited(
       _httpCancel.whenCancel.then((_) {
@@ -1431,15 +1436,27 @@ class _P2PDownloadSession {
         if (discoveryWait?.isCompleted == false) discoveryWait!.complete();
       }),
     );
-    Completer<void>? changed;
+    final replaceUnprovenStartupPeers =
+        manifest!.peerCandidateReplacement && _ordinaryPeerRaceLimit < 4;
+    Completer<void>? changed, discoveryChanged;
     void notify() {
       if (changed?.isCompleted == false) changed!.complete();
+      if (discoveryChanged?.isCompleted == false) discoveryChanged!.complete();
     }
 
-    void retireFailedPeers() {
-      if (!manifest!.peerCandidateReplacement) return;
+    void retireFailedPeers([String? failedId]) {
+      if (!manifest!.peerCandidateReplacement ||
+          !_active ||
+          book.closed ||
+          book.complete ||
+          discoveryCancel.isCancelled) {
+        return;
+      }
       for (final entry in admittedPeers.entries.toList()) {
-        if (retiringPeers.containsKey(entry.key)) continue;
+        if ((failedId != null && entry.key != failedId) ||
+            retiringPeers.containsKey(entry.key)) {
+          continue;
+        }
         late final Future<void> retiring;
         retiring = () async {
           if (!await coordinator.retireFailedSource(entry.key)) return;
@@ -1449,12 +1466,29 @@ class _P2PDownloadSession {
             admittedPeerIds.remove(entry.key);
             admittedPeers.remove(entry.key);
             notify();
+            if (_multiHandoff && !discoveryCancel.isCancelled) {
+              bodyReplacementPending = true;
+              if (!yieldInitialDiscovery.isCompleted) {
+                yieldInitialDiscovery.complete();
+              }
+              if (discoveryWait?.isCompleted == false) {
+                discoveryWait!.complete();
+              }
+            }
           }
         }().whenComplete(() => retiringPeers.remove(entry.key));
         retiringPeers[entry.key] = retiring;
         unawaited(retiring.catchError((Object _) {}));
       }
     }
+
+    onBodySourceFailed = (id) {
+      if (_multiHandoff && admittedPeers.containsKey(id)) {
+        // Let the coordinator finish recording the failure and owning close
+        // before retirement checks its request and native transport state.
+        scheduleMicrotask(() => retireFailedPeers(id));
+      }
+    };
 
     Future<void> add(_P2PPeer peer, Set<int>? pieces) async {
       try {
@@ -1530,12 +1564,6 @@ class _P2PDownloadSession {
       }
     }());
     Future<void> discoverPeers({bool late = false}) async {
-      if (!_active ||
-          book.closed ||
-          book.complete ||
-          discoveryCancel.isCancelled) {
-        return;
-      }
       final connecting = <Future<void>>{};
       // The explicit three-owner mode starts with two attempts. An extra
       // candidate may race after a short delay if no source has verified a
@@ -1549,7 +1577,18 @@ class _P2PDownloadSession {
           !hedgeStarted &&
           !startupPieceProven &&
           !_httpsNearlyComplete;
+      bool canReplaceStartupPeer() =>
+          !late &&
+          replaceUnprovenStartupPeers &&
+          !startupPieceProven &&
+          !_httpsNearlyComplete;
       try {
+        if (!_active ||
+            book.closed ||
+            book.complete ||
+            discoveryCancel.isCancelled) {
+          return;
+        }
         await _refreshPeers(operationCancel: discoveryCancel);
         if (!_active ||
             book.closed ||
@@ -1561,7 +1600,10 @@ class _P2PDownloadSession {
             !book.closed &&
             !book.complete &&
             !discoveryCancel.isCancelled &&
-            (admittedPeerIds.length < 2 || canHedge()) &&
+            (late || !yieldInitialDiscovery.isCompleted) &&
+            (admittedPeerIds.length < 2 ||
+                canHedge() ||
+                canReplaceStartupPeer()) &&
             discoveredPeerIds.length < candidateLimit) {
           // A verified source has already handed off startup. Replacements
           // use the existing bounded late-discovery clock, not the remainder
@@ -1583,11 +1625,21 @@ class _P2PDownloadSession {
           if (available <= 0) {
             final waitForHedge =
                 canHedge() && raceWatch != null && untilHedge > Duration.zero;
-            if (connecting.isEmpty && !waitForHedge) break;
+            final waitForProbe =
+                canReplaceStartupPeer() && admittedPeerIds.isNotEmpty;
+            if (connecting.isEmpty && !waitForHedge && !waitForProbe) break;
             final waiting = <Future<void>>[
               ...connecting,
               discoveryCancel.whenCancel.then<void>((_) {}),
+              if (!late) yieldInitialDiscovery.future,
             ];
+            if (waitForProbe) {
+              // An open channel can still fail its first piece. Keep the
+              // current candidate list available until the probe succeeds or
+              // the failed owner actually frees a slot.
+              discoveryChanged = Completer<void>();
+              waiting.add(discoveryChanged!.future);
+            }
             Timer? timer;
             if (waitForHedge) {
               final alarm = Completer<void>();
@@ -1598,6 +1650,7 @@ class _P2PDownloadSession {
               await Future.any(waiting);
             } finally {
               timer?.cancel();
+              discoveryChanged = null;
             }
             continue;
           }
@@ -1623,7 +1676,10 @@ class _P2PDownloadSession {
               .toList();
           if (candidates.isEmpty) {
             if (connecting.isEmpty) break;
-            await Future.any(connecting.toList());
+            await Future.any([
+              ...connecting,
+              if (!late) yieldInitialDiscovery.future,
+            ]);
             continue;
           }
           discoveredPeerIds.addAll(
@@ -1673,8 +1729,9 @@ class _P2PDownloadSession {
       } catch (_) {
         // Discovery is optional and cannot stop HTTPS or existing sources.
       } finally {
-        // Every branch remains owned even if the ledger completes or the
-        // receiver cancels while another candidate is still negotiating.
+        // Hand the single discovery loop to the body phase before joining
+        // unrelated ICE attempts. Opening still owns them through cleanup.
+        if (!late) initialSelectionStopped.complete();
         await Future.wait(connecting.toList());
       }
     }
@@ -1728,11 +1785,12 @@ class _P2PDownloadSession {
             }
           } catch (_) {
             // Coordinator owns source retirement and physical cleanup.
-            if (_ordinaryPeerRaceLimit > 2 &&
+            if ((_ordinaryPeerRaceLimit > 2 || replaceUnprovenStartupPeers) &&
                 source.id != 'server' &&
                 _active &&
                 !book.closed) {
               coordinator.rejectUnprovenSource(source.id);
+              if (replaceUnprovenStartupPeers) retireFailedPeers();
             }
           } finally {
             pendingProbes--;
@@ -1850,7 +1908,8 @@ class _P2PDownloadSession {
       // limit; a failed body's slot is reusable only after physical disposal.
       // Negotiated replacements still spend at most four distinct identities.
       lateDiscovery = () async {
-        await initialPeers;
+        await Future.any([initialPeers, yieldInitialDiscovery.future]);
+        await initialSelectionStopped.future;
         for (final seconds in const [2, 4, 6, 8, 10, 10, 10, 10]) {
           if (!_active ||
               book.closed ||
@@ -1863,12 +1922,16 @@ class _P2PDownloadSession {
                   2 * AppUpgradeP2PManifest.chunkSize) {
             break;
           }
-          final wait = discoveryWait = Completer<void>();
-          discoveryTimer = Timer(Duration(seconds: seconds), () {
-            if (!wait.isCompleted) wait.complete();
-          });
-          await wait.future;
-          discoveryTimer?.cancel();
+          if (!bodyReplacementPending) {
+            final wait = discoveryWait = Completer<void>();
+            discoveryTimer = Timer(Duration(seconds: seconds), () {
+              if (!wait.isCompleted) wait.complete();
+            });
+            await wait.future;
+            discoveryTimer?.cancel();
+          }
+          discoveryWait = null;
+          bodyReplacementPending = false;
           if (!_active ||
               book.closed ||
               book.complete ||
@@ -2745,10 +2808,13 @@ class _P2PDownloadSession {
       );
     } on AppUpgradeP2PFailure catch (error) {
       final peer = previous;
+      final offerId = peer?.offerId;
+      final connection = peer?.pc;
       if (split == null ||
           peer == null ||
           !peer.offerSubmitted ||
-          peer.offerId == null ||
+          offerId == null ||
+          connection == null ||
           !_active ||
           _serverAttempts >= 2 ||
           _httpsNearlyComplete ||
@@ -2762,31 +2828,16 @@ class _P2PDownloadSession {
       }
       _closePeer(peer);
       try {
-        await _closeTransport(peer).timeout(_remainingConnectBudget());
-        var closed = false;
-        for (var poll = 0; poll < 3; poll++) {
-          _checkActive();
-          try {
-            final reply = await _request(
-              'server_cancel',
-              '${manifest!.apiBase}/server-cancel',
-              body: {'offer_id': peer.offerId},
-            );
-            closed =
-                reply['ok'] == true &&
-                reply['state'] == 'closed' &&
-                reply['offer_id'] == peer.offerId;
-            break;
-          } on AppUpgradeP2PFailure catch (pending) {
-            if (pending.code != 'server_offer_cancel_pending' || poll == 2) {
-              rethrow;
-            }
-            await Future<void>.delayed(
-              const Duration(milliseconds: 100),
-            ).timeout(_remainingConnectBudget());
-          }
-        }
-        if (!closed ||
+        // Both operations retire the old offer, so they can share the time
+        // remaining. A new offer still requires both owners to be released.
+        final [localReleased, serverClosed] = await Future.wait([
+          _closeTransport(peer)
+              .timeout(_remainingConnectBudget())
+              .then((_) => _releasedNativePeers[connection] == true),
+          _cancelSeedOffer(offerId),
+        ]);
+        if (!localReleased ||
+            !serverClosed ||
             _remainingConnectBudget() < const Duration(seconds: 1) ||
             _httpsNearlyComplete) {
           rethrow;
@@ -2799,6 +2850,27 @@ class _P2PDownloadSession {
       }
       _emit('seed', 'seed_connect_retry');
       return _openSeedAttempt(leased: leased);
+    }
+  }
+
+  Future<bool> _cancelSeedOffer(String offerId) async {
+    for (var poll = 0; ; poll++) {
+      _checkActive();
+      try {
+        final reply = await _request(
+          'server_cancel',
+          '${manifest!.apiBase}/server-cancel',
+          body: {'offer_id': offerId},
+        );
+        return reply['ok'] == true &&
+            reply['state'] == 'closed' &&
+            reply['offer_id'] == offerId;
+      } on AppUpgradeP2PFailure catch (pending) {
+        if (pending.code != 'server_offer_cancel_pending' || poll == 2) rethrow;
+        await Future<void>.delayed(
+          const Duration(milliseconds: 100),
+        ).timeout(_remainingConnectBudget());
+      }
     }
   }
 
@@ -3136,11 +3208,14 @@ class _P2PDownloadSession {
               break;
             } on AppUpgradeP2PFailure catch (error) {
               // The negotiated batch contract de-duplicates even after inbox
-              // delivery. Replay the same immutable wave once if only its ACK
-              // was lost; legacy endpoints and semantic rejections stay final.
+              // delivery. Replay the same immutable wave once after a lost ACK
+              // or temporary queue pressure. Invalid payloads and limits stay
+              // final, and every replay shares the owner's original budget.
               if (attempt != 0 ||
                   !manifest!.candidateBatch ||
-                  !_retryableReport(error.code)) {
+                  !(_retryableReport(error.code) ||
+                      error.code == 'candidate_queue_full' ||
+                      error.code == 'candidate_processing_timeout')) {
                 rethrow;
               }
               _emit('candidate', 'retry', source: _source(peer));

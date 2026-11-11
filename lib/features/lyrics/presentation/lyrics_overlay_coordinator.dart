@@ -12,7 +12,7 @@ import '../../music_platform/presentation/platform_feedback.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../library/presentation/library_access.dart';
 import '../../library/library_providers.dart';
-import '../lyrics_providers.dart';
+import '../lyric_timing.dart';
 
 class LyricsOverlayCoordinator extends ConsumerStatefulWidget {
   const LyricsOverlayCoordinator({required this.child, super.key});
@@ -163,9 +163,7 @@ class _LyricsOverlayCoordinatorState
     var current = track.title;
     var next = track.artist;
     try {
-      final lyrics = await ref.read(
-        lyricsProvider(track.resolvedLyricsAsset).future,
-      );
+      final lyrics = await ref.read(currentTimedLyricsProvider.future);
       if (lyrics.lines.isNotEmpty) {
         final index = lyrics.activeIndexAt(position);
         if (index >= 0) current = lyrics.lines[index].text;
@@ -238,6 +236,12 @@ class _LyricsOverlayCoordinatorState
     }
 
     ref.listen(positionProvider, (_, _) => unawaited(_syncOverlayLyrics()));
+    if (overlay.visible) {
+      ref.listen(
+        currentTimedLyricsProvider,
+        (_, _) => unawaited(_syncOverlayLyrics()),
+      );
+    }
     ref.listen(
       currentMediaItemProvider,
       (_, _) => unawaited(_syncOverlayLyrics()),
