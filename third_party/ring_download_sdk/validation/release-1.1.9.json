@@ -1,0 +1,66 @@
+{
+  "version": "1.1.9",
+  "channel": "stable",
+  "released_at": "2026-11-10",
+  "candidate_version": "1.1.9",
+  "regression": {
+    "formal_full_tests": 675,
+    "formal_full_log_sha256": "5c6d9ade4131d3d57747fc0fb2d1591fedf20a761dbf486bb9ee0421277c9597",
+    "static_analysis": "passed",
+    "inputs_unchanged": true
+  },
+  "new_behavior": {
+    "replace_silent_startup_peers_in_two_and_three_owner_modes": true,
+    "replace_only_after_native_retirement": true,
+    "wake_body_discovery_after_retirement": true,
+    "pending_unrelated_ICE_does_not_block_free_body_slot": true,
+    "overlap_local_and_server_seed_retirement": true,
+    "seed_retry_requires_successful_native_disposal": true,
+    "candidate_pressure_retries_per_wave": 1,
+    "candidate_pressure_retry_requires_batch_protocol": true,
+    "preserve_startup_and_discovery_limits": true
+  },
+  "ordinary_native_owner_default": 2,
+  "ordinary_native_owner_configurable_max": 4,
+  "ordinary_admitted_source_limit": 2,
+  "ordinary_attempt_limit_when_negotiated": 4,
+  "shared_piece_limit": 4,
+  "shared_reserved_byte_limit": 4194304,
+  "source_port_diversity_default": false,
+  "sharing_default": false,
+  "HTTPS_immediate": true,
+  "external_COS_independent": true,
+  "Android_independent_host": {
+    "build": "0.0.32+32",
+    "sdk": "1.1.9",
+    "signed": true,
+    "alignment_16KiB_verified": true,
+    "debuggable": false,
+    "device_acceptance": true
+  },
+  "Android_native_source_identical_to_1_1_8": true,
+  "current_release_Android_device_acceptance": "passed on formal 1.1.9 build",
+  "initial_regression": {
+    "log_sha256": "8a749c08b41e8c10085a4e9c2d276b672934793bc69003fc8777a5becf9dc2c2",
+    "failed_cases": 3,
+    "correction": "Preserved the initial result, modeled a live failure topology, separated discovery from unrelated ICE, and repeated qualification serially."
+  },
+  "native_acceptance": {
+    "file_bytes": 185004705,
+    "sha256": "3e7549a783c72b84c594ef05d993dbf1327e09ae829982309d2d7c16fadcdced",
+    "cold_result_elapsed_ms": 21114,
+    "peer_verified_bytes": 6746785,
+    "seed_verified_bytes": 92274688,
+    "cold_native_transports_released": 3,
+    "cancel_native_transports_released": 3,
+    "cancel_result": "client_interrupted",
+    "native_cleanup_errors": 0,
+    "full_receipt_verified": true,
+    "target_APK_installed": false
+  },
+  "limitations": [
+    "D to home IPv4 ICE remains unresolved.",
+    "One Android acceptance run does not measure production fallback rate.",
+    "Staggered hedging requires host configuration p8pPeerRaceLimit: 3."
+  ]
+}

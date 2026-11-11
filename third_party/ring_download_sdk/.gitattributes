@@ -1,0 +1,5 @@
+# Preserve upstream SDK and validation bytes across Git checkouts.
+* -text whitespace=trailing-space,space-before-tab,cr-at-eol
+# Analyzer receipts contain intentional terminal padding.
+validation/**/formal-analysis.txt -whitespace
+validation/release-1.1.5/candidate-analysis.txt -whitespace

@@ -1,0 +1,13 @@
+{
+  "SDK": "1.1.9",
+  "official_archive_SHA256": "5bf35689ee7003300fc261be63225dacd775d1ffee49cd4738ac13435b77eb75",
+  "upstream_source_manifest": "source-sha256.json",
+  "note": "The upstream manifest describes the official archive. The existing Music null-promotion correction is implemented with a stable File reference for Dart 3.11 and 3.13; all other upstream files match the official archive.",
+  "overrides": {
+    "lib/src/core/services/app_upgrade_v40_download_client.dart": {
+      "upstream_SHA256": "7a0fc364497310305acf1984114b0e9623ef7aacc6589a59976fd8da5663d55c",
+      "vendored_SHA256": "aff458182d588b12dc20377ef3386a2fa6ae4827dc23a8f64ed93eb48b3b51f0",
+      "reason": "Capture the non-null bootstrap file once before awaiting length; preserve the original cancellation checks and read path across Dart compiler versions."
+    }
+  }
+}
