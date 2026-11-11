@@ -44,7 +44,7 @@ class FavoriteToggleButton extends ConsumerWidget {
     final buttonWidth = player ? 72.0 : dimension;
     final glyphColor = player
         ? (favorite
-              ? const Color(0xFFFF3B45)
+              ? const Color(0xFFFF343D)
               : Colors.white.withValues(alpha: .82))
         : favorite
         ? favoriteFeedbackColor(context)
@@ -148,9 +148,9 @@ class FavoriteToggleButton extends ConsumerWidget {
               ),
               if (count != null)
                 Positioned(
-                  left: player ? 29 : 26,
+                  left: player ? 25 : 26,
                   right: 0,
-                  top: player ? 7 : 6,
+                  top: player ? 9 : 6,
                   child: IgnorePointer(
                     child: ExcludeSemantics(
                       child: SizedBox(
@@ -161,9 +161,11 @@ class FavoriteToggleButton extends ConsumerWidget {
                             formatSongFavoriteCount(count),
                             key: ValueKey('song-favorite-count-${track.id}'),
                             style: TextStyle(
-                              fontSize: player ? 9.5 : 8,
+                              fontSize: player ? 8.5 : 8,
                               height: 1,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: player
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],

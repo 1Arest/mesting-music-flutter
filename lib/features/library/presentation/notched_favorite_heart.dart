@@ -29,20 +29,20 @@ class _HeartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 28, size.height / 28);
-    // Start just above the cleft, follow the left lobe and pointed bottom,
-    // and stop on the right shoulder. The two rounded ends stay separated.
+    // Traced from the supplied enlarged reference: shallow cleft, rounded
+    // lower tip and an inward curved shoulder beside the upper-right count.
     final outline = Path()
-      ..moveTo(18.1, 5.1)
-      ..cubicTo(16.4, 5.1, 14.8, 6.2, 13.7, 7.7)
-      ..cubicTo(10.3, 2.5, 2.0, 3.4, 2.0, 10.2)
-      ..cubicTo(2.0, 15.5, 8.3, 20.6, 13.7, 24.5)
-      ..cubicTo(18.4, 21.1, 24.2, 16.3, 25.2, 11.8);
+      ..moveTo(18.4, 1.2)
+      ..cubicTo(16.8, .5, 15.3, 1.8, 14.0, 2.1)
+      ..cubicTo(9.6, .1, 4.4, 1.0, 1.9, 5.5)
+      ..cubicTo(-.4, 9.2, .8, 15.2, 4.7, 20.0)
+      ..cubicTo(7.1, 23.0, 10.4, 25.5, 12.8, 26.8)
+      ..quadraticBezierTo(13.7, 27.5, 14.8, 26.8)
+      ..cubicTo(21.7, 22.3, 26.5, 16.5, 27.0, 12.5);
     if (selected) {
-      // The same opening becomes a shallow bite in the filled red lobe.
       final filled = Path.from(outline)
-        ..cubicTo(25.4, 10.9, 25.4, 10.0, 25.2, 9.2)
-        ..lineTo(20.2, 9.2)
-        ..quadraticBezierTo(18.1, 9.2, 18.1, 7.1)
+        ..cubicTo(22.6, 12.8, 18.2, 12.5, 18.2, 7.4)
+        ..cubicTo(18.0, 5.0, 18.2, 2.9, 18.4, 1.2)
         ..close();
       canvas.drawPath(filled, Paint()..color = color);
     } else {
@@ -51,7 +51,7 @@ class _HeartPainter extends CustomPainter {
         Paint()
           ..color = color
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.65
+          ..strokeWidth = 1.25
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
