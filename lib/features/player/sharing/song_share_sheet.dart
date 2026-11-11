@@ -8,6 +8,8 @@ import '../../../shared/models/track.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../themes/music_typography.dart';
 import 'song_share.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../themes/personal_style.dart';
 
 Future<void> showSongShareSheet(BuildContext context, Track track) =>
     showLiquidGlassBottomSheet<void>(
@@ -18,15 +20,15 @@ Future<void> showSongShareSheet(BuildContext context, Track track) =>
       builder: (_) => SongShareSheet(track: track),
     );
 
-class SongShareSheet extends StatefulWidget {
+class SongShareSheet extends ConsumerStatefulWidget {
   const SongShareSheet({required this.track, super.key});
   final Track track;
 
   @override
-  State<SongShareSheet> createState() => _SongShareSheetState();
+  ConsumerState<SongShareSheet> createState() => _SongShareSheetState();
 }
 
-class _SongShareSheetState extends State<SongShareSheet> {
+class _SongShareSheetState extends ConsumerState<SongShareSheet> {
   Uint8List? _poster;
   bool _busy = false;
   String? _message;
@@ -55,6 +57,10 @@ class _SongShareSheetState extends State<SongShareSheet> {
   @override
   Widget build(BuildContext context) {
     final url = songShareUrl(widget.track);
+    final template = ref.watch(personalStyleProvider.select((s) => s.poster));
+    ref.listen(personalStyleProvider.select((s) => s.poster), (_, _) {
+      if (mounted) setState(() => _poster = null);
+    });
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * .88,
@@ -132,11 +138,16 @@ class _SongShareSheetState extends State<SongShareSheet> {
                     : () => _perform(() async {
                         final image = await generateSongPoster(
                           widget.track,
+                          template: template,
                           fontFamily: Theme.of(
                             context,
                           ).textTheme.bodyMedium?.fontFamily,
                         );
-                        if (mounted) setState(() => _poster = image);
+                        if (mounted &&
+                            ref.read(personalStyleProvider).poster ==
+                                template) {
+                          setState(() => _poster = image);
+                        }
                       }),
                 icon: const Icon(CupertinoIcons.photo),
                 label: const Text('生成分享海报'),

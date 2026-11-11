@@ -290,6 +290,7 @@ class _PersonalIdentity extends ConsumerWidget {
             child: VipEffectAnchor(
               handle: avatarKey,
               child: PlatformAvatar(
+                  personal: true,
                 url: profile?.avatarUrl ?? session.avatarUrl,
                 size: 104,
               ),

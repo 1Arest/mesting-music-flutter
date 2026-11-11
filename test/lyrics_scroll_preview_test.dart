@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:mesting_music/core/persistence/app_preferences.dart';
+import 'package:mesting_music/features/themes/personal_style.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,6 +148,40 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('个性歌词的字号行距和高亮保留滚动定位播放', (tester) async {
+    const style = PersonalStyle(
+      lyricSize: 32,
+      lineHeight: 1.7,
+      lyricColor: 0xFFFFC2D6,
+    );
+    final player = await _mount(
+      tester,
+      const ImmersiveLyrics(referenceDesign: true),
+      style: style,
+    );
+    await _dragLyrics(tester);
+    final preview = find.byType(LyricSeekRow);
+    final row = tester.widget<LyricSeekRow>(preview);
+    final line = _lines.singleWhere((line) => line.time == row.time);
+    final text = tester.widget<Text>(
+      find.descendant(of: preview, matching: find.text(line.text)),
+    );
+    expect(text.style!.fontSize, 32);
+    expect(text.style!.height, 1.7);
+    expect(text.style!.color, const Color(0xFFFFC2D6));
+    expect(
+      tester.getRect(preview).contains(tester.getCenter(find.byType(ListView))),
+      isTrue,
+    );
+    await tester.tap(
+      find.descendant(of: preview, matching: find.byType(IconButton)),
+    );
+    await tester.pumpAndSettle();
+    expect(player.seeks, [line.time]);
+    expect(player.plays, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('经典歌词浏览期间暂停跟播并在空闲后恢复', (tester) async {
     final positions = StreamController<Duration>.broadcast();
     addTearDown(positions.close);
@@ -204,12 +241,21 @@ Future<_Player> _mount(
   Stream<Duration>? positions,
   double scale = 1,
   bool synced = true,
+  PersonalStyle? style,
 }) async {
+  final preferences = await SharedPreferences.getInstance();
+  if (style != null) {
+    await preferences.setString(
+      PersonalStyleController.preferenceKey,
+      jsonEncode(style.toJson()),
+    );
+  }
   final player = _Player();
   final document = LyricsDocument(lines: _lines, isSynced: synced);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(preferences),
         audioHandlerProvider.overrideWithValue(player),
         currentTrackProvider.overrideWithValue(_track),
         lyricsProvider.overrideWith((ref, path) async => document),

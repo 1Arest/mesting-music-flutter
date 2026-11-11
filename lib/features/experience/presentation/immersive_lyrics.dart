@@ -9,6 +9,7 @@ import '../../lyrics/presentation/lyric_scroll_preview.dart';
 import '../../lyrics/lyric_timing.dart';
 import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
+import '../../themes/personal_style.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -52,6 +53,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   @override
   Widget build(BuildContext context) {
     final track = ref.watch(currentTrackProvider);
+    final personal = ref.watch(personalStyleProvider);
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
@@ -88,11 +90,20 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
                     .copyWith(
-                      fontSize: widget.referenceDesign
+                      fontFamily: personal.serif ? 'serif' : null,
+                      fontSize: personal.lyricSize > 0
+                          ? personal.lyricSize
+                          : widget.referenceDesign
                           ? MusicTypography.largeTitleSize
                           : MusicTypography.sectionTitleSize,
-                      fontWeight: MusicTypography.titleWeight,
-                      height: widget.referenceDesign ? 1.3 : 1.4,
+                      fontWeight: personal.lyricWeight == 1
+                          ? FontWeight.w400
+                          : MusicTypography.titleWeight,
+                      height: personal.lineHeight > 0
+                          ? personal.lineHeight
+                          : widget.referenceDesign
+                          ? 1.3
+                          : 1.4,
                       letterSpacing: -.5,
                     );
                 final textWidth = (constraints.maxWidth - 48).clamp(
@@ -194,7 +205,14 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       final line = document.lines[index];
                       final text = Text(
                         line.text,
-                        style: style.copyWith(color: Colors.white),
+                        style: style.copyWith(
+                          color:
+                              (!document.isSynced ||
+                                      index == (_preview.index ?? active)) &&
+                                  personal.lyricColor != null
+                              ? Color(personal.lyricColor!)
+                              : Colors.white,
+                        ),
                       );
                       if (_preview.index == index) {
                         final play = _preview.seeking
