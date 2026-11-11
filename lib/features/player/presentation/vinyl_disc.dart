@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../shared/widgets/artwork_image.dart';
@@ -104,20 +105,20 @@ class VinylDiscSurface extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    stops: [0, .88, .945, 1],
+                    stops: [0, .84, .975, 1],
                     colors: [
                       Color(0xFF171719),
                       Color(0xFF0B0B0D),
-                      Color(0xFF252529),
+                      Color(0xFF1A1B1D),
                       Color(0xFF101012),
                     ],
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: Color(0x66000000),
-                      blurRadius: 34,
-                      spreadRadius: 2,
-                      offset: Offset(0, 18),
+                      blurRadius: 24,
+                      spreadRadius: 0,
+                      offset: Offset(0, 12),
                     ),
                     BoxShadow(
                       color: Color(0x332D2D31),
@@ -174,7 +175,9 @@ class VinylDiscSurface extends StatelessWidget {
             ),
             Positioned.fill(
               child: IgnorePointer(
-                child: CustomPaint(painter: _VinylGroovePainter()),
+                child: CustomPaint(
+                  painter: _VinylGroovePainter(labelSizeFactor.clamp(.35, .66)),
+                ),
               ),
             ),
             Positioned.fill(
@@ -185,7 +188,7 @@ class VinylDiscSurface extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFF343438).withValues(alpha: .76),
-                        width: constraints.maxWidth * .025,
+                        width: constraints.maxWidth * .007,
                       ),
                     ),
                   ),
@@ -200,7 +203,8 @@ class VinylDiscSurface extends StatelessWidget {
 }
 
 class _VinylGroovePainter extends CustomPainter {
-  const _VinylGroovePainter();
+  const _VinylGroovePainter(this.labelFactor);
+  final double labelFactor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -209,14 +213,56 @@ class _VinylGroovePainter extends CustomPainter {
     final groove = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = .55;
-    for (var index = 0; index < 48; index++) {
-      groove.color = index % 4 == 0
-          ? Colors.white.withValues(alpha: .075)
-          : Colors.white.withValues(alpha: .032);
-      canvas.drawCircle(center, radius * (.31 + index * .0131), groove);
+    // Highlights remain above the rotating surface, like light on real vinyl.
+    final ring = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addOval(Rect.fromCircle(center: center, radius: radius * .985))
+      ..addOval(
+        Rect.fromCircle(center: center, radius: radius * (labelFactor + .025)),
+      );
+    canvas.save();
+    canvas.clipPath(ring);
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..shader = SweepGradient(
+          transform: const GradientRotation(-math.pi / 4),
+          colors: const [
+            Color(0x0217181B),
+            Color(0x245D6269),
+            Color(0x0017181B),
+            Color(0x0017181B),
+            Color(0x185D6269),
+            Color(0x0017181B),
+            Color(0x0217181B),
+          ],
+          stops: const [0, .14, .28, .48, .64, .78, 1],
+        ).createShader(Offset.zero & size),
+    );
+    final start = labelFactor + .035;
+    for (var index = 0; index < 66; index++) {
+      groove.color = index % 5 == 0
+          ? const Color(0x18FFFFFF)
+          : const Color(0x09FFFFFF);
+      canvas.drawCircle(
+        center,
+        radius * (start + index * (.97 - start) / 65),
+        groove,
+      );
     }
+    canvas.restore();
+    canvas.drawCircle(
+      center,
+      radius * (labelFactor + .009),
+      Paint()
+        ..color = const Color(0x66000000)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = radius * .017,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _VinylGroovePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _VinylGroovePainter oldDelegate) =>
+      oldDelegate.labelFactor != labelFactor;
 }

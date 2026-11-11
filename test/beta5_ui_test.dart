@@ -669,6 +669,13 @@ void main() {
               debugShowCheckedModeBanner: false,
               theme: fontsLoaded
                   ? theme.copyWith(
+                      cupertinoOverrideTheme: theme.cupertinoOverrideTheme?.copyWith(
+                        textTheme: theme.cupertinoOverrideTheme!.textTheme!.copyWith(
+                          textStyle: theme.cupertinoOverrideTheme!.textTheme!.textStyle.copyWith(fontFamily: 'BetaQACJK'),
+                          actionTextStyle: theme.cupertinoOverrideTheme!.textTheme!.actionTextStyle.copyWith(fontFamily: 'BetaQACJK'),
+                          actionSmallTextStyle: theme.cupertinoOverrideTheme!.textTheme!.actionSmallTextStyle.copyWith(fontFamily: 'BetaQACJK'),
+                        ),
+                      ),
                       textTheme: theme.textTheme.apply(fontFamily: 'BetaQACJK'),
                       chipTheme: theme.chipTheme.copyWith(
                         labelStyle:
@@ -1800,6 +1807,27 @@ void main() {
     },
     skip: !DistributionChannel.isBeta,
   );
+
+  for (final sample in [
+    (const Size(390, 844), 1.0, true),
+    (const Size(320, 640), 1.6, false),
+    (const Size(844, 390), 1.0, false),
+  ]) {
+    testWidgets('refined classic record layout ${sample.$1} scale ${sample.$2}', (tester) async {
+      viewport(tester, sample.$1);
+      await prepare(playing: sample.$3);
+      await container.read(playerVisualStyleProvider.notifier).select(PlayerVisualStyle.classic);
+      await pump(tester, const BetaNowPlayingPage(), scale: sample.$2);
+      expect(find.byKey(const ValueKey('classic-record-disc')), findsOneWidget);
+      expect(find.byKey(const ValueKey('classic-record-tonearm')), findsOneWidget);
+      final disc = tester.getSize(find.byKey(const ValueKey('classic-record-disc')));
+      expect(disc.width, closeTo(disc.height, .01));
+      expect(find.byKey(const ValueKey('system-media-volume')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await captureScreenshot(tester, 'classic-refined-${sample.$1.width.toInt()}');
+      await disposeFixture(tester);
+    }, skip: !DistributionChannel.isBeta);
+  }
 
   testWidgets(
     'beta8 playing vinyl stays on grooves and year menu is rounded',

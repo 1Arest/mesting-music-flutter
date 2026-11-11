@@ -231,25 +231,20 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                 body: Stack(
                   children: [
                     Positioned.fill(
-                      child: classic
-                          ? const ColoredBox(color: Color(0xFFAAA9AA))
-                          : RepaintBoundary(
-                              child: ImageFiltered(
-                                imageFilter: ImageFilter.blur(
-                                  sigmaX: 65,
-                                  sigmaY: 65,
-                                ),
-                                child: Transform.scale(
-                                  scale: 1.4,
-                                  child: TrackArtwork(
-                                    track: track,
-                                    width: 1000,
-                                    height: 1400,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
+                      child: RepaintBoundary(
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(sigmaX: 65, sigmaY: 65),
+                          child: Transform.scale(
+                            scale: 1.4,
+                            child: TrackArtwork(
+                              track: track,
+                              width: 1000,
+                              height: 1400,
+                              fit: BoxFit.cover,
                             ),
+                          ),
+                        ),
+                      ),
                     ),
                     const Positioned.fill(child: ListeningAtmosphereLayer()),
                     if (style != PlayerVisualStyle.cover && !classic && !detail)
@@ -264,9 +259,9 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                             end: Alignment.bottomCenter,
                             colors: classic
                                 ? const [
-                                    Color(0x08000000),
-                                    Color(0x66000000),
-                                    Color(0xE817191D),
+                                    Color(0x6630343B),
+                                    Color(0x8830343B),
+                                    Color(0xF0181B20),
                                   ]
                                 : [
                                     Color(
