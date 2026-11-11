@@ -245,6 +245,21 @@ class ThemeVisualSettingsController extends Notifier<ThemeVisualSettings> {
     await ref.read(sharedPreferencesProvider).setBool(_decorationKey, value);
   }
 
+  /// An explicit outfit choice pairs a character with its own rail. Existing
+  /// independent preferences remain the source of truth for custom mixes.
+  Future<void> setProgressOutfit(ProgressDecoration value) async {
+    final preferences = ref.read(sharedPreferencesProvider);
+    final saved = await Future.wait([
+      preferences.setString(_progressStyleKey, value.name),
+      preferences.setString(_progressCharacterKey, value.name),
+    ]);
+    if (saved.any((success) => !success)) {
+      throw StateError('暂时无法保存进度条装扮，请重试');
+    }
+    // Publish both together so a player never sees a half-applied pairing.
+    state = state.copyWith(progressStyle: value, progressCharacter: value);
+  }
+
   Future<void> setProgressStyle(ProgressDecoration value) async {
     state = state.copyWith(progressStyle: value);
     await ref

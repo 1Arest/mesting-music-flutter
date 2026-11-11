@@ -134,7 +134,7 @@ void main() {
   }
 
   testWidgets(
-    'both grouped pickers expose the uploads and save separate selections',
+    'grouped role and rail choices have distinct previews and save independently',
     (tester) async {
       tester.view.physicalSize = const Size(1000, 1400);
       tester.view.devicePixelRatio = 1;
@@ -190,12 +190,16 @@ void main() {
             of: find.byType(InkWell),
             matching: find.text(progressDecorationLabel(value)),
           ),
-          findsNWidgets(2),
+          findsOneWidget,
+        );
+        expect(
+          find.text('${progressDecorationLabel(value)}轨道'),
+          findsOneWidget,
         );
       }
       expect(find.text('三丽鸥'), findsNWidgets(2));
       expect(find.text('线条小狗'), findsNWidgets(2));
-      await tester.tap(find.text('美乐蒂').first);
+      await tester.tap(find.byKey(const ValueKey('progress-track-myMelody')));
       await tester.pumpAndSettle();
       expect(
         container.read(themeVisualSettingsProvider).progressStyle,
@@ -205,7 +209,9 @@ void main() {
         container.read(themeVisualSettingsProvider).progressCharacter,
         ProgressDecoration.classic,
       );
-      await tester.tap(find.text('小八').last);
+      await tester.tap(
+        find.byKey(const ValueKey('progress-character-hachiware')),
+      );
       await tester.pumpAndSettle();
       expect(
         container.read(themeVisualSettingsProvider).progressStyle,
