@@ -34,6 +34,8 @@ class SongFavoriteCountBadge extends ConsumerWidget {
           key: ValueKey('song-favorite-count-${track.id}'),
           style: TextStyle(
             fontSize: inline ? 11 : 9,
+            height: 1,
+            fontWeight: FontWeight.w500,
             color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -55,15 +57,15 @@ class SongFavoriteCountBadge extends ConsumerWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        child,
+        Padding(padding: const EdgeInsets.only(right: 30), child: child),
         Positioned(
-          top: 0,
+          top: 5,
           right: 0,
           child: SizedBox(
             width: 34,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
+              alignment: Alignment.centerLeft,
               child: label,
             ),
           ),

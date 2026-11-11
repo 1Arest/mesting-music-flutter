@@ -358,7 +358,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                                 ),
                                                 FavoriteToggleButton(
                                                   track: track,
-                                                  star: true,
+                                                  player: true,
                                                   compact: true,
                                                 ),
                                                 _more(context),
@@ -448,7 +448,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                                 const SizedBox(width: 12),
                                                 FavoriteToggleButton(
                                                   track: track,
-                                                  star: true,
+                                                  player: true,
                                                 ),
                                               ],
                                             ),
