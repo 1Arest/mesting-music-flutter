@@ -84,6 +84,8 @@ import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/library/data/song_favorite_count.dart';
+import 'package:mesting_music/features/experience/presentation/apple_output_volume_slider.dart';
+import 'package:mesting_music/features/themes/player_layout_picker.dart';
 import 'package:mesting_music/shared/models/audio_origin.dart';
 import 'package:mesting_music/features/library/data/library_repository.dart';
 import 'package:mesting_music/features/themes/theme_controller.dart';
@@ -181,6 +183,8 @@ class _Output extends AudioOutputController {
   void disconnect() => state = const AudioOutput(available: true);
   @override
   Future<void> choose() async {}
+  @override
+  Future<void> refresh() async {}
 }
 
 class _Volume extends MediaVolumeController {
@@ -306,6 +310,7 @@ void main() {
     bool standardOnly = false,
     bool qualityUnknown = false,
     bool playing = false,
+    PlayerPageLayout layout = PlayerPageLayout.original,
     int? favoriteCount,
     bool favorite = false,
     Stream<PlaybackState>? playbackEvents,
@@ -315,7 +320,7 @@ void main() {
   }) async {
     metadataReady = false;
     paths = [];
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({ThemeVisualSettingsController.playerLayoutKey: layout.name});
     database = AppDatabase(NativeDatabase.memory());
     addTearDown(database.close);
     api = MusicPlatformApi(
@@ -1832,6 +1837,143 @@ void main() {
       expect(find.byKey(const ValueKey('system-media-volume')), findsOneWidget);
       expect(tester.takeException(), isNull);
       await captureScreenshot(tester, 'classic-refined-${sample.$1.width.toInt()}');
+      await disposeFixture(tester);
+    }, skip: !DistributionChannel.isBeta);
+  }
+
+  for (final sample in [
+    (const Size(390, 844), 1.0, false),
+    (const Size(320, 640), 1.6, true),
+    (const Size(844, 390), 1.0, true),
+  ]) {
+    testWidgets('compact player volume dialog restores layout ${sample.$1}', (tester) async {
+      viewport(tester, sample.$1);
+      await prepare(layout: PlayerPageLayout.spacious);
+      await pump(tester, BetaNowPlayingPage(lyricsInitially: sample.$3), scale: sample.$2);
+      final seek = find.byKey(const ValueKey('playback-seek-slider'));
+      expect(find.byKey(const ValueKey('system-media-volume')), findsNothing);
+      final more = find.byTooltip('更多操作');
+      await tester.ensureVisible(more);
+      await tester.pump(const Duration(milliseconds: 400));
+      final before = tester.getRect(seek);
+      await tester.tap(more);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.ensureVisible(find.text('音量调节'));
+      await tester.tap(find.text('音量调节'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const ValueKey('apple-output-picker')), findsOneWidget);
+      final volume = tester.widget<AppleOutputVolumeSlider>(find.byKey(const ValueKey('output-volume-slider')));
+      expect(volume.onChanged, isNotNull);
+      volume.onChanged!(.8);
+      volume.onChangeEnd!(.8);
+      await tester.pump();
+      expect(container.read(mediaVolumeProvider).value, .8);
+      await tester.ensureVisible(find.text('完成'));
+      await tester.tap(find.text('完成'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 800));
+      expect(find.byKey(const ValueKey('apple-output-picker')), findsNothing);
+      expect(find.byKey(const ValueKey('system-media-volume')), findsNothing);
+      expect(tester.getRect(seek), before);
+      expect(tester.takeException(), isNull);
+      await captureScreenshot(tester, 'compact-player-${sample.$1.width.toInt()}');
+      await disposeFixture(tester);
+    }, skip: !DistributionChannel.isBeta);
+  }
+
+  for (final layout in PlayerPageLayout.values) {
+    for (final narrow in [false, true]) {
+      testWidgets('player layout choice ${layout.name} narrow $narrow', (tester) async {
+        viewport(tester, narrow ? const Size(320, 640) : const Size(390, 844));
+        await prepare(layout: layout);
+        await pump(tester, const BetaNowPlayingPage(lyricsInitially: true), scale: narrow ? 1.6 : 1);
+        expect(find.byType(ApplePlayerControls), findsOneWidget);
+        expect(find.byKey(const ValueKey('system-media-volume')), layout == PlayerPageLayout.original ? findsOneWidget : findsNothing);
+        expect(find.byType(ImmersiveLyrics), findsOneWidget);
+        await captureScreenshot(tester, 'layout-choice-${layout.name}-${narrow ? 'narrow' : 'regular'}');
+        expect(tester.takeException(), isNull);
+        await disposeFixture(tester);
+      }, skip: !DistributionChannel.isBeta);
+    }
+  }
+
+  for (final layout in PlayerPageLayout.values) {
+    testWidgets('immersive lyrics menu restores ${layout.name} without changing saved layout', (tester) async {
+      viewport(tester);
+      await prepare(layout: layout);
+      final handler = container.read(audioHandlerProvider);
+      await pump(tester, const BetaNowPlayingPage());
+      Future<void> choose(String title) async {
+        final more = find.byTooltip('更多操作');
+        await tester.ensureVisible(more);
+        await tester.tap(more);
+        await tester.pump(); await tester.pump(const Duration(milliseconds: 600));
+        await tester.ensureVisible(find.text(title));
+        await tester.tap(find.text(title));
+        await tester.pump(); await tester.pump(const Duration(milliseconds: 600));
+        await tester.pump(); await tester.pump(const Duration(milliseconds: 500));
+      }
+      await choose('沉浸歌词');
+      expect(find.byType(ImmersiveLyrics), findsOneWidget);
+      expect(find.byType(ApplePlayerControls), findsNothing);
+      expect(tester.getSize(find.byType(ImmersiveLyrics)).height, greaterThan(670));
+      expect(find.byTooltip('更多操作').hitTestable(), findsOneWidget);
+      await captureScreenshot(tester, 'immersive-lyrics-${layout.name}');
+      await choose('退出沉浸歌词');
+      expect(find.byType(ImmersiveLyrics), findsOneWidget);
+      expect(find.byType(ApplePlayerControls), findsOneWidget);
+      expect(find.byKey(const ValueKey('system-media-volume')), layout == PlayerPageLayout.original ? findsOneWidget : findsNothing);
+      expect(container.read(themeVisualSettingsProvider).playerLayout, layout);
+      expect(container.read(audioHandlerProvider), same(handler));
+      await choose('沉浸歌词');
+      await tester.tap(find.byType(ImmersiveLyrics));
+      await tester.pump(); await tester.pump(const Duration(milliseconds: 700));
+      expect(find.byType(ImmersiveLyrics), findsNothing);
+      expect(find.byType(ApplePlayerControls), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await disposeFixture(tester);
+    }, skip: !DistributionChannel.isBeta);
+  }
+
+  for (final narrow in [false, true]) {
+    testWidgets('player layout gallery comparison cards narrow $narrow', (tester) async {
+      viewport(tester, narrow ? const Size(320, 640) : const Size(390, 844));
+      await prepare();
+      await pump(tester, const ThemeGalleryPage(), scale: narrow ? 1.6 : 1, dark: narrow);
+      await tester.scrollUntilVisible(find.text('播放器排版'), 180, scrollable: find.byType(Scrollable).first);
+      final galleryScroll = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+      galleryScroll.jumpTo((galleryScroll.pixels - 75).clamp(0.0, galleryScroll.maxScrollExtent));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(PlayerLayoutPicker), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-layout-preview-original')), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-layout-preview-spacious')), findsOneWidget);
+      expect(find.text('沉浸歌词'), findsNothing);
+      final pickerRect = tester.getRect(find.byType(PlayerLayoutPicker));
+      for (final layout in PlayerPageLayout.values) {
+        final card = tester.getRect(find.byKey(ValueKey('player-layout-${layout.name}')));
+        expect(card.left, greaterThanOrEqualTo(pickerRect.left - .1));
+        expect(card.right, lessThanOrEqualTo(pickerRect.right + .1));
+      }
+      await captureScreenshot(tester, 'player-layout-gallery-${narrow ? 'narrow-dark' : 'regular-light'}');
+      if (const bool.fromEnvironment('EXPORT_BETA_SCREENSHOTS')) {
+        final root = tester.renderObject<RenderRepaintBoundary>(find.byKey(const ValueKey('beta5-capture')));
+        final heading = tester.getRect(find.text('播放器排版'));
+        await tester.runAsync(() async {
+          final image = await (root.layer! as OffsetLayer).toImage(Rect.fromLTRB(0, heading.top - 8, root.size.width, pickerRect.bottom + 12), pixelRatio: 2);
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('${const String.fromEnvironment('BETA_SCREENSHOT_DIR')}/player-layout-options-${narrow ? 'dark' : 'light'}.png').writeAsBytes(data!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
+      await tester.ensureVisible(find.byKey(const ValueKey('player-layout-spacious')));
+      await tester.tap(find.byKey(const ValueKey('player-layout-spacious')));
+      await tester.pump(); await tester.pump(const Duration(milliseconds: 500));
+      expect(container.read(themeVisualSettingsProvider).playerLayout, PlayerPageLayout.spacious);
+      expect(tester.takeException(), isNull);
       await disposeFixture(tester);
     }, skip: !DistributionChannel.isBeta);
   }
@@ -3575,7 +3717,7 @@ void main() {
           const BetaNowPlayingPage(lyricsInitially: true),
           scale: sample.$2,
         );
-        expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
+        expect(find.byKey(const ValueKey('player-notched-heart')), findsOneWidget);
         expect(find.byType(ApplePlayerControls), findsOneWidget);
         final seek = find.byKey(const ValueKey('playback-seek-slider'));
         expect(

@@ -33,6 +33,7 @@ import '../../playlists/presentation/add_to_playlist_sheet.dart';
 import '../../themes/beta_appearance.dart';
 import '../../music_platform/platform_recommendation_providers.dart';
 import 'apple_player_controls.dart';
+import 'player_output_dialog.dart';
 import 'immersive_lyrics.dart';
 import '../../lyrics/presentation/lyric_timing_tools.dart';
 import 'player_pull_to_dismiss.dart';
@@ -47,6 +48,7 @@ import 'player_chrome_reveal.dart';
 import 'player_content_transition.dart';
 import 'player_artwork_transition.dart';
 import '../../themes/music_typography.dart';
+import '../../themes/theme_controller.dart';
 
 /// THESIS: Artwork and lyrics lead; shared Apple transport recedes below them.
 /// PALETTE: Cover-derived blur, a dark readability veil, white transport, red
@@ -80,6 +82,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
   late bool _queue = widget.queueInitially;
   double _direction = 1;
   bool _verticalTransition = false;
+  bool _immersiveLyrics = false;
   StreamSubscription<String>? _commands;
   bool _routeExitRequested = false;
   late final PlayerChromeReveal _chromeReveal;
@@ -96,6 +99,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     _direction = show ? 1 : -1;
     _verticalTransition = true;
     _lyrics = show;
+    if (!show) _immersiveLyrics = false;
     _queue = false;
   });
   void _dismissPlayer() {
@@ -164,6 +168,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
   }
 
   void _toggleQueue() => setState(() {
+    _immersiveLyrics = false;
     _verticalTransition = _lyrics;
     _queue = !_queue;
   });
@@ -188,6 +193,10 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     final playing = ref.watch(
       playbackStateProvider.select((state) => state.value?.playing ?? false),
     );
+    final layout = ref.watch(
+      themeVisualSettingsProvider.select((s) => s.playerLayout),
+    );
+    final immersiveLyrics = _immersiveLyrics && _lyrics && !_queue;
     final detail = _lyrics || _queue;
     final classic = style == PlayerVisualStyle.classic && !detail;
     final theme = Theme.of(context);
@@ -282,7 +291,11 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                               (MediaQuery.textScalerOf(context).scale(24) - 24)
                                   .clamp(0.0, 96.0);
                           final minimum =
-                              (_queue ? 320.0 : 700.0) +
+                              (_queue
+                                  ? 320.0
+                                  : immersiveLyrics
+                                  ? 240.0
+                                  : 700.0) +
                               scaled * 2 +
                               (_togetherActive && !detail ? 140 : 0);
                           final content = Center(
@@ -292,6 +305,32 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                 children: [
                                   const SizedBox(height: 8),
                                   PlayerDismissHandle(onTap: _dismissPlayer),
+                                  if (immersiveLyrics)
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 16,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            PlayerGlassButton(
+                                              label: '返回封面',
+                                              onPressed: () =>
+                                                  _showLyrics(false),
+                                              icon: CupertinoIcons.chevron_down,
+                                            ),
+                                            const Spacer(),
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                right: 16,
+                                              ),
+                                              child: _more(context),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   if (!detail)
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
@@ -318,7 +357,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                       milliseconds: 260,
                                     ),
                                     curve: Curves.easeInOutCubic,
-                                    child: !detail
+                                    child: !detail || immersiveLyrics
                                         ? const SizedBox.shrink()
                                         : Padding(
                                             padding: const EdgeInsets.fromLTRB(
@@ -391,6 +430,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                                 onReturnToCover: () =>
                                                     _showLyrics(false),
                                                 referenceDesign: true,
+                                                fullScreen: immersiveLyrics,
                                                 key: ValueKey(
                                                   'immersive-lyrics-${track.id}',
                                                 ),
@@ -459,7 +499,8 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                             ),
                                           ),
                                   ),
-                                  if (track.source == TrackSource.netease &&
+                                  if (!immersiveLyrics &&
+                                      track.source == TrackSource.netease &&
                                       track.audioOrigin != null)
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
@@ -487,13 +528,16 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                         ),
                                       ),
                                     ),
-                                  ApplePlayerControls(
-                                    lyricsActive: _lyrics && !_queue,
-                                    queueActive: _queue,
-                                    onToggleLyrics: () =>
-                                        _showLyrics(_queue || !_lyrics),
-                                    onToggleQueue: _toggleQueue,
-                                  ),
+                                  if (!immersiveLyrics)
+                                    ApplePlayerControls(
+                                      showVolume:
+                                          layout == PlayerPageLayout.original,
+                                      lyricsActive: _lyrics && !_queue,
+                                      queueActive: _queue,
+                                      onToggleLyrics: () =>
+                                          _showLyrics(_queue || !_lyrics),
+                                      onToggleQueue: _toggleQueue,
+                                    ),
                                 ],
                               ),
                             ),
@@ -544,6 +588,15 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     final track = ref.read(currentTrackProvider);
     return PlayerMoreMenu(
       onSelected: (value) async {
+        if (value == 'immersive-lyrics') {
+          setState(() {
+            _immersiveLyrics = !_immersiveLyrics;
+            _lyrics = true;
+            _queue = false;
+            _verticalTransition = true;
+          });
+          return;
+        }
         if (value == 'share') {
           await showSongShareSheet(context, track);
           return;
@@ -610,6 +663,10 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
           await showLyricTimingSheet(context);
           return;
         }
+        if (value == 'volume') {
+          await showPlayerOutputDialog(context, ref);
+          return;
+        }
         if (value == 'quality') {
           await showPlatformQualityPicker(context, ref);
           return;
@@ -656,7 +713,15 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
             '待播列表与播放模式',
             CupertinoIcons.list_bullet,
           ),
+          PlayerMenuAction(
+            'immersive-lyrics',
+            _immersiveLyrics ? '退出沉浸歌词' : '沉浸歌词',
+            _immersiveLyrics
+                ? CupertinoIcons.arrow_down_right_arrow_up_left
+                : CupertinoIcons.arrow_up_left_arrow_down_right,
+          ),
           const PlayerMenuAction('quality', '音质选择', CupertinoIcons.waveform),
+          const PlayerMenuAction('volume', '音量调节', CupertinoIcons.volume_up),
           const PlayerMenuAction('lyric-timing', '歌词时间调整', CupertinoIcons.time),
           const PlayerMenuAction('comments', '歌曲评论', Icons.chat_bubble_outline),
           const PlayerMenuAction(

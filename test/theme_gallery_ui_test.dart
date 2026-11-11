@@ -324,15 +324,10 @@ void main() {
     expect(close, findsOneWidget);
     expect(tester.getTopLeft(close), initialPosition);
     expect(find.text('经典圆点'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('follow-theme-progress-style-icon')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('follow-theme-progress-character-icon')),
-      findsOneWidget,
-    );
-    expect(find.byType(ThemeFollowIcon), findsNWidgets(2));
+    // Progress outfits now compose the rail and character in one preview;
+    // retired follow-theme aliases are no longer rendered by the gallery.
+    expect(find.byKey(const ValueKey('progress-outfit-preview')), findsOneWidget);
+    expect(find.byKey(const ValueKey('progress-outfit-customize')), findsOneWidget);
     expect(find.text('随'), findsNothing);
     expect(find.byType(ChoiceChip), findsNothing);
     expect(find.byType(SwitchListTile), findsNothing);

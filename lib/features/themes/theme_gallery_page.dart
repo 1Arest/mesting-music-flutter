@@ -22,6 +22,7 @@ import 'music_theme_preset.dart';
 import 'progress_outfit_picker.dart';
 import 'personal_style_page.dart';
 import 'theme_controller.dart';
+import 'player_layout_picker.dart';
 import 'music_theme_tokens.dart';
 import 'startup_style_picker.dart';
 import 'music_typography.dart';
@@ -268,6 +269,15 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                         },
                       ),
                       const SizedBox(height: 24),
+                      if (DistributionChannel.isBeta) ...[
+                        const _SettingsHeading(
+                          title: '播放器排版',
+                          description: '默认保留原有排版；点击预览选择，即时生效并保存在本机。',
+                        ),
+                        const SizedBox(height: 11),
+                        const PlayerLayoutPicker(),
+                        const SizedBox(height: 24),
+                      ],
                       _ThemePreview(
                         preset: selected,
                         effectivePreset: effectiveTheme,
@@ -1475,7 +1485,13 @@ class _ThemeModePresetCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
-            height: 88,
+            height:
+                88 +
+                (MediaQuery.textScalerOf(context).scale(12) - 12).clamp(
+                      0.0,
+                      32.0,
+                    ) *
+                    3,
             padding: const EdgeInsets.fromLTRB(10, 9, 8, 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(17),

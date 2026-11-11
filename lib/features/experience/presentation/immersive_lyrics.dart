@@ -9,6 +9,7 @@ import '../../lyrics/presentation/lyric_scroll_preview.dart';
 import '../../lyrics/lyric_timing.dart';
 import '../../themes/music_typography.dart';
 import '../../themes/personal_style.dart';
+import '../../themes/theme_controller.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -23,10 +24,11 @@ final activeLyricIndexProvider = Provider.family<int, LyricsDocument>(
 class ImmersiveLyrics extends ConsumerStatefulWidget {
   const ImmersiveLyrics({
     this.referenceDesign = false,
+    this.fullScreen = false,
     this.onReturnToCover,
     super.key,
   });
-  final bool referenceDesign;
+  final bool referenceDesign, fullScreen;
   final VoidCallback? onReturnToCover;
   @override
   ConsumerState<ImmersiveLyrics> createState() => _ImmersiveLyricsState();
@@ -58,6 +60,13 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   Widget build(BuildContext context) {
     final track = ref.watch(currentTrackProvider);
     final personal = ref.watch(personalStyleProvider);
+    final layout = ref.watch(
+      themeVisualSettingsProvider.select((s) => s.playerLayout),
+    );
+    final immersive = widget.fullScreen;
+    final spacious =
+        widget.referenceDesign &&
+        (immersive || layout == PlayerPageLayout.spacious);
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
@@ -97,15 +106,21 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       fontFamily: personal.serif ? 'serif' : null,
                       fontSize: personal.lyricSize > 0
                           ? personal.lyricSize
+                          : spacious
+                          ? (immersive ? 22 : 20)
                           : widget.referenceDesign
                           ? MusicTypography.largeTitleSize
                           : MusicTypography.sectionTitleSize,
                       fontWeight: personal.lyricWeight == 1
                           ? FontWeight.w400
+                          : personal.lyricWeight == 2
+                          ? MusicTypography.titleWeight
+                          : spacious
+                          ? FontWeight.w500
                           : MusicTypography.titleWeight,
                       height: personal.lineHeight > 0
                           ? personal.lineHeight
-                          : widget.referenceDesign
+                          : widget.referenceDesign && !spacious
                           ? 1.3
                           : 1.4,
                       letterSpacing: -.5,
@@ -174,7 +189,13 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     }
                   });
                 }
-                final topPadding = constraints.maxHeight * .2;
+                final topPadding =
+                    constraints.maxHeight *
+                    (immersive
+                        ? .42
+                        : spacious
+                        ? .38
+                        : .2);
                 final lyrics = ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     begin: Alignment.topCenter,
@@ -209,6 +230,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       final line = document.lines[index];
                       final text = Text(
                         line.text,
+                        textAlign: spacious
+                            ? TextAlign.center
+                            : TextAlign.start,
                         style: style.copyWith(
                           color:
                               (!document.isSynced ||
@@ -232,7 +256,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                           child: LyricSeekRow(
                             time: line.time,
                             foreground: Colors.white,
-                            alignment: Alignment.centerLeft,
+                            alignment: spacious
+                                ? Alignment.center
+                                : Alignment.centerLeft,
                             onPlay: play,
                             child: text,
                           ),
@@ -260,8 +286,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                             child: text,
                             builder: (_, distance, child) => ImageFiltered(
                               imageFilter: ImageFilter.blur(
-                                sigmaX: distance * 3.4,
-                                sigmaY: distance * 3.4,
+                                sigmaX: distance * (spacious ? 1.8 : 3.4),
+                                sigmaY: distance * (spacious ? 1.8 : 3.4),
                               ),
                               enabled: widget.referenceDesign && distance > .01,
                               child: Opacity(
@@ -273,7 +299,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                                   scale: widget.referenceDesign
                                       ? 1 - distance * .035
                                       : 1,
-                                  alignment: Alignment.centerLeft,
+                                  alignment: spacious
+                                      ? Alignment.center
+                                      : Alignment.centerLeft,
                                   child: child,
                                 ),
                               ),

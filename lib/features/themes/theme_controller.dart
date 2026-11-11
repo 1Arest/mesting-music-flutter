@@ -168,10 +168,19 @@ enum ProgressDecoration {
   nailong,
 }
 
+enum PlayerPageLayout {
+  original('原有排版', '常驻音量条 · 大字歌词'),
+  spacious('清爽排版', '隐藏音量条 · 居中歌词');
+
+  const PlayerPageLayout(this.label, this.description);
+  final String label, description;
+}
+
 class ThemeVisualSettings {
   const ThemeVisualSettings({
     this.backgroundStrength = .58,
     this.showIpDecoration = false,
+    this.playerLayout = PlayerPageLayout.original,
     this.progressStyle = ProgressDecoration.classic,
     this.progressCharacter = ProgressDecoration.classic,
     this.shinchanWeather,
@@ -179,6 +188,7 @@ class ThemeVisualSettings {
 
   final double backgroundStrength;
   final bool showIpDecoration;
+  final PlayerPageLayout playerLayout;
   final ProgressDecoration progressStyle;
   final ProgressDecoration progressCharacter;
   final ShinchanProgressWeather? shinchanWeather;
@@ -186,6 +196,7 @@ class ThemeVisualSettings {
   ThemeVisualSettings copyWith({
     double? backgroundStrength,
     bool? showIpDecoration,
+    PlayerPageLayout? playerLayout,
     ProgressDecoration? progressStyle,
     ProgressDecoration? progressCharacter,
     ShinchanProgressWeather? shinchanWeather,
@@ -193,6 +204,7 @@ class ThemeVisualSettings {
     return ThemeVisualSettings(
       backgroundStrength: backgroundStrength ?? this.backgroundStrength,
       showIpDecoration: showIpDecoration ?? this.showIpDecoration,
+      playerLayout: playerLayout ?? this.playerLayout,
       progressStyle: progressStyle ?? this.progressStyle,
       progressCharacter: progressCharacter ?? this.progressCharacter,
       shinchanWeather: shinchanWeather ?? this.shinchanWeather,
@@ -206,6 +218,7 @@ class ThemeVisualSettingsController extends Notifier<ThemeVisualSettings> {
   static const _progressStyleKey = 'music_progress_style';
   static const _progressCharacterKey = 'music_progress_character';
   static const _weatherKey = 'music_shinchan_progress_weather';
+  static const playerLayoutKey = 'music_player_page_layout';
 
   @override
   ThemeVisualSettings build() {
@@ -215,6 +228,10 @@ class ThemeVisualSettingsController extends Notifier<ThemeVisualSettings> {
           ? .58
           : preferences.getDouble(_strengthKey) ?? .58,
       showIpDecoration: preferences.getBool(_decorationKey) ?? false,
+      playerLayout: PlayerPageLayout.values.firstWhere(
+        (layout) => layout.name == preferences.getString(playerLayoutKey),
+        orElse: () => PlayerPageLayout.original,
+      ),
       progressStyle: _readDecoration(preferences.getString(_progressStyleKey)),
       progressCharacter: _readDecoration(
         preferences.getString(_progressCharacterKey),
@@ -233,6 +250,14 @@ class ThemeVisualSettingsController extends Notifier<ThemeVisualSettings> {
       (item) => item.name == value,
       orElse: () => ProgressDecoration.classic,
     );
+  }
+
+  Future<void> setPlayerLayout(PlayerPageLayout value) async {
+    final saved = await ref
+        .read(sharedPreferencesProvider)
+        .setString(playerLayoutKey, value.name);
+    if (!saved) throw StateError('暂时无法保存播放器排版，请重试');
+    state = state.copyWith(playerLayout: value);
   }
 
   Future<void> setBackgroundStrength(double value) async {

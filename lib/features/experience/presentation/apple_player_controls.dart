@@ -24,18 +24,20 @@ import '../../themes/music_theme_preset.dart';
 import '../../themes/music_typography.dart';
 
 /// CONTRACT: Apple Music transport from the user's pinned reference. All five
-/// Beta styles share this exact component: progress, naked white glyphs, system
-/// media volume, then lyrics / audio output / current queue. IP rail and character
+/// Beta styles share this component: progress, naked white glyphs, then lyrics /
+/// audio output / queue. Inline volume is optional; the player uses its dialog.
+/// IP rail and character
 /// preferences are independent decoration, never an alternate control layout.
 class ApplePlayerControls extends ConsumerStatefulWidget {
   const ApplePlayerControls({
     this.lyricsActive = false,
     this.queueActive = false,
+    this.showVolume = true,
     this.onToggleLyrics,
     this.onToggleQueue,
     super.key,
   });
-  final bool lyricsActive, queueActive;
+  final bool lyricsActive, queueActive, showVolume;
   final VoidCallback? onToggleLyrics, onToggleQueue;
   @override
   ConsumerState<ApplePlayerControls> createState() =>
@@ -98,7 +100,9 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
     final railIp = decorationIp(visual.progressStyle, preset);
     final characterIp = decorationIp(visual.progressCharacter, preset);
     final classic = railIp == MusicThemeIp.classic;
-    final volume = ref.watch(mediaVolumeProvider);
+    final volume = widget.showVolume
+        ? ref.watch(mediaVolumeProvider)
+        : const MediaVolumeState();
     final output = widget.onToggleLyrics != null
         ? ref.watch(audioOutputProvider)
         : const AudioOutput();
@@ -293,74 +297,77 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  CupertinoIcons.volume_down,
-                  color: Colors.white54,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 4,
-                        activeTrackColor: Colors.white60,
-                        inactiveTrackColor: Colors.white24,
-                        disabledActiveTrackColor: Colors.white24,
-                        disabledInactiveTrackColor: Colors.white12,
-                        thumbShape: SliderComponentShape.noThumb,
-                        overlayShape: SliderComponentShape.noOverlay,
-                      ),
-                      child: MergeSemantics(
-                        key: const ValueKey('media-volume-semantics'),
-                        child: Semantics(
-                          label: '系统媒体音量',
-                          child: Slider(
-                            semanticFormatterCallback: (value) =>
-                                '${(value * 100).round()}%',
-                            key: const ValueKey('system-media-volume'),
-                            padding: EdgeInsets.zero,
-                            value: _volumeDrag ?? volume.value,
-                            onChangeStart: volume.available
-                                ? (v) => setState(() => _volumeDrag = v)
-                                : null,
-                            onChanged: volume.available
-                                ? (v) {
-                                    setState(() => _volumeDrag = v);
-                                    ref
-                                        .read(mediaVolumeProvider.notifier)
-                                        .setVolume(v);
-                                  }
-                                : null,
-                            onChangeEnd: volume.available
-                                ? (v) async {
-                                    await ref
-                                        .read(mediaVolumeProvider.notifier)
-                                        .setVolume(v);
-                                    if (mounted) {
-                                      setState(() => _volumeDrag = null);
+            if (widget.showVolume) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(
+                    CupertinoIcons.volume_down,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          activeTrackColor: Colors.white60,
+                          inactiveTrackColor: Colors.white24,
+                          disabledActiveTrackColor: Colors.white24,
+                          disabledInactiveTrackColor: Colors.white12,
+                          thumbShape: SliderComponentShape.noThumb,
+                          overlayShape: SliderComponentShape.noOverlay,
+                        ),
+                        child: MergeSemantics(
+                          key: const ValueKey('media-volume-semantics'),
+                          child: Semantics(
+                            label: '系统媒体音量',
+                            child: Slider(
+                              semanticFormatterCallback: (value) =>
+                                  '${(value * 100).round()}%',
+                              key: const ValueKey('system-media-volume'),
+                              padding: EdgeInsets.zero,
+                              value: _volumeDrag ?? volume.value,
+                              onChangeStart: volume.available
+                                  ? (v) => setState(() => _volumeDrag = v)
+                                  : null,
+                              onChanged: volume.available
+                                  ? (v) {
+                                      setState(() => _volumeDrag = v);
+                                      ref
+                                          .read(mediaVolumeProvider.notifier)
+                                          .setVolume(v);
                                     }
-                                  }
-                                : null,
+                                  : null,
+                              onChangeEnd: volume.available
+                                  ? (v) async {
+                                      await ref
+                                          .read(mediaVolumeProvider.notifier)
+                                          .setVolume(v);
+                                      if (mounted) {
+                                        setState(() => _volumeDrag = null);
+                                      }
+                                    }
+                                  : null,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                const Icon(
-                  CupertinoIcons.volume_up,
-                  color: Colors.white54,
-                  size: 22,
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
+                  const SizedBox(width: 12),
+                  const Icon(
+                    CupertinoIcons.volume_up,
+                    color: Colors.white54,
+                    size: 22,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+            ] else
+              const SizedBox(height: 22),
           ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
