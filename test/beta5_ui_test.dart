@@ -83,6 +83,8 @@ import 'package:mesting_music/core/database/app_database.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
+import 'package:mesting_music/features/library/data/song_favorite_count.dart';
+import 'package:mesting_music/shared/models/audio_origin.dart';
 import 'package:mesting_music/features/library/data/library_repository.dart';
 import 'package:mesting_music/features/themes/theme_controller.dart';
 
@@ -304,6 +306,8 @@ void main() {
     bool standardOnly = false,
     bool qualityUnknown = false,
     bool playing = false,
+    int? favoriteCount,
+    bool favorite = false,
     Stream<PlaybackState>? playbackEvents,
     Stream<Duration>? positionEvents,
     Duration position = const Duration(seconds: 37),
@@ -435,6 +439,9 @@ void main() {
     );
     container = ProviderContainer(
       overrides: [
+        if (favoriteCount != null)
+          songFavoriteCountProvider.overrideWith((ref, song) async => favoriteCount),
+        if (favorite) favoriteTrackIdsProvider.overrideWithValue({_track.id}),
         // Navigation acceptance has no reward account or platform keystore.
         // The dedicated reward tests exercise automation through mock services.
         neteaseRewardServiceProvider.overrideWith((ref) async => null),
@@ -1825,6 +1832,42 @@ void main() {
       expect(find.byKey(const ValueKey('system-media-volume')), findsOneWidget);
       expect(tester.takeException(), isNull);
       await captureScreenshot(tester, 'classic-refined-${sample.$1.width.toInt()}');
+      await disposeFixture(tester);
+    }, skip: !DistributionChannel.isBeta);
+  }
+
+  for (final selected in [false, true]) {
+    testWidgets('classic notched heart and source contrast $selected', (tester) async {
+      viewport(tester, const Size(390, 844));
+      // Explicit UI fixtures: these counts are never a live platform response.
+      await prepare(playing: selected, favoriteCount: 10000000, favorite: selected);
+      container.read(_qaRecordingProvider.notifier).select(Track(
+        id: _track.id, title: _track.title, artist: _track.artist,
+        album: _track.album, duration: _track.duration,
+        source: TrackSource.netease, platformSongId: '362937',
+        audioAsset: _track.audioAsset, coverAsset: _track.coverAsset,
+        lyricsAsset: '', audioOrigin: const AudioOrigin('酷狗官方', '362937'),
+      ));
+      await container.read(playerVisualStyleProvider.notifier).select(PlayerVisualStyle.classic);
+      await pump(tester, const BetaNowPlayingPage());
+      expect(find.text('999w+'), findsOneWidget);
+      expect(find.byKey(const ValueKey('player-notched-heart')), findsOneWidget);
+      final source = tester.widget<Text>(find.byKey(const ValueKey('netease-actual-audio-source')));
+      expect(source.style!.color!.a, greaterThan(.8));
+      expect(tester.takeException(), isNull);
+      await captureScreenshot(tester, 'classic-heart-${selected ? 'selected' : 'outline'}');
+      if (const bool.fromEnvironment('EXPORT_BETA_SCREENSHOTS')) {
+        // Render the actual button's layer at 5x for fine silhouette review.
+        final root = tester.renderObject<RenderRepaintBoundary>(find.byKey(const ValueKey('beta5-capture')));
+        final button = tester.renderObject<RenderBox>(find.byKey(ValueKey('favorite-button-${_track.id}')));
+        final origin = button.localToGlobal(Offset.zero, ancestor: root);
+        await tester.runAsync(() async {
+          final image = await (root.layer! as OffsetLayer).toImage(origin & button.size, pixelRatio: 5);
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('${const String.fromEnvironment('BETA_SCREENSHOT_DIR')}/classic-heart-${selected ? 'selected' : 'outline'}-detail.png').writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
       await disposeFixture(tester);
     }, skip: !DistributionChannel.isBeta);
   }

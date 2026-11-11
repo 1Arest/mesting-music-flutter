@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +6,7 @@ import '../../../shared/widgets/music_notice.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../themes/beta_appearance.dart';
 import 'library_access.dart';
+import 'notched_favorite_heart.dart';
 import '../../themes/mesting_palette.dart';
 import '../library_providers.dart';
 import '../data/song_favorite_count.dart';
@@ -42,6 +42,13 @@ class FavoriteToggleButton extends ConsumerWidget {
     );
     const dimension = 48.0;
     final buttonWidth = player ? 72.0 : dimension;
+    final glyphColor = player
+        ? (favorite
+              ? const Color(0xFFFF3B45)
+              : Colors.white.withValues(alpha: .82))
+        : favorite
+        ? favoriteFeedbackColor(context)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
     final song = songCountIdentity(track);
     final count = song != null
         ? ref.watch(songFavoriteCountProvider(song)).value
@@ -70,13 +77,7 @@ class FavoriteToggleButton extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     minimumSize: Size(buttonWidth, dimension),
                     maximumSize: Size(buttonWidth, dimension),
-                    foregroundColor: favorite
-                        ? (DistributionChannel.isBeta
-                              ? BetaAppearance.favorite(
-                                  Theme.of(context).brightness,
-                                )
-                              : _favoriteAccent)
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    foregroundColor: glyphColor,
                     overlayColor: Colors.transparent,
                   ),
                   onPressed: () async {
@@ -140,15 +141,16 @@ class FavoriteToggleButton extends ConsumerWidget {
                                 ? 21
                                 : 23,
                             thin: player,
+                            color: glyphColor,
                           ),
                   ),
                 ),
               ),
               if (count != null)
                 Positioned(
-                  left: player ? 32 : 26,
+                  left: player ? 29 : 26,
                   right: 0,
-                  top: player ? 8 : 6,
+                  top: player ? 7 : 6,
                   child: IgnorePointer(
                     child: ExcludeSemantics(
                       child: SizedBox(
@@ -165,11 +167,7 @@ class FavoriteToggleButton extends ConsumerWidget {
                               fontFeatures: const [
                                 FontFeature.tabularFigures(),
                               ],
-                              color: favorite
-                                  ? favoriteFeedbackColor(context)
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                              color: glyphColor,
                             ),
                           ),
                         ),
@@ -192,10 +190,12 @@ class _FavoriteGlyph extends StatefulWidget {
     required this.favorite,
     required this.size,
     this.thin = false,
+    required this.color,
   });
   final bool favorite;
   final double size;
   final bool thin;
+  final Color color;
   @override
   State<_FavoriteGlyph> createState() => _FavoriteGlyphState();
 }
@@ -233,16 +233,19 @@ class _FavoriteGlyphState extends State<_FavoriteGlyph>
         scale: 1 + .12 * (1 - Curves.easeOutCubic.transform(_motion.value)),
         child: child,
       ),
-      child: Icon(
-        widget.thin
-            ? (widget.favorite
-                  ? CupertinoIcons.heart_fill
-                  : CupertinoIcons.heart)
-            : widget.favorite
-            ? Icons.favorite_rounded
-            : Icons.favorite_border_rounded,
-        size: widget.size,
-      ),
+      child: widget.thin
+          ? NotchedFavoriteHeart(
+              key: const ValueKey('player-notched-heart'),
+              selected: widget.favorite,
+              color: widget.color,
+              size: widget.size,
+            )
+          : Icon(
+              widget.favorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              size: widget.size,
+            ),
     ),
   );
 }

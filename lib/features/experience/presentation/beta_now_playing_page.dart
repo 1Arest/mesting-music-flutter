@@ -475,7 +475,15 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.white70,
+                                          color: Colors.white.withValues(
+                                            alpha: .86,
+                                          ),
+                                          shadows: const [
+                                            Shadow(
+                                              color: Colors.black54,
+                                              blurRadius: 4,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
