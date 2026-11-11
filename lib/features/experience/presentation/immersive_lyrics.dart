@@ -7,7 +7,6 @@ import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/presentation/lyric_scroll_preview.dart';
 import '../../lyrics/lyric_timing.dart';
-import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../../themes/personal_style.dart';
 
@@ -22,8 +21,13 @@ final activeLyricIndexProvider = Provider.family<int, LyricsDocument>(
 /// Variable-height lines keep long lyrics and accessibility text sizes intact.
 /// The measured offsets use the same text style as the rendered paragraphs.
 class ImmersiveLyrics extends ConsumerStatefulWidget {
-  const ImmersiveLyrics({this.referenceDesign = false, super.key});
+  const ImmersiveLyrics({
+    this.referenceDesign = false,
+    this.onReturnToCover,
+    super.key,
+  });
   final bool referenceDesign;
+  final VoidCallback? onReturnToCover;
   @override
   ConsumerState<ImmersiveLyrics> createState() => _ImmersiveLyricsState();
 }
@@ -236,14 +240,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       }
                       return GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: document.isSynced && _preview.index == null
-                            ? () => ref
-                                  .read(audioHandlerProvider)
-                                  .seek(
-                                    line.time.isNegative
-                                        ? Duration.zero
-                                        : line.time,
-                                  )
+                        onTap: _preview.index == null
+                            ? widget.onReturnToCover
                             : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -286,17 +284,21 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     },
                   ),
                 );
-                return LyricTimingTools(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (event) =>
-                        document.isSynced &&
-                        _preview.handleScroll(
-                          event,
-                          lineCount: document.lines.length,
-                          topPadding: topPadding,
-                          lineAtOffset: (offset) =>
-                              lyricLineAtOffset(_offsets, offset),
-                        ),
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (event) =>
+                      document.isSynced &&
+                      _preview.handleScroll(
+                        event,
+                        lineCount: document.lines.length,
+                        topPadding: topPadding,
+                        lineAtOffset: (offset) =>
+                            lyricLineAtOffset(_offsets, offset),
+                      ),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _preview.index == null
+                        ? widget.onReturnToCover
+                        : null,
                     child: lyrics,
                   ),
                 );

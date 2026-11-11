@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -115,11 +117,18 @@ void main() {
     expect(find.text('正在铺开歌词'), findsNothing);
     expect(find.bySemanticsLabel('正在加载歌词'), findsOneWidget);
 
-    final loader = tester.widget<MathCurveLoader>(find.byType(MathCurveLoader));
-    expect(loader.duration, const Duration(milliseconds: 3000));
-    expect(loader.respectReducedMotion, isTrue);
-    expect(loader.style.particleCount, 62);
-    expect(loader.style.trailSpan, .34);
+    if (DistributionChannel.isBeta) {
+      expect(find.byType(CupertinoActivityIndicator), findsOneWidget);
+      expect(find.byType(MathCurveLoader), findsNothing);
+    } else {
+      final loader = tester.widget<MathCurveLoader>(
+        find.byType(MathCurveLoader),
+      );
+      expect(loader.duration, const Duration(milliseconds: 3000));
+      expect(loader.respectReducedMotion, isTrue);
+      expect(loader.style.particleCount, 62);
+      expect(loader.style.trailSpan, .34);
+    }
 
     pendingLyrics.complete(document);
     await tester.pumpAndSettle();

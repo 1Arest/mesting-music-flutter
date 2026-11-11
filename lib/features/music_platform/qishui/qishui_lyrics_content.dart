@@ -13,10 +13,10 @@ import '../../experience/presentation/immersive_lyrics.dart'
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/lyric_timing.dart';
-import '../../lyrics/presentation/lyric_timing_tools.dart';
 import '../../themes/music_typography.dart';
 import '../music_platform_providers.dart';
 import '../presentation/platform_feedback.dart';
+import 'qishui_player_navigation.dart';
 
 String qishuiLyricTime(Duration time) {
   final safe = time.isNegative ? Duration.zero : time;
@@ -44,22 +44,27 @@ class QishuiLyricsContent extends ConsumerWidget {
           ),
           data: (document) => document.lines.isEmpty
               ? const Center(child: Text('汽水暂未提供这首歌的歌词'))
-              : LyricTimingTools(
-                  child: QishuiLyricLines(
-                    key: ValueKey(track.id),
-                    document: document,
-                  ),
+              : QishuiLyricLines(
+                  key: ValueKey(track.id),
+                  document: document,
+                  onReturnToCover: () =>
+                      ref.read(qishuiMusicLyricsProvider.notifier).showCover(),
                 ),
         );
   }
 }
 
 /// Official-reference layout: large left-aligned lines, a strong current line,
-/// edge fades and an independent selected-line time/play cue. A tap previews a
-/// line; only its explicit play control seeks the existing authenticated player.
+/// edge fades and a selected-line time/play cue during manual scrolling.
+/// A normal tap returns to the cover; only a browsed selection can seek.
 class QishuiLyricLines extends ConsumerStatefulWidget {
-  const QishuiLyricLines({required this.document, super.key});
+  const QishuiLyricLines({
+    required this.document,
+    this.onReturnToCover,
+    super.key,
+  });
   final LyricsDocument document;
+  final VoidCallback? onReturnToCover;
   @override
   ConsumerState<QishuiLyricLines> createState() => _LyricLinesState();
 }
@@ -95,6 +100,21 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
   void _pauseFollowing() {
     _resume?.cancel();
     if (_following) setState(() => _following = false);
+  }
+
+  void _selectAt(ScrollMetrics metrics) {
+    if (!widget.document.isSynced || _heights.isEmpty) return;
+    final offset = metrics.pixels + metrics.viewportDimension / 2 - 28;
+    var before = 0.0;
+    var index = _heights.length - 1;
+    for (var i = 0; i < _heights.length; i++) {
+      before += _heights[i];
+      if (offset < before) {
+        index = i;
+        break;
+      }
+    }
+    if (_selected != index) setState(() => _selected = index);
   }
 
   void _scheduleResume() {
@@ -210,9 +230,14 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
               ).createShader(rect),
               child: NotificationListener<ScrollNotification>(
                 onNotification: (event) {
+                  if (event.depth != 0) return false;
                   if (event is UserScrollNotification &&
                       event.direction != ScrollDirection.idle) {
                     _pauseFollowing();
+                    _selectAt(event.metrics);
+                  }
+                  if (event is ScrollUpdateNotification && !_following) {
+                    _selectAt(event.metrics);
                   }
                   if (event is ScrollEndNotification && !_following) {
                     _scheduleResume();
@@ -239,13 +264,11 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
                         child: InkWell(
                           key: ValueKey('qishui-lyric-line-$index'),
                           borderRadius: BorderRadius.circular(14),
-                          onTap: !document.isSynced
-                              ? null
-                              : () {
-                                  _pauseFollowing();
-                                  setState(() => _selected = index);
-                                  _scheduleResume();
-                                },
+                          onTap: _selected == null
+                              ? widget.onReturnToCover
+                              : selected && !_jumping
+                              ? () => _jump(index)
+                              : null,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 160),
                             decoration: BoxDecoration(
