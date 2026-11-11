@@ -6,6 +6,7 @@ import '../../music_platform/music_platform_providers.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../auth/presentation/beta_login_navigation.dart';
 import 'player_queue_panel.dart';
+import 'player_surface_theme.dart';
 import 'dart:ui';
 import 'dart:async';
 import '../../../shared/models/track.dart';
@@ -206,7 +207,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     return BetaMusicChromeCover(
       player: true,
       child: Theme(
-        data: darkTheme,
+        data: readablePlayerSurfaceTheme(darkTheme),
         child: Builder(
           builder: (context) => PlayerPullToDismiss(
             onDismiss: _dismissPlayer,
