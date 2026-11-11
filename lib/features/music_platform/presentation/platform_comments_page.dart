@@ -11,6 +11,7 @@ import '../netease/netease_comment_hugs_page.dart';
 import '../../../shared/widgets/beta_anchored_menu.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import '../../../core/cache/cached_browse_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -187,6 +188,29 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
   bool _nativeHot = false;
   String? _sortNotice;
   final _scroll = ScrollController();
+  // Bound short-page top-ups; a real user scroll grants a fresh prefetch budget.
+  int _prefetchBudget = 3;
+
+  void _prefetch() {
+    if (!mounted ||
+        !_current ||
+        _loading ||
+        !_hasMore ||
+        _error != null ||
+        _prefetchBudget <= 0 ||
+        !_scroll.hasClients) {
+      return;
+    }
+    final position = _scroll.position;
+    final distance = (position.viewportDimension * 1.5).clamp(720.0, 1600.0);
+    if (position.extentAfter > distance) return;
+    _prefetchBudget--;
+    unawaited(_load(silent: true));
+  }
+
+  void _prefetchAfterLayout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prefetch());
+  }
 
   bool get _current =>
       ref.read(showPlatformFeaturesProvider) &&
@@ -199,14 +223,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
   @override
   void initState() {
     super.initState();
-    _scroll.addListener(() {
-      if (_scroll.hasClients &&
-          _scroll.position.extentAfter < 300 &&
-          _hasMore &&
-          _error == null) {
-        _load();
-      }
-    });
+    _scroll.addListener(_prefetch);
     _load(reset: true);
   }
 
@@ -222,7 +239,10 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
   Future<void> _load({bool reset = false, bool silent = false}) async {
     if (!_current || (_loading && !reset)) return;
     final generation = reset ? ++_generation : _generation;
-    if (reset) _browse.reset();
+    if (reset) {
+      _browse.reset();
+      _prefetchBudget = 3;
+    }
     final page = reset ? 1 : _page + 1;
     setState(() {
       _loading = true;
@@ -289,7 +309,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
               previous.comments,
               current.comments,
               (comment) => comment.id,
-              fallbackIndex: (page - 1) * 30,
+              fallbackIndex: (page - 1) * platformCommentPageSize,
             );
             if (page == 1) {
               _singers = singers;
@@ -323,7 +343,9 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
         _commentRevision++;
       });
     } catch (error) {
-      if (mounted && generation == _generation && !silent) {
+      if (mounted &&
+          generation == _generation &&
+          (!silent || _comments.isNotEmpty)) {
         setState(
           () => _error = error is MusicPlatformException
               ? error.message
@@ -333,6 +355,7 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
     } finally {
       if (mounted && generation == _generation) {
         setState(() => _loading = false);
+        _prefetchAfterLayout();
       }
     }
   }
@@ -617,72 +640,91 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: MusicRefreshIndicator(
-                        onRefresh: () => _load(reset: true),
-                        child: buildPlatformLazyList(
-                          controller: _scroll,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(18, 8, 18, 170),
-                          header: [
-                            if (widget.thread != null)
-                              PlatformPanel(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.thread!.nickname,
-                                      style: const TextStyle(
-                                        fontWeight: MusicTypography.titleWeight,
+                      child: NotificationListener<UserScrollNotification>(
+                        onNotification: (event) {
+                          if (event.direction != ScrollDirection.idle) {
+                            _prefetchBudget = 3;
+                            _prefetch();
+                          }
+                          return false;
+                        },
+                        child: MusicRefreshIndicator(
+                          onRefresh: () => _load(reset: true),
+                          child: buildPlatformLazyList(
+                            controller: _scroll,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(18, 8, 18, 170),
+                            header: [
+                              if (widget.thread != null)
+                                PlatformPanel(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.thread!.nickname,
+                                        style: const TextStyle(
+                                          fontWeight:
+                                              MusicTypography.titleWeight,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(widget.thread!.content),
-                                  ],
-                                ),
-                              ),
-                            if (_loading &&
-                                !_silentLoading &&
-                                _comments.isEmpty)
-                              const Padding(
-                                key: ValueKey('comments-initial-loading'),
-                                padding: EdgeInsets.symmetric(vertical: 36),
-                                child: Center(child: BetaActivityIndicator()),
-                              ),
-                            if (_error != null)
-                              PlatformFeedbackState(
-                                message: _error!,
-                                retry: () => _load(reset: _page == 0),
-                              ),
-                            if (!_loading && _error == null && entries.isEmpty)
-                              PlatformFeedbackState(
-                                message: _scope == PlatformCommentScope.all
-                                    ? '暂时没有评论，来写下你的感受'
-                                    : '已加载评论中暂无此类内容',
-                              ),
-                          ],
-                          itemCount: entries.length,
-                          findItemIndex: (key) => _derivedCommentIndices[key],
-                          itemBuilder: (context, index) =>
-                              _commentRow(context, entries[index]),
-                          footer: [
-                            if (_loading &&
-                                !_silentLoading &&
-                                _comments.isNotEmpty)
-                              const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Center(
-                                  child: MusicActivityIndicator(
-                                    independent: true,
+                                      const SizedBox(height: 8),
+                                      Text(widget.thread!.content),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            if (_hasMore && !_loading)
-                              TextButton.icon(
-                                onPressed: _load,
-                                icon: const Icon(Icons.expand_more_rounded),
-                                label: const Text('加载更多'),
-                              ),
-                          ],
+                              if (_loading &&
+                                  !_silentLoading &&
+                                  _comments.isEmpty)
+                                const Padding(
+                                  key: ValueKey('comments-initial-loading'),
+                                  padding: EdgeInsets.symmetric(vertical: 36),
+                                  child: Center(child: BetaActivityIndicator()),
+                                ),
+                              if (_error != null && _comments.isEmpty)
+                                PlatformFeedbackState(
+                                  message: _error!,
+                                  retry: () => _load(reset: _page == 0),
+                                ),
+                              if (!_loading &&
+                                  _error == null &&
+                                  entries.isEmpty)
+                                PlatformFeedbackState(
+                                  message: _scope == PlatformCommentScope.all
+                                      ? '暂时没有评论，来写下你的感受'
+                                      : '已加载评论中暂无此类内容',
+                                ),
+                            ],
+                            itemCount: entries.length,
+                            findItemIndex: (key) => _derivedCommentIndices[key],
+                            itemBuilder: (context, index) =>
+                                _commentRow(context, entries[index]),
+                            footer: [
+                              if (_comments.isNotEmpty &&
+                                  (_hasMore || _error != null))
+                                SizedBox(
+                                  key: const ValueKey(
+                                    'comments-pagination-footer',
+                                  ),
+                                  height: 56,
+                                  child: Center(
+                                    child: _error != null
+                                        ? TextButton(
+                                            onPressed: _load,
+                                            child: const Text('加载失败，点击重试'),
+                                          )
+                                        : _loading
+                                        ? const MusicActivityIndicator(
+                                            independent: true,
+                                          )
+                                        : TextButton(
+                                            onPressed: _load,
+                                            child: const Text('加载更多'),
+                                          ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

@@ -287,7 +287,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                               (MediaQuery.textScalerOf(context).scale(24) - 24)
                                   .clamp(0.0, 96.0);
                           final minimum =
-                              700.0 +
+                              (_queue ? 320.0 : 700.0) +
                               scaled * 2 +
                               (_togetherActive && !detail ? 140 : 0);
                           final content = Center(
