@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,8 @@ import 'package:mesting_music/core/audio/audio_output_controller.dart';
 import 'package:mesting_music/core/audio/media_volume_controller.dart';
 import 'package:mesting_music/core/audio/mesting_audio_handler.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
+import 'package:mesting_music/core/audio/playback_mode.dart';
+import 'package:mesting_music/features/queue/presentation/playback_mode_button.dart';
 import 'package:mesting_music/features/experience/presentation/player_output_dialog.dart';
 import 'package:mesting_music/features/experience/presentation/apple_output_volume_slider.dart';
 import 'package:mesting_music/features/experience/presentation/player_queue_panel.dart';
@@ -53,7 +54,7 @@ void main() {
   });
 
   testWidgets(
-    'queue mode changes announce results and use distinct repeat icons',
+    'one queue entry selects and announces exactly four playback modes',
     (tester) async {
       final handler = (await tester.runAsync(() async {
         final value = MestingAudioHandler(
@@ -78,56 +79,38 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final repeat = find.byKey(const ValueKey('player-repeat'));
-      IconData? repeatIcon() => tester
-          .widget<Icon>(
-            find.descendant(of: repeat, matching: find.byType(Icon)),
-          )
-          .icon;
-      expect(repeatIcon(), CupertinoIcons.repeat);
-      await tester.tap(repeat);
-      await tester.pumpAndSettle();
-      expect(repeatIcon(), CupertinoIcons.repeat_1);
-      expect(find.text('已切换为单曲循环'), findsOneWidget);
-      await tester.tap(repeat);
-      await tester.pumpAndSettle();
-      expect(repeatIcon(), CupertinoIcons.arrow_turn_down_right);
-      expect(find.text('已切换为顺序播放'), findsOneWidget);
-      await tester.tap(repeat);
-      await tester.pumpAndSettle();
-      expect(repeatIcon(), CupertinoIcons.repeat);
-      expect(find.text('已切换为列表循环'), findsOneWidget);
-      final shuffle = find.byKey(const ValueKey('player-shuffle'));
-      expect(
-        tester
-            .widget<Icon>(
-              find.descendant(of: shuffle, matching: find.byType(Icon)),
-            )
-            .icon,
-        CupertinoIcons.arrow_up_arrow_down,
-      );
-      await tester.tap(shuffle);
-      await tester.pumpAndSettle();
-      expect(find.text('已开启随机播放'), findsOneWidget);
-      expect(
-        tester
-            .widget<Icon>(
-              find.descendant(of: shuffle, matching: find.byType(Icon)),
-            )
-            .icon,
-        CupertinoIcons.shuffle,
-      );
-      await tester.tap(shuffle);
-      await tester.pumpAndSettle();
-      expect(find.text('已关闭随机播放，恢复顺序播放'), findsOneWidget);
-      expect(
-        tester
-            .widget<Icon>(
-              find.descendant(of: shuffle, matching: find.byType(Icon)),
-            )
-            .icon,
-        CupertinoIcons.arrow_up_arrow_down,
-      );
+      final picker = find.byKey(const ValueKey('queue-playback-mode'));
+      expect(find.byKey(const ValueKey('player-repeat')), findsNothing);
+      expect(find.byKey(const ValueKey('player-shuffle')), findsNothing);
+      expect(find.byKey(const ValueKey('queue-random-upcoming')), findsNothing);
+      expect(handler.playbackMode, PlaybackMode.sequential);
+      for (final mode in [
+        PlaybackMode.list,
+        PlaybackMode.single,
+        PlaybackMode.random,
+        PlaybackMode.sequential,
+      ]) {
+        await tester.tap(picker);
+        await tester.pumpAndSettle();
+        for (final option in PlaybackMode.values) {
+          expect(
+            find.byKey(ValueKey('queue-mode-${option.name}')),
+            findsOneWidget,
+          );
+        }
+        await tester.tap(find.byKey(ValueKey('queue-mode-${mode.name}')));
+        await tester.pumpAndSettle();
+        expect(handler.playbackMode, mode);
+        expect(find.text('已切换为${mode.label}'), findsOneWidget);
+        expect(
+          tester
+              .widget<Icon>(
+                find.descendant(of: picker, matching: find.byType(Icon)).first,
+              )
+              .icon,
+          queueModeIcon(mode),
+        );
+      }
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

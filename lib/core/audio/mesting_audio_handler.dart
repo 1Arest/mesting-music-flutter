@@ -2381,7 +2381,7 @@ class MestingAudioHandler extends BaseAudioHandler
     await _pauseFadeController.cancel();
     await _player.stop();
     await _loadQueue(const <Track>[]);
-    await setPlaybackMode(PlaybackMode.list);
+    await setPlaybackMode(PlaybackMode.sequential);
     _trace('session-cleared');
   }
 
@@ -2391,6 +2391,8 @@ class MestingAudioHandler extends BaseAudioHandler
 
   Future<void> setPlaybackMode(PlaybackMode mode) async {
     final next = PlaybackOrder.fromLegacy(mode);
+    // One app mode owns the visible order; retire the old hidden random picker.
+    await setRandomUpcoming(false);
     _changeShuffleOrder(next.shuffle);
     _order = next;
     await _applyPlaybackOrder();
@@ -2410,6 +2412,12 @@ class MestingAudioHandler extends BaseAudioHandler
     if (enabled) {
       _unshuffledUpcomingIds = next.map((item) => item.id).toList();
       next.shuffle(_random);
+      if (next.length > 1 &&
+          next.asMap().entries.every(
+            (entry) => entry.value.id == _unshuffledUpcomingIds[entry.key],
+          )) {
+        next.add(next.removeAt(0));
+      }
     } else {
       final rank = {
         for (var i = 0; i < _unshuffledUpcomingIds.length; i++)

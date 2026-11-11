@@ -52,7 +52,8 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
       0.0,
       max,
     );
-    final mode = ref.watch(playbackModeProvider).value ?? PlaybackMode.list;
+    final mode =
+        ref.watch(playbackModeProvider).value ?? PlaybackMode.sequential;
     Future<void> act(Future<void> Function() action) async {
       try {
         await action();
@@ -396,6 +397,8 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       ? Icons.shuffle_rounded
                                       : mode == PlaybackMode.single
                                       ? Icons.repeat_one_rounded
+                                      : mode == PlaybackMode.sequential
+                                      ? Icons.format_list_numbered_rounded
                                       : Icons.repeat_rounded,
                                   size: 23,
                                 ),

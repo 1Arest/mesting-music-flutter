@@ -112,6 +112,12 @@ class _Transport extends Fake implements MestingAudioHandler {
   }
 
   @override
+  Future<void> setPlaybackMode(PlaybackMode mode) async {
+    order = PlaybackOrder.fromLegacy(mode);
+    orders.add(order);
+  }
+
+  @override
   Future<void> cycleRepeat() async {
     order = order.copyWith(
       repeat: PlaybackRepeat.values[(order.repeat.index + 1) % 3],
@@ -508,26 +514,27 @@ void main() {
         dark: true,
       );
       Color? surface;
-      for (var i = 0; i < 6; i++) {
-        for (final key in ['player-shuffle', 'player-repeat']) {
-          final button = find.byKey(ValueKey(key));
-          expect(
-            tester
-                .widget<Icon>(
-                  find.descendant(of: button, matching: find.byType(Icon)),
-                )
-                .color,
-            Colors.white,
-          );
-          final panel = tester.widget<Container>(
-            find.descendant(of: button, matching: find.byType(Container)).first,
-          );
-          final color = (panel.decoration! as BoxDecoration).color;
-          surface ??= color;
-          expect(color, surface);
-          await tester.tap(button);
-          await tester.pumpAndSettle();
-        }
+      for (final mode in PlaybackMode.values) {
+        final button = find.byKey(const ValueKey('queue-playback-mode'));
+        expect(
+          tester
+              .widget<Icon>(
+                find.descendant(of: button, matching: find.byType(Icon)).first,
+              )
+              .color,
+          Colors.white,
+        );
+        final panel = tester.widget<Container>(
+          find.descendant(of: button, matching: find.byType(Container)).first,
+        );
+        final color = (panel.decoration! as BoxDecoration).color;
+        surface ??= color;
+        expect(color, surface);
+        await tester.tap(button);
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(ValueKey('queue-mode-${mode.name}')));
+        await tester.pumpAndSettle();
+        expect(handler.playbackOrder.legacy, mode);
       }
       await capture(tester, 'queue-modes-white');
     },
