@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'equalizer_preset_picker.dart';
+import 'equalizer_band_control.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,8 +74,8 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                             ),
                           ),
                           const SizedBox(height: 5),
-                          Text(
-                            state.binding
+                          _EqualizerStatusLabel(
+                            message: state.binding
                                 ? '正在连接音频会话'
                                 : !state.enabled
                                 ? '已关闭'
@@ -144,97 +146,27 @@ class _MusicEqualizerPageState extends ConsumerState<MusicEqualizerPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final name in musicEqualizerPresets.keys)
-                    ChoiceChip(
-                      label: Text(name),
-                      selected: state.preset == name,
-                      onSelected: state.binding
-                          ? null
-                          : (_) => controller.selectPreset(name),
-                    ),
-                ],
+              EqualizerPresetPicker(
+                names: musicEqualizerPresets.keys,
+                selected: state.preset,
+                onSelected: state.binding ? null : controller.selectPreset,
               ),
               const SizedBox(height: 28),
               for (var i = 0; i < state.frequencies.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 14),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 55,
-                        child: Text(
-                          _frequency(state.frequencies[i]),
-                          style: const TextStyle(
-                            fontSize: MusicTypography.footnoteSize,
-                            fontWeight: MusicTypography.bodyWeight,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Semantics(
-                          label: '${_frequency(state.frequencies[i])} 频段增益',
-                          // A 6dp visual point on a 2dp track, independent of
-                          // the 48dp hit target. Scaling the whole slider would
-                          // also shrink dragging and accessibility interaction.
-                          child: SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 2,
-                              trackShape: const RectangularSliderTrackShape(),
-                              activeTrackColor: scheme.primary,
-                              inactiveTrackColor: scheme.outlineVariant,
-                              thumbColor: scheme.primary,
-                              disabledThumbColor: scheme.onSurfaceVariant,
-                              thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 3,
-                                disabledThumbRadius: 3,
-                                elevation: 0,
-                                pressedElevation: 0,
-                              ),
-                              overlayShape: SliderComponentShape.noOverlay,
-                              showValueIndicator: ShowValueIndicator.never,
-                            ),
-                            child: SizedBox(
-                              height: 48,
-                              child: Slider(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                key: ValueKey('music-equalizer-band-$i'),
-                                value: state.levels[i].clamp(
-                                  state.minimum,
-                                  state.maximum,
-                                ),
-                                min: state.minimum,
-                                max: state.maximum,
-                                semanticFormatterCallback: (value) =>
-                                    '${value.toStringAsFixed(1)} 分贝',
-                                onChanged: interactive
-                                    ? (v) => controller.previewBand(i, v)
-                                    : null,
-                                onChangeEnd: interactive
-                                    ? (_) => unawaited(controller.commitBands())
-                                    : null,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 52,
-                        child: Text(
-                          '${state.levels[i] > 0 ? '+' : ''}${state.levels[i].toStringAsFixed(1)} dB',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: MusicTypography.captionSize,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: EqualizerBandControl(
+                    index: i,
+                    frequency: _frequency(state.frequencies[i]),
+                    value: state.levels[i],
+                    minimum: state.minimum,
+                    maximum: state.maximum,
+                    onChanged: interactive
+                        ? (v) => controller.previewBand(i, v)
+                        : null,
+                    onChangeEnd: interactive
+                        ? (_) => unawaited(controller.commitBands())
+                        : null,
                   ),
                 ),
               if (state.message != null) ...[
@@ -345,4 +277,38 @@ class _EqualizerCurve extends CustomPainter {
       old.ink != ink ||
       old.minimum != minimum ||
       old.maximum != maximum;
+}
+
+/// Reserve the tallest supported status at the current text scale and width.
+/// Long preset names or a temporary binding message must not move the controls.
+class _EqualizerStatusLabel extends StatelessWidget {
+  const _EqualizerStatusLabel({required this.message, required this.style});
+  final String message;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, bounds) {
+      final effectiveStyle = DefaultTextStyle.of(context).style.merge(style);
+      var height = 0.0;
+      for (final text in [
+        message,
+        '正在连接音频会话',
+        '已开启 · 等待音乐播放',
+        for (final preset in musicEqualizerPresets.keys) '已生效 · $preset',
+      ]) {
+        final painter = TextPainter(
+          text: TextSpan(text: text, style: effectiveStyle),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: bounds.maxWidth);
+        if (painter.height > height) height = painter.height;
+        painter.dispose();
+      }
+      return SizedBox(
+        height: height,
+        child: Text(message, style: style),
+      );
+    },
+  );
 }
