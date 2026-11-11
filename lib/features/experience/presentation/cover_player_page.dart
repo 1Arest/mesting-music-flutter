@@ -305,7 +305,10 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  child: FavoriteToggleButton(track: track),
+                                  child: FavoriteToggleButton(
+                                    track: track,
+                                    player: true,
+                                  ),
                                 ),
                               ],
                             ),
