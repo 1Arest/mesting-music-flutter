@@ -37,7 +37,7 @@ class FavoriteToggleButton extends ConsumerWidget {
     );
     const dimension = 48.0;
     final song = songCountIdentity(track);
-    final count = DistributionChannel.isBeta && song != null
+    final count = song != null
         ? ref.watch(songFavoriteCountProvider(song)).value
         : null;
 

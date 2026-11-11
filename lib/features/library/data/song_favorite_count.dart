@@ -53,12 +53,12 @@ int? songFavoriteCount(Map<String, dynamic> payload, SongCountIdentity song) {
 }
 
 String formatSongFavoriteCount(int count) {
+  if (count >= 9990000) return '999w+';
   if (count < 10000) return '$count';
-  final unit = count >= 100000000 ? 100000000 : 10000;
-  final value = (count / unit)
+  final value = ((count ~/ 1000) / 10)
       .toStringAsFixed(1)
       .replaceFirst(RegExp(r'\.0$'), '');
-  return '$value${unit == 10000 ? '万' : '亿'}';
+  return '${value}w';
 }
 
 /// A bounded session cache coalesces list/player reads for the same recording.

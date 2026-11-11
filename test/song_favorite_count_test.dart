@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/features/library/data/song_favorite_count.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/library/presentation/favorite_toggle_button.dart';
+import 'package:mesting_music/features/library/presentation/song_favorite_count_badge.dart';
+import 'package:mesting_music/features/player/player_visual_style.dart';
+import 'package:mesting_music/features/player/presentation/player_visual_stages.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 void main() {
@@ -97,8 +99,16 @@ void main() {
       expect(songFavoriteCount(payload, (TrackSource.kugou, '1')), isNull);
     }
     expect(songCountIdentity(_track), (TrackSource.netease, '362937'));
-    expect(formatSongFavoriteCount(5902129), '590.2万');
-    expect(formatSongFavoriteCount(397620), '39.8万');
+    expect(formatSongFavoriteCount(5902129), '590.2w');
+    expect(formatSongFavoriteCount(397620), '39.7w');
+  });
+
+  test('万单位截断且显示上限为999w+', () {
+    expect(formatSongFavoriteCount(9999), '9999');
+    expect(formatSongFavoriteCount(10000), '1w');
+    expect(formatSongFavoriteCount(9989999), '998.9w');
+    expect(formatSongFavoriteCount(9990000), '999w+');
+    expect(formatSongFavoriteCount(100000000), '999w+');
   });
 
   test('搜索与播放器读取合并，后续读取使用缓存', () async {
@@ -124,6 +134,49 @@ void main() {
     cache.invalidate(song);
     expect(await cache.load(song, request, () => true), 12);
     expect(requests, 2);
+  });
+
+  testWidgets('独立红心显示上限，保留触摸；无数据保持原样', (tester) async {
+    var taps = 0;
+    for (final inline in [false, true]) {
+      for (final count in <int?>[10000000, null]) {
+        await tester.pumpWidget(
+          ProviderScope(
+            key: ValueKey('$inline-$count'),
+            overrides: [
+              songFavoriteCountProvider.overrideWith(
+                (ref, song) async => count,
+              ),
+            ],
+            child: MaterialApp(
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: 100,
+                    child: SongFavoriteCountBadge(
+                      track: _track,
+                      inline: inline,
+                      child: IconButton(
+                        icon: const Icon(Icons.favorite),
+                        onPressed: () => taps++,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text('999w+'),
+          count == null ? findsNothing : findsOneWidget,
+        );
+        await tester.tap(find.byIcon(Icons.favorite));
+        expect(tester.takeException(), isNull);
+      }
+    }
+    expect(taps, 4);
   });
 
   testWidgets('有总数时展示数字，缺失时原有收藏按钮继续显示', (tester) async {
@@ -157,7 +210,52 @@ void main() {
       }
       expect(tester.takeException(), isNull);
     }
-  }, skip: !DistributionChannel.isBeta);
+  });
+
+  testWidgets('三套独立播放器显示歌曲总数且红心仍可点击', (tester) async {
+    tester.view.physicalSize = const Size(390, 873);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var taps = 0;
+    for (final style in [
+      PlayerVisualStyle.aurora,
+      PlayerVisualStyle.cassette,
+      PlayerVisualStyle.lyricStage,
+    ]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          key: ValueKey(style),
+          overrides: [
+            songFavoriteCountProvider.overrideWith(
+              (ref, song) async => 10000000,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: AlternativePlayerStage(
+                style: style,
+                track: _track,
+                vinylRotating: false,
+                routeAnimation: kAlwaysCompleteAnimation,
+                favorite: false,
+                onToggleFavorite: () => taps++,
+                onShowLyrics: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('999w+'), findsOneWidget);
+      await tester.tap(
+        find.byKey(ValueKey('alternative-player-favorite-${style.id}')),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+    expect(taps, 3);
+  });
 }
 
 const _track = Track(
