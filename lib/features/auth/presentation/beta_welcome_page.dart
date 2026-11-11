@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/persistence/app_preferences.dart';
@@ -135,17 +134,7 @@ class _BetaWelcomePageState extends ConsumerState<BetaWelcomePage> {
                                 onPressed: _opening
                                     ? null
                                     : () => _platform(MusicPlatform.kugou),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      CupertinoIcons.device_phone_portrait,
-                                      size: 23,
-                                    ),
-                                    SizedBox(width: 9),
-                                    Text('酷狗登录'),
-                                  ],
-                                ),
+                                child: const Text('酷狗登录'),
                               ),
                               const SizedBox(height: 14),
                               BetaGlassButton(
