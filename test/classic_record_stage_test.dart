@@ -14,7 +14,7 @@ void main() {
         expect(distance, greaterThan(geometry.record.width / 2 * .62));
         expect(distance, lessThan(geometry.record.width / 2));
         expect(geometry.pivot.dy, lessThan(geometry.record.top));
-        expect(geometry.record.bottom, lessThanOrEqualTo(side));
+        expect(geometry.record.bottom, lessThanOrEqualTo(geometry.height));
         expect(geometry.record.left, greaterThanOrEqualTo(0));
         expect(geometry.record.right, lessThanOrEqualTo(side));
       }

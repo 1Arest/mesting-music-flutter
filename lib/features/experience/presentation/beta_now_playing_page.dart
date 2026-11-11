@@ -259,9 +259,9 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                             end: Alignment.bottomCenter,
                             colors: classic
                                 ? const [
-                                    Color(0x6630343B),
-                                    Color(0x8830343B),
-                                    Color(0xF0181B20),
+                                    Color(0xCC535659),
+                                    Color(0xD8434548),
+                                    Color(0xF02D3033),
                                   ]
                                 : [
                                     Color(
@@ -369,9 +369,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                   ),
                                   if (!detail)
                                     NeteaseTogetherPlayerHeader(
-                                      foreground: classic
-                                          ? const Color(0xFF17191F)
-                                          : Colors.white,
+                                      foreground: Colors.white,
                                       onManage: () =>
                                           showNeteaseTogetherPanel(context),
                                     ),
@@ -449,6 +447,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                                     title: track.title,
                                                     artist: track.artist,
                                                     direction: _direction,
+                                                    compact: classic,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 12),
@@ -476,9 +475,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: classic
-                                              ? const Color(0xFF565B66)
-                                              : Colors.white70,
+                                          color: Colors.white70,
                                         ),
                                       ),
                                     ),
@@ -740,10 +737,11 @@ class _Identity extends StatelessWidget {
     required this.title,
     required this.artist,
     this.small = false,
+    this.compact = false,
     this.direction = 1,
   });
   final String title, artist;
-  final bool small;
+  final bool small, compact;
   final double direction;
   @override
   Widget build(BuildContext context) => PlayerContentTransition(
@@ -756,27 +754,33 @@ class _Identity extends StatelessWidget {
         children: [
           Text(
             title,
-            maxLines: small ? 1 : 2,
+            maxLines: small || compact ? 1 : 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: Colors.white,
               fontSize: small
                   ? MusicTypography.bodySize
+                  : compact
+                  ? 20
                   : MusicTypography.titleSize,
               height: 1.16,
-              fontWeight: MusicTypography.titleWeight,
+              fontWeight: compact
+                  ? FontWeight.w600
+                  : MusicTypography.titleWeight,
               letterSpacing: -.4,
             ),
           ),
-          const SizedBox(height: 5),
+          SizedBox(height: compact ? 4 : 5),
           Text(
             artist,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: Colors.white,
+              color: compact ? Colors.white70 : Colors.white,
               fontSize: small
                   ? MusicTypography.subheadlineSize
+                  : compact
+                  ? 14
                   : MusicTypography.bodySize,
             ),
           ),

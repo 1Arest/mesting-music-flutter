@@ -9,12 +9,13 @@ class ClassicRecordGeometry {
   const ClassicRecordGeometry(this.side);
   final double side;
   Rect get record =>
-      Rect.fromLTWH(side * .05, side * .10, side * .90, side * .90);
+      Rect.fromLTWH(side * .05, side * .21, side * .90, side * .90);
+  double get height => side * 1.14;
   Offset get pivot => Offset(side * .52, side * .014);
   Offset get stylus => Offset(side * .83, side * .43);
 }
 
-/// One compact square stage: generous record, restrained rim and an articulated
+/// A taller stage reserves air above the record for the articulated
 /// metal arm. The arm is stationary while the existing record surface rotates.
 class ClassicRecordStage extends StatelessWidget {
   const ClassicRecordStage({
@@ -28,24 +29,25 @@ class ClassicRecordStage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
-      final side = math.min(bounds.maxWidth, bounds.maxHeight);
+      final side = math.min(bounds.maxWidth, bounds.maxHeight / 1.14);
       final geometry = ClassicRecordGeometry(side);
       final reduceMotion = MediaQuery.disableAnimationsOf(context);
       return Center(
-        child: SizedBox.square(
-          dimension: side,
+        child: SizedBox(
+          width: side,
+          height: geometry.height,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               Positioned.fromRect(
-                rect: geometry.record.inflate(side * .025),
+                rect: geometry.record.inflate(side * .018),
                 child: DecoratedBox(
                   key: const ValueKey('classic-record-halo'),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: .045),
+                    color: Colors.white.withValues(alpha: .025),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: .10),
+                      color: Colors.white.withValues(alpha: .065),
                       width: 1,
                     ),
                   ),
