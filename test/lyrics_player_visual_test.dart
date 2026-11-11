@@ -7,6 +7,7 @@ import 'package:mesting_music/core/audio/playback_mode.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/core/platform/lyrics_overlay_bridge.dart';
+import 'package:mesting_music/features/auth/account_capabilities.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/lyrics/domain/lyrics_document.dart';
 import 'package:mesting_music/features/lyrics/lyrics_providers.dart';
@@ -88,13 +89,9 @@ void main() {
     expect(find.text(_track.title), findsOneWidget);
     expect(find.text(_track.artist), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('listen-together-player-entry')),
+      find.byKey(const ValueKey('playback-controls-dock')),
       findsOneWidget,
     );
-    expect(find.text('好友一起听'), findsOneWidget);
-    expect(find.byTooltip('分享给好友'), findsOneWidget);
-    expect(find.byIcon(Icons.ios_share_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.desktop_windows_rounded), findsNothing);
     final backButton = find.byKey(const ValueKey('now-playing-back-button'));
     expect(backButton, findsOneWidget);
     expect(
@@ -113,10 +110,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('lyrics-track-heading')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('listen-together-player-entry')),
-      findsNothing,
-    );
     expect(find.text(_track.title), findsOneWidget);
     expect(find.text(_track.artist), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -243,14 +236,14 @@ void main() {
       final stage = find.byKey(ValueKey(style.stageKey));
       expect(stage, findsOneWidget);
       expect(find.byType(PlayerStyleAtmosphere), findsOneWidget);
-      final togetherEntry = tester.getRect(
-        find.byKey(const ValueKey('listen-together-player-entry')),
+      final backButton = tester.getRect(
+        find.byKey(const ValueKey('now-playing-back-button')),
       );
       final eyebrow = tester.getRect(find.text(style.eyebrow));
       expect(
         eyebrow.top,
-        greaterThanOrEqualTo(togetherEntry.bottom + 12),
-        reason: '${style.preference} 的舞台标题必须完整避让顶部一起听入口',
+        greaterThanOrEqualTo(backButton.bottom + 12),
+        reason: '${style.preference} 的舞台标题必须避开顶部返回按钮',
       );
       final switcher = tester.widget<AnimatedSwitcher>(
         find.byKey(const ValueKey('now-playing-content-switcher')),
@@ -345,6 +338,7 @@ Future<List<Color>> _pumpLyricsPlayer(
         sharedPreferencesProvider.overrideWithValue(preferences),
         audioHandlerProvider.overrideWithValue(handler),
         currentTrackProvider.overrideWithValue(_track),
+        showPlatformFeaturesProvider.overrideWithValue(false),
         favoriteTrackIdsProvider.overrideWithValue(const <String>{}),
         effectiveMusicThemeProvider.overrideWithValue(preset),
         playbackStateProvider.overrideWith(

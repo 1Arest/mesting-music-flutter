@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:math_curve_loaders/math_curve_loaders.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/features/lyrics/domain/lyrics_document.dart';
@@ -13,6 +14,7 @@ import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   const track = Track(
     id: 'lyrics-readability',
     title: '主题歌词',
