@@ -28,7 +28,7 @@ const _capture = bool.fromEnvironment('CAPTURE_HEART_BADGE');
 void main() {
   setUpAll(() async {
     if (!_capture) return;
-    await (FontLoader('HeartBadgeQA')..addFont(
+    await (FontLoader('Roboto')..addFont(
           File(
             'C:/Windows/Fonts/msyh.ttc',
           ).readAsBytes().then(ByteData.sublistView),
@@ -125,11 +125,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData.dark().copyWith(
-          textTheme: ThemeData.dark().textTheme.apply(
-            fontFamily: 'HeartBadgeQA',
-          ),
-        ),
+        theme: ThemeData.dark(),
         home: Scaffold(
           body: Center(
             child: RepaintBoundary(
