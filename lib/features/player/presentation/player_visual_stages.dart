@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../../themes/personal_decorations.dart';
 
 import 'package:flutter/material.dart';
 
@@ -152,7 +153,7 @@ class PlayerArtworkStage extends StatelessWidget {
       ),
     };
     return Center(
-      child: AspectRatio(aspectRatio: 1, child: RepaintBoundary(child: stage)),
+      child: AspectRatio(aspectRatio: 1, child: PersonalCoverFrame(child: RepaintBoundary(child: stage))),
     );
   }
 }

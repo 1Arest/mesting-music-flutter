@@ -6,6 +6,7 @@ import '../../../core/audio/playback_providers.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
 import '../../themes/music_typography.dart';
+import '../../themes/personal_style.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -30,6 +31,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   String _track = '';
   LyricsDocument? _measured;
   double _measuredWidth = 0;
+  TextStyle? _measuredStyle;
   TextScaler? _measuredScaler;
   final _heights = <double>[];
   @override
@@ -41,6 +43,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   @override
   Widget build(BuildContext context) {
     final track = ref.watch(currentTrackProvider);
+    final personal = ref.watch(personalStyleProvider);
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
@@ -75,11 +78,20 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
                     .copyWith(
-                      fontSize: widget.referenceDesign
+                      fontFamily: personal.serif ? 'serif' : null,
+                      fontSize: personal.lyricSize > 0
+                          ? personal.lyricSize
+                          : widget.referenceDesign
                           ? MusicTypography.largeTitleSize
                           : MusicTypography.sectionTitleSize,
-                      fontWeight: MusicTypography.titleWeight,
-                      height: widget.referenceDesign ? 1.3 : 1.4,
+                      fontWeight: personal.lyricWeight == 1
+                          ? FontWeight.w400
+                          : MusicTypography.titleWeight,
+                      height: personal.lineHeight > 0
+                          ? personal.lineHeight
+                          : widget.referenceDesign
+                          ? 1.3
+                          : 1.4,
                       letterSpacing: -.5,
                     );
                 final textWidth = (constraints.maxWidth - 48).clamp(
@@ -91,9 +103,11 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                 // paragraph at audio frequency wastes frames on long songs.
                 if (!identical(_measured, document) ||
                     _measuredWidth != textWidth ||
+                    _measuredStyle != style ||
                     _measuredScaler != scaler) {
                   _measured = document;
                   _measuredWidth = textWidth;
+                  _measuredStyle = style;
                   _measuredScaler = scaler;
                   _heights.clear();
                   _active = -2;
@@ -176,7 +190,13 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                           curve: Curves.easeOutCubic,
                           child: Text(
                             document.lines[index].text,
-                            style: style.copyWith(color: Colors.white),
+                            style: style.copyWith(
+                              color:
+                                  (index == active || !document.isSynced) &&
+                                      personal.lyricColor != null
+                                  ? Color(personal.lyricColor!)
+                                  : Colors.white,
+                            ),
                           ),
                           builder: (_, distance, child) => ImageFiltered(
                             imageFilter: ImageFilter.blur(

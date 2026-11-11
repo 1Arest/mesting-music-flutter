@@ -20,6 +20,7 @@ import 'beta_appearance.dart';
 import 'custom_background_controller.dart';
 import 'music_theme_preset.dart';
 import 'progress_outfit_picker.dart';
+import 'personal_style_page.dart';
 import 'theme_controller.dart';
 import 'music_theme_tokens.dart';
 import 'startup_style_picker.dart';
@@ -365,6 +366,18 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                         ],
                       ),
                       const SizedBox(height: 26),
+                      ListTile(
+                        leading: const Icon(Icons.palette_outlined),
+                        title: const Text('我的风格'),
+                        subtitle: const Text('免费配色、歌词、挂件、相框与听歌氛围'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () =>
+                            Navigator.of(context, rootNavigator: true).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const PersonalStylePage(),
+                              ),
+                            ),
+                      ),
                       const _SettingsHeading(
                         title: '进度条装扮',
                         description: '选角色，搭配同系列轨道；也可以自定义组合。',

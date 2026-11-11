@@ -1,4 +1,6 @@
 import 'dart:ui';
+import '../../themes/listening_atmosphere.dart';
+import '../../themes/personal_decorations.dart';
 import 'package:flutter/material.dart';
 import '../../music_platform/presentation/platform_quality_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -101,6 +103,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                   ),
                 ),
               ),
+              const Positioned.fill(child: ListeningAtmosphereLayer()),
               Positioned.fill(
                 child: ColoredBox(color: const Color(0x99131820)),
               ),
@@ -229,24 +232,25 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       ),
                                       child: AspectRatio(
                                         aspectRatio: 1,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
+                                        child: PersonalCoverFrame(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                              boxShadow: const [
+                                                BoxShadow(
+                                                  color: Color(0x66000000),
+                                                  blurRadius: 32,
+                                                  offset: Offset(0, 16),
+                                                ),
+                                              ],
                                             ),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Color(0x66000000),
-                                                blurRadius: 32,
-                                                offset: Offset(0, 16),
-                                              ),
-                                            ],
-                                          ),
-                                          clipBehavior: Clip.antiAlias,
-                                          child: TrackArtwork(
-                                            track: track,
-                                            width: 640,
-                                            height: 640,
+                                            clipBehavior: Clip.antiAlias,
+                                            child: TrackArtwork(
+                                              track: track,
+                                              width: 640,
+                                              height: 640,
+                                            ),
                                           ),
                                         ),
                                       ),
