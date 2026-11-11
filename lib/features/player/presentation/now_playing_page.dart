@@ -1,3 +1,4 @@
+import '../../library/presentation/song_favorite_count_badge.dart';
 import 'dart:async';
 import 'dart:ui';
 
@@ -407,37 +408,45 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                                                   Positioned(
                                                     right: 0,
                                                     top: 1,
-                                                    child: _RoundGlassButton(
-                                                      key: const ValueKey(
-                                                        'classic-player-favorite',
-                                                      ),
-                                                      tooltip: favorite
-                                                          ? '取消收藏'
-                                                          : '收藏歌曲',
-                                                      icon: favorite
-                                                          ? Icons
-                                                                .favorite_rounded
-                                                          : Icons
-                                                                .favorite_border_rounded,
-                                                      iconColor: MestingPalette
+                                                    child: SongFavoriteCountBadge(
+                                                      track: track,
+                                                      color: MestingPalette
                                                           .favorite,
-                                                      surfaceColor:
-                                                          MestingPalette
-                                                              .favorite
-                                                              .withValues(
-                                                                alpha: favorite
-                                                                    ? .20
-                                                                    : .10,
-                                                              ),
-                                                      borderColor:
-                                                          MestingPalette
-                                                              .favorite
-                                                              .withValues(
-                                                                alpha: favorite
-                                                                    ? .58
-                                                                    : .34,
-                                                              ),
-                                                      onTap: toggleFavorite,
+                                                      child: _RoundGlassButton(
+                                                        key: const ValueKey(
+                                                          'classic-player-favorite',
+                                                        ),
+                                                        tooltip: favorite
+                                                            ? '取消收藏'
+                                                            : '收藏歌曲',
+                                                        icon: favorite
+                                                            ? Icons
+                                                                  .favorite_rounded
+                                                            : Icons
+                                                                  .favorite_border_rounded,
+                                                        iconColor:
+                                                            MestingPalette
+                                                                .favorite,
+                                                        surfaceColor:
+                                                            MestingPalette
+                                                                .favorite
+                                                                .withValues(
+                                                                  alpha:
+                                                                      favorite
+                                                                      ? .20
+                                                                      : .10,
+                                                                ),
+                                                        borderColor:
+                                                            MestingPalette
+                                                                .favorite
+                                                                .withValues(
+                                                                  alpha:
+                                                                      favorite
+                                                                      ? .58
+                                                                      : .34,
+                                                                ),
+                                                        onTap: toggleFavorite,
+                                                      ),
                                                     ),
                                                   ),
                                                 ],

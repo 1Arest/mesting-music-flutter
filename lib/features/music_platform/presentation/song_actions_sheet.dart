@@ -1,3 +1,4 @@
+import '../../library/presentation/song_favorite_count_badge.dart';
 import '../qishui/qishui_song_actions.dart';
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
@@ -298,7 +299,14 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
         key: intent is String ? ValueKey('song-menu-$intent') : null,
         contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 3),
         minVerticalPadding: 12,
-        leading: Icon(icon, size: 25, color: color),
+        leading: intent == 'favorite'
+            ? SongFavoriteCountBadge(
+                track: widget.track,
+                color: color,
+                inline: true,
+                child: Icon(icon, size: 25, color: color),
+              )
+            : Icon(icon, size: 25, color: color),
         title: Text(
           label,
           maxLines: 2,
