@@ -27,6 +27,7 @@ import 'persistent_mini_player.dart';
 import 'now_playing_transition.dart';
 import 'vinyl_disc.dart';
 import '../../experience/presentation/cover_player_page.dart';
+import '../../experience/presentation/player_swipe_to_comments.dart';
 import '../../experience/presentation/beta_now_playing_page.dart';
 import '../../themes/music_typography.dart';
 
@@ -197,7 +198,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
       }
     }
 
-    return PopScope(
+    final page = PopScope(
       canPop: _allowRoutePop,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -637,6 +638,15 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
           ],
         ),
       ),
+    );
+    return PlayerSwipeToComments(
+      enabled: !_lyricsVisible && ref.watch(showPlatformFeaturesProvider),
+      onOpenComments: () => openPlatformSongComments(
+        context,
+        ref,
+        ref.read(currentTrackProvider),
+      ),
+      child: page,
     );
   }
 }

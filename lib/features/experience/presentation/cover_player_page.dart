@@ -1,3 +1,4 @@
+import 'player_swipe_to_comments.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../music_platform/presentation/platform_quality_button.dart';
@@ -66,7 +67,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
       context.canPop() ? context.pop() : context.go('/music/recommend');
     }
 
-    return PopScope(
+    final page = PopScope(
       canPop: !_lyrics,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _lyrics) setState(() => _lyrics = false);
@@ -516,6 +517,15 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
           ),
         ),
       ),
+    );
+    return PlayerSwipeToComments(
+      enabled: !_lyrics && ref.watch(showPlatformFeaturesProvider),
+      onOpenComments: () => openPlatformSongComments(
+        context,
+        ref,
+        ref.read(currentTrackProvider),
+      ),
+      child: page,
     );
   }
 }
