@@ -152,6 +152,7 @@ void main() {
       };
       final page = await repository.load(_song);
       expect(requests.last.url.queryParameters['mixsongid'], '12345');
+      expect(requests.last.url.queryParameters['pagesize'], '30');
       expect(page.comments.single.specialId, 'child-id');
       expect(page.comments.single.userId, '7');
       expect(page.hasMore, true);
