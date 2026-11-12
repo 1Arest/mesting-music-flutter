@@ -9,13 +9,11 @@ class PlayerContentTransition extends StatefulWidget {
     required this.child,
     this.duration = const Duration(milliseconds: 360),
     this.direction = 1,
-    this.axis = Axis.horizontal,
     super.key,
   });
   final Widget child;
   final Duration duration;
   final double direction;
-  final Axis axis;
   @override
   State<PlayerContentTransition> createState() =>
       _PlayerContentTransitionState();
@@ -99,7 +97,6 @@ class _PlayerContentTransitionState extends State<PlayerContentTransition>
       motion: _motion,
       opacity: () => outgoing ? _outgoingAlpha : _incomingAlpha,
       direction: widget.direction,
-      axis: widget.axis,
       child: child,
     );
   }
@@ -121,7 +118,6 @@ class _PlayerTransitionSurface extends StatelessWidget {
     required this.motion,
     required this.opacity,
     required this.direction,
-    required this.axis,
     required this.child,
     super.key,
   });
@@ -129,7 +125,6 @@ class _PlayerTransitionSurface extends StatelessWidget {
   final Animation<double> motion;
   final double Function() opacity;
   final double direction;
-  final Axis axis;
   final Widget child;
 
   @override
@@ -152,12 +147,10 @@ class _PlayerTransitionSurface extends StatelessWidget {
               return Opacity(
                 opacity: alpha.clamp(0, 1),
                 child: FractionalTranslation(
-                  translation: axis == Axis.vertical
-                      ? Offset(0, .12 * distance)
-                      : Offset(
-                          (outgoing ? -1 : 1) * direction * .045 * distance,
-                          .018 * distance,
-                        ),
+                  translation: Offset(
+                    (outgoing ? -1 : 1) * direction * .045 * distance,
+                    .018 * distance,
+                  ),
                   child: Transform.scale(
                     scale: 1 - .015 * distance,
                     child: child,

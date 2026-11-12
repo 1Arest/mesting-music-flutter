@@ -1,7 +1,4 @@
 import 'dart:ui' as ui;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mesting_music/core/persistence/app_preferences.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,11 +27,6 @@ Track song({
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late SharedPreferences prefs;
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    prefs = await SharedPreferences.getInstance();
-  });
 
   test('only public catalogue links leave the device', () {
     for (final url in [
@@ -91,16 +83,13 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: MaterialApp(
-            home: MediaQuery(
-              data: const MediaQueryData(
-                size: Size(320, 640),
-                textScaler: TextScaler.linear(2),
-              ),
-              child: Scaffold(body: SongShareSheet(track: song())),
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(2),
             ),
+            child: Scaffold(body: SongShareSheet(track: song())),
           ),
         ),
       );
@@ -131,11 +120,8 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: MaterialApp(
-            home: Scaffold(body: SongShareSheet(track: song())),
-          ),
+        MaterialApp(
+          home: Scaffold(body: SongShareSheet(track: song())),
         ),
       );
       await tester.runAsync(() async {
@@ -185,13 +171,10 @@ void main() {
         ),
       );
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-          child: MaterialApp(
-            home: Scaffold(
-              body: SongShareSheet(
-                track: song(id: 'netease_123', source: TrackSource.netease),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: SongShareSheet(
+              track: song(id: 'netease_123', source: TrackSource.netease),
             ),
           ),
         ),

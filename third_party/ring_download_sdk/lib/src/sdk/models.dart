@@ -233,7 +233,7 @@ class RingSdkStatus {
     required this.p2pEnabled,
     required this.sharingOptIn,
   });
-  static const sdkVersion = '1.1.9';
+  static const sdkVersion = '1.1.8';
   final String appId, platform, networkType;
   final bool p2pEnabled, sharingOptIn;
   Map<String, Object?> toJson() => {

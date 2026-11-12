@@ -1,5 +1,4 @@
 import 'package:audio_service/audio_service.dart';
-import '../../themes/personal_decorations.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -134,135 +133,133 @@ class _FloatingPlaybackPillState extends ConsumerState<FloatingPlaybackPill> {
         key: _anchor,
         onLongPress: _openMenu,
         child: RepaintBoundary(
-          child: PersonalMiniPlayer(
-            child: GlassButton.custom(
-              key: const ValueKey('beta6-official-play-pill'),
-              onTap: () {
-                appHaptic(context, AppHapticEvent.impact);
-                if (ref.read(qishuiNavigationProvider)) {
-                  openQishuiMusicTab(context, ref);
-                } else {
-                  openNowPlaying(context, ref);
-                }
-              },
-              quality: GlassQuality.premium,
-              useOwnLayer: true,
-              width: double.infinity,
-              height: 64,
-              shape: const LiquidRoundedRectangle(borderRadius: 32),
-              settings: betaMusicPillGlass(context),
-              child: AnimatedPadding(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.symmetric(
-                  horizontal: narrowCompact
-                      ? 6
-                      : compact
-                      ? 10
-                      : 16,
-                ),
-                child: Row(
-                  children: [
-                    // Retain both 44dp transport targets on narrow inline bars.
-                    // Only cover geometry adapts; its original image stays cached.
-                    Expanded(
-                      child: ValueListenableBuilder(
-                        valueListenable: _drag,
-                        builder: (context, drag, child) =>
-                            PlaybackPillTrackMotion(
-                              trackId: track.id,
-                              forward: _forward,
-                              dragOffset:
-                                  drag.progress *
-                                  miniPlayerSwipeDistanceThreshold *
-                                  1.5,
-                              dragging: drag.dragging,
-                              child: child!,
-                            ),
-                        child: Row(
-                          children: [
-                            if (track.source == TrackSource.netease)
-                              PlaybackPillArtwork(
-                                track: track,
-                                dimension: narrowCompact ? 24 : 32,
-                              )
-                            else
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeOutCubic,
-                                width: narrowCompact ? 24 : 32,
-                                height: narrowCompact ? 24 : 32,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: TrackArtwork(
-                                    track: track,
-                                    width: 32,
-                                    height: 32,
-                                  ),
+          child: GlassButton.custom(
+            key: const ValueKey('beta6-official-play-pill'),
+            onTap: () {
+              appHaptic(context, AppHapticEvent.impact);
+              if (ref.read(qishuiNavigationProvider)) {
+                openQishuiMusicTab(context, ref);
+              } else {
+                openNowPlaying(context, ref);
+              }
+            },
+            quality: GlassQuality.premium,
+            useOwnLayer: true,
+            width: double.infinity,
+            height: 64,
+            shape: const LiquidRoundedRectangle(borderRadius: 32),
+            settings: betaMusicPillGlass(context),
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.symmetric(
+                horizontal: narrowCompact
+                    ? 6
+                    : compact
+                    ? 10
+                    : 16,
+              ),
+              child: Row(
+                children: [
+                  // Retain both 44dp transport targets on narrow inline bars.
+                  // Only cover geometry adapts; its original image stays cached.
+                  Expanded(
+                    child: ValueListenableBuilder(
+                      valueListenable: _drag,
+                      builder: (context, drag, child) =>
+                          PlaybackPillTrackMotion(
+                            trackId: track.id,
+                            forward: _forward,
+                            dragOffset:
+                                drag.progress *
+                                miniPlayerSwipeDistanceThreshold *
+                                1.5,
+                            dragging: drag.dragging,
+                            child: child!,
+                          ),
+                      child: Row(
+                        children: [
+                          if (track.source == TrackSource.netease)
+                            PlaybackPillArtwork(
+                              track: track,
+                              dimension: narrowCompact ? 24 : 32,
+                            )
+                          else
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              width: narrowCompact ? 24 : 32,
+                              height: narrowCompact ? 24 : 32,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: TrackArtwork(
+                                  track: track,
+                                  width: 32,
+                                  height: 32,
                                 ),
                               ),
-                            SizedBox(width: narrowCompact ? 6 : 10),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                            ),
+                          SizedBox(width: narrowCompact ? 6 : 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: foreground,
+                                    fontWeight: MusicTypography.bodyWeight,
+                                    fontSize: MusicTypography.subheadlineSize,
+                                  ),
+                                ),
+                                if (!compact ||
+                                    MediaQuery.textScalerOf(
+                                          context,
+                                        ).scale(12) <=
+                                        16)
                                   Text(
-                                    track.title,
+                                    track.artist,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: foreground,
-                                      fontWeight: MusicTypography.bodyWeight,
-                                      fontSize: MusicTypography.subheadlineSize,
+                                      color: foreground.withValues(alpha: .7),
+                                      fontSize: MusicTypography.captionSize,
                                     ),
                                   ),
-                                  if (!compact ||
-                                      MediaQuery.textScalerOf(
-                                            context,
-                                          ).scale(12) <=
-                                          16)
-                                    Text(
-                                      track.artist,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: foreground.withValues(alpha: .7),
-                                        fontSize: MusicTypography.captionSize,
-                                      ),
-                                    ),
-                                ],
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    if (busy)
-                      const SizedBox(
-                        width: 44,
-                        height: 44,
-                        child: Center(
-                          child: BetaActivityIndicator(label: '正在加载所选歌曲'),
-                        ),
-                      )
-                    else
-                      control(
-                        label: playing ? '暂停' : '播放',
-                        icon: playing
-                            ? CupertinoIcons.pause_fill
-                            : CupertinoIcons.play_fill,
-                        // Consult the live fade state so another tap can cancel
-                        // Pause before the shared transport finishes its fade.
-                        onTap: () => action(handler.togglePlayPause),
+                  ),
+                  if (busy)
+                    const SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Center(
+                        child: BetaActivityIndicator(label: '正在加载所选歌曲'),
                       ),
+                    )
+                  else
                     control(
-                      label: '下一首',
-                      icon: CupertinoIcons.forward_end_fill,
-                      onTap: () => skip(true),
+                      label: playing ? '暂停' : '播放',
+                      icon: playing
+                          ? CupertinoIcons.pause_fill
+                          : CupertinoIcons.play_fill,
+                      // Consult the live fade state so another tap can cancel
+                      // Pause before the shared transport finishes its fade.
+                      onTap: () => action(handler.togglePlayPause),
                     ),
-                  ],
-                ),
+                  control(
+                    label: '下一首',
+                    icon: CupertinoIcons.forward_end_fill,
+                    onTap: () => skip(true),
+                  ),
+                ],
               ),
             ),
           ),

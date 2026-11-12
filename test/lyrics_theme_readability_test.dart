@@ -1,11 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:math_curve_loaders/math_curve_loaders.dart';
 import 'package:mesting_music/core/audio/playback_providers.dart';
 import 'package:mesting_music/features/lyrics/domain/lyrics_document.dart';
@@ -16,7 +13,6 @@ import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
   const track = Track(
     id: 'lyrics-readability',
     title: '主题歌词',
@@ -117,18 +113,11 @@ void main() {
     expect(find.text('正在铺开歌词'), findsNothing);
     expect(find.bySemanticsLabel('正在加载歌词'), findsOneWidget);
 
-    if (DistributionChannel.isBeta) {
-      expect(find.byType(CupertinoActivityIndicator), findsOneWidget);
-      expect(find.byType(MathCurveLoader), findsNothing);
-    } else {
-      final loader = tester.widget<MathCurveLoader>(
-        find.byType(MathCurveLoader),
-      );
-      expect(loader.duration, const Duration(milliseconds: 3000));
-      expect(loader.respectReducedMotion, isTrue);
-      expect(loader.style.particleCount, 62);
-      expect(loader.style.trailSpan, .34);
-    }
+    final loader = tester.widget<MathCurveLoader>(find.byType(MathCurveLoader));
+    expect(loader.duration, const Duration(milliseconds: 3000));
+    expect(loader.respectReducedMotion, isTrue);
+    expect(loader.style.particleCount, 62);
+    expect(loader.style.trailSpan, .34);
 
     pendingLyrics.complete(document);
     await tester.pumpAndSettle();

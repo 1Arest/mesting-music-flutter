@@ -1,7 +1,4 @@
-import 'player_swipe_to_comments.dart';
 import 'dart:ui';
-import '../../themes/listening_atmosphere.dart';
-import '../../themes/personal_decorations.dart';
 import 'package:flutter/material.dart';
 import '../../music_platform/presentation/platform_quality_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,8 +49,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
       0.0,
       max,
     );
-    final mode =
-        ref.watch(playbackModeProvider).value ?? PlaybackMode.sequential;
+    final mode = ref.watch(playbackModeProvider).value ?? PlaybackMode.list;
     Future<void> act(Future<void> Function() action) async {
       try {
         await action();
@@ -70,7 +66,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
       context.canPop() ? context.pop() : context.go('/music/recommend');
     }
 
-    final page = PopScope(
+    return PopScope(
       canPop: !_lyrics,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _lyrics) setState(() => _lyrics = false);
@@ -105,7 +101,6 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                   ),
                 ),
               ),
-              const Positioned.fill(child: ListeningAtmosphereLayer()),
               Positioned.fill(
                 child: ColoredBox(color: const Color(0x99131820)),
               ),
@@ -220,12 +215,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                           ],
                                         ),
                                       ),
-                                      Expanded(
-                                        child: ImmersiveLyrics(
-                                          onReturnToCover: () =>
-                                              setState(() => _lyrics = false),
-                                        ),
-                                      ),
+                                      const Expanded(child: ImmersiveLyrics()),
                                     ],
                                   )
                                 : Center(
@@ -239,25 +229,24 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       ),
                                       child: AspectRatio(
                                         aspectRatio: 1,
-                                        child: PersonalCoverFrame(
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(18),
-                                              boxShadow: const [
-                                                BoxShadow(
-                                                  color: Color(0x66000000),
-                                                  blurRadius: 32,
-                                                  offset: Offset(0, 16),
-                                                ),
-                                              ],
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              18,
                                             ),
-                                            clipBehavior: Clip.antiAlias,
-                                            child: TrackArtwork(
-                                              track: track,
-                                              width: 640,
-                                              height: 640,
-                                            ),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Color(0x66000000),
+                                                blurRadius: 32,
+                                                offset: Offset(0, 16),
+                                              ),
+                                            ],
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: TrackArtwork(
+                                            track: track,
+                                            width: 640,
+                                            height: 640,
                                           ),
                                         ),
                                       ),
@@ -306,10 +295,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       color: Colors.white,
                                     ),
                                   ),
-                                  child: FavoriteToggleButton(
-                                    track: track,
-                                    player: true,
-                                  ),
+                                  child: FavoriteToggleButton(track: track),
                                 ),
                               ],
                             ),
@@ -397,8 +383,6 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                                       ? Icons.shuffle_rounded
                                       : mode == PlaybackMode.single
                                       ? Icons.repeat_one_rounded
-                                      : mode == PlaybackMode.sequential
-                                      ? Icons.format_list_numbered_rounded
                                       : Icons.repeat_rounded,
                                   size: 23,
                                 ),
@@ -532,15 +516,6 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
           ),
         ),
       ),
-    );
-    return PlayerSwipeToComments(
-      enabled: !_lyrics && ref.watch(showPlatformFeaturesProvider),
-      onOpenComments: () => openPlatformSongComments(
-        context,
-        ref,
-        ref.read(currentTrackProvider),
-      ),
-      child: page,
     );
   }
 }

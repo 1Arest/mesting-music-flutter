@@ -5,10 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../lyrics/lyrics_providers.dart';
 import '../../lyrics/domain/lyrics_document.dart';
-import '../../lyrics/presentation/lyric_scroll_preview.dart';
-import '../../lyrics/lyric_timing.dart';
 import '../../themes/music_typography.dart';
-import '../../themes/personal_style.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -21,35 +18,22 @@ final activeLyricIndexProvider = Provider.family<int, LyricsDocument>(
 /// Variable-height lines keep long lyrics and accessibility text sizes intact.
 /// The measured offsets use the same text style as the rendered paragraphs.
 class ImmersiveLyrics extends ConsumerStatefulWidget {
-  const ImmersiveLyrics({
-    this.referenceDesign = false,
-    this.onReturnToCover,
-    super.key,
-  });
+  const ImmersiveLyrics({this.referenceDesign = false, super.key});
   final bool referenceDesign;
-  final VoidCallback? onReturnToCover;
   @override
   ConsumerState<ImmersiveLyrics> createState() => _ImmersiveLyricsState();
 }
 
 class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   final _scroll = ScrollController();
-  late final LyricScrollPreview _preview = LyricScrollPreview(() {
-    setState(() {
-      if (_preview.index == null) _active = -2;
-    });
-  });
   int _active = -2;
   String _track = '';
   LyricsDocument? _measured;
   double _measuredWidth = 0;
   TextScaler? _measuredScaler;
-  TextStyle? _measuredStyle;
-  TextDirection? _measuredDirection;
-  final _offsets = <double>[];
+  final _heights = <double>[];
   @override
   void dispose() {
-    _preview.clear(notify: false);
     _scroll.dispose();
     super.dispose();
   }
@@ -57,16 +41,13 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   @override
   Widget build(BuildContext context) {
     final track = ref.watch(currentTrackProvider);
-    final personal = ref.watch(personalStyleProvider);
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
-      _preview.clear(notify: false);
     }
     return ref
-        .watch(currentTimedLyricsProvider)
+        .watch(lyricsProvider(track.resolvedLyricsAsset))
         .when(
-          skipLoadingOnReload: true,
           loading: () => const Center(
             child: Text('正在寻找歌词…', style: TextStyle(color: Colors.white70)),
           ),
@@ -94,20 +75,11 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
                     .copyWith(
-                      fontFamily: personal.serif ? 'serif' : null,
-                      fontSize: personal.lyricSize > 0
-                          ? personal.lyricSize
-                          : widget.referenceDesign
+                      fontSize: widget.referenceDesign
                           ? MusicTypography.largeTitleSize
                           : MusicTypography.sectionTitleSize,
-                      fontWeight: personal.lyricWeight == 1
-                          ? FontWeight.w400
-                          : MusicTypography.titleWeight,
-                      height: personal.lineHeight > 0
-                          ? personal.lineHeight
-                          : widget.referenceDesign
-                          ? 1.3
-                          : 1.4,
+                      fontWeight: MusicTypography.titleWeight,
+                      height: widget.referenceDesign ? 1.3 : 1.4,
                       letterSpacing: -.5,
                     );
                 final textWidth = (constraints.maxWidth - 48).clamp(
@@ -115,23 +87,15 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                   double.infinity,
                 );
                 final scaler = MediaQuery.textScalerOf(context);
-                final direction = Directionality.of(context);
                 // Position ticks only update the active line; measuring every
                 // paragraph at audio frequency wastes frames on long songs.
                 if (!identical(_measured, document) ||
                     _measuredWidth != textWidth ||
-                    _measuredScaler != scaler ||
-                    _measuredStyle != style ||
-                    _measuredDirection != direction) {
+                    _measuredScaler != scaler) {
                   _measured = document;
                   _measuredWidth = textWidth;
                   _measuredScaler = scaler;
-                  _measuredStyle = style;
-                  _measuredDirection = direction;
-                  _offsets
-                    ..clear()
-                    ..add(0);
-                  _preview.clear(notify: false);
+                  _heights.clear();
                   _active = -2;
                   for (final line in document.lines) {
                     final painter = TextPainter(
@@ -139,43 +103,35 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                         text: line.text.isEmpty ? ' ' : line.text,
                         style: style,
                       ),
-                      textDirection: direction,
+                      textDirection: TextDirection.ltr,
                       textScaler: scaler,
                     )..layout(maxWidth: textWidth);
-                    _offsets.add(_offsets.last + painter.height + 28);
+                    _heights.add(painter.height + 28);
                     painter.dispose();
                   }
                 }
-                if (_preview.index == null && _active != active) {
+                if (_active != active) {
                   _active = active;
-                  final target =
-                      _offsets[active.clamp(0, document.lines.length - 1)];
+                  final target = _heights
+                      .take(active.clamp(0, _heights.length))
+                      .fold(0.0, (a, b) => a + b);
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted ||
                         !_scroll.hasClients ||
-                        _preview.index != null ||
-                        _track != track.id ||
                         !identical(_measured, document) ||
                         _active != active) {
                       return;
                     }
-                    final offset = target.clamp(
-                      0.0,
-                      _scroll.position.maxScrollExtent,
+                    _scroll.animateTo(
+                      target.clamp(0.0, _scroll.position.maxScrollExtent),
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 460),
+                      curve: Curves.easeOutCubic,
                     );
-                    if (MediaQuery.disableAnimationsOf(context)) {
-                      _scroll.jumpTo(offset);
-                    } else {
-                      _scroll.animateTo(
-                        offset,
-                        duration: const Duration(milliseconds: 460),
-                        curve: Curves.easeOutCubic,
-                      );
-                    }
                   });
                 }
-                final topPadding = constraints.maxHeight * .2;
-                final lyrics = ShaderMask(
+                return ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -193,7 +149,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     controller: _scroll,
                     padding: EdgeInsets.fromLTRB(
                       24,
-                      topPadding,
+                      constraints.maxHeight * .2,
                       24,
                       constraints.maxHeight * .7,
                     ),
@@ -201,105 +157,50 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       parent: BouncingScrollPhysics(),
                     ),
                     itemCount: document.lines.length,
-                    itemExtentBuilder: (index, _) =>
-                        index < document.lines.length
-                        ? _offsets[index + 1] - _offsets[index]
-                        : null,
-                    itemBuilder: (context, index) {
-                      final line = document.lines[index];
-                      final text = Text(
-                        line.text,
-                        style: style.copyWith(
-                          color:
-                              (!document.isSynced ||
-                                      index == (_preview.index ?? active)) &&
-                                  personal.lyricColor != null
-                              ? Color(personal.lyricColor!)
-                              : Colors.white,
-                        ),
-                      );
-                      if (_preview.index == index) {
-                        final play = _preview.seeking
-                            ? null
-                            : () => _preview.playFrom(
-                                this.context,
-                                ref,
-                                line.time,
-                              );
-                        return GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: play,
-                          child: LyricSeekRow(
-                            time: line.time,
-                            foreground: Colors.white,
-                            alignment: Alignment.centerLeft,
-                            onPlay: play,
-                            child: text,
+                    itemBuilder: (context, index) => GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: document.isSynced
+                          ? () => ref
+                                .read(audioHandlerProvider)
+                                .seek(document.lines[index].time)
+                          : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(
+                            end: !document.isSynced || index == active ? 0 : 1,
                           ),
-                        );
-                      }
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: _preview.index == null
-                            ? widget.onReturnToCover
-                            : null,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(
-                              end:
-                                  !document.isSynced ||
-                                      index == (_preview.index ?? active)
-                                  ? 0
-                                  : 1,
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 460),
+                          curve: Curves.easeOutCubic,
+                          child: Text(
+                            document.lines[index].text,
+                            style: style.copyWith(color: Colors.white),
+                          ),
+                          builder: (_, distance, child) => ImageFiltered(
+                            imageFilter: ImageFilter.blur(
+                              sigmaX: distance * 3.4,
+                              sigmaY: distance * 3.4,
                             ),
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 460),
-                            curve: Curves.easeOutCubic,
-                            child: text,
-                            builder: (_, distance, child) => ImageFiltered(
-                              imageFilter: ImageFilter.blur(
-                                sigmaX: distance * 3.4,
-                                sigmaY: distance * 3.4,
-                              ),
-                              enabled: widget.referenceDesign && distance > .01,
-                              child: Opacity(
-                                opacity:
-                                    1 -
-                                    distance *
-                                        (widget.referenceDesign ? .55 : .35),
-                                child: Transform.scale(
-                                  scale: widget.referenceDesign
-                                      ? 1 - distance * .035
-                                      : 1,
-                                  alignment: Alignment.centerLeft,
-                                  child: child,
-                                ),
+                            enabled: widget.referenceDesign && distance > .01,
+                            child: Opacity(
+                              opacity:
+                                  1 -
+                                  distance *
+                                      (widget.referenceDesign ? .55 : .35),
+                              child: Transform.scale(
+                                scale: widget.referenceDesign
+                                    ? 1 - distance * .035
+                                    : 1,
+                                alignment: Alignment.centerLeft,
+                                child: child,
                               ),
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                );
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (event) =>
-                      document.isSynced &&
-                      _preview.handleScroll(
-                        event,
-                        lineCount: document.lines.length,
-                        topPadding: topPadding,
-                        lineAtOffset: (offset) =>
-                            lyricLineAtOffset(_offsets, offset),
                       ),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _preview.index == null
-                        ? widget.onReturnToCover
-                        : null,
-                    child: lyrics,
+                    ),
                   ),
                 );
               },

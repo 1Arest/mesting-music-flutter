@@ -6,12 +6,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/audio/playback_mode.dart';
 import '../../../core/audio/playback_providers.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../../shared/widgets/music_notice.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
 import 'queue_track_duration.dart';
-import 'playback_mode_button.dart';
 import '../../themes/music_typography.dart';
 
 /// Shared sheet/player presentation. Never regroup rows into an order different
@@ -49,6 +49,7 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
     final order =
         ref.watch(playbackOrderProvider).value ?? handler.playbackOrder;
     final colors = Theme.of(context).colorScheme;
+    final randomUpcoming = ref.watch(randomUpcomingProvider).value ?? false;
     final ink = immersive ? Colors.white : colors.onSurface;
     final muted = immersive ? Colors.white70 : colors.onSurfaceVariant;
     Future<void> act(
@@ -70,6 +71,37 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
       }
     }
 
+    Widget modeButton(
+      String key,
+      String label,
+      IconData icon,
+      bool selected,
+      VoidCallback tap,
+    ) => Semantics(
+      button: true,
+      toggled: selected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: CupertinoButton(
+          key: ValueKey(key),
+          onPressed: tap,
+          padding: EdgeInsets.zero,
+          minimumSize: const Size(48, 48),
+          child: Container(
+            width: 46,
+            height: 38,
+            decoration: BoxDecoration(
+              // The glyph communicates the mode. Keep the same neutral
+              // surface/ink across every shuffle and repeat state.
+              color: ink.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(icon, color: ink, size: 23),
+          ),
+        ),
+      ),
+    );
     return SongListTools(
       listId: 'playback-queue',
       bottom: widget.bottomClearance,
@@ -115,17 +147,61 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                     ),
                   ),
                 ),
-                PlaybackModeButton(
-                  mode: order.legacy,
-                  immersive: immersive,
-                  onSelected: (mode) => unawaited(
+                modeButton(
+                  'player-shuffle',
+                  order.shuffle ? '随机播放已开启，点击关闭' : '顺序播放，点击开启随机播放',
+                  order.shuffle
+                      ? CupertinoIcons.shuffle
+                      : CupertinoIcons.arrow_up_arrow_down,
+                  order.shuffle,
+                  () => unawaited(
                     act(
-                      () => handler.setPlaybackMode(mode),
-                      () => '已切换为${handler.playbackOrder.label}',
+                      () => handler.setShuffleEnabled(
+                        !handler.playbackOrder.shuffle,
+                      ),
+                      () => handler.playbackOrder.shuffle
+                          ? '已开启随机播放'
+                          : '已关闭随机播放，恢复顺序播放',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                modeButton(
+                  'player-repeat',
+                  '${order.repeat.label}，点击切换循环方式',
+                  order.repeat == PlaybackRepeat.one
+                      ? CupertinoIcons.repeat_1
+                      : order.repeat == PlaybackRepeat.all
+                      ? CupertinoIcons.repeat
+                      : CupertinoIcons.arrow_turn_down_right,
+                  order.repeat != PlaybackRepeat.off,
+                  () => unawaited(
+                    act(
+                      handler.cycleRepeat,
+                      () => '已切换为${handler.playbackOrder.repeat.label}',
                     ),
                   ),
                 ),
               ],
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                key: const ValueKey('queue-random-upcoming'),
+                style: TextButton.styleFrom(
+                  foregroundColor: randomUpcoming ? colors.primary : ink,
+                ),
+                icon: Icon(
+                  randomUpcoming
+                      ? CupertinoIcons.shuffle
+                      : CupertinoIcons.arrow_up_arrow_down,
+                  size: 20,
+                ),
+                label: Text(randomUpcoming ? '随机待播：开' : '随机待播：关'),
+                onPressed: () => unawaited(
+                  act(() => handler.setRandomUpcoming(!handler.randomUpcoming)),
+                ),
+              ),
             ),
             Expanded(
               child: items.isEmpty
@@ -229,7 +305,11 @@ class _BetaPlaybackQueueState extends ConsumerState<BetaPlaybackQueue> {
                           ),
                           child: Semantics(
                             label:
-                                '${index == 0 ? '下一首' : '待播放'}，${item.title}，${item.artist ?? '未知歌手'}',
+                                '${randomUpcoming
+                                    ? '随机待播放'
+                                    : index == 0
+                                    ? '下一首'
+                                    : '待播放'}，${item.title}，${item.artist ?? '未知歌手'}',
                             customSemanticsActions: {
                               const CustomSemanticsAction(
                                 label: '从待播列表移除',

@@ -81,7 +81,6 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
         .call(thread == null ? '/comment/new' : '/comment/floor', {
           'threadId': _thread(resource),
           'page': page,
-          'pageSize': platformCommentPageSize,
           'sortType': sort == PlatformCommentSort.hottest ? 2 : 3,
           'cursor': page == 1
               ? '0'
@@ -124,11 +123,15 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformComment comment,
   ) async {
     requireWritable();
-    await music.api.request('/api/v2/resource/comments/hug/listener', {
-      'targetUserId': comment.userId,
-      'commentId': comment.id,
-      'threadId': _thread(resource),
-    }, expectedCredential: music.credential);
+    await music.api.request(
+      '/api/v2/resource/comments/hug/listener',
+      {
+        'targetUserId': comment.userId,
+        'commentId': comment.id,
+        'threadId': _thread(resource),
+      },
+      expectedCredential: music.credential,
+    );
   }
 
   Future<Map<String, dynamic>> hugs(

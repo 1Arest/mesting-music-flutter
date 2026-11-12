@@ -1,4 +1,3 @@
-import '../../library/presentation/song_favorite_count_badge.dart';
 import 'dart:async';
 import 'dart:ui';
 
@@ -28,7 +27,6 @@ import 'persistent_mini_player.dart';
 import 'now_playing_transition.dart';
 import 'vinyl_disc.dart';
 import '../../experience/presentation/cover_player_page.dart';
-import '../../experience/presentation/player_swipe_to_comments.dart';
 import '../../experience/presentation/beta_now_playing_page.dart';
 import '../../themes/music_typography.dart';
 
@@ -199,7 +197,7 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
       }
     }
 
-    final page = PopScope(
+    return PopScope(
       canPop: _allowRoutePop,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -262,12 +260,8 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                             constraints: BoxConstraints(
                               maxWidth: widePlayer ? 760 : double.infinity,
                             ),
-                            child: _ImmersiveLyricsViewport(
-                              child: LyricsPanel(
-                                immersive: true,
-                                onReturnToCover: () =>
-                                    setState(() => _lyricsVisible = false),
-                              ),
+                            child: const _ImmersiveLyricsViewport(
+                              child: LyricsPanel(immersive: true),
                             ),
                           ),
                         ),
@@ -413,45 +407,37 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                                                   Positioned(
                                                     right: 0,
                                                     top: 1,
-                                                    child: SongFavoriteCountBadge(
-                                                      track: track,
-                                                      color: MestingPalette
-                                                          .favorite,
-                                                      child: _RoundGlassButton(
-                                                        key: const ValueKey(
-                                                          'classic-player-favorite',
-                                                        ),
-                                                        tooltip: favorite
-                                                            ? '取消收藏'
-                                                            : '收藏歌曲',
-                                                        icon: favorite
-                                                            ? Icons
-                                                                  .favorite_rounded
-                                                            : Icons
-                                                                  .favorite_border_rounded,
-                                                        iconColor:
-                                                            MestingPalette
-                                                                .favorite,
-                                                        surfaceColor:
-                                                            MestingPalette
-                                                                .favorite
-                                                                .withValues(
-                                                                  alpha:
-                                                                      favorite
-                                                                      ? .20
-                                                                      : .10,
-                                                                ),
-                                                        borderColor:
-                                                            MestingPalette
-                                                                .favorite
-                                                                .withValues(
-                                                                  alpha:
-                                                                      favorite
-                                                                      ? .58
-                                                                      : .34,
-                                                                ),
-                                                        onTap: toggleFavorite,
+                                                    child: _RoundGlassButton(
+                                                      key: const ValueKey(
+                                                        'classic-player-favorite',
                                                       ),
+                                                      tooltip: favorite
+                                                          ? '取消收藏'
+                                                          : '收藏歌曲',
+                                                      icon: favorite
+                                                          ? Icons
+                                                                .favorite_rounded
+                                                          : Icons
+                                                                .favorite_border_rounded,
+                                                      iconColor: MestingPalette
+                                                          .favorite,
+                                                      surfaceColor:
+                                                          MestingPalette
+                                                              .favorite
+                                                              .withValues(
+                                                                alpha: favorite
+                                                                    ? .20
+                                                                    : .10,
+                                                              ),
+                                                      borderColor:
+                                                          MestingPalette
+                                                              .favorite
+                                                              .withValues(
+                                                                alpha: favorite
+                                                                    ? .58
+                                                                    : .34,
+                                                              ),
+                                                      onTap: toggleFavorite,
                                                     ),
                                                   ),
                                                 ],
@@ -651,15 +637,6 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
           ],
         ),
       ),
-    );
-    return PlayerSwipeToComments(
-      enabled: !_lyricsVisible && ref.watch(showPlatformFeaturesProvider),
-      onOpenComments: () => openPlatformSongComments(
-        context,
-        ref,
-        ref.read(currentTrackProvider),
-      ),
-      child: page,
     );
   }
 }

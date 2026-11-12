@@ -41,7 +41,6 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
   double? _scrubMilliseconds;
 
   IconData _modeIcon(PlaybackMode mode) => switch (mode) {
-    PlaybackMode.sequential => Icons.format_list_numbered_rounded,
     PlaybackMode.list => Icons.repeat_rounded,
     PlaybackMode.single => Icons.repeat_one_rounded,
     PlaybackMode.random => Icons.shuffle_rounded,
@@ -53,8 +52,7 @@ class _PlaybackControlsState extends ConsumerState<PlaybackControls> {
     final state = ref.watch(playbackStateProvider).value;
     final position = ref.watch(positionProvider).value ?? Duration.zero;
     final duration = ref.watch(durationProvider).value ?? Duration.zero;
-    final mode =
-        ref.watch(playbackModeProvider).value ?? PlaybackMode.sequential;
+    final mode = ref.watch(playbackModeProvider).value ?? PlaybackMode.list;
     final playing = state?.playing ?? false;
     final musicTheme = ref.watch(effectiveMusicThemeProvider);
     final visualSettings = ref.watch(themeVisualSettingsProvider);

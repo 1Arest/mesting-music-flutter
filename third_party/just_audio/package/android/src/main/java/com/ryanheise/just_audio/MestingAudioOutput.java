@@ -8,7 +8,7 @@ import android.os.Looper;
 import androidx.media3.exoplayer.ExoPlayer;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Per-owner access to Media3's actual track, without probing players or hidden APIs.
+/** Per-owner access to Media3's actual track, without another player or hidden APIs.
  * Native requests, confirmed routes and paused preferences remain distinct. */
 public final class MestingAudioOutput {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
@@ -35,13 +35,6 @@ public final class MestingAudioOutput {
 
     /** Main-thread binding. Tell Media3 about the preference as well as the
      * track so its sink/capabilities agree across format/source recreation. */
-    /** Silent preparation and draining tails must use the selected music route,
-     * rather than briefly reverting to the system default during overlap. */
-    public static void inheritPreference(String from, String to) {
-        if (from == null || to == null) return;
-        entry(to).preferred = entry(from).preferred;
-    }
-
     public static void attachPlayer(String owner, ExoPlayer player) {
         Entry value = entry(owner);
         synchronized (value) {

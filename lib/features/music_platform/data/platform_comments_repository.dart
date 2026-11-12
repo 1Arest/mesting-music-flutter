@@ -3,9 +3,6 @@ import '../domain/platform_session.dart';
 import 'music_platform_api.dart';
 import 'platform_song_identity.dart';
 
-/// Large enough for continuous browsing without per-row network requests.
-const platformCommentPageSize = 30;
-
 enum PlatformCommentKind {
   song,
   playlist,
@@ -209,7 +206,7 @@ class PlatformCommentsRepository {
         : '/comment/playlist';
     final query = <String, String>{
       'page': '$page',
-      'pagesize': '$platformCommentPageSize',
+      'pagesize': '30',
       if (hottestChildrenId != null)
         'childrenid': hottestChildrenId
       else if (reply) ...{

@@ -1,5 +1,3 @@
-import '../../../shared/widgets/beta_page_motion.dart';
-import 'playlist_audit_page.dart';
 import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../themes/beta_appearance.dart';
@@ -178,11 +176,7 @@ class PlaylistDetailPage extends ConsumerWidget {
           _PlaylistActionSheet(playlistName: playlist.name),
     );
     if (!context.mounted) return;
-    if (action == 'audit') {
-      await Navigator.of(context).push(
-        betaContentRoute<void>(PlaylistAuditPage(playlistId: playlist.id)),
-      );
-    } else if (action == 'edit') {
+    if (action == 'edit') {
       await _editPlaylist(context, ref, playlist);
     } else if (action == 'delete') {
       await _deletePlaylist(context, ref, playlist.name);
@@ -1203,13 +1197,6 @@ class _PlaylistActionSheet extends StatelessWidget {
                       style: TextStyle(color: tokens.textSecondary),
                     ),
                     const SizedBox(height: 16),
-                    _ActionSheetTile(
-                      icon: Icons.fact_check_outlined,
-                      title: '歌单体检',
-                      caption: '核对重复歌曲与本地文件',
-                      onTap: () => Navigator.pop(context, 'audit'),
-                    ),
-                    const SizedBox(height: 9),
                     _ActionSheetTile(
                       icon: Icons.edit_rounded,
                       title: '编辑歌单',

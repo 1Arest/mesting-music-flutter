@@ -47,7 +47,6 @@ void main() {
   Future<(_CompletionPlayer, MestingAudioHandler)> prepare() async {
     final player = _CompletionPlayer();
     final handler = MestingAudioHandler(tracks: [], player: player);
-    await handler.setPlaybackMode(PlaybackMode.list);
     await handler.replaceQueue([
       song('A'),
       song('B'),
@@ -65,82 +64,6 @@ void main() {
       await Future<void>.delayed(Duration.zero);
     }
   }
-
-  test(
-    'new installs default to sequential and app cycles exactly four modes',
-    () async {
-      final player = _CompletionPlayer();
-      final handler = MestingAudioHandler(tracks: [], player: player);
-      addTearDown(() async {
-        await handler.debugDispose();
-        await player.completions.close();
-      });
-      await handler.replaceQueue([
-        song('A'),
-        song('B'),
-        song('C'),
-      ], autoplay: false);
-      expect(handler.playbackMode, PlaybackMode.sequential);
-      final loads = player.loads;
-      player.at = const Duration(seconds: 37);
-      for (final expected in [
-        PlaybackMode.list,
-        PlaybackMode.single,
-        PlaybackMode.random,
-        PlaybackMode.sequential,
-      ]) {
-        await handler.cyclePlaybackMode();
-        expect(handler.playbackMode, expected);
-        expect(player.loads, loads);
-        expect(player.at, const Duration(seconds: 37));
-        expect(
-          player.loop,
-          expected == PlaybackMode.single ? LoopMode.one : LoopMode.off,
-        );
-      }
-    },
-  );
-
-  test(
-    'random visibly reorders pending songs, Next follows rows, sequential restores remaining source order',
-    () async {
-      final (player, handler) = await prepare();
-      final tracks = ['A', 'B', 'C', 'D', 'E', 'F'].map(song).toList();
-      await handler.replaceQueue(tracks, autoplay: false);
-      final original = handler.upcomingQueue.map((item) => item.id).toList();
-      final loads = player.loads;
-      player.at = const Duration(seconds: 37);
-      await handler.setRandomUpcoming(true);
-      await handler.setPlaybackMode(PlaybackMode.random);
-      final shuffled = handler.upcomingQueue.map((item) => item.id).toList();
-      expect(shuffled.toSet(), original.toSet());
-      expect(shuffled, isNot(original));
-      expect(handler.randomUpcoming, false);
-      expect(handler.mediaItem.value?.id, 'A');
-      expect(player.loads, loads);
-      expect(player.at, const Duration(seconds: 37));
-      await handler.skipToNext();
-      expect(handler.mediaItem.value?.id, shuffled.first);
-      await handler.setPlaybackMode(PlaybackMode.sequential);
-      expect(
-        handler.upcomingQueue.map((item) => item.id),
-        original.where((id) => id != shuffled.first),
-      );
-      expect(handler.playbackOrder.repeat, PlaybackRepeat.off);
-    },
-  );
-
-  test('saved old preferences migrate and all four app modes restore', () {
-    expect(PlaybackOrder.parse('list').legacy, PlaybackMode.list);
-    expect(PlaybackOrder.parse('single').legacy, PlaybackMode.single);
-    expect(PlaybackOrder.parse('random').legacy, PlaybackMode.random);
-    expect(PlaybackOrder.parse('').legacy, PlaybackMode.sequential);
-    for (final mode in PlaybackMode.values) {
-      final saved = PlaybackOrder.fromLegacy(mode);
-      expect(PlaybackOrder.parse(saved.serialized).legacy, mode);
-      expect(saved.label, mode.label);
-    }
-  });
 
   test('old sessions migrate and all independent combinations round-trip', () {
     expect(PlaybackOrder.parse('single').repeat, PlaybackRepeat.one);

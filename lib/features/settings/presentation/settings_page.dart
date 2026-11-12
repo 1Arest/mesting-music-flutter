@@ -1,4 +1,3 @@
-import 'playback_settings_page.dart';
 import '../../music_platform/qishui/qishui_signer_settings_page.dart';
 import '../../music_platform/qishui/qishui_providers.dart';
 import '../../music_platform/qishui/qishui_account_page.dart';
@@ -181,20 +180,6 @@ class SettingsPage extends ConsumerWidget {
                 _SettingsSurface(
                   child: Column(
                     children: [
-                      _SettingsTile(
-                        key: const ValueKey('settings-playback'),
-                        icon: Icons.tune_rounded,
-                        iconColor: const Color(0xFF527FD3),
-                        title: '播放设置',
-                        subtitle: '提前准备、音量平衡与交叉淡化',
-                        onTap: () =>
-                            Navigator.of(context, rootNavigator: true).push(
-                              betaEntryRoute<void>(
-                                const PlaybackSettingsPage(),
-                              ),
-                            ),
-                      ),
-                      const _SettingsDivider(),
                       _SettingsTile(
                         key: const ValueKey('settings-equalizer'),
                         icon: Icons.graphic_eq_rounded,

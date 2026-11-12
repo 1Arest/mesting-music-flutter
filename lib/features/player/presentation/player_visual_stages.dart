@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import '../../themes/personal_decorations.dart';
 
 import 'package:flutter/material.dart';
 
@@ -10,7 +9,6 @@ import '../../themes/mesting_palette.dart';
 import '../player_visual_style.dart';
 import 'vinyl_disc.dart';
 import '../../themes/music_typography.dart';
-import '../../library/presentation/song_favorite_count_badge.dart';
 
 const double alternativePlayerStageDefaultTopInset = 90;
 const double alternativePlayerStageHeaderClearance = 68;
@@ -154,7 +152,7 @@ class PlayerArtworkStage extends StatelessWidget {
       ),
     };
     return Center(
-      child: AspectRatio(aspectRatio: 1, child: PersonalCoverFrame(child: RepaintBoundary(child: stage))),
+      child: AspectRatio(aspectRatio: 1, child: RepaintBoundary(child: stage)),
     );
   }
 }
@@ -481,7 +479,6 @@ class _AuroraStage extends StatelessWidget {
                 track: track,
                 centered: true,
                 artistTrailing: _StageFavoriteButton(
-                  track: track,
                   style: PlayerVisualStyle.aurora,
                   favorite: favorite,
                   onToggleFavorite: onToggleFavorite,
@@ -562,7 +559,6 @@ class _CosmicPulseStage extends StatelessWidget {
                 track: track,
                 centered: true,
                 artistTrailing: _StageFavoriteButton(
-                  track: track,
                   style: PlayerVisualStyle.cassette,
                   favorite: favorite,
                   onToggleFavorite: onToggleFavorite,
@@ -643,7 +639,6 @@ class _LiquidSpectrumStage extends StatelessWidget {
                 track: track,
                 centered: true,
                 artistTrailing: _StageFavoriteButton(
-                  track: track,
                   style: PlayerVisualStyle.lyricStage,
                   favorite: favorite,
                   onToggleFavorite: onToggleFavorite,
@@ -788,75 +783,67 @@ class _StageEyebrow extends StatelessWidget {
 
 class _StageFavoriteButton extends StatelessWidget {
   const _StageFavoriteButton({
-    required this.track,
     required this.style,
     required this.favorite,
     required this.onToggleFavorite,
   });
 
   final PlayerVisualStyle style;
-  final Track track;
   final bool favorite;
   final VoidCallback onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
-    return SongFavoriteCountBadge(
-      track: track,
-      color: MestingPalette.favorite,
-      child: Semantics(
-        button: true,
-        selected: favorite,
-        label: favorite ? '已收藏' : '收藏歌曲',
-        child: Tooltip(
-          message: favorite ? '取消收藏' : '收藏歌曲',
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onToggleFavorite,
-              customBorder: const CircleBorder(),
-              child: AnimatedContainer(
-                key: ValueKey('alternative-player-favorite-${style.id}'),
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: MestingPalette.favorite.withValues(
-                    alpha: favorite ? .20 : .10,
-                  ),
-                  border: Border.all(
-                    color: MestingPalette.favorite.withValues(
-                      alpha: favorite ? .58 : .34,
-                    ),
-                  ),
-                  boxShadow: favorite
-                      ? [
-                          BoxShadow(
-                            color: MestingPalette.favorite.withValues(
-                              alpha: .18,
-                            ),
-                            blurRadius: 12,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+    return Semantics(
+      button: true,
+      selected: favorite,
+      label: favorite ? '已收藏' : '收藏歌曲',
+      child: Tooltip(
+        message: favorite ? '取消收藏' : '收藏歌曲',
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onToggleFavorite,
+            customBorder: const CircleBorder(),
+            child: AnimatedContainer(
+              key: ValueKey('alternative-player-favorite-${style.id}'),
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: MestingPalette.favorite.withValues(
+                  alpha: favorite ? .20 : .10,
                 ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 180),
-                  switchInCurve: Curves.easeOutBack,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: Icon(
-                    favorite
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    key: ValueKey(favorite),
-                    color: MestingPalette.favorite,
-                    size: 22,
+                border: Border.all(
+                  color: MestingPalette.favorite.withValues(
+                    alpha: favorite ? .58 : .34,
                   ),
+                ),
+                boxShadow: favorite
+                    ? [
+                        BoxShadow(
+                          color: MestingPalette.favorite.withValues(alpha: .18),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.easeOutBack,
+                switchOutCurve: Curves.easeInCubic,
+                child: Icon(
+                  favorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  key: ValueKey(favorite),
+                  color: MestingPalette.favorite,
+                  size: 22,
                 ),
               ),
             ),

@@ -1,4 +1,3 @@
-import '../../library/presentation/song_favorite_count_badge.dart';
 import '../../music_platform/netease/fallback/netease_source_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -61,14 +60,7 @@ Future<void> showPlaybackPillMenu(
                 ? Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (id == 'favorite')
-                        SongFavoriteCountBadge(
-                          track: track,
-                          inline: true,
-                          child: Icon(icon, size: 23),
-                        )
-                      else
-                        Icon(icon, size: 23),
+                      Icon(icon, size: 23),
                       const SizedBox(height: 7),
                       Text(
                         title,

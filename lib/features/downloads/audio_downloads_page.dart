@@ -18,8 +18,6 @@ import '../music_platform/presentation/platform_feedback.dart';
 import '../experience/presentation/editorial_widgets.dart';
 import '../player/presentation/beta_playback_actions.dart';
 import 'audio_downloads.dart';
-import 'download_failure.dart';
-import '../../shared/widgets/liquid_glass_sheet.dart';
 import 'audio_download_quality.dart';
 import 'audio_download_storage.dart';
 import 'netease_download_source_picker.dart';
@@ -85,7 +83,6 @@ class AudioDownloadsPage extends ConsumerStatefulWidget {
 class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
   late bool _downloaded = widget.downloadedOnly;
   bool _busy = false;
-  DownloadFailure? _failureFilter;
   final _storage = const AudioDownloadStorage();
   Future<void> _act(Future<void> Function() operation) async {
     if (_busy) return;
@@ -148,51 +145,6 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
       ),
     ],
   );
-
-  Future<void> _batchMenu(AudioDownloadManager manager) async {
-    final owner = ref.read(platformAccountProvider).value?.ownerId;
-    final action = await showLiquidGlassBottomSheet<String>(
-      context: context,
-      builder: (sheet) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(padding: EdgeInsets.all(20), child: Text('批量管理下载任务')),
-            for (final item in [
-              ('pause', '全部暂停'),
-              ('resume', '全部继续'),
-              ('retry', '重试失败任务'),
-            ])
-              ListTile(
-                title: Text(item.$2),
-                onTap: () => Navigator.pop(sheet, item.$1),
-              ),
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('仅处理当前账号；已完成及正在保存的任务不受影响。'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted ||
-        action == null ||
-        owner != ref.read(platformAccountProvider).value?.ownerId) {
-      return;
-    }
-    if (action != 'pause' && await _storage.ensureDirectory() == null) return;
-    if (!mounted || owner != ref.read(platformAccountProvider).value?.ownerId) {
-      return;
-    }
-    manager.manageBatch(
-      action,
-      matches: (t) =>
-          action != 'retry' ||
-          _failureFilter == null ||
-          t.phase == AudioDownloadPhase.failed &&
-              classifyDownloadFailure(t.error) == _failureFilter,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -274,26 +226,6 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
     List<AudioDownloadTask> completed,
     List<AudioDownloadTask> visible, {
     required bool downloaded,
-  }) => _taskList(
-    manager,
-    completed,
-    visible
-        .where(
-          (t) =>
-              downloaded ||
-              _failureFilter == null ||
-              t.phase == AudioDownloadPhase.failed &&
-                  classifyDownloadFailure(t.error) == _failureFilter,
-        )
-        .toList(),
-    downloaded: downloaded,
-  );
-
-  Widget _taskList(
-    AudioDownloadManager manager,
-    List<AudioDownloadTask> completed,
-    List<AudioDownloadTask> filtered, {
-    required bool downloaded,
   }) => SongListTools(
     listId: 'downloads:$downloaded',
     child: CustomScrollView(
@@ -305,38 +237,6 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (!downloaded) ...[
-                  BetaGlassButton(
-                    label: '批量管理下载任务',
-                    onPressed: () => _batchMenu(manager),
-                    child: const Text('批量管理'),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        CupertinoButton(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          onPressed: () =>
-                              setState(() => _failureFilter = null),
-                          child: Text(
-                            _failureFilter == null ? '✓ 全部任务' : '全部任务',
-                          ),
-                        ),
-                        for (final kind in DownloadFailure.values)
-                          CupertinoButton(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            onPressed: () =>
-                                setState(() => _failureFilter = kind),
-                            child: Text(
-                              '${_failureFilter == kind ? '✓ ' : ''}${kind.label}',
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
                 Row(
                   key: downloaded
                       ? const ValueKey('download-actions-row')
@@ -413,23 +313,19 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
             ),
           ),
         ),
-        if (filtered.isEmpty)
+        if (visible.isEmpty)
           SliverToBoxAdapter(
             child: EditorialEmpty(
-              downloaded
-                  ? '还没有已下载的音乐。\n从歌曲更多菜单下载后，即可离线播放。'
-                  : _failureFilter == null
-                  ? '暂无下载任务'
-                  : '该分类暂无失败任务',
+              downloaded ? '还没有已下载的音乐。\n从歌曲更多菜单下载后，即可离线播放。' : '暂无下载任务',
             ),
           ),
         SliverList.builder(
-          itemCount: filtered.length,
+          itemCount: visible.length,
           itemBuilder: (context, index) => ListenableBuilder(
-            listenable: manager.taskChanges(filtered[index].id),
+            listenable: manager.taskChanges(visible[index].id),
             builder: (context, _) {
               final task =
-                  manager.taskById(filtered[index].id) ?? filtered[index];
+                  manager.taskById(visible[index].id) ?? visible[index];
               final done = task.phase == AudioDownloadPhase.completed;
               final resolving = task.phase == AudioDownloadPhase.resolving;
               final active = task.phase == AudioDownloadPhase.downloading;
@@ -597,7 +493,7 @@ class _AudioDownloadsPageState extends ConsumerState<AudioDownloadsPage> {
         SliverToBoxAdapter(
           child: Column(
             children: [
-              if (filtered.isNotEmpty) const MusicListEnd(),
+              if (visible.isNotEmpty) const MusicListEnd(),
               SizedBox(height: BetaContentInsets.musicBottomOf(context, 12)),
             ],
           ),

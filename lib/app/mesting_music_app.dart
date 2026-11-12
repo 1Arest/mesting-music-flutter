@@ -1,5 +1,3 @@
-import '../core/audio/playback_preferences.dart';
-import '../features/kugou_together/together_controller.dart';
 import '../features/music_platform/qishui/qishui_effects.dart';
 import '../features/music_platform/qishui/qishui_history_providers.dart';
 import '../features/music_platform/qishui/qishui_listening_binding.dart';
@@ -41,6 +39,7 @@ import '../features/music_platform/listening_sync/listening_sync_providers.dart'
 import '../features/audiobooks/audiobook_repository.dart';
 import '../features/audiobooks/audiobook_models.dart';
 import '../features/audiobooks/audiobook_playback.dart';
+import '../features/kugou_together/together_controller.dart';
 import '../shared/models/track.dart';
 import '../core/persistence/playback_persistence_controller.dart';
 import '../features/library/library_providers.dart';
@@ -48,7 +47,6 @@ import '../features/recommendation/recommendation_providers.dart';
 import '../features/search/search_providers.dart';
 import 'router/app_router.dart';
 import 'system_back_coordinator.dart';
-import '../features/themes/personal_style.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 /// Fire on first mount as well as switches; a guest may never emit a login
@@ -67,19 +65,6 @@ class MestingMusicApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final musicTheme = ref.watch(effectiveMusicThemeProvider);
     final audioHandler = ref.read(audioHandlerProvider);
-    audioHandler.configurePlaybackPreferences(
-      ref.watch(playbackPreferencesProvider),
-    );
-    audioHandler.configureSynchronizedPlayback(() {
-      final platform = ref.read(platformAccountProvider).value?.platform;
-      if (platform == MusicPlatform.netease) {
-        return ref.read(neteaseTogetherControllerProvider)?.active ?? false;
-      }
-      if (platform == MusicPlatform.kugou) {
-        return ref.read(togetherControllerProvider).active;
-      }
-      return false;
-    });
     if (DistributionChannel.isBeta) {
       ref.read(platformAccountProvider.notifier).preparePlatformSwitch = ref
           .read(playbackPersistenceControllerProvider)
@@ -232,10 +217,7 @@ class MestingMusicApp extends ConsumerWidget {
       scrollBehavior: DistributionChannel.isBeta
           ? const BetaScrollBehavior()
           : null,
-      theme: applyPersonalPalette(
-        buildMestingTheme(musicTheme),
-        ref.watch(personalStyleProvider),
-      ),
+      theme: buildMestingTheme(musicTheme),
       routerConfig: appRouter,
       builder: (context, child) => MusicApplicationTheme(
         data: Theme.of(context),

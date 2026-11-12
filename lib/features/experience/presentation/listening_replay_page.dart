@@ -9,7 +9,6 @@ import '../../themes/music_theme_tokens.dart';
 import 'editorial_widgets.dart';
 import '../../../shared/widgets/artwork_image.dart';
 import '../../themes/music_typography.dart';
-import '../../themes/listening_keepsake.dart';
 
 class ListeningReplayPage extends ConsumerStatefulWidget {
   const ListeningReplayPage({super.key});
@@ -178,19 +177,6 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                     if (records.isEmpty || replay.tracks.isEmpty)
                       const EditorialEmpty('这个时段还没有听歌记录。\n从现在开始播放，回顾会逐渐丰富。')
                     else ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 22),
-                        child: OutlinedButton.icon(
-                          onPressed: () => showListeningKeepsake(
-                            context,
-                            replay,
-                            _year,
-                            _month,
-                          ),
-                          icon: const Icon(Icons.post_add),
-                          label: const Text('生成听歌纪念卡'),
-                        ),
-                      ),
                       const EditorialSection('常听歌手'),
                       EditorialShelf(
                         height: 308,

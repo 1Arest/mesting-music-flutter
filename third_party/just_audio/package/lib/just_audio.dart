@@ -116,29 +116,8 @@ class AudioPlayer {
   String? _id;
   // Local Android-only extension: a stable logical owner survives the native
   // player's lazy disposal/recreation. All other platforms keep upstream code.
-  String? _androidAudioOutputOwner;
-  Map<String, Object?>? _musicLoudness;
+  final String? _androidAudioOutputOwner;
   String? _sodaEffectConfig;
-
-  /// Internal music-owner handoff: observers follow the active decoder while
-  /// its predecessor drains. Non-Android players retain upstream behavior.
-  Future<void> setMusicOutputOwner(String owner) async {
-    _androidAudioOutputOwner = owner;
-    if (!_isAndroid() || !_active || _disposed) return;
-    final platform = await _platform;
-    await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
-        .invokeMethod<void>('mestingSetOutputOwner', {'owner': owner});
-  }
-  Future<void> configureMusicLoudness({required String key, required bool enabled,
-      required int durationMs, bool invalidate = false}) async {
-    final config = <String, Object?>{'key': key, 'enabled': enabled,
-      'durationMs': durationMs, 'invalidate': invalidate};
-    if (!invalidate) _musicLoudness = config;
-    if (!_isAndroid() || !_active || _disposed) return;
-    final platform = await _platform;
-    await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
-        .invokeMethod<void>('mestingLoudness', config);
-  }
 
   /// Local music-owner extension. Configuration is reapplied if this same
   /// logical player lazily recreates its Android decoder after stop().
@@ -1745,10 +1724,6 @@ class AudioPlayer {
           await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
               .invokeMethod<void>(
                   'mestingSetOutputOwner', {'owner': _androidAudioOutputOwner});
-          if (_musicLoudness != null) {
-            await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
-                .invokeMethod<void>('mestingLoudness', _musicLoudness);
-          }
           if (_sodaEffectConfig != null) {
             await MethodChannel(
                     'com.ryanheise.just_audio.methods.${platform.id}')
@@ -3629,12 +3604,9 @@ class LockCachingAudioSource extends StreamAudioSource {
     final sourceLength =
         response.contentLength == -1 ? null : response.contentLength;
     final mimeType = response.headers.contentType.toString();
-    // CDNs may repeat this header or combine its values. HttpHeaders.value
-    // throws for repeated values, turning otherwise playable audio into a 500.
+    final acceptRanges = response.headers.value(HttpHeaders.acceptRangesHeader);
     final originSupportsRangeRequests =
-        (response.headers[HttpHeaders.acceptRangesHeader] ?? const <String>[])
-            .expand((value) => value.split(','))
-            .any((unit) => unit.trim().toLowerCase() == 'bytes');
+        acceptRanges != null && acceptRanges != 'none';
     final mimeFile = await _mimeFile;
     await mimeFile.writeAsString(mimeType);
     final inProgressResponses = <_InProgressCacheResponse>[];

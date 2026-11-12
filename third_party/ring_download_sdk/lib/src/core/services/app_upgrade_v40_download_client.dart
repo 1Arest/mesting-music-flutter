@@ -470,13 +470,9 @@ class AppUpgradeV40DownloadClient {
             ? null
             : (index) async {
                 await stopBootstrap();
-                if (cancelToken.isCancelled || httpsRejected) {
-                  return null;
-                }
-                // Keep a stable reference across awaits. Dart versions differ
-                // in promotion of the nullable variable captured by this closure.
-                final bootstrap = bootstrapFile!;
-                if (!bootstrap.existsSync()) {
+                if (cancelToken.isCancelled ||
+                    httpsRejected ||
+                    !bootstrapFile!.existsSync()) {
                   return null;
                 }
                 final start = index * AppUpgradeP2PManifest.chunkSize;
@@ -484,8 +480,10 @@ class AppUpgradeV40DownloadClient {
                   0,
                   currentInfo.fileSize,
                 );
-                if (await bootstrap.length() < end) return null;
-                final bytes = await bootstrap
+                if (await bootstrapFile.length() < end) return null;
+                // Dart 3.11 promotes this value after the length check above;
+                // retain the upstream read while avoiding a redundant bang.
+                final bytes = await bootstrapFile
                     .openRead(start, end)
                     .fold<BytesBuilder>(
                       BytesBuilder(copy: false),

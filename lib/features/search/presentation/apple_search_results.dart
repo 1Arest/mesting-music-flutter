@@ -1,13 +1,10 @@
-import '../domain/song_version_filter.dart';
 import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../../../core/audio/playback_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../../shared/models/track.dart';
@@ -21,13 +18,10 @@ import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../../shared/models/song_search_facts.dart';
 
-String _songSourceLabel(Track value) =>
-    value.source == TrackSource.netease ? '网易云' : '酷狗';
-
 /// A single lazy scroll view owns pagination and row construction. Avoid a
 /// shrink-wrapped list inside another list: later search pages can contain
 /// hundreds of rows and must not rebuild/decode all their covers at once.
-class AppleSearchResults extends ConsumerStatefulWidget {
+class AppleSearchResults extends ConsumerWidget {
   const AppleSearchResults({
     required this.state,
     required this.controller,
@@ -36,127 +30,7 @@ class AppleSearchResults extends ConsumerStatefulWidget {
   final MusicSearchState state;
   final ScrollController controller;
   @override
-  ConsumerState<AppleSearchResults> createState() => _AppleSearchResultsState();
-}
-
-class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
-  SongVersionFilter _filter = SongVersionFilter.all;
-  MusicSearchState get state => widget.state;
-  ScrollController get controller => widget.controller;
-  @override
-  void didUpdateWidget(covariant AppleSearchResults oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.query != state.query) _filter = SongVersionFilter.all;
-  }
-
-  List<Track> _filtered(List<Track> tracks) => tracks
-      .where(
-        (t) =>
-            _filter == SongVersionFilter.all ||
-            recordingVersion(t, state.songFacts[t.id]) == _filter,
-      )
-      .toList();
-  Future<void> _chooseFilter() async {
-    final value = await showLiquidGlassBottomSheet<SongVersionFilter>(
-      context: context,
-      builder: (sheet) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(padding: EdgeInsets.all(20), child: Text('歌曲版本')),
-              for (final value in SongVersionFilter.values)
-                ListTile(
-                  title: Text(value.label),
-                  trailing: value == _filter
-                      ? const Icon(CupertinoIcons.check_mark)
-                      : null,
-                  onTap: () => Navigator.pop(sheet, value),
-                ),
-              const Padding(
-                padding: EdgeInsets.all(18),
-                child: Text('仅筛选已加载结果，版本信息不足时归入未知。'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (mounted && value != null) {
-      if (controller.hasClients) controller.jumpTo(0);
-      setState(() => _filter = value);
-    }
-  }
-
-  Future<void> _chooseSource(
-    Track track,
-    List<Track> sources,
-    Map<String, SongSearchFacts> facts,
-  ) async {
-    final query = ref.read(musicSearchControllerProvider).query;
-    final owner = ref.read(platformAccountProvider).value;
-    final identity = (owner?.ownerId, owner?.token);
-    final selected = await showLiquidGlassBottomSheet<Track>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(padding: EdgeInsets.all(20), child: Text('选择音源')),
-          for (final value in sources)
-            ListTile(
-              title: Text(
-                [
-                  _songSourceLabel(value),
-                  facts[value.id]?.label ?? '',
-                ].where((s) => s.isNotEmpty).join(' · '),
-              ),
-              subtitle: Text('${value.artist} · ${value.album}'),
-              trailing: value.id == track.id
-                  ? const Icon(Icons.check_rounded)
-                  : null,
-              onTap: () => Navigator.of(sheet).pop(value),
-            ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-    if (!mounted ||
-        selected == null ||
-        ref.read(musicSearchControllerProvider).query != query) {
-      return;
-    }
-    final now = ref.read(platformAccountProvider).value;
-    if ((now?.ownerId, now?.token) != identity) return;
-    // A stale sheet cannot insert a song after its account/query was replaced.
-    if (!(ref.read(musicSearchControllerProvider).sourceChoices[track.id] ??
-            const <Track>[])
-        .any((t) => t.id == selected.id)) {
-      return;
-    }
-    ref
-        .read(musicSearchControllerProvider.notifier)
-        .chooseSongSource(track.id, selected);
-    // Source selection replaces the keyed row. The page, not that disposable
-    // row, owns the asynchronous login and URL resolution.
-    await playBetaSelection(
-      context,
-      ref,
-      selected,
-      stillCurrent: () =>
-          mounted &&
-          ref.read(musicSearchControllerProvider).query == query &&
-          (
-                ref.read(platformAccountProvider).value?.ownerId,
-                ref.read(platformAccountProvider).value?.token,
-              ) ==
-              identity,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     Widget section(String name, int count) => Padding(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 12),
@@ -188,35 +62,6 @@ class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
         controller: controller,
         physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-              child: Row(
-                children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: _chooseFilter,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          CupertinoIcons.line_horizontal_3_decrease,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(_filter.label),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_filter != SongVersionFilter.all)
-                    const Flexible(
-                      child: Text('筛选已加载结果', textAlign: TextAlign.end),
-                    ),
-                ],
-              ),
-            ),
-          ),
           for (final warning in state.warnings)
             SliverToBoxAdapter(
               child: Padding(
@@ -242,8 +87,8 @@ class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
               ),
             ),
           for (final group in [
-            (name: '本地音乐', tracks: _filtered(state.localTracks)),
-            (name: '歌曲', tracks: _filtered(state.onlineTracks)),
+            (name: '本地音乐', tracks: state.localTracks),
+            (name: '歌曲', tracks: state.onlineTracks),
           ])
             if (group.tracks.isNotEmpty) ...[
               SliverToBoxAdapter(
@@ -258,32 +103,14 @@ class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
                   sources:
                       state.sourceChoices[group.tracks[index].id] ?? const [],
                   facts: state.songFacts,
-                  onChooseSource: _chooseSource,
                 ),
               ),
             ],
-          if (_filtered(state.localTracks).isEmpty &&
-              _filtered(state.onlineTracks).isEmpty &&
-              state.errorMessage == null)
-            SliverToBoxAdapter(
+          if (!state.hasResults && state.errorMessage == null)
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Text(
-                  _filter == SongVersionFilter.all
-                      ? '没有找到相关歌曲，试试其他关键词。'
-                      : '已加载结果中没有此版本，可继续加载或切换筛选。',
-                ),
-              ),
-            ),
-          if (_filter != SongVersionFilter.all &&
-              state.hasMore &&
-              !state.isLoadingMore)
-            SliverToBoxAdapter(
-              child: CupertinoButton(
-                onPressed: ref
-                    .read(musicSearchControllerProvider.notifier)
-                    .loadMore,
-                child: const Text('继续加载搜索结果'),
+                padding: EdgeInsets.all(32),
+                child: Text('没有找到相关歌曲，试试其他关键词。'),
               ),
             ),
           SliverToBoxAdapter(
@@ -321,17 +148,66 @@ class _SearchSongRow extends ConsumerWidget {
   const _SearchSongRow({
     required this.track,
     required this.contextTracks,
-    required this.onChooseSource,
     this.sources = const [],
     this.facts = const {},
     super.key,
   });
   final Track track;
   final List<Track> contextTracks;
-  final Future<void> Function(Track, List<Track>, Map<String, SongSearchFacts>)
-  onChooseSource;
   final List<Track> sources;
   final Map<String, SongSearchFacts> facts;
+
+  String _source(Track value) =>
+      value.source == TrackSource.netease ? '网易云' : '酷狗';
+
+  Future<void> _chooseSource(BuildContext context, WidgetRef ref) async {
+    final query = ref.read(musicSearchControllerProvider).query;
+    final owner = ref.read(platformAccountProvider).value;
+    final identity = (owner?.ownerId, owner?.token);
+    final selected = await showLiquidGlassBottomSheet<Track>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(padding: EdgeInsets.all(20), child: Text('选择音源')),
+          for (final value in sources)
+            ListTile(
+              title: Text(
+                [
+                  _source(value),
+                  facts[value.id]?.label ?? '',
+                ].where((s) => s.isNotEmpty).join(' · '),
+              ),
+              subtitle: Text('${value.artist} · ${value.album}'),
+              trailing: value.id == track.id
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              onTap: () => Navigator.of(sheet).pop(value),
+            ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+    if (!context.mounted ||
+        selected == null ||
+        ref.read(musicSearchControllerProvider).query != query) {
+      return;
+    }
+    final now = ref.read(platformAccountProvider).value;
+    if ((now?.ownerId, now?.token) != identity) return;
+    // A stale sheet cannot insert a song after its account/query was replaced.
+    if (!(ref.read(musicSearchControllerProvider).sourceChoices[track.id] ??
+            const <Track>[])
+        .any((t) => t.id == selected.id)) {
+      return;
+    }
+    ref
+        .read(musicSearchControllerProvider.notifier)
+        .chooseSongSource(track.id, selected);
+    await playBetaSelection(context, ref, selected);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -349,7 +225,7 @@ class _SearchSongRow extends ConsumerWidget {
       if (sources.length > 1)
         IconButton(
           tooltip: '选择音源（${sources.length}）',
-          onPressed: () => onChooseSource(track, sources, facts),
+          onPressed: () => _chooseSource(context, ref),
           icon: const Icon(Icons.library_music_outlined, size: 21),
         ),
       FavoriteToggleButton(track: track, compact: true),
@@ -414,7 +290,7 @@ class _SearchSongRow extends ConsumerWidget {
                                 if (sources.isNotEmpty)
                                   Text(
                                     [
-                                      _songSourceLabel(track),
+                                      _source(track),
                                       facts[track.id]?.label ?? '',
                                     ].where((s) => s.isNotEmpty).join(' · '),
                                     // Provenance and access status remain

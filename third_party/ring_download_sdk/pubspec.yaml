@@ -1,6 +1,6 @@
 name: ring_download_sdk
 description: Verified HTTPS and bounded peer-assisted Android APK downloads for Flutter.
-version: 1.1.9
+version: 1.1.8
 publish_to: none
 environment:
   sdk: '>=3.10.8 <4.0.0'

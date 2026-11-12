@@ -267,7 +267,7 @@ void main() {
         final request = harness.requests.firstWhere(
           (r) => r.uri.pathSegments.last == 'session',
         );
-        expect((request.data as Map)['sdk_version'], '1.1.9');
+        expect((request.data as Map)['sdk_version'], '1.1.8');
         secondGate.complete();
         expect(
           await result.timeout(const Duration(seconds: 15)),
@@ -502,103 +502,6 @@ void main() {
     },
   );
 
-  for (final raceLimit in [2, 3]) {
-    test(
-      '$raceLimit-peer race replaces silent startup sources after disposal',
-      () async {
-        replacementFixture();
-        harness.rejectedPeerIds.clear();
-        final spare = raceLimit == 2 ? _third : _fourth;
-        if (raceLimit == 2) {
-          harness.advertisedPeerIds = [_other, _second, _third];
-        } else {
-          harness.rejectedPeerIds.add(_third);
-        }
-        harness.manifestOverride['p2p_connect_timeout_ms'] = 8000;
-        harness.precomputedDigest = sha256.convert(harness.bytes).toString();
-        harness.precomputedManifest = Map<String, dynamic>.from(
-          harness.manifestJson,
-        );
-        harness.client = harness.makeClient(
-          hybridStartup: true,
-          enableP8P: true,
-          p8pPeerRaceLimit: raceLimit,
-          sourceTimeout: Duration(milliseconds: raceLimit == 2 ? 1500 : 3200),
-        );
-        final disposeGate = Completer<void>();
-        final disposing = Completer<void>();
-        final silentRequests = <String>{};
-        var hedgeOffered = false;
-        var spareOffered = false;
-        var spareOfferedWhileDisposing = false;
-        var spareSupplied = false;
-        for (final id in [_other, _second]) {
-          harness.ordinaryDisposeGates[id] = disposeGate.future;
-        }
-        harness.ordinaryDisposeStarted = (id) {
-          if ((id == _other || id == _second) && !disposing.isCompleted) {
-            disposing.complete();
-          }
-        };
-        harness.signalOfferHook = (request) async {
-          final target = (request.data as Map)['peer_id'];
-          if (raceLimit == 3 && target == _third) hedgeOffered = true;
-          if (target == spare) {
-            spareOffered = true;
-            spareOfferedWhileDisposing = !disposeGate.isCompleted;
-          }
-        };
-        harness.beforeLeasedPiece = (channel, _, stopped) async {
-          final target = harness.peers
-              .singleWhere((peer) => identical(peer.channel, channel))
-              .target;
-          if (target == _other || target == _second) {
-            silentRequests.add(target!);
-            await stopped;
-          } else if (target == spare) {
-            spareSupplied = true;
-          }
-        };
-        final cancel = CancelToken();
-        final download = replacementDownload(
-          cancelToken: cancel,
-        ).then<Object>((value) => value, onError: (Object error) => error);
-        try {
-          await disposing.future.timeout(const Duration(seconds: 6));
-          expect(silentRequests, {_other, _second});
-          expect(hedgeOffered, raceLimit == 3);
-          expect(spareOffered, isFalse);
-          disposeGate.complete();
-          expect(
-            await download.timeout(const Duration(seconds: 6)),
-            harness.bytes.length,
-            reason: jsonEncode(
-              harness.logs
-                  .where(
-                    (e) =>
-                        e.stage == 'result_reason' ||
-                        e.stage == 'transfer' ||
-                        e.stage == 'performance',
-                  )
-                  .map((e) => e.toJson())
-                  .toList(),
-            ),
-          );
-          expect(spareOffered, isTrue);
-          expect(spareOfferedWhileDisposing, isFalse);
-          expect(spareSupplied, isTrue);
-          expect(harness.peakOrdinaryOwners, raceLimit);
-        } finally {
-          cancel.cancel('fixture cleanup');
-          if (!disposeGate.isCompleted) disposeGate.complete();
-          await download;
-          await harness.client.close();
-        }
-        expect(harness.peers.every((peer) => peer.disposed), isTrue);
-      },
-    );
-  }
-
   Future<void> standbyCase({
     bool holdDisposal = false,
     bool cancelDuringRetirement = false,
@@ -619,7 +522,7 @@ void main() {
         iceGathering: Duration(seconds: 2),
         answer: Duration(seconds: 2),
         channel: Duration(seconds: 2),
-        transfer: Duration(milliseconds: 1200),
+        transfer: Duration(milliseconds: 350),
       ),
     );
     final offers = <String>{},
@@ -682,7 +585,7 @@ void main() {
             .whenComplete(() => done = true);
     try {
       if (holdDisposal) {
-        await disposing.future.timeout(const Duration(seconds: 4));
+        await disposing.future.timeout(const Duration(seconds: 2));
         expect(
           harness.logs
               .where((e) => e.code == 'hello_ready' && e.source == 'peer')
@@ -718,21 +621,7 @@ void main() {
           reason:
               'Hello-ready 0B sources must not discard already connecting healthy candidates',
         );
-        expect(
-          received,
-          harness.bytes.length,
-          reason: jsonEncode(
-            harness.logs
-                .where(
-                  (e) =>
-                      e.stage == 'result_reason' ||
-                      e.stage == 'transfer' ||
-                      e.stage == 'performance',
-                )
-                .map((e) => e.toJson())
-                .toList(),
-          ),
-        );
+        expect(received, harness.bytes.length);
       }
     } finally {
       if (!done) cancel.cancel('standby_fixture_teardown');
@@ -769,93 +658,10 @@ void main() {
     () => standbyCase(failDisposal: true),
   );
 
-  test(
-    'observed LifeRing topology replaces one body failure with seed active',
-    () async {
-      replacementFixture();
-      harness.rejectedPeerIds.clear();
-      harness.stalledIcePeerIds.add(_second);
-      harness.seedBusy = false;
-      harness.bytes = Uint8List.fromList(
-        List.generate(24 * 1048576 + 79, (i) => i % 251),
-      );
-      harness.advertisedPieces = List.generate(25, (i) => i);
-      harness.advertisedPeerIds = [_other, _second];
-      harness.pieceDelay = const Duration(milliseconds: 220);
-      harness.precomputedDigest = sha256.convert(harness.bytes).toString();
-      harness.precomputedManifest = Map<String, dynamic>.from(
-        harness.manifestJson,
-      );
-      var failedNodeRequests = 0;
-      var spareOfferedAfterBodyFailure = false;
-      var spareOfferedBeforeIceRetirement = false;
-      harness.beforeLeasedPiece = (channel, _, stopped) async {
-        final id = harness.peers
-            .singleWhere((peer) => identical(peer.channel, channel))
-            .target;
-        if (id == _other && ++failedNodeRequests == 2) {
-          harness.advertisedPeerIds = [_other, _second, _third];
-          await channel.close();
-        }
-      };
-      harness.signalOfferHook = (request) async {
-        if ((request.data as Map)['peer_id'] == _third) {
-          spareOfferedAfterBodyFailure = failedNodeRequests >= 2;
-          spareOfferedBeforeIceRetirement = harness.peers.any(
-            (peer) => peer.target == _second && peer.remoteSet && !peer.closed,
-          );
-        }
-      };
-      try {
-        final count = await harness.downloadPrefix(
-          bootstrapPiece: (_) async => null,
-          bootstrapHandoff: () async {},
-          p8pRangePiece: (index, token) async {
-            await Future.any([
-              Future<void>.delayed(const Duration(milliseconds: 500)),
-              token.whenCancel,
-            ]);
-            if (token.isCancelled) throw token.cancelError!;
-            final start = index * 1048576;
-            return Uint8List.sublistView(
-              harness.bytes,
-              start,
-              (start + 1048576).clamp(0, harness.bytes.length),
-            );
-          },
-        );
-        expect(count, harness.bytes.length);
-        expect(spareOfferedAfterBodyFailure, isTrue);
-        expect(spareOfferedBeforeIceRetirement, isTrue);
-        final profiles = harness.logs.where(
-          (event) => event.code == 'source_profile',
-        );
-        final verified = {
-          for (final event in profiles)
-            for (final metric in event.metrics.entries)
-              if (metric.key.endsWith('_verified_bytes'))
-                metric.key: metric.value,
-        };
-        expect(verified['source_seed_verified_bytes'], greaterThan(0));
-        expect(verified['source_peer1_verified_bytes'], greaterThan(0));
-        expect(verified['source_peer3_verified_bytes'], greaterThan(0));
-        expect(
-          sha256.convert(await harness.part.readAsBytes()).toString(),
-          harness.info.sha256,
-        );
-        expect(harness.peakOrdinaryOwners, lessThanOrEqualTo(2));
-      } finally {
-        await harness.client.close();
-      }
-      expect(harness.peers.every((peer) => peer.disposed), isTrue);
-    },
-  );
-
   Future<void> admittedBodyFailureCase({
     bool holdSecondClose = false,
     bool cancelDuringClose = false,
     bool supported = true,
-    bool expectImmediateReplacement = false,
   }) async {
     replacementFixture(supported: supported);
     harness.rejectedPeerIds.clear();
@@ -873,14 +679,11 @@ void main() {
     );
     final secondClose = Completer<void>(), thirdOffer = Completer<void>();
     final secondFailed = Completer<void>(), cancel = CancelToken();
-    final afterHandoff = Stopwatch();
-    Duration? replacementDelay;
     if (holdSecondClose) {
       harness.ordinaryDisposeGates[_second] = secondClose.future;
       harness.signalOfferHook = (request) async {
         if ((request.data as Map)['peer_id'] == _third &&
             !thirdOffer.isCompleted) {
-          replacementDelay = afterHandoff.elapsed;
           thirdOffer.complete();
         }
       };
@@ -904,9 +707,7 @@ void main() {
     final download = harness.downloadPrefix(
       cancelToken: cancel,
       bootstrapPiece: (_) async => null,
-      bootstrapHandoff: () async {
-        afterHandoff.start();
-      },
+      bootstrapHandoff: () async {},
       p8pRangePiece: (index, token) async {
         await Future.any([
           Future<void>.delayed(const Duration(milliseconds: 500)),
@@ -966,9 +767,6 @@ void main() {
         true,
         reason: 'One pending native close cannot block the other retired slot',
       );
-      if (expectImmediateReplacement) {
-        expect(replacementDelay, lessThan(const Duration(milliseconds: 1800)));
-      }
     }
     expect(
       result,
@@ -1033,13 +831,6 @@ void main() {
   test(
     'P8P replaces a failed admitted peer while another native close is pending',
     () => admittedBodyFailureCase(holdSecondClose: true),
-  );
-  test(
-    'P8P wakes body replacement without waiting for periodic discovery',
-    () => admittedBodyFailureCase(
-      holdSecondClose: true,
-      expectImmediateReplacement: true,
-    ),
   );
   test(
     'P8P cancellation during admitted source retirement starts no replacement',
@@ -2191,19 +1982,12 @@ void main() {
   );
 
   test(
-    'P8P seed retry overlaps local and server close before fresh identity',
+    'P8P seed retry waits for local and server close before fresh identity',
     () async {
       seedRetryFixture();
       final closing = Completer<void>(), ack = Completer<void>();
       harness.peerCloseGate = closing.future;
       harness.cancelGate = ack.future;
-      var freshOfferHadBothClosures = false;
-      harness.seedOfferHook = (number) async {
-        if (number == 2) {
-          freshOfferHadBothClosures =
-              ack.isCompleted && harness.peers.first.disposed;
-        }
-      };
       final download = harness.downloadPrefix(
         bootstrapPiece: (_) async => null,
         bootstrapHandoff: () async {},
@@ -2219,15 +2003,15 @@ void main() {
       );
       unawaited(download.then<void>((_) {}, onError: (Object _) {}));
       try {
+        await harness.waitForPath('server-offer');
+        await Future<void>.delayed(const Duration(milliseconds: 30));
+        expect(harness.paths.where((p) => p == 'server-offer'), hasLength(1));
+        expect(harness.paths, isNot(contains('server-cancel')));
+        closing.complete();
         await harness.waitForPath('server-cancel');
         expect(harness.paths.where((p) => p == 'server-offer'), hasLength(1));
-        expect(harness.peers.first.disposed, isFalse);
         ack.complete();
-        await Future<void>.delayed(Duration.zero);
-        expect(harness.paths.where((p) => p == 'server-offer'), hasLength(1));
-        closing.complete();
         expect(await download, harness.bytes.length);
-        expect(freshOfferHadBothClosures, isTrue);
         expect(harness.part.readAsBytesSync(), harness.bytes);
         final offers = harness.requests
             .where((r) => r.uri.pathSegments.last == 'server-offer')
@@ -2254,38 +2038,6 @@ void main() {
       }
     },
   );
-
-  test('P8P seed retry retains a seed owner after failed disposal', () async {
-    seedRetryFixture();
-    harness.trackPeerOwners = true;
-    harness.failSeedDispose = true;
-    try {
-      expect(
-        await harness.downloadPrefix(
-          bootstrapPiece: (_) async => null,
-          bootstrapHandoff: () async {},
-        ),
-        0,
-      );
-      expect(
-        harness.paths.where((path) => path == 'server-cancel'),
-        hasLength(1),
-      );
-      expect(
-        harness.paths.where((path) => path == 'server-offer'),
-        hasLength(1),
-      );
-      expect(
-        harness.logs.any((event) => event.code == 'native_dispose_failed'),
-        isTrue,
-      );
-    } finally {
-      harness.failSeedDispose = false;
-      for (final peer in harness.peers.where((peer) => !peer.disposed)) {
-        await peer.dispose();
-      }
-    }
-  });
 
   for (final fault in [
     'pending',
@@ -5710,186 +5462,6 @@ void main() {
     expect(jsonEncode(attempts).contains(_other), false);
   });
 
-  for (final peer in [false, true]) {
-    for (final failure in [
-      'candidate_queue_full',
-      'candidate_processing_timeout',
-    ]) {
-      test(
-        'candidate backpressure $failure retries ordered batch peer=$peer',
-        () async {
-          harness.enableTrickle();
-          harness.manifestOverride['candidate_batch_supported'] = true;
-          harness.localIceCandidates = List.generate(
-            10,
-            (index) => RTCIceCandidate(
-              'candidate:$index 1 udp 1 192.168.1.99 ${5000 + index} typ host',
-              '0',
-              0,
-            ),
-          );
-          harness.advertisePeer = peer;
-          harness.seedBusy = peer;
-          harness.client = harness.makeClient(
-            hybridStartup: true,
-            fastSignaling: true,
-          );
-          final endpoint = peer ? 'candidate' : 'server-candidate';
-          final ready = Completer<void>();
-          if (peer) {
-            harness.signalPost = () => ready.future;
-          } else {
-            harness.seedGate = ready.future;
-          }
-          harness.candidateFailures[endpoint] = [
-            (
-              status: failure == 'candidate_queue_full' ? 429 : 408,
-              code: failure,
-            ),
-          ];
-          final posted = <Object?>[];
-          harness.candidatePost = (request) async {
-            if (request.uri.pathSegments.last != endpoint) return;
-            posted.add(jsonDecode(jsonEncode(request.data)));
-            if (harness.candidateFailures[endpoint]!.isEmpty &&
-                ((request.data as Map)['candidates'] as List).last == null &&
-                !ready.isCompleted) {
-              ready.complete();
-            }
-          };
-          final cancel = CancelToken();
-          final download = harness
-              .downloadPrefix(
-                cancelToken: cancel,
-                bootstrapPiece: (_) async => null,
-              )
-              .then<Object>((value) => value, onError: (Object error) => error);
-          try {
-            for (
-              var attempt = 0;
-              attempt < 200 && !ready.isCompleted;
-              attempt++
-            ) {
-              await Future<void>.delayed(const Duration(milliseconds: 5));
-            }
-            expect(ready.isCompleted, isTrue);
-            expect(await download, harness.bytes.length);
-            expect(posted.length, greaterThanOrEqualTo(3));
-            expect(posted[0], posted[1]);
-            final accepted = posted
-                .skip(1)
-                .expand((body) => (body as Map)['candidates'] as List)
-                .toList();
-            expect(accepted.last, isNull);
-            expect(
-              accepted.where((candidate) => candidate == null),
-              hasLength(1),
-            );
-            expect(
-              accepted.whereType<Map>().map(
-                (candidate) => candidate['candidate'],
-              ),
-              harness.localIceCandidates.map(
-                (candidate) => candidate.candidate,
-              ),
-            );
-            expect(
-              harness.logs.where(
-                (event) =>
-                    event.stage == 'candidate' &&
-                    event.code == 'retry' &&
-                    event.source == (peer ? 'peer' : 'seed'),
-              ),
-              hasLength(1),
-            );
-          } finally {
-            cancel.cancel('candidate fixture cleanup');
-            if (!ready.isCompleted) ready.complete();
-            await download;
-            await harness.client.close();
-          }
-          expect(
-            harness.peers.every((connection) => connection.disposed),
-            isTrue,
-          );
-        },
-      );
-    }
-  }
-
-  for (final scenario in [
-    'legacy',
-    'invalid',
-    'offer_limit',
-    'persistent',
-    'cancel',
-  ]) {
-    test('candidate backpressure stops safely for $scenario', () async {
-      harness.enableTrickle();
-      harness.manifestOverride['candidate_batch_supported'] =
-          scenario != 'legacy';
-      harness.localIceCandidates = [
-        RTCIceCandidate(
-          'candidate:1 1 udp 1 192.168.1.99 5000 typ host',
-          '0',
-          0,
-        ),
-      ];
-      final code = switch (scenario) {
-        'invalid' => 'invalid_candidate',
-        'offer_limit' => 'server_candidate_offer_limit',
-        _ => 'candidate_queue_full',
-      };
-      final expectedPosts = scenario == 'persistent' ? 2 : 1;
-      harness.candidateFailures['server-candidate'] = List.generate(
-        expectedPosts,
-        (_) => (status: scenario == 'invalid' ? 422 : 429, code: code),
-      );
-      final ready = Completer<void>();
-      harness.seedGate = ready.future;
-      final cancel = CancelToken();
-      Timer? cancelTimer;
-      final posted = <Object?>[];
-      harness.candidatePost = (request) async {
-        if (request.uri.pathSegments.last != 'server-candidate') return;
-        posted.add(jsonDecode(jsonEncode(request.data)));
-        if (scenario == 'cancel') {
-          cancelTimer = Timer(const Duration(milliseconds: 10), () {
-            cancel.cancel('candidate replay cancelled');
-          });
-        }
-      };
-      final download = harness
-          .downloadPrefix(cancelToken: cancel)
-          .then<Object>((value) => value, onError: (Object error) => error);
-      try {
-        if (scenario == 'cancel') {
-          final result = await download.timeout(const Duration(seconds: 3));
-          expect(result, isA<DioException>());
-          expect(CancelToken.isCancel(result as DioException), isTrue);
-        } else {
-          bool stopped() => harness.logs.any(
-            (event) => event.stage == 'candidate' && event.code == code,
-          );
-          for (var i = 0; i < 200 && !stopped(); i++) {
-            await Future<void>.delayed(const Duration(milliseconds: 5));
-          }
-          expect(stopped(), isTrue);
-        }
-        expect(posted, hasLength(expectedPosts));
-        if (scenario == 'persistent') expect(posted[0], posted[1]);
-      } finally {
-        cancelTimer?.cancel();
-        cancel.cancel('candidate fixture cleanup');
-        ready.complete();
-        await download;
-        await harness.client.close();
-      }
-      expect(posted, hasLength(expectedPosts));
-      expect(harness.peers.every((peer) => peer.disposed), isTrue);
-    });
-  }
-
   test(
     'batch candidates preserve order, bound payloads and flush EOC last',
     () async {
@@ -6038,14 +5610,12 @@ class _Harness {
   Future<void>? seedGate, sessionGate, peersGate;
   Future<void> Function()? peersHook;
   Future<void>? peerCloseGate, cancelGate;
-  bool failSeedDispose = false;
   int failSeedConnections = 0, cancelPending = 0;
   int hangSeedConnections = 0, seedOfferCount = 0;
   Future<void> Function(int)? seedOfferHook;
   String? cancelFault;
   Duration seedDelay = Duration.zero;
   Future<void> Function(RequestOptions)? candidatePost;
-  final candidateFailures = <String, List<({int status, String code})>>{};
   Duration remoteDescriptionDelay = Duration.zero;
   Duration channelOpenDelay = Duration.zero;
   Future<void> Function()? signalPoll;
@@ -6430,12 +6000,7 @@ class _Harness {
       case 'candidate':
       case 'server-candidate':
         await candidatePost?.call(request);
-        final failures = candidateFailures[endpoint];
-        if (failures != null && failures.isNotEmpty) {
-          final failure = failures.removeAt(0);
-          status = failure.status;
-          data = {'error': failure.code, 'retryable': true};
-        } else if (failCandidatePosts) {
+        if (failCandidatePosts) {
           status = 503;
           data = {'error': 'server_seed_unavailable'};
         }
@@ -6639,9 +6204,6 @@ class _FakePeer extends RTCPeerConnection {
   @override
   Future<void> dispose() async {
     await close();
-    if (server == true && harness.failSeedDispose) {
-      throw StateError('synthetic seed dispose failure');
-    }
     if (server != true) {
       harness.ordinaryDisposeStarted?.call(target);
       await harness.ordinaryDisposeGates[target];

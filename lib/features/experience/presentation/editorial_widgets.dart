@@ -161,7 +161,6 @@ class EditorialHeader extends ConsumerWidget {
                 tooltip: '我的账号',
                 onPressed: () => context.go('/profile'),
                 icon: PlatformAvatar(
-                  personal: true,
                   url: profile?.avatarUrl ?? platform?.avatarUrl ?? '',
                   size: 42,
                 ),

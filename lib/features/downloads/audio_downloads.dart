@@ -350,7 +350,6 @@ class AudioDownloadManager extends ChangeNotifier {
         !{
           AudioDownloadPhase.downloading,
           AudioDownloadPhase.resolving,
-          AudioDownloadPhase.queued,
         }.contains(task.phase)) {
       return;
     }
@@ -442,42 +441,6 @@ class AudioDownloadManager extends ChangeNotifier {
     }
   }
 
-  /// Freeze the owner and task IDs before editing. Saving/completed tasks are
-  /// deliberately excluded, and the worker resumes only after the whole batch.
-  void manageBatch(
-    String action, {
-    String? failureLabel,
-    bool Function(AudioDownloadTask)? matches,
-  }) {
-    final owner = currentOwner();
-    if (owner == null || restoring) return;
-    final snapshot = _tasks
-        .where((t) => t.owner == owner && (matches?.call(t) ?? true))
-        .toList();
-    _batching = true;
-    try {
-      for (final task in snapshot) {
-        if (currentOwner() != owner) break;
-        if (action == 'pause') pause(task.id);
-        if (action == 'resume') resume(task.id);
-        if (action == 'retry' && task.phase == AudioDownloadPhase.failed) {
-          retry(task.id);
-        }
-      }
-    } finally {
-      _batching = false;
-      if (_batchSave) {
-        _batchSave = false;
-        _save();
-      }
-      if (_batchChanged) {
-        _batchChanged = false;
-        _notify();
-      }
-      unawaited(_pump());
-    }
-  }
-
   void retry(String id) {
     final task = _tasks.firstWhere((t) => t.id == id);
     if (task.owner != currentOwner() ||
@@ -531,7 +494,7 @@ class AudioDownloadManager extends ChangeNotifier {
       taskById(task.id) != null &&
       taskById(task.id)!.phase != AudioDownloadPhase.cancelled;
   Future<void> _pump() async {
-    if (_working || _disposed || restoring || _batching) return;
+    if (_working || _disposed || restoring) return;
     _working = true;
     try {
       while (!_disposed) {

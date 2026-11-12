@@ -52,14 +52,12 @@ class P8PCoordinator {
     this.stopGrace = const Duration(seconds: 1),
     this.onDiagnostic,
     this.onLifecycle,
-    this.onSourceFailed,
   });
   final P8POrderedWriter writer;
   final int Function() clockMicros;
   final Duration requestTimeout, hedgeAfter, stopGrace;
   final P8PDiagnosticObserver? onDiagnostic;
   final P8PLifecycleObserver? onLifecycle;
-  final void Function(String source)? onSourceFailed;
   int _snapshotSequence = 0;
   P8PLeaseBook get book => writer.book;
   final _sources = <String, _SourceState>{};
@@ -104,12 +102,6 @@ class P8PCoordinator {
 
   void _notify() {
     if (_wake?.isCompleted == false) _wake!.complete();
-  }
-
-  void _markFailed(_SourceState state) {
-    if (state.failed) return;
-    state.failed = true;
-    onSourceFailed?.call(state.source.id);
   }
 
   void _observe(_SourceState state, P8PDiagnosticCode reason, [_Job? job]) {
@@ -356,6 +348,7 @@ class P8PCoordinator {
               } else {
                 _count('source_failures');
                 state.diagnosticFailures++;
+                state.failed = true;
                 _closeSource(state, P8PDiagnosticCode.sourceFailed, job);
               }
             }
@@ -381,7 +374,7 @@ class P8PCoordinator {
           },
           onError: (Object error) {
             state.diagnosticFailures++;
-            _markFailed(state);
+            state.failed = true;
             _count('cleanup_failures');
             _observe(state, P8PDiagnosticCode.cleanupFailed, job);
             _notify();
@@ -392,7 +385,7 @@ class P8PCoordinator {
     } catch (_) {
       _observe(state, P8PDiagnosticCode.sourceFailed);
       state.diagnosticFailures++;
-      _markFailed(state);
+      state.failed = true;
       book.cancel(lease);
       // The source may have started a native operation before throwing. Its
       // close must finish before that reservation is acknowledged stopped.
@@ -426,7 +419,7 @@ class P8PCoordinator {
       job.request.cancel();
       _count('source_recoveries');
     } else if (hedged) {
-      _markFailed(state);
+      state.failed = true;
     } else {
       _closeSource(state, P8PDiagnosticCode.prefixRescued, job);
     }
@@ -440,7 +433,7 @@ class P8PCoordinator {
     if (state.closingRequested) return;
     if (reason == P8PDiagnosticCode.prefixRescued) _traceRescueSlots();
     state.closingRequested = true;
-    _markFailed(state);
+    state.failed = true;
     _observe(state, reason, cause);
     for (final job in state.jobs.values) {
       if (!job.cancelled && !job.verified) state.diagnosticCancelled++;

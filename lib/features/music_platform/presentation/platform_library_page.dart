@@ -1,5 +1,3 @@
-import '../../../shared/widgets/beta_page_motion.dart';
-import '../../playlists/presentation/playlist_audit_page.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
@@ -204,28 +202,14 @@ class PlatformCloudPlaylistPage extends ConsumerWidget {
                         ),
                         if (playlist.value != null && repository.canManage(id))
                           BetaPopupMenuButton<String>(
-                            onSelected: (action) {
-                              if (action == 'audit') {
-                                Navigator.of(context).push(
-                                  betaContentRoute<void>(
-                                    PlaylistAuditPage(playlistId: id),
-                                  ),
-                                );
-                                return;
-                              }
-                              _manage(
-                                context,
-                                ref,
-                                repository,
-                                playlist.value!,
-                                action,
-                              );
-                            },
+                            onSelected: (action) => _manage(
+                              context,
+                              ref,
+                              repository,
+                              playlist.value!,
+                              action,
+                            ),
                             itemBuilder: (_) => const [
-                              PopupMenuItem(
-                                value: 'audit',
-                                child: Text('歌单体检'),
-                              ),
                               PopupMenuItem(
                                 value: 'rename',
                                 child: Text('编辑名称与封面'),

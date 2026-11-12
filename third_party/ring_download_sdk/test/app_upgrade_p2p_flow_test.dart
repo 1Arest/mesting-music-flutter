@@ -3211,12 +3211,7 @@ void main() {
         'indices': [0, 1],
       });
       channel.receiveText({'type': 'get-piece', 'index': 1});
-      await _waitUntil(
-        () => channel.sent.where((message) => !message.isBinary).any((message) {
-          final control = jsonDecode(message.text) as Map;
-          return control['type'] == 'piece-end' && control['index'] == 1;
-        }),
-      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       final controls = channel.sent
           .where((message) => !message.isBinary)
           .map((message) => jsonDecode(message.text) as Map)
