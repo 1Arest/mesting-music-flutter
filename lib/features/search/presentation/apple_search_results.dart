@@ -3,9 +3,11 @@ import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/audio/playback_providers.dart';
 import '../../player/presentation/beta_playback_actions.dart';
 import '../../../shared/models/track.dart';
@@ -18,6 +20,9 @@ import '../../themes/music_typography.dart';
 import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../../shared/models/song_search_facts.dart';
+
+String _songSourceLabel(Track value) =>
+    value.source == TrackSource.netease ? '网易云' : '酷狗';
 
 /// A single lazy scroll view owns pagination and row construction. Avoid a
 /// shrink-wrapped list inside another list: later search pages can contain
@@ -81,6 +86,73 @@ class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
       if (controller.hasClients) controller.jumpTo(0);
       setState(() => _filter = value);
     }
+  }
+
+  Future<void> _chooseSource(
+    Track track,
+    List<Track> sources,
+    Map<String, SongSearchFacts> facts,
+  ) async {
+    final query = ref.read(musicSearchControllerProvider).query;
+    final owner = ref.read(platformAccountProvider).value;
+    final identity = (owner?.ownerId, owner?.token);
+    final selected = await showLiquidGlassBottomSheet<Track>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      builder: (sheet) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(padding: EdgeInsets.all(20), child: Text('选择音源')),
+          for (final value in sources)
+            ListTile(
+              title: Text(
+                [
+                  _songSourceLabel(value),
+                  facts[value.id]?.label ?? '',
+                ].where((s) => s.isNotEmpty).join(' · '),
+              ),
+              subtitle: Text('${value.artist} · ${value.album}'),
+              trailing: value.id == track.id
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              onTap: () => Navigator.of(sheet).pop(value),
+            ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+    if (!mounted ||
+        selected == null ||
+        ref.read(musicSearchControllerProvider).query != query) {
+      return;
+    }
+    final now = ref.read(platformAccountProvider).value;
+    if ((now?.ownerId, now?.token) != identity) return;
+    // A stale sheet cannot insert a song after its account/query was replaced.
+    if (!(ref.read(musicSearchControllerProvider).sourceChoices[track.id] ??
+            const <Track>[])
+        .any((t) => t.id == selected.id)) {
+      return;
+    }
+    ref
+        .read(musicSearchControllerProvider.notifier)
+        .chooseSongSource(track.id, selected);
+    // Source selection replaces the keyed row. The page, not that disposable
+    // row, owns the asynchronous login and URL resolution.
+    await playBetaSelection(
+      context,
+      ref,
+      selected,
+      stillCurrent: () =>
+          mounted &&
+          ref.read(musicSearchControllerProvider).query == query &&
+          (
+                ref.read(platformAccountProvider).value?.ownerId,
+                ref.read(platformAccountProvider).value?.token,
+              ) ==
+              identity,
+    );
   }
 
   @override
@@ -186,6 +258,7 @@ class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
                   sources:
                       state.sourceChoices[group.tracks[index].id] ?? const [],
                   facts: state.songFacts,
+                  onChooseSource: _chooseSource,
                 ),
               ),
             ],
@@ -248,66 +321,17 @@ class _SearchSongRow extends ConsumerWidget {
   const _SearchSongRow({
     required this.track,
     required this.contextTracks,
+    required this.onChooseSource,
     this.sources = const [],
     this.facts = const {},
     super.key,
   });
   final Track track;
   final List<Track> contextTracks;
+  final Future<void> Function(Track, List<Track>, Map<String, SongSearchFacts>)
+  onChooseSource;
   final List<Track> sources;
   final Map<String, SongSearchFacts> facts;
-
-  String _source(Track value) =>
-      value.source == TrackSource.netease ? '网易云' : '酷狗';
-
-  Future<void> _chooseSource(BuildContext context, WidgetRef ref) async {
-    final query = ref.read(musicSearchControllerProvider).query;
-    final owner = ref.read(platformAccountProvider).value;
-    final identity = (owner?.ownerId, owner?.token);
-    final selected = await showLiquidGlassBottomSheet<Track>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      builder: (sheet) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(padding: EdgeInsets.all(20), child: Text('选择音源')),
-          for (final value in sources)
-            ListTile(
-              title: Text(
-                [
-                  _source(value),
-                  facts[value.id]?.label ?? '',
-                ].where((s) => s.isNotEmpty).join(' · '),
-              ),
-              subtitle: Text('${value.artist} · ${value.album}'),
-              trailing: value.id == track.id
-                  ? const Icon(Icons.check_rounded)
-                  : null,
-              onTap: () => Navigator.of(sheet).pop(value),
-            ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-    if (!context.mounted ||
-        selected == null ||
-        ref.read(musicSearchControllerProvider).query != query) {
-      return;
-    }
-    final now = ref.read(platformAccountProvider).value;
-    if ((now?.ownerId, now?.token) != identity) return;
-    // A stale sheet cannot insert a song after its account/query was replaced.
-    if (!(ref.read(musicSearchControllerProvider).sourceChoices[track.id] ??
-            const <Track>[])
-        .any((t) => t.id == selected.id)) {
-      return;
-    }
-    ref
-        .read(musicSearchControllerProvider.notifier)
-        .chooseSongSource(track.id, selected);
-    await playBetaSelection(context, ref, selected);
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -325,7 +349,7 @@ class _SearchSongRow extends ConsumerWidget {
       if (sources.length > 1)
         IconButton(
           tooltip: '选择音源（${sources.length}）',
-          onPressed: () => _chooseSource(context, ref),
+          onPressed: () => onChooseSource(track, sources, facts),
           icon: const Icon(Icons.library_music_outlined, size: 21),
         ),
       FavoriteToggleButton(track: track, compact: true),
@@ -390,7 +414,7 @@ class _SearchSongRow extends ConsumerWidget {
                                 if (sources.isNotEmpty)
                                   Text(
                                     [
-                                      _source(track),
+                                      _songSourceLabel(track),
                                       facts[track.id]?.label ?? '',
                                     ].where((s) => s.isNotEmpty).join(' · '),
                                     // Provenance and access status remain

@@ -8,10 +8,17 @@ void main() {
     'all public versions have offline history and current APK notes match',
     () {
       final version = RegExp(
-        r'^version: (1\.0\.(\d+))\+(\d+)$',
+        r'^version: (\d+\.\d+\.\d+)\+(\d+)$',
         multiLine: true,
       ).firstMatch(File('pubspec.yaml').readAsStringSync())!;
-      for (var n = 1; n <= int.parse(version[2]!); n++) {
+      // A minor-version rollover must preserve the entire 1.0 history, rather
+      // than interpreting 1.1.0 as an empty range of historical patch releases.
+      final legacyLast = musicReleaseNotes.keys
+          .map((key) => RegExp(r'^1\.0\.(\d+)$').firstMatch(key))
+          .whereType<RegExpMatch>()
+          .map((match) => int.parse(match[1]!))
+          .fold<int>(0, (last, patch) => patch > last ? patch : last);
+      for (var n = 1; n <= legacyLast; n++) {
         // v38 was a private native-debug candidate, never a public code59
         // delivery. Historical notes must not fabricate a formal release.
         if (n == 38) continue;
@@ -24,7 +31,7 @@ void main() {
           jsonDecode(File('assets/data/release-notes.json').readAsStringSync())
               as Map;
       expect(json['version'], version[1]);
-      expect(json['versionCode'], int.parse(version[3]!));
+      expect(json['versionCode'], int.parse(version[2]!));
       expect(json['releaseNotes'], notesForMusicVersion(version[1]!));
       expect(notesForMusicVersion('9.9.9'), isEmpty);
       expect(notesForMusicVersion('1.0.38'), isEmpty);

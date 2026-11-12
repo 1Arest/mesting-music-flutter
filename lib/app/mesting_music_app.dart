@@ -16,6 +16,7 @@ import '../features/downloads/download_source_coordinator.dart';
 import '../features/music_platform/netease/netease_listening_reporter.dart';
 import '../features/music_platform/netease/together/netease_together_controller.dart';
 import 'dart:async';
+import '../features/notifications/notification_coordinator.dart';
 
 import 'package:flutter/material.dart';
 import '../features/music_platform/presentation/song_list_tools_host.dart';
@@ -266,7 +267,9 @@ class MestingMusicApp extends ConsumerWidget {
                   enabled: DistributionChannel.isBeta,
                   child: LyricsOverlayCoordinator(
                     child: SongListToolsHost(
-                      child: child ?? const SizedBox.shrink(),
+                      child: DistributionChannel.isBeta
+                          ? MusicNotificationCoordinator(child: child ?? const SizedBox.shrink())
+                          : child ?? const SizedBox.shrink(),
                     ),
                   ),
                 ),

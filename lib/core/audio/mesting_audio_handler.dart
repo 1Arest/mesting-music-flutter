@@ -967,6 +967,15 @@ class MestingAudioHandler extends BaseAudioHandler
         );
       }
       rethrow;
+    } finally {
+      // An abandoned UI owner can return after publishing loading. Only clear
+      // this load's marker; a newer selection retains its own pending state.
+      if (_pendingQueueEpoch == loadEpoch) {
+        _pendingQueueEpoch = null;
+        if (loadEpoch == _queueLoadEpoch) {
+          _broadcastState(_player.playbackEvent);
+        }
+      }
     }
   }
 

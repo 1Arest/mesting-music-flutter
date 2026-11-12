@@ -27,6 +27,7 @@ import 'theme_controller.dart';
 import 'music_theme_tokens.dart';
 import 'startup_style_picker.dart';
 import 'music_typography.dart';
+import 'music_application_theme.dart';
 
 export 'progress_decoration_picker.dart' show ProgressDecorationPicker;
 
@@ -109,6 +110,10 @@ Future<void> showDressUpCenterSheet(BuildContext context) {
     showShadow: false,
     showDecorativeGlow: false,
     blurSigma: 0,
+    // Appearance belongs to the app, not the Theme captured when this route
+    // opened (or the player's local dark palette). Keep the same route/state
+    // and resolve its live theme for both the surface and its descendants.
+    themeBuilder: MusicApplicationTheme.of,
     surfaceColorBuilder: (sheetContext) =>
         sheetContext.musicThemeTokens.glassStrong.withValues(alpha: 1),
     builder: (context) => const FractionallySizedBox(

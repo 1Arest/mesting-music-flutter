@@ -8,6 +8,7 @@ import 'credential_failure.dart';
 import 'retained_secure_read.dart';
 import 'retained_secure_storage.dart';
 import 'android_credential_archive.dart';
+import 'credential_mutation_signal.dart';
 
 /// Recovery has separate data, wrapped keys, configuration and KeyStore aliases.
 /// It is used only after an explicit, platform-verified login. Existing encrypted
@@ -58,6 +59,11 @@ class RetainedCredentialVault {
   final AndroidCredentialArchive? archive;
   final Set<String> _checked = {}, _active = {};
   final Map<String, String?> _recoveryValues = {};
+
+  /// Background readers must re-open the committed archive, rather than reuse
+  /// the UI isolate's recovered value after another engine changed an account.
+  Future<String?> readFresh(String key) =>
+      RetainedCredentialVault._(primary, recovery, archive).read(key);
 
   String _platform(String key) => key.contains('netease') ? 'netease' : 'kugou';
 
@@ -144,6 +150,7 @@ class RetainedCredentialVault {
   }
 
   Future<void> write(String key, String value) async {
+    await CredentialMutationSignal.emit(key);
     // Resolve the actual owner before the first write to a different platform.
     // Otherwise a retained archive could be shadowed by a write to legacy data.
     final previous = await read(key);
@@ -173,6 +180,7 @@ class RetainedCredentialVault {
   /// Only a verified login may create this overlay. Rollback touches solely the
   /// newly created recovery entry, leaving every legacy key/account unchanged.
   Future<CredentialRecoveryWrite> recover(String key, String value) async {
+    await CredentialMutationSignal.emit(key);
     if (archive != null) {
       // A fresh verified login must never read either failed old cipher first.
       // Its receipt can restore the previous pointer without decrypting it.
@@ -223,6 +231,7 @@ class RetainedCredentialVault {
   }
 
   Future<void> clear(String key) async {
+    await CredentialMutationSignal.emit(key);
     await read(key);
     if (_active.contains(key)) {
       // A tombstone prevents old retained credentials resurfacing after logout.

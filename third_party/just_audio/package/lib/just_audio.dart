@@ -3643,9 +3643,12 @@ class LockCachingAudioSource extends StreamAudioSource {
     final sourceLength =
         response.contentLength == -1 ? null : response.contentLength;
     final mimeType = response.headers.contentType.toString();
-    final acceptRanges = response.headers.value(HttpHeaders.acceptRangesHeader);
+    // CDNs may repeat this header or combine its values. HttpHeaders.value
+    // throws for repeated values, turning otherwise playable audio into a 500.
     final originSupportsRangeRequests =
-        acceptRanges != null && acceptRanges != 'none';
+        (response.headers[HttpHeaders.acceptRangesHeader] ?? const <String>[])
+            .expand((value) => value.split(','))
+            .any((unit) => unit.trim().toLowerCase() == 'bytes');
     final mimeFile = await _mimeFile;
     await mimeFile.writeAsString(mimeType);
     final inProgressResponses = <_InProgressCacheResponse>[];

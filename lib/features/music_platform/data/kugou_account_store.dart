@@ -147,6 +147,17 @@ class SecureKugouAccountStore
     return _vault.read(key);
   }
 
+  /// Read a committed selected login without migrating, registering a device,
+  /// or writing account storage. Safe for a short-lived background engine.
+  Future<PlatformSession?> readRetained() async {
+    final raw = await _vault.readFresh(key);
+    if (raw != null) return _decode(raw).selected;
+    final legacy = await _vault.readFresh(SecurePlatformSessionStore.key);
+    return legacy == null
+        ? null
+        : PlatformSession.fromJson(jsonDecode(legacy) as Map<String, dynamic>);
+  }
+
   Future<void> _writeRaw(String raw, {String? previous}) async {
     try {
       await _vault.write(key, raw);

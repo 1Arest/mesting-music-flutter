@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="favorites" android:enabled="true"
+        android:icon="@drawable/ic_shortcut_favorites"
+        android:shortcutShortLabel="@string/shortcut_favorites">
+        <intent android:action="com.mesting.music.SHORTCUT_FAVORITES"
+            android:targetPackage="@string/mesting_shortcut_package"
+            android:targetClass="com.mesting.music.MusicEntryActivity">
+            <extra android:name="mesting_entry" android:value="favorites" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="recognize" android:enabled="true"
+        android:icon="@drawable/ic_shortcut_recognize"
+        android:shortcutShortLabel="@string/shortcut_recognize">
+        <intent android:action="com.mesting.music.SHORTCUT_RECOGNIZE"
+            android:targetPackage="@string/mesting_shortcut_package"
+            android:targetClass="com.mesting.music.MusicEntryActivity">
+            <extra android:name="mesting_entry" android:value="recognize" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="search" android:enabled="true"
+        android:icon="@drawable/ic_shortcut_search"
+        android:shortcutShortLabel="@string/shortcut_search">
+        <intent android:action="com.mesting.music.SHORTCUT_SEARCH"
+            android:targetPackage="@string/mesting_shortcut_package"
+            android:targetClass="com.mesting.music.MusicEntryActivity">
+            <extra android:name="mesting_entry" android:value="search" />
+        </intent>
+    </shortcut>
+</shortcuts>

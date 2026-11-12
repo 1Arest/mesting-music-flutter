@@ -4,6 +4,44 @@
          permission is requested, and stable keeps its original manifest. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Persisted notification jobs are restored by Android after reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <application android:name="com.mesting.music.MestingApplication"
-        tools:replace="android:name" />
+        tools:replace="android:name">
+        <activity android:name=".MusicEntryActivity" android:exported="true"
+            android:excludeFromRecents="true" android:noHistory="true" android:taskAffinity=""
+            android:theme="@android:style/Theme.NoDisplay" />
+        <service android:name=".MusicNoticeJobService" android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <activity android:name=".CoralBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity>
+        <activity-alias android:name=".CoralLauncher" android:targetActivity=".CoralBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity-alias>
+        <activity android:name=".CoralLightBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity>
+        <activity-alias android:name=".CoralLightLauncher" android:targetActivity=".CoralLightBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity-alias>
+        <activity android:name=".CoralDarkBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity>
+        <activity-alias android:name=".CoralDarkLauncher" android:targetActivity=".CoralDarkBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity-alias>
+        <activity android:name=".MorningMistBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity>
+        <activity-alias android:name=".MorningMistLauncher" android:targetActivity=".MorningMistBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity-alias>
+        <activity android:name=".MidnightVinylBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity>
+        <activity-alias android:name=".MidnightVinylLauncher" android:targetActivity=".MidnightVinylBrandActivity">
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/music_shortcuts" />
+        </activity-alias>
+    </application>
 </manifest>

@@ -118,6 +118,9 @@ open class MainActivity : AudioServiceActivity() {
         if (!flutterEngine.plugins.has(MusicHttpPlugin::class.java)) {
             flutterEngine.plugins.add(MusicHttpPlugin())
         }
+        if (!flutterEngine.plugins.has(MusicNotificationPlugin::class.java)) {
+            flutterEngine.plugins.add(MusicNotificationPlugin())
+        }
         // The cached audio engine outlives this Activity. Its Together bridge
         // must detach with that engine, never when the UI merely backgrounds.
         if (!flutterEngine.plugins.has(TogetherBackgroundPlugin::class.java)) {

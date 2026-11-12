@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'features/notifications/notification_runner.dart';
 import 'shared/media/persistent_network_image_cache.dart';
 import 'shared/media/artwork_refresh_coordinator.dart';
 import 'core/cache/browse_response_cache.dart';
@@ -29,6 +30,13 @@ import 'features/themes/app_brand_style.dart';
 import 'features/themes/theme_controller.dart';
 import 'features/themes/startup_style.dart';
 import 'shared/models/track.dart';
+
+/// Retained by AOT for the Android system job; deliberately avoids main().
+@pragma('vm:entry-point')
+Future<void> notificationBackgroundMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await runBackgroundNotices();
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

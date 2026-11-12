@@ -26,6 +26,7 @@ import '../../../shared/widgets/beta_glass_controls.dart';
 import '../../auth/presentation/beta_onboarding_page.dart';
 import '../../auth/presentation/beta_welcome_page.dart';
 import 'haptic_settings_page.dart';
+import '../../notifications/notification_pages.dart';
 import 'frame_diagnostics_page.dart';
 import '../../music_platform/listening_sync_page.dart';
 import 'music_equalizer_page.dart';
@@ -93,6 +94,19 @@ class SettingsPage extends ConsumerWidget {
                               betaEntryRoute<void>(const HapticSettingsPage()),
                             ),
                       ),
+                    if (DistributionChannel.isBeta && !ref.watch(qishuiNavigationProvider)) ...[
+                      const _SettingsDivider(),
+                      _SettingsTile(
+                        key: const ValueKey('settings-notifications'),
+                        icon: Icons.notifications_none_rounded,
+                        iconColor: const Color(0xFF527FD3),
+                        title: '消息与通知',
+                        subtitle: '网易云、酷狗消息与分类提醒',
+                        onTap: () => Navigator.of(context).push(
+                          betaEntryRoute<void>(const MusicNotificationSettingsPage()),
+                        ),
+                      ),
+                    ],
                     if (DistributionChannel.isBeta) const _SettingsDivider(),
                   ],
                 ),

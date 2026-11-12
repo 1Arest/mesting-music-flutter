@@ -50,6 +50,10 @@ android {
         // Explicit, profile-only sandbox. Release entry points cannot inherit
         // a benchmark identity or renderer override from a forgotten env var.
         val sandbox = benchmarkBuild
+        // Static shortcuts must target the actual installed package, including
+        // isolated profile builds that intentionally use a different identity.
+        resValue("string", "mesting_shortcut_package", if (sandbox)
+            "com.mesting.music.beta.benchmark" else "com.mesting.music")
         if (sandbox && gradle.startParameter.taskNames.none { it.contains("Profile", ignoreCase = true) }) {
             throw GradleException("mestingBenchmark is allowed only for profile builds")
         }

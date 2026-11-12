@@ -3,6 +3,7 @@ import '../../features/music_platform/qishui/qishui_pages.dart';
 import '../../shared/widgets/beta_page_motion.dart';
 import '../../shared/widgets/beta_page_route_observer.dart';
 import 'beta_tab_shell.dart';
+import '../../features/notifications/notification_pages.dart';
 import '../../features/player/presentation/now_playing_route.dart';
 import '../../features/experience/presentation/playback_pill_menu.dart';
 import '../../features/music_platform/data/platform_category_search.dart';
@@ -149,6 +150,14 @@ List<RouteBase> _musicShellRoutes() {
       path: '/music/queue',
       pageBuilder: (context, state) =>
           _musicSlidePage(state: state, child: const QueuePage()),
+    ),
+    GoRoute(
+      path: '/music/notifications',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: MusicNotificationInboxPage(platform: state.uri.queryParameters['platform'],
+          noticeId: state.uri.queryParameters['notice']),
+      ),
     ),
     GoRoute(
       path: '/music/search',
