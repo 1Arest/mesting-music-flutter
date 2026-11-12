@@ -116,8 +116,29 @@ class AudioPlayer {
   String? _id;
   // Local Android-only extension: a stable logical owner survives the native
   // player's lazy disposal/recreation. All other platforms keep upstream code.
-  final String? _androidAudioOutputOwner;
+  String? _androidAudioOutputOwner;
+  Map<String, Object?>? _musicLoudness;
   String? _sodaEffectConfig;
+
+  /// Internal music-owner handoff: observers follow the active decoder while
+  /// its predecessor drains. Non-Android players retain upstream behavior.
+  Future<void> setMusicOutputOwner(String owner) async {
+    _androidAudioOutputOwner = owner;
+    if (!_isAndroid() || !_active || _disposed) return;
+    final platform = await _platform;
+    await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
+        .invokeMethod<void>('mestingSetOutputOwner', {'owner': owner});
+  }
+  Future<void> configureMusicLoudness({required String key, required bool enabled,
+      required int durationMs, bool invalidate = false}) async {
+    final config = <String, Object?>{'key': key, 'enabled': enabled,
+      'durationMs': durationMs, 'invalidate': invalidate};
+    if (!invalidate) _musicLoudness = config;
+    if (!_isAndroid() || !_active || _disposed) return;
+    final platform = await _platform;
+    await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
+        .invokeMethod<void>('mestingLoudness', config);
+  }
 
   /// Local music-owner extension. Configuration is reapplied if this same
   /// logical player lazily recreates its Android decoder after stop().
@@ -1738,6 +1759,10 @@ class AudioPlayer {
           await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
               .invokeMethod<void>(
                   'mestingSetOutputOwner', {'owner': _androidAudioOutputOwner});
+          if (_musicLoudness != null) {
+            await MethodChannel('com.ryanheise.just_audio.methods.${platform.id}')
+                .invokeMethod<void>('mestingLoudness', _musicLoudness);
+          }
           if (_sodaEffectConfig != null) {
             await MethodChannel(
                     'com.ryanheise.just_audio.methods.${platform.id}')

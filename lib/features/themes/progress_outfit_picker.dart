@@ -100,52 +100,88 @@ class _ProgressOutfitPickerState extends ConsumerState<ProgressOutfitPicker> {
               label: Text(_catalogOpen ? '收起角色与轨道' : '选择角色与轨道'),
             ),
           ),
-        if (!widget.collapsible || _catalogOpen) ...[
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              key: const ValueKey('progress-outfit-customize'),
-              onPressed: _saving
-                  ? null
-                  : () => setState(() => _customizing = !_customizing),
-              icon: Icon(
-                _customizing ? Icons.check_rounded : Icons.tune_rounded,
+        TweenAnimationBuilder<double>(
+          tween: Tween(
+            begin: !widget.collapsible || _catalogOpen ? 1.0 : 0.0,
+            end: !widget.collapsible || _catalogOpen ? 1.0 : 0.0,
+          ),
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          // Retain the catalog while animating, then remove the fully closed
+          // subtree from layout and accessibility traversal.
+          builder: (context, factor, child) => Offstage(
+            offstage: factor == 0,
+            child: TickerMode(
+              enabled: factor > 0,
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  heightFactor: factor,
+                  child: child,
+                ),
               ),
-              label: Text(_customizing ? '完成搭配' : '自定义搭配'),
             ),
           ),
-          Text(
-            _customizing ? '自定义轨道' : '选择角色',
-            style: const TextStyle(fontWeight: MusicTypography.titleWeight),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            _customizing ? '只更换轨道，保留当前角色。' : '选择角色时，会同时搭配同系列轨道。',
-            style: TextStyle(
-              fontSize: MusicTypography.footnoteSize,
-              color: scheme.onSurfaceVariant,
+          child: IgnorePointer(
+            ignoring: widget.collapsible && !_catalogOpen,
+            child: ExcludeSemantics(
+              excluding: widget.collapsible && !_catalogOpen,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      key: const ValueKey('progress-outfit-customize'),
+                      onPressed: _saving
+                          ? null
+                          : () => setState(() => _customizing = !_customizing),
+                      icon: Icon(
+                        _customizing ? Icons.check_rounded : Icons.tune_rounded,
+                      ),
+                      label: Text(_customizing ? '完成搭配' : '自定义搭配'),
+                    ),
+                  ),
+                  Text(
+                    _customizing ? '自定义轨道' : '选择角色',
+                    style: const TextStyle(
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _customizing ? '只更换轨道，保留当前角色。' : '选择角色时，会同时搭配同系列轨道。',
+                    style: TextStyle(
+                      fontSize: MusicTypography.footnoteSize,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  IgnorePointer(
+                    ignoring: _saving,
+                    child: ProgressDecorationPicker(
+                      selected: _customizing ? style : character,
+                      character: !_customizing,
+                      preset: preset,
+                      onSelected: _select,
+                    ),
+                  ),
+                  if (!_customizing &&
+                      DistributionChannel.isBeta &&
+                      character == ProgressDecoration.shinchan) ...[
+                    const SizedBox(height: 18),
+                    ShinchanWeatherPicker(
+                      selected:
+                          settings.shinchanWeather ??
+                          shinchanWeatherForPreset(preset.id),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
-          IgnorePointer(
-            ignoring: _saving,
-            child: ProgressDecorationPicker(
-              selected: _customizing ? style : character,
-              character: !_customizing,
-              preset: preset,
-              onSelected: _select,
-            ),
-          ),
-          if (!_customizing &&
-              DistributionChannel.isBeta &&
-              character == ProgressDecoration.shinchan) ...[
-            const SizedBox(height: 18),
-            ShinchanWeatherPicker(
-              selected:
-                  settings.shinchanWeather ??
-                  shinchanWeatherForPreset(preset.id),
-            ),
-          ],
-        ],
+        ),
       ],
     );
   }

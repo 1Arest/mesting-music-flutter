@@ -31,10 +31,16 @@ void paintMusicSpectrumRing(
   final points = List<Offset>.generate(_directions.length, (index) {
     final progress = index / _directions.length;
     final band = 1 - (2 * progress - 1).abs();
+    // Each position follows its own measured frequency band. Low-frequency
+    // impacts expand the ring, while high-frequency detail shapes its sides.
+    final spectrum = math.pow(frame.bandAt(band), 1.35).toDouble();
     final energy =
-        .22 * frame.level +
-        .60 * frame.bandAt(band) +
-        .18 * frame.pulse * (1 - band);
+        (.16 * frame.level +
+                .62 * spectrum +
+                .14 * frame.bass * (1 - band) +
+                .25 * frame.treble * band +
+                .38 * frame.pulse * (1 - band * .45))
+            .clamp(0.0, 1.0);
     return center + _directions[index] * (radius + reach * energy);
   }, growable: false);
   final first = (points.last + points.first) / 2;

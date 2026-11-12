@@ -3,21 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/audio/playback_providers.dart';
 import '../../music_platform/presentation/platform_feedback.dart';
+import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../lyric_timing.dart';
 
-/// Compact controls leave the playing lyrics visible while adjusting timing.
-class LyricTimingTools extends ConsumerStatefulWidget {
-  const LyricTimingTools({required this.child, super.key});
-  final Widget child;
+/// Uses the existing player menu; lyrics never allocate a second more button.
+Future<void> showLyricTimingSheet(BuildContext context) =>
+    showLiquidGlassBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (_) => const LyricTimingPanel(),
+    );
 
+class LyricTimingPanel extends ConsumerStatefulWidget {
+  const LyricTimingPanel({super.key});
   @override
-  ConsumerState<LyricTimingTools> createState() => _LyricTimingToolsState();
+  ConsumerState<LyricTimingPanel> createState() => _LyricTimingPanelState();
 }
 
-class _LyricTimingToolsState extends ConsumerState<LyricTimingTools> {
-  bool _open = false;
+class _LyricTimingPanelState extends ConsumerState<LyricTimingPanel> {
   bool _saving = false;
-  String? _song;
 
   Future<void> _adjust(String song, int? delta) async {
     if (_saving) return;
@@ -39,10 +45,6 @@ class _LyricTimingToolsState extends ConsumerState<LyricTimingTools> {
   @override
   Widget build(BuildContext context) {
     final song = lyricTimingKey(ref.watch(currentTrackProvider));
-    if (_song != song) {
-      _song = song;
-      _open = false;
-    }
     final offset = ref.watch(lyricTimingProvider(song));
     final synced =
         ref.watch(currentTimedLyricsProvider).value?.isSynced == true;
@@ -50,67 +52,54 @@ class _LyricTimingToolsState extends ConsumerState<LyricTimingTools> {
     final label =
         '${milliseconds > 0 ? '+' : ''}${(milliseconds / 1000).toStringAsFixed(1)} 秒';
     final ready = !_saving && offset.hasValue;
-    return Stack(
-      children: [
-        Positioned.fill(child: widget.child),
-        if (synced)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: IconButton(
-              tooltip: '歌词时间调整',
-              onPressed: () => setState(() => _open = !_open),
-              icon: const Icon(Icons.more_horiz_rounded, color: Colors.white70),
-            ),
-          ),
-        if (_open && synced)
-          Positioned(
-            right: 4,
-            top: 46,
-            bottom: 4,
-            child: Center(
-              child: Material(
-                color: const Color(0xE6222228),
-                borderRadius: BorderRadius.circular(16),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: ready ? () => _adjust(song, -500) : null,
-                        child: const Text('−0.5 秒'),
-                      ),
-                      TextButton(
-                        onPressed: ready && milliseconds != 0
-                            ? () => _adjust(song, null)
-                            : null,
-                        child: const Text('还原'),
-                      ),
-                      TextButton(
-                        onPressed: ready ? () => _adjust(song, 500) : null,
-                        child: const Text('＋0.5 秒'),
-                      ),
-                      IconButton(
-                        tooltip: '关闭歌词时间调整',
-                        color: Colors.white,
-                        onPressed: () => setState(() => _open = false),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('歌词时间调整', style: TextStyle(fontSize: 20)),
                 ),
-              ),
+                IconButton(
+                  tooltip: '关闭歌词时间调整',
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
             ),
-          ),
-      ],
+            const SizedBox(height: 12),
+            Text(label, style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 8),
+            const Text('负值提前，正值延后；仅保存在本机当前歌曲'),
+            const SizedBox(height: 16),
+            if (!synced) const Text('当前歌曲没有可调整时间的同步歌词'),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: ready && synced ? () => _adjust(song, -500) : null,
+                  child: const Text('−0.5 秒'),
+                ),
+                TextButton(
+                  onPressed: ready && synced && milliseconds != 0
+                      ? () => _adjust(song, null)
+                      : null,
+                  child: const Text('还原'),
+                ),
+                TextButton(
+                  onPressed: ready && synced ? () => _adjust(song, 500) : null,
+                  child: const Text('＋0.5 秒'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

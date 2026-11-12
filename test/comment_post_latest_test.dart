@@ -123,6 +123,51 @@ class _Netease extends NeteaseCommentsRepository {
 
 void main() {
   setUpAll(LiquidGlassWidgets.initialize);
+  testWidgets(
+    'comment rows are prepared fifteen at a time during downward browsing',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repository = _Kugou(_Feed());
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            showPlatformFeaturesProvider.overrideWithValue(true),
+            platformAccountProvider.overrideWith(_Account.new),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+          ],
+          child: LiquidGlassWidgets.wrap(
+            brightnessResolver: Theme.maybeBrightnessOf,
+            adaptiveQuality: false,
+            child: MaterialApp(
+              home: PlatformCommentsPage(
+                repository: repository,
+                resource: _resource,
+                sourceCurrent: () => true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('comment-reveal-old-14')),
+        findsOneWidget,
+      );
+      final scroll = tester.widget<ListView>(find.byType(ListView)).controller!;
+      scroll.jumpTo(1400);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('comment-reveal-old-29')),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   for (final netease in [false, true]) {
     for (final failure in [false, true]) {
       testWidgets(

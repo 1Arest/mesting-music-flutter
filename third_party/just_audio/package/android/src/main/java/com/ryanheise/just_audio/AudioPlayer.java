@@ -84,6 +84,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
     private String outputOwner;
     private final SodaAudioProcessor sodaAudioProcessor;
     private final RhythmAudioProcessor rhythmAudioProcessor = new RhythmAudioProcessor();
+    private final MusicLoudnessProcessor musicLoudnessProcessor;
     private volatile android.media.AudioTrack outputTrack;
     private final MethodChannel methodChannel;
     private final BetterEventChannel eventChannel;
@@ -159,6 +160,7 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
     ) {
         this.context = applicationContext;
         this.sodaAudioProcessor = new SodaAudioProcessor(applicationContext);
+        this.musicLoudnessProcessor = new MusicLoudnessProcessor(applicationContext);
         this.rawAudioEffects = rawAudioEffects;
         this.offloadSchedulingEnabled = offloadSchedulingEnabled != null ? offloadSchedulingEnabled : false;
         this.useLazyPreparation = useLazyPreparation;
@@ -440,6 +442,11 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
 
     @Override
     public void onMethodCall(final MethodCall call, final Result result) {
+        if ("mestingLoudness".equals(call.method)) {
+            Number duration = call.argument("durationMs");
+            musicLoudnessProcessor.select(call.argument("key"), Boolean.TRUE.equals(call.argument("enabled")), duration == null ? 0 : duration.longValue(), Boolean.TRUE.equals(call.argument("invalidate")));
+            result.success(null); return;
+        }
         if ("mestingSodaEffect".equals(call.method)) {
             if (outputOwner == null) { result.error("owner", "Music owner required", null); return; }
             result.success(sodaAudioProcessor.select(call.argument("config")));
@@ -452,7 +459,15 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
         // Bind before lazy ExoPlayer initialization so only the music owner's
         // renderer gets routing observation; chat/video players stay upstream.
         if ("mestingSetOutputOwner".equals(call.method)) {
-            outputOwner = call.argument("owner");
+            String nextOwner = call.argument("owner");
+            if ("mesting-prepared".equals(nextOwner)) MestingAudioOutput.inheritPreference("mesting-music", nextOwner);
+            if ("mesting-tail".equals(nextOwner)) MestingAudioOutput.inheritPreference(outputOwner, nextOwner);
+            if (outputOwner != null && player != null) MestingAudioOutput.releasePlayer(outputOwner, player, outputTrack);
+            outputOwner = nextOwner;
+            if (outputOwner != null && player != null) {
+                MestingAudioOutput.attachPlayer(outputOwner, player);
+                if (outputTrack != null) MestingAudioOutput.observeTrack(outputOwner, outputTrack);
+            }
             result.success(null);
             return;
         }
@@ -815,7 +830,8 @@ public class AudioPlayer implements MethodCallHandler, Player.Listener, Metadata
                         // Delegate all decoding/buffering to Media3. Observe
                         // its actual AudioTrack, never reflection or a probe player.
                         AudioSink sink = new DefaultAudioSink.Builder(sinkContext)
-                            .setAudioProcessors(new androidx.media3.common.audio.AudioProcessor[] { sodaAudioProcessor, rhythmAudioProcessor })
+                            // Measure music loudness before DSP; visualize the PCM actually sent to the sink.
+                            .setAudioProcessors(new androidx.media3.common.audio.AudioProcessor[] { musicLoudnessProcessor, sodaAudioProcessor, rhythmAudioProcessor })
                             .setEnableFloatOutput(floatOutput)
                             .setEnableAudioOutputPlaybackParameters(playbackParams)
                             .setAudioTrackProvider((config, attributes, sessionId, trackContext) -> {

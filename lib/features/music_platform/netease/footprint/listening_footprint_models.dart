@@ -1,3 +1,4 @@
+import 'official_report_extras.dart';
 import 'official_footprint.dart';
 
 /// Public listen-home contracts, independently of local playback diagnostics.
@@ -118,11 +119,13 @@ class OfficialListeningReport {
     required this.days,
     this.listenDays,
     this.todayListening,
+    this.extras = const OfficialReportExtras(),
   });
   final OfficialListenPeriod period;
   final Map<String, OfficialFootprintDay> days;
   final int? listenDays;
   final OfficialTodayListening? todayListening;
+  final OfficialReportExtras extras;
 
   factory OfficialListeningReport.parse(Object? response) {
     // The established parser owns date validity, duplicate-day rejection and
@@ -164,6 +167,7 @@ class OfficialListeningReport {
           ? null
           : _integer(block['listenDays'], max: 366),
       todayListening: today,
+      extras: OfficialReportExtras.parse(data),
     );
   }
 

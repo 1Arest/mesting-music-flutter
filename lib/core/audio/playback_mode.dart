@@ -1,9 +1,11 @@
 enum PlaybackMode {
+  sequential,
   list,
   single,
   random;
 
   String get label => switch (this) {
+    PlaybackMode.sequential => '顺序播放',
     PlaybackMode.list => '列表循环',
     PlaybackMode.single => '单曲循环',
     PlaybackMode.random => '随机播放',
@@ -13,8 +15,8 @@ enum PlaybackMode {
       PlaybackMode.values[(index + 1) % PlaybackMode.values.length];
 }
 
-/// Repeat and shuffle are orthogonal. The legacy three-state projection stays
-/// available to older menus and persisted Beta.15 sessions.
+/// System repeat/shuffle remain independent; app menus expose four clear modes.
+/// Existing three-mode and v2 sessions still retain their saved preference.
 enum PlaybackRepeat {
   off,
   all,
@@ -28,18 +30,18 @@ enum PlaybackRepeat {
 }
 
 class PlaybackOrder {
-  const PlaybackOrder({this.repeat = PlaybackRepeat.all, this.shuffle = false});
+  const PlaybackOrder({this.repeat = PlaybackRepeat.off, this.shuffle = false});
   final PlaybackRepeat repeat;
   final bool shuffle;
 
   /// Shared wording for the queue controls, their HUD and the toolbar badge.
-  String get label => shuffle
-      ? '随机播放，${repeat == PlaybackRepeat.off ? '不循环' : repeat.label}'
-      : repeat.label;
+  String get label => legacy.label;
   PlaybackMode get legacy => repeat == PlaybackRepeat.one
       ? PlaybackMode.single
       : shuffle
       ? PlaybackMode.random
+      : repeat == PlaybackRepeat.off
+      ? PlaybackMode.sequential
       : PlaybackMode.list;
   PlaybackOrder copyWith({PlaybackRepeat? repeat, bool? shuffle}) =>
       PlaybackOrder(
@@ -50,6 +52,8 @@ class PlaybackOrder {
   static PlaybackOrder fromLegacy(PlaybackMode mode) => PlaybackOrder(
     repeat: mode == PlaybackMode.single
         ? PlaybackRepeat.one
+        : mode == PlaybackMode.sequential
+        ? PlaybackRepeat.off
         : PlaybackRepeat.all,
     shuffle: mode == PlaybackMode.random,
   );
@@ -59,7 +63,7 @@ class PlaybackOrder {
       return PlaybackOrder(
         repeat: PlaybackRepeat.values.firstWhere(
           (r) => r.name == parts[1],
-          orElse: () => PlaybackRepeat.all,
+          orElse: () => PlaybackRepeat.off,
         ),
         shuffle: parts[2] == '1',
       );
@@ -67,7 +71,7 @@ class PlaybackOrder {
     return fromLegacy(
       PlaybackMode.values.firstWhere(
         (m) => m.name == value,
-        orElse: () => PlaybackMode.list,
+        orElse: () => PlaybackMode.sequential,
       ),
     );
   }

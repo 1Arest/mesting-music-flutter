@@ -26,6 +26,7 @@ class MusicRhythmFrame {
   final bool available;
 
   double get bass => bands.take(3).fold(0.0, math.max);
+  double get treble => bands.skip(8).fold(0.0, math.max);
 
   double bandAt(double fraction) {
     if (bands.isEmpty) return 0;
@@ -40,10 +41,12 @@ class MusicRhythmFrame {
       final v = value is num ? value.toDouble() : 0.0;
       if (!v.isFinite || v <= .0001) return 0;
       // A decibel scale keeps quiet passages visible without flattening a beat.
-      return ((20 * math.log(v.clamp(.0001, 1)) / math.ln10 + 54) / 48).clamp(
-        0.0,
-        1.0,
-      );
+      final decibels =
+          ((20 * math.log(v.clamp(.0001, 1)) / math.ln10 + 60) / 54).clamp(
+            0.0,
+            1.0,
+          );
+      return math.pow(decibels, 1.65).toDouble();
     }
 
     if (data['available'] != true) return const MusicRhythmFrame();
@@ -131,12 +134,12 @@ class MusicRhythmSampler extends ValueNotifier<MusicRhythmFrame> {
     final rise = math.max(frame.level - _raw.level, frame.bass - _raw.bass);
     var pulse = value.pulse * .48;
     if (newFrame &&
-        rise > .085 &&
+        rise > .055 &&
         frame.level > .14 &&
         now - _lastOnsetMs >= 190) {
       _lastOnsetMs = now;
       _onset++;
-      pulse = (rise * 3.8).clamp(0.0, 1.0);
+      pulse = (rise * 5.4).clamp(0.0, 1.0);
     }
     _raw = frame;
     value = MusicRhythmFrame(

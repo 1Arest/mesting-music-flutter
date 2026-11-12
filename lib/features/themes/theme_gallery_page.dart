@@ -16,7 +16,6 @@ import '../../shared/widgets/beta_glass_action.dart';
 import '../../shared/widgets/liquid_glass_sheet.dart';
 import '../../core/platform/distribution_channel.dart';
 import '../player/presentation/player_visual_stages.dart';
-import '../player/presentation/vinyl_disc.dart';
 import '../player/player_visual_style.dart';
 import 'app_brand_style.dart';
 import 'beta_appearance.dart';
@@ -372,7 +371,7 @@ class _ThemeSettingsPanelState extends ConsumerState<_ThemeSettingsPanel> {
                       ListTile(
                         leading: const Icon(Icons.palette_outlined),
                         title: const Text('我的风格'),
-                        subtitle: const Text('免费配色、歌词、挂件、相框与听歌氛围'),
+                        subtitle: const Text('免费配色、歌词、挂件与听歌氛围'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () =>
                             Navigator.of(context, rootNavigator: true).push(
@@ -1138,69 +1137,24 @@ class _PlayerStylePreview extends StatelessWidget {
 class _ClassicPlayerStylePreview extends StatelessWidget {
   const _ClassicPlayerStylePreview({required this.active});
 
-  static const _tonearmAsset = 'assets/images/player/netease-style-tonearm.png';
   static const previewCover =
       'assets/images/theme_playlists/shinchan/cover-01.jpg';
   final bool active;
-
   @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFE1DDDE), Color(0xFFAAA4A6)],
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final shortest = constraints.biggest.shortestSide;
-          final recordSize = (shortest * .88).clamp(76.0, 104.0);
-          final tonearmWidth = recordSize * .34;
-          final tonearmHeight = recordSize * .55;
-          return Stack(
-            key: const ValueKey('classic-player-turntable-preview'),
-            clipBehavior: Clip.hardEdge,
-            children: [
-              Positioned(
-                left: (constraints.maxWidth - recordSize) / 2,
-                bottom: 5,
-                width: recordSize,
-                height: recordSize,
-                child: VinylDisc(
-                  key: const ValueKey('classic-player-preview-vinyl'),
-                  coverAsset: previewCover,
-                  playing: active,
-                  rotationDuration: const Duration(milliseconds: 2400),
-                  rotationCount: 1,
-                  labelSizeFactor: .6,
-                ),
-              ),
-              Positioned(
-                left: constraints.maxWidth * .51,
-                top: 2,
-                width: tonearmWidth,
-                height: tonearmHeight,
-                child: Transform.rotate(
-                  angle: -.05,
-                  alignment: const Alignment(-.78, -.86),
-                  child: Image.asset(
-                    _tonearmAsset,
-                    key: const ValueKey('classic-player-preview-tonearm'),
-                    fit: BoxFit.contain,
-                    cacheWidth: 192,
-                    filterQuality: FilterQuality.high,
-                    excludeFromSemantics: true,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => PlayerArtworkStage(
+    style: PlayerVisualStyle.classic,
+    track: Track(
+      id: 'classic-style-preview',
+      title: '黑胶唱片预览',
+      artist: '',
+      album: '',
+      duration: Duration.zero,
+      audioAsset: '',
+      coverAsset: previewCover,
+      lyricsAsset: '',
+    ),
+    playing: active,
+  );
 }
 
 class _IpCategoryCard extends StatelessWidget {

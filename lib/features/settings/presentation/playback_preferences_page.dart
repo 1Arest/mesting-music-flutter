@@ -1,3 +1,4 @@
+import 'playback_settings_page.dart';
 import '../../music_platform/music_platform_providers.dart';
 import '../../music_platform/domain/platform_session.dart';
 import 'package:audio_service/audio_service.dart';
@@ -124,7 +125,7 @@ class _PlaybackPreferencesPageState
                   ),
           ),
           const SizedBox(height: 8),
-          SwitchListTile(
+          SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             title: const Text('随机播放'),
             subtitle: const Text('与循环方式分别设置'),
@@ -133,6 +134,8 @@ class _PlaybackPreferencesPageState
                 ? null
                 : (v) => apply(() => handler.setShuffleEnabled(v)),
           ),
+          const SizedBox(height: 28),
+          const PlaybackSettingsPage(embedded: true),
         ],
       ),
     );

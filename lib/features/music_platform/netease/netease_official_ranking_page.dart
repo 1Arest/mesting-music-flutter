@@ -1,3 +1,5 @@
+import '../../../shared/widgets/music_refresh_indicator.dart';
+import '../../../shared/widgets/beta_glass_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -195,7 +197,7 @@ class _OfficialRankingPeriodState
   @override
   Widget build(BuildContext context) {
     final tracks = _items.map((row) => row.track).toList(growable: false);
-    return RefreshIndicator(
+    return MusicRefreshIndicator(
       onRefresh: _load,
       child: ListView(
         key: ValueKey(
@@ -210,7 +212,11 @@ class _OfficialRankingPeriodState
           BetaContentInsets.bottomOf(context, 32),
         ),
         children: [
-          if (_busy) const LinearProgressIndicator(),
+          if (_busy)
+            const Padding(
+              padding: EdgeInsets.all(28),
+              child: Center(child: BetaActivityIndicator()),
+            ),
           if (_error != null) ...[
             Text(_error!),
             TextButton(onPressed: _load, child: const Text('重新加载')),

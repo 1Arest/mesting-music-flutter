@@ -277,16 +277,6 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                               ),
                             ),
                         ],
-                        if (state.receivedBytes > 0 ||
-                            phase == AppUpdatePhase.downloading ||
-                            verifying) ...[
-                          const SizedBox(height: 22),
-                          AppleDownloadProgress(
-                            key: const ValueKey('app-update-progress'),
-                            receivedBytes: state.receivedBytes,
-                            totalBytes: state.totalBytes,
-                          ),
-                        ],
                       ],
                       if (current && releaseNotes.isNotEmpty) ...[
                         const SizedBox(height: 18),
@@ -316,6 +306,19 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (manifest != null &&
+                        !checking &&
+                        !current &&
+                        (state.receivedBytes > 0 ||
+                            phase == AppUpdatePhase.downloading ||
+                            verifying)) ...[
+                      AppleDownloadProgress(
+                        key: const ValueKey('app-update-progress'),
+                        receivedBytes: state.receivedBytes,
+                        totalBytes: state.totalBytes,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     BetaGlassButton(
                       key: const ValueKey('app-update-primary'),
                       blue: true,

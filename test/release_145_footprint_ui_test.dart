@@ -227,11 +227,11 @@ void main() {
       'official daily chart, selection and collapsing pinned segment dark=$dark',
       (tester) async {
         await mount(tester, dark: dark);
-        expect(find.text('累计听歌 5609 小时 16 分钟'), findsOneWidget);
+        expect(find.text('总时长 5609 小时 16 分钟'), findsOneWidget);
         expect(find.text('3 小时 15 分钟'), findsOneWidget);
         expect(find.text('收听了 3 天'), findsOneWidget);
         final title = find.byKey(const ValueKey('footprint-collapsing-title'));
-        expect(tester.widget<Text>(title).style!.fontSize, 34);
+        expect(tester.widget<Text>(title).style!.fontSize, 28);
         final plot = find.byKey(const ValueKey('footprint-chart-scrub'));
         final rect = tester.getRect(plot);
         await tester.tapAt(
@@ -350,7 +350,7 @@ void main() {
       await tester.pump();
       expect(find.text('请返回并选择网易云账号'), findsOneWidget);
       expect(find.text('3 小时 15 分钟'), findsNothing);
-      expect(find.text('累计听歌 5609 小时 16 分钟'), findsNothing);
+      expect(find.text('总时长 5609 小时 16 分钟'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

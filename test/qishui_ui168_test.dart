@@ -415,16 +415,37 @@ void main() {
     expect(find.byKey(const ValueKey('qishui-inline-lyrics')), findsOneWidget);
     expect(find.text('这是界面验证用歌词'), findsOneWidget);
     await shot(tester, 'music-inline-lyrics');
+    final player = container.read(audioHandlerProvider) as Player168;
     await tester.tap(find.byKey(const ValueKey('qishui-lyric-line-1')));
     await settle168(tester);
-    final player = container.read(audioHandlerProvider) as Player168;
+    expect(container.read(qishuiMusicLyricsProvider), isFalse);
     expect(player.seeks, isEmpty);
-    expect(find.text('00:10'), findsOneWidget);
-    await shot(tester, 'music-selected-line');
-    await tester.tap(find.byKey(const ValueKey('qishui-lyric-play-1')));
+    expect(player.plays, 0);
+    await tester.tap(find.byKey(const ValueKey('qishui-music-cover')));
     await settle168(tester);
-    expect(player.seeks, [const Duration(seconds: 10)]);
+    final list = find.byKey(const ValueKey('qishui-official-lyric-lines'));
+    await tester.timedDrag(
+      list,
+      const Offset(0, -130),
+      const Duration(seconds: 1),
+    );
+    await settle168(tester);
+    final play = find.byWidgetPredicate(
+      (widget) =>
+          widget.key is ValueKey<String> &&
+          (widget.key as ValueKey<String>).value.startsWith(
+            'qishui-lyric-play-',
+          ),
+    );
+    expect(play, findsOneWidget);
+    final key = tester.widget(play).key as ValueKey<String>;
+    final index = int.parse(key.value.split('-').last);
+    await shot(tester, 'music-selected-line');
+    await tester.tap(find.byKey(ValueKey('qishui-lyric-line-$index')));
+    await settle168(tester);
+    expect(player.seeks, [Duration(seconds: index * 10)]);
     expect(player.plays, 1);
+    expect(container.read(qishuiMusicLyricsProvider), isTrue);
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await settle168(tester);
     expect(container.read(qishuiMusicLyricsProvider), isFalse);

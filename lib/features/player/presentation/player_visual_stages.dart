@@ -1,6 +1,5 @@
 import 'music_rhythm_artwork.dart';
 import 'dart:math' as math;
-import '../../themes/personal_decorations.dart';
 
 import 'package:flutter/material.dart';
 
@@ -24,15 +23,15 @@ class _BetaTonearmPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
-    final pivot = Offset(w * .54, w * .005);
+    final pivot = Offset(w * .50, w * .035);
     canvas.save();
     canvas.translate(pivot.dx, pivot.dy);
     canvas.rotate(angle);
     canvas.translate(-pivot.dx, -pivot.dy);
     final path = Path()
       ..moveTo(pivot.dx, pivot.dy)
-      ..quadraticBezierTo(w * .56, w * .14, w * .61, w * .24)
-      ..quadraticBezierTo(w * .64, w * .28, w * .84, w * .37);
+      ..quadraticBezierTo(w * .56, w * .18, w * .65, w * .32)
+      ..quadraticBezierTo(w * .69, w * .40, w * .82, w * .50);
     canvas.drawPath(
       path,
       Paint()
@@ -47,7 +46,7 @@ class _BetaTonearmPainter extends CustomPainter {
       w * .009,
       Paint()..color = const Color(0xFFD5D7D9),
     );
-    canvas.translate(w * .84, w * .37);
+    canvas.translate(w * .82, w * .50);
     canvas.rotate(.42);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
@@ -97,30 +96,9 @@ class PlayerArtworkStage extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-      PlayerVisualStyle.classic => LayoutBuilder(
-        builder: (context, bounds) => Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 28),
-                child: VinylDisc(coverAsset: track.coverAsset, playing: motion),
-              ),
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: playing ? 0 : -.38),
-                  duration: MediaQuery.disableAnimationsOf(context)
-                      ? Duration.zero
-                      : const Duration(milliseconds: 500),
-                  builder: (context, angle, _) =>
-                      CustomPaint(painter: _BetaTonearmPainter(angle)),
-                ),
-              ),
-            ),
-          ],
-        ),
+      PlayerVisualStyle.classic => ClassicVinylArtwork(
+        track: track,
+        playing: playing,
       ),
       PlayerVisualStyle.aurora => _AuroraRhythmOrbit(
         playing: motion,
@@ -156,7 +134,7 @@ class PlayerArtworkStage extends StatelessWidget {
       ),
     };
     return Center(
-      child: AspectRatio(aspectRatio: 1, child: PersonalCoverFrame(child: RepaintBoundary(child: stage))),
+      child: AspectRatio(aspectRatio: 1, child: RepaintBoundary(child: stage)),
     );
   }
 }
@@ -1900,4 +1878,57 @@ class _AuroraOrbitPainter extends CustomPainter {
         oldDelegate.energy != energy ||
         oldDelegate.reduceMotion != reduceMotion;
   }
+}
+
+/// Independent record/arm transforms follow the official player's structure.
+/// Only the record rotates; pausing preserves its angle and lifts the arm.
+class ClassicVinylArtwork extends StatelessWidget {
+  const ClassicVinylArtwork({
+    required this.track,
+    required this.playing,
+    super.key,
+  });
+  final Track track;
+  final bool playing;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, c) {
+      final side = math.min(c.maxWidth, c.maxHeight);
+      final reduced = MediaQuery.disableAnimationsOf(context);
+      return Center(
+        child: SizedBox.square(
+          dimension: side,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: side * .075,
+                top: side * .15,
+                width: side * .85,
+                height: side * .85,
+                child: VinylDisc(
+                  coverAsset: track.coverAsset,
+                  playing: playing && !reduced,
+                  labelSizeFactor: .64,
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(end: playing ? 0 : -25 * math.pi / 180),
+                    duration: reduced
+                        ? Duration.zero
+                        : const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, angle, _) =>
+                        CustomPaint(painter: _BetaTonearmPainter(angle)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

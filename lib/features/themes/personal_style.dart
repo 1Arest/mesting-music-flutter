@@ -1,3 +1,4 @@
+import '../../shared/models/track.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,7 +87,7 @@ class PersonalStyle {
   Color get accent => personalPalettes[palette] ?? personalPalettes['默认']!;
   Map<String, Object?> toJson() => {
     'palette': palette,
-    'frame': frame.name,
+
     'accessory': accessory.name,
     'mini': mini.name,
     'poster': poster.name,
@@ -121,7 +122,7 @@ class PersonalStyle {
       palette: personalPalettes.containsKey(j['palette'])
           ? j['palette'] as String
           : '默认',
-      frame: choice(CoverFrame.values, 'frame'),
+      frame: CoverFrame.none,
       accessory: choice(AvatarAccessory.values, 'accessory'),
       mini: choice(MiniPlayerFinish.values, 'mini'),
       poster: choice(PosterTemplate.values, 'poster'),
@@ -204,3 +205,15 @@ ThemeData applyPersonalPalette(ThemeData theme, PersonalStyle style) {
     ),
   );
 }
+
+/// Explicit illustrative content for settings opened without a running player.
+const personalStyleDemoTrack = Track(
+  id: 'personal-style-preview',
+  title: '歌曲分享预览',
+  artist: 'Mesting Music',
+  album: '效果预览',
+  duration: Duration.zero,
+  audioAsset: '',
+  coverAsset: '',
+  lyricsAsset: '',
+);

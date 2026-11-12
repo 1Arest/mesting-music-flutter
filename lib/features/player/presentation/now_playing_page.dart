@@ -269,8 +269,12 @@ class _NowPlayingPageState extends ConsumerState<NowPlayingPage> {
                             constraints: BoxConstraints(
                               maxWidth: widePlayer ? 760 : double.infinity,
                             ),
-                            child: const _ImmersiveLyricsViewport(
-                              child: LyricsPanel(immersive: true),
+                            child: _ImmersiveLyricsViewport(
+                              child: LyricsPanel(
+                                immersive: true,
+                                onReturnToCover: () =>
+                                    setState(() => _lyricsVisible = false),
+                              ),
                             ),
                           ),
                         ),

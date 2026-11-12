@@ -15,10 +15,65 @@ import 'package:mesting_music/features/lyrics/domain/lyrics_document.dart';
 import 'package:mesting_music/features/lyrics/lyrics_providers.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyric_scroll_preview.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyrics_panel.dart';
+import 'package:mesting_music/features/lyrics/presentation/lyric_timing_tools.dart';
+import 'package:mesting_music/features/experience/presentation/player_content_transition.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  for (final immersive in [true, false]) {
+    for (final synced in [true, false]) {
+      testWidgets(
+        'normal lyric tap returns to cover without seeking: immersive=$immersive synced=$synced',
+        (tester) async {
+          var returns = 0;
+          final widget = immersive
+              ? ImmersiveLyrics(
+                  referenceDesign: true,
+                  onReturnToCover: () => returns++,
+                )
+              : LyricsPanel(immersive: true, onReturnToCover: () => returns++);
+          final player = await _mount(tester, widget, synced: synced);
+          await tester.tap(find.text(_lines.first.text));
+          await tester.pumpAndSettle();
+          expect(returns, 1);
+          expect(player.seeks, isEmpty);
+          expect(player.plays, 0);
+          expect(find.byType(LyricSeekRow), findsNothing);
+        },
+      );
+    }
+    testWidgets(
+      'only manually selected lyric text seeks: immersive=$immersive',
+      (tester) async {
+        var returns = 0;
+        final widget = immersive
+            ? ImmersiveLyrics(
+                referenceDesign: true,
+                onReturnToCover: () => returns++,
+              )
+            : LyricsPanel(immersive: true, onReturnToCover: () => returns++);
+        final player = await _mount(tester, widget);
+        await _dragLyrics(tester);
+        final preview = find.byType(LyricSeekRow);
+        final time = tester.widget<LyricSeekRow>(preview).time;
+        final line = _lines.singleWhere((line) => line.time == time);
+        expect(player.seeks, isEmpty);
+        await tester.tap(
+          find.descendant(of: preview, matching: find.text(line.text)),
+        );
+        await tester.pumpAndSettle();
+        expect(player.seeks, [time]);
+        expect(player.plays, 1);
+        expect(returns, 0);
+        await tester.tap(find.text(line.text));
+        await tester.pumpAndSettle();
+        expect(returns, 1);
+        expect(player.seeks, [time]);
+      },
+    );
+  }
 
   test('歌词偏移按歌曲保存，连续操作和重启后恢复，清零仅还原当前歌', () async {
     final first = ProviderContainer();
@@ -68,12 +123,13 @@ void main() {
     expect(early.activeIndexAt(Duration.zero), 0);
   });
 
-  testWidgets('在歌词旁调整半秒会保存，关闭面板仍沿用偏移', (tester) async {
+  testWidgets('从既有菜单打开底部调整面板，歌词无额外按钮，半秒偏移仍保存', (tester) async {
     final player = await _mount(
       tester,
       const ImmersiveLyrics(referenceDesign: true),
     );
-    await tester.tap(find.byTooltip('歌词时间调整'));
+    expect(find.byTooltip('歌词时间调整'), findsNothing);
+    await tester.tap(find.text('菜单中的歌词时间调整'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('＋0.5 秒'));
     await tester.pumpAndSettle();
@@ -97,7 +153,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(player.seeks, [selected.time]);
-    await tester.tap(find.byTooltip('歌词时间调整'));
+    await tester.tap(find.text('菜单中的歌词时间调整'));
     await tester.pumpAndSettle();
     expect(find.text('+0.5 秒'), findsOneWidget);
     await tester.tap(find.text('还原'));
@@ -105,6 +161,67 @@ void main() {
     expect(find.text('0.0 秒'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+  testWidgets('歌词调整弹层从底部出现，关闭时向下收起', (tester) async {
+    await _mount(tester, const ImmersiveLyrics(referenceDesign: true));
+    await tester.tap(find.text('菜单中的歌词时间调整'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    final early = tester.getRect(find.byType(LyricTimingPanel));
+    await tester.pump(const Duration(milliseconds: 100));
+    final later = tester.getRect(find.byType(LyricTimingPanel));
+    expect(later.left, closeTo(early.left, .01));
+    expect(later.top, lessThan(early.top));
+    await tester.pumpAndSettle();
+    final settled = tester.getRect(find.byType(LyricTimingPanel));
+    await tester.tap(find.byTooltip('关闭歌词时间调整'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    final closing = tester.getRect(find.byType(LyricTimingPanel));
+    expect(closing.top, greaterThan(settled.top));
+    expect(closing.left, closeTo(settled.left, .01));
+    await tester.pumpAndSettle();
+    expect(find.byType(LyricTimingPanel), findsNothing);
+  });
+
+  testWidgets('封面到歌词只有垂直位移，歌词退出向下而非横向', (tester) async {
+    var lyrics = false;
+    late StateSetter update;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (_, setState) {
+              update = setState;
+              return PlayerContentTransition(
+                axis: Axis.vertical,
+                child: Center(
+                  key: ValueKey(lyrics),
+                  child: Text(lyrics ? '歌词' : '封面'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    final coverCenter = tester.getCenter(find.text('封面'));
+    update(() => lyrics = true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    final entering = tester.getCenter(find.text('歌词'));
+    expect(entering.dx, closeTo(coverCenter.dx, .01));
+    expect(entering.dy, greaterThan(coverCenter.dy));
+    await tester.pumpAndSettle();
+    final settled = tester.getCenter(find.text('歌词'));
+    update(() => lyrics = false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    final closing = tester.getCenter(find.text('歌词'));
+    expect(closing.dx, closeTo(settled.dx, .01));
+    expect(closing.dy, greaterThan(settled.dy));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('模糊歌词滚动时提亮居中的换行歌词并按准确时间播放', (tester) async {
     final player = await _mount(
       tester,
@@ -265,6 +382,16 @@ Future<_Player> _mount(
       ],
       child: MaterialApp(
         home: Scaffold(
+          appBar: AppBar(
+            actions: [
+              Builder(
+                builder: (context) => TextButton(
+                  onPressed: () => showLyricTimingSheet(context),
+                  child: const Text('菜单中的歌词时间调整'),
+                ),
+              ),
+            ],
+          ),
           backgroundColor: Colors.black,
           body: Center(
             child: SizedBox(

@@ -1,3 +1,4 @@
+import '../domain/song_version_filter.dart';
 import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
@@ -21,7 +22,7 @@ import '../../../shared/models/song_search_facts.dart';
 /// A single lazy scroll view owns pagination and row construction. Avoid a
 /// shrink-wrapped list inside another list: later search pages can contain
 /// hundreds of rows and must not rebuild/decode all their covers at once.
-class AppleSearchResults extends ConsumerWidget {
+class AppleSearchResults extends ConsumerStatefulWidget {
   const AppleSearchResults({
     required this.state,
     required this.controller,
@@ -30,7 +31,60 @@ class AppleSearchResults extends ConsumerWidget {
   final MusicSearchState state;
   final ScrollController controller;
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppleSearchResults> createState() => _AppleSearchResultsState();
+}
+
+class _AppleSearchResultsState extends ConsumerState<AppleSearchResults> {
+  SongVersionFilter _filter = SongVersionFilter.all;
+  MusicSearchState get state => widget.state;
+  ScrollController get controller => widget.controller;
+  @override
+  void didUpdateWidget(covariant AppleSearchResults oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.query != state.query) _filter = SongVersionFilter.all;
+  }
+
+  List<Track> _filtered(List<Track> tracks) => tracks
+      .where(
+        (t) =>
+            _filter == SongVersionFilter.all ||
+            recordingVersion(t, state.songFacts[t.id]) == _filter,
+      )
+      .toList();
+  Future<void> _chooseFilter() async {
+    final value = await showLiquidGlassBottomSheet<SongVersionFilter>(
+      context: context,
+      builder: (sheet) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(padding: EdgeInsets.all(20), child: Text('歌曲版本')),
+              for (final value in SongVersionFilter.values)
+                ListTile(
+                  title: Text(value.label),
+                  trailing: value == _filter
+                      ? const Icon(CupertinoIcons.check_mark)
+                      : null,
+                  onTap: () => Navigator.pop(sheet, value),
+                ),
+              const Padding(
+                padding: EdgeInsets.all(18),
+                child: Text('仅筛选已加载结果，版本信息不足时归入未知。'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (mounted && value != null) {
+      if (controller.hasClients) controller.jumpTo(0);
+      setState(() => _filter = value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     Widget section(String name, int count) => Padding(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 12),
@@ -62,6 +116,35 @@ class AppleSearchResults extends ConsumerWidget {
         controller: controller,
         physics: const ArtworkFrontierPhysics(parent: BouncingScrollPhysics()),
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
+              child: Row(
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: _chooseFilter,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          CupertinoIcons.line_horizontal_3_decrease,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(_filter.label),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_filter != SongVersionFilter.all)
+                    const Flexible(
+                      child: Text('筛选已加载结果', textAlign: TextAlign.end),
+                    ),
+                ],
+              ),
+            ),
+          ),
           for (final warning in state.warnings)
             SliverToBoxAdapter(
               child: Padding(
@@ -87,8 +170,8 @@ class AppleSearchResults extends ConsumerWidget {
               ),
             ),
           for (final group in [
-            (name: '本地音乐', tracks: state.localTracks),
-            (name: '歌曲', tracks: state.onlineTracks),
+            (name: '本地音乐', tracks: _filtered(state.localTracks)),
+            (name: '歌曲', tracks: _filtered(state.onlineTracks)),
           ])
             if (group.tracks.isNotEmpty) ...[
               SliverToBoxAdapter(
@@ -106,11 +189,28 @@ class AppleSearchResults extends ConsumerWidget {
                 ),
               ),
             ],
-          if (!state.hasResults && state.errorMessage == null)
-            const SliverToBoxAdapter(
+          if (_filtered(state.localTracks).isEmpty &&
+              _filtered(state.onlineTracks).isEmpty &&
+              state.errorMessage == null)
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Text('没有找到相关歌曲，试试其他关键词。'),
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  _filter == SongVersionFilter.all
+                      ? '没有找到相关歌曲，试试其他关键词。'
+                      : '已加载结果中没有此版本，可继续加载或切换筛选。',
+                ),
+              ),
+            ),
+          if (_filter != SongVersionFilter.all &&
+              state.hasMore &&
+              !state.isLoadingMore)
+            SliverToBoxAdapter(
+              child: CupertinoButton(
+                onPressed: ref
+                    .read(musicSearchControllerProvider.notifier)
+                    .loadMore,
+                child: const Text('继续加载搜索结果'),
               ),
             ),
           SliverToBoxAdapter(

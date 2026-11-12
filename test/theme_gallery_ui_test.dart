@@ -1,3 +1,5 @@
+import 'package:mesting_music/features/player/presentation/player_visual_stages.dart';
+import 'package:mesting_music/features/player/presentation/vinyl_disc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,7 +84,7 @@ void main() {
       () => warmUpDressUpAssets(tester.element(find.text('open'))),
     );
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
 
     final sheetSurface = find.byKey(liquidGlassSheetSurfaceKey);
     expect(sheetSurface, findsOneWidget);
@@ -186,7 +188,7 @@ void main() {
       () => warmUpDressUpAssets(tester.element(find.text('open'))),
     );
     await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
 
     Color sheetColor() {
       final body = tester.widget<DecoratedBox>(
@@ -201,7 +203,7 @@ void main() {
     await tester.runAsync(
       () => container.read(musicThemeProvider.notifier).select('classic-dark'),
     );
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
 
     expect(find.byKey(liquidGlassSheetSurfaceKey), findsOneWidget);
     expect(sheetColor(), const Color(0xFF12151C));
@@ -222,7 +224,7 @@ void main() {
         child: const MaterialApp(home: ThemeGalleryPage()),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
 
     final close = find.byTooltip('关闭装扮');
     expect(close, findsOneWidget);
@@ -240,16 +242,19 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('player-style-classic')), findsOneWidget);
+    expect(find.byType(ClassicVinylArtwork), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('classic-player-turntable-preview')),
+      find.descendant(
+        of: find.byType(ClassicVinylArtwork),
+        matching: find.byType(VinylDisc),
+      ),
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('classic-player-preview-vinyl')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('classic-player-preview-tonearm')),
+      find.descendant(
+        of: find.byType(ClassicVinylArtwork),
+        matching: find.byType(TweenAnimationBuilder<double>),
+      ),
       findsOneWidget,
     );
     expect(find.byKey(const ValueKey('player-style-aurora')), findsOneWidget);
@@ -297,7 +302,7 @@ void main() {
     );
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -420));
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
     expect(find.text('浅色'), findsOneWidget);
     expect(find.text('深色'), findsOneWidget);
     expect(find.text('跟随系统'), findsWidgets);
@@ -319,7 +324,7 @@ void main() {
     expect(tester.getSize(systemMode).width, tester.getSize(lightMode).width);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
 
     expect(close, findsOneWidget);
     expect(tester.getTopLeft(close), initialPosition);
@@ -338,7 +343,7 @@ void main() {
     expect(find.byType(SwitchListTile), findsNothing);
 
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -1000));
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
     expect(close, findsOneWidget);
     expect(tester.getTopLeft(close), initialPosition);
     expect(find.text('自动推荐'), findsOneWidget);
@@ -372,7 +377,7 @@ void main() {
         child: const MaterialApp(home: ThemeGalleryPage()),
       ),
     );
-    await tester.pumpAndSettle();
+    await _settlePreview(tester);
     final morningStyle = find.byKey(const ValueKey('brand-style-morning_mist'));
     await tester.runAsync(() async {
       tester.widget<InkWell>(morningStyle).onTap!();
@@ -427,7 +432,7 @@ void main() {
             child: const MaterialApp(home: ThemeGalleryPage()),
           ),
         );
-        await tester.pumpAndSettle();
+        await _settlePreview(tester);
 
         final preview = find.byKey(const ValueKey('classic-theme-preview'));
         expect(preview, findsOneWidget);
@@ -438,4 +443,12 @@ void main() {
       }
     },
   );
+}
+
+// The selected vinyl preview rotates continuously; settle finite transitions
+// without waiting for its intentional repeating ticker to become idle.
+Future<void> _settlePreview(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+  await tester.pump();
 }

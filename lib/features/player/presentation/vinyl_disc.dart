@@ -185,7 +185,7 @@ class VinylDiscSurface extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: const Color(0xFF343438).withValues(alpha: .76),
-                        width: constraints.maxWidth * .025,
+                        width: constraints.maxWidth * .006,
                       ),
                     ),
                   ),
@@ -213,7 +213,7 @@ class _VinylGroovePainter extends CustomPainter {
       groove.color = index % 4 == 0
           ? Colors.white.withValues(alpha: .075)
           : Colors.white.withValues(alpha: .032);
-      canvas.drawCircle(center, radius * (.31 + index * .0131), groove);
+      canvas.drawCircle(center, radius * (.66 + index * .0065), groove);
     }
   }
 

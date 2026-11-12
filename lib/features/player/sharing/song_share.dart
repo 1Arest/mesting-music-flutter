@@ -38,10 +38,11 @@ Future<Uint8List> generateSongPoster(
   Track track, {
   String? fontFamily,
   PosterTemplate template = PosterTemplate.original,
+  double pixelRatio = 3,
 }) async {
   final cover = await _loadCover(track.coverAsset);
   final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder)..scale(3);
+  final canvas = Canvas(recorder)..scale(pixelRatio.clamp(.5, 3));
   const size = Size(360, 568);
   final dark = template == PosterTemplate.magazine;
   final ink = dark ? Colors.white : const Color(0xFF252D35);
@@ -215,7 +216,10 @@ Future<Uint8List> generateSongPoster(
   }
   final picture = recorder.endRecording();
   try {
-    final image = await picture.toImage(1080, 1704);
+    final image = await picture.toImage(
+      (360 * pixelRatio.clamp(.5, 3)).round(),
+      (568 * pixelRatio.clamp(.5, 3)).round(),
+    );
     try {
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
       if (bytes == null) throw StateError('海报生成失败，请重试');

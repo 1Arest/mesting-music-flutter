@@ -23,7 +23,7 @@ class MusicRhythmArtwork extends StatelessWidget {
         final available = constraints.biggest.shortestSide;
         final side = available.isFinite ? available : 320.0;
         if (side <= 0) return const SizedBox.shrink();
-        final inset = (side * .147).clamp(13.0, 44.0);
+        final inset = (side * .18).clamp(16.0, 56.0);
         final artwork = Padding(
           padding: EdgeInsets.all(inset),
           child: ClipOval(
@@ -87,7 +87,7 @@ class _RhythmRingPainter extends CustomPainter {
     canvas,
     center: size.center(Offset.zero),
     radius: size.shortestSide / 2 - inset + 5,
-    reach: (inset - 9).clamp(1.0, 34.0),
+    reach: (inset - 7).clamp(1.0, 50.0),
     stroke: 1.65,
     frame: frame,
   );

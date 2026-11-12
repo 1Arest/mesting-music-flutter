@@ -1,3 +1,4 @@
+import 'style_option_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,23 +83,16 @@ class _ProfileEffectPickerState extends ConsumerState<ProfileEffectPicker> {
           ),
         ),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            for (final effect in ProfileEffectStyle.values)
-              ChoiceChip(
-                key: ValueKey('profile-effect-${effect.name}'),
-                label: Text(effect.label),
-                labelStyle: theme.textTheme.labelLarge,
-                selected: selected == effect,
-                onSelected: _saving
-                    ? null
-                    : (_) {
-                        if (selected != effect) _select(effect);
-                      },
-              ),
-          ],
+        StyleOptionGrid(
+          values: ProfileEffectStyle.values.map((e) => e.name).toList(),
+          labels: ProfileEffectStyle.values.map((e) => e.label).toList(),
+          selected: selected.name,
+          keyPrefix: 'profile-effect',
+          onSelected: _saving
+              ? null
+              : (value) => _select(ProfileEffectStyle.values.byName(value)),
+          preview: (value) =>
+              _ProfileEffectThumbnail(ProfileEffectStyle.values.byName(value)),
         ),
         const SizedBox(height: 6),
         Text(
@@ -112,4 +106,30 @@ class _ProfileEffectPickerState extends ConsumerState<ProfileEffectPicker> {
       ],
     );
   }
+}
+
+/// A still from the production painter; the larger selected preview above uses
+/// live playback. Keeping these catalogue samples static avoids five tickers.
+class _ProfileEffectThumbnail extends StatelessWidget {
+  const _ProfileEffectThumbnail(this.effect);
+  final ProfileEffectStyle effect;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, c) {
+      final center = Offset(c.maxWidth / 2, c.maxHeight / 2);
+      const still = AlwaysStoppedAnimation<double>(.24);
+      return CustomPaint(
+        painter: VipProfilePainter(
+          style: effect,
+          animation: still,
+          geometryChanges: still,
+          avatarRect: () => Rect.fromCircle(center: center, radius: 17),
+          reduced: false,
+        ),
+        child: const Center(
+          child: CircleAvatar(radius: 17, child: Icon(Icons.person, size: 20)),
+        ),
+      );
+    },
+  );
 }

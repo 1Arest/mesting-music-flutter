@@ -1,3 +1,4 @@
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
@@ -24,6 +25,7 @@ import 'support/ui_fix_capture.dart';
 
 void main() {
   setUpAll(() async {
+    await LiquidGlassWidgets.initialize();
     await initializeUiFixCapture();
     if (uiFixCaptureDirectory.isNotEmpty) {
       await (FontLoader(
@@ -91,7 +93,8 @@ void main() {
         overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       final s = restored.read(personalStyleProvider);
-      expect(s.frame, CoverFrame.stamp);
+      expect(s.frame, CoverFrame.none);
+      expect(s.toJson().containsKey('frame'), false);
       expect(s.poster, PosterTemplate.ticket);
       expect(s.strength, .8);
       expect(s.lyricSize, 32);
@@ -226,7 +229,7 @@ void main() {
           AvatarAccessory.moon,
         );
         await captureUiFix(tester, 'personal-style-accessories-$scale');
-        await tester.tap(find.text('恢复默认'));
+        await tester.tap(find.bySemanticsLabel('恢复默认').first);
         await tester.pumpAndSettle();
         expect(
           container.read(personalStyleProvider).accessory,

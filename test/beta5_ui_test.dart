@@ -299,6 +299,7 @@ void main() {
   late List<String> paths;
   Future<void> prepare({
     bool richHome = false,
+    int queueCount = 2,
     bool guest = false,
     bool standardOnly = false,
     bool qualityUnknown = false,
@@ -477,6 +478,13 @@ void main() {
               artist: _track.artist,
               artUri: Uri.parse(_track.coverAsset),
             ),
+            for (var i = 2; i < queueCount; i++)
+              MediaItem(
+                id: 'pending-$i',
+                title: '待播歌曲 ${i + 1}',
+                artist: _track.artist,
+                artUri: Uri.parse(_track.coverAsset),
+              ),
           ]),
         ),
         // These are parsed UI fixtures, not wire payloads. Real platform cover
@@ -1260,7 +1268,9 @@ void main() {
         findsOneWidget,
       );
       await tester.tap(catalog);
-      await tester.pumpAndSettle();
+      // Selected vinyl and character previews intentionally keep animating.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 650));
       expect(find.text('Hello Kitty'), findsWidgets);
       expect(find.text('库洛米'), findsWidgets);
       await captureScreenshot(tester, 'beta7-dress-up-progress');
@@ -3507,13 +3517,13 @@ void main() {
       'beta16 reference lyrics and inline queue ${sample.$1} text ${sample.$2}',
       (tester) async {
         viewport(tester, sample.$1);
-        await prepare();
+        await prepare(queueCount: 12);
         await pump(
           tester,
           const BetaNowPlayingPage(lyricsInitially: true),
           scale: sample.$2,
         );
-        expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
+        expect(find.byIcon(CupertinoIcons.heart), findsOneWidget);
         expect(find.byType(ApplePlayerControls), findsOneWidget);
         final seek = find.byKey(const ValueKey('playback-seek-slider'));
         expect(
@@ -3545,9 +3555,31 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 650));
         expect(find.byType(PlayerQueuePanel), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('playback-seek-slider')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('system-media-volume')), findsNothing);
+        expect(find.byTooltip('上一首'), findsNothing);
+        final queueRect = tester.getRect(
+          find.byKey(const ValueKey('player-inline-queue')),
+        );
+        expect(
+          queueRect.height,
+          greaterThan(sample.$1.height > 800 ? 400 : 40),
+        );
+        if (sample.$1.height > 800) {
+          expect(
+            queueRect.overlaps(tester.getRect(find.text('待播歌曲 5'))),
+            isTrue,
+          );
+        }
         expect(find.text('下一段旋律'), findsOneWidget);
-        expect(find.byKey(const ValueKey('player-shuffle')), findsOneWidget);
-        expect(find.byKey(const ValueKey('player-repeat')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('queue-playback-mode')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('player-repeat')), findsNothing);
         await captureScreenshot(
           tester,
           'beta16-inline-queue-${sample.$1.width.toInt()}',
@@ -3558,6 +3590,14 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 650));
         expect(find.byType(PlayerQueuePanel), findsNothing);
+        expect(
+          find.byKey(const ValueKey('playback-seek-slider')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('system-media-volume')),
+          findsOneWidget,
+        );
         await disposeFixture(tester);
       },
       skip: !DistributionChannel.isBeta,

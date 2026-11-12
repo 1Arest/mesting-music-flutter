@@ -267,7 +267,7 @@ void main() {
               .widget<Text>(byKey('footprint-collapsing-title'))
               .style!
               .fontSize,
-          destination == FootprintScale.month ? 34 : 17,
+          destination == FootprintScale.month ? 28 : 17,
         );
       }
       expect(activeScroll(tester).controller!.offset, closeTo(weekOffset, .1));
@@ -307,7 +307,7 @@ void main() {
             .widget<Text>(byKey('footprint-collapsing-title'))
             .style!
             .fontSize,
-        34,
+        28,
       );
       await tester.tap(byKey('footprint-previous'));
       await tester.pumpAndSettle();
@@ -381,7 +381,7 @@ void main() {
             .clear();
         await tester.pumpAndSettle();
         expect(find.text('请返回并选择网易云账号'), findsOneWidget);
-        expect(find.text('累计听歌 5609 小时 16 分钟'), findsNothing);
+        expect(find.text('总时长 5609 小时 16 分钟'), findsNothing);
         expect(find.byKey(const ValueKey('footprint-song-1000')), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

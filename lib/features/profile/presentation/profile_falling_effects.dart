@@ -22,7 +22,7 @@ void paintProfileAccent(
       canvas,
       center: center,
       radius: radius,
-      reach: (avatar.shortestSide * .105).clamp(5.0, 14.0),
+      reach: (avatar.shortestSide * .18).clamp(8.0, 24.0),
       stroke: 1.55,
       frame: frame,
     );

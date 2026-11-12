@@ -1,0 +1,4 @@
+# The engine manifest hashes the exact patch bytes; Windows checkout must not
+# translate this pinned LF artifact to CRLF before release verification.
+third_party/flutter_engine/release-opengles.patch -text
+third_party/flutter_engine/android-release/assets/LICENSE.flutter-engine.txt -text

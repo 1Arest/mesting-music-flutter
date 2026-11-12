@@ -1,3 +1,4 @@
+import 'official_report_extras_view.dart';
 import '../../presentation/song_actions_sheet.dart';
 import '../../../../shared/widgets/song_list_tools.dart';
 import '../../../../shared/widgets/beta_page_motion.dart';
@@ -352,8 +353,8 @@ class _ListeningFootprintPageState
     };
     Widget arrow(int delta, IconData icon, String semantic) => BetaGlassButton(
       key: ValueKey(delta < 0 ? 'footprint-previous' : 'footprint-next'),
-      width: 44,
-      height: 44,
+      width: 38,
+      height: 38,
       label: semantic,
       onPressed: reader.canMove(delta)
           ? () {
@@ -361,7 +362,7 @@ class _ListeningFootprintPageState
               unawaited(reader.loadSelected());
             }
           : null,
-      child: Icon(icon, size: 18),
+      child: Icon(icon, size: 16),
     );
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
@@ -444,6 +445,11 @@ class _ListeningFootprintPageState
           selected: selected,
           onSelected: (value) =>
               setState(() => _selectedDays[period.key] = value),
+        ),
+        OfficialReportExtrasView(
+          data: report.extras,
+          period: '${period.firstDay} – ${period.lastDay}',
+          weekly: period.scale == FootprintScale.week,
         ),
         if (bars.any((b) => b.seconds == null))
           const Padding(
@@ -734,15 +740,18 @@ class _FootprintHeader extends StatelessWidget {
                   top: lerpDouble(top + 71, top + 18, t),
                   child: IgnorePointer(
                     child: Align(
-                      alignment: Alignment(lerpDouble(-1, 0, t)!, 0),
-                      child: Text(
-                        '听歌足迹',
-                        key: const ValueKey('footprint-collapsing-title'),
-                        style: TextStyle(
-                          fontSize: lerpDouble(34, 17, t),
-                          fontWeight: MusicTypography.titleWeight,
-                          height: 1.15,
-                          letterSpacing: lerpDouble(-.9, -.2, t),
+                      alignment: Alignment.center,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '云村听歌足迹',
+                          key: const ValueKey('footprint-collapsing-title'),
+                          style: TextStyle(
+                            fontSize: lerpDouble(28, 17, t),
+                            fontWeight: MusicTypography.titleWeight,
+                            height: 1.15,
+                            letterSpacing: lerpDouble(-.9, -.2, t),
+                          ),
                         ),
                       ),
                     ),
@@ -758,12 +767,12 @@ class _FootprintHeader extends StatelessWidget {
                       child: ExcludeSemantics(
                         excluding: t > .6,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               total.value == null
                                   ? '官方累计时长暂未获取'
-                                  : '累计听歌 ${officialDuration(total.value!)}',
+                                  : '总时长 ${officialDuration(total.value!)}',
                               key: const ValueKey('footprint-official-total'),
                               style: const TextStyle(
                                 fontSize: MusicTypography.subheadlineSize,

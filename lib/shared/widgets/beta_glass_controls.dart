@@ -26,6 +26,7 @@ class BetaGlassButton extends StatelessWidget {
     this.fontSize = MusicTypography.subheadlineSize,
     this.horizontalPadding = 18,
     this.embeddedInPill = false,
+    this.borderRadius,
     super.key,
   });
   final Widget child;
@@ -37,6 +38,7 @@ class BetaGlassButton extends StatelessWidget {
   final double fontSize;
   final double horizontalPadding;
   final double? width;
+  final double? borderRadius;
 
   /// A segmented action capsule provides one optical layer for its children.
   /// Standalone buttons retain their own layer and all existing press behavior.
@@ -121,7 +123,9 @@ class BetaGlassButton extends StatelessWidget {
                           )
                         : betaBlueActionGlass
                   : betaNeutralActionGlass(context),
-              shape: LiquidRoundedRectangle(borderRadius: height / 2),
+              shape: LiquidRoundedRectangle(
+                borderRadius: borderRadius ?? height / 2,
+              ),
               child: Padding(
                 padding: width == height
                     ? EdgeInsets.zero

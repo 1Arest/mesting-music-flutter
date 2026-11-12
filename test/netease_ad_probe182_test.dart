@@ -115,7 +115,7 @@ void main() {
       ]);
       final root = jsonDecode(result.report.json) as Map;
       expect(root['schema'], 2);
-      expect(root['appVersion'], '1.0.95');
+      expect(root['appVersion'], '1.0.96');
       expect(root['appVersionCode'], 114);
       expect(root['requestContext']['extFromEntry'], isFalse);
       expect(root['requestContext']['deviceSdkContextAdded'], isFalse);

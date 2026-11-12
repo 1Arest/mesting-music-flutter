@@ -9,7 +9,9 @@ import 'personal_style.dart';
 /// One low-cost repaint layer behind controls. No FFT or fabricated beat data.
 /// Route visibility, reduced motion and lifecycle all gate its single ticker.
 class ListeningAtmosphereLayer extends ConsumerStatefulWidget {
-  const ListeningAtmosphereLayer({super.key});
+  const ListeningAtmosphereLayer({this.style, this.preview = false, super.key});
+  final PersonalStyle? style;
+  final bool preview;
   @override
   ConsumerState<ListeningAtmosphereLayer> createState() => _AtmosphereState();
 }
@@ -47,14 +49,18 @@ class _AtmosphereState extends ConsumerState<ListeningAtmosphereLayer>
 
   @override
   Widget build(BuildContext context) {
-    final s = ref.watch(personalStyleProvider);
+    final PersonalStyle s = widget.style ?? ref.watch(personalStyleProvider);
     if (s.atmosphere == ListeningAtmosphere.off) {
       _motion.stop();
       _running = false;
       return const SizedBox.shrink();
     }
-    final track = ref.watch(currentTrackProvider);
-    final playing = ref.watch(playbackStateProvider).value?.playing ?? false;
+    final track = widget.preview && !ref.exists(audioHandlerProvider)
+        ? personalStyleDemoTrack
+        : ref.watch(currentTrackProvider);
+    final playing =
+        widget.preview ||
+        (ref.watch(playbackStateProvider).value?.playing ?? false);
     final active =
         s.atmosphere != ListeningAtmosphere.off &&
         playing &&

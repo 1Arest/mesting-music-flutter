@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
-import '../../music_platform/cross_platform_music_scope.dart';
-import '../../music_platform/domain/platform_session.dart';
-import '../../music_platform/music_platform_providers.dart';
-import '../../music_platform/platform_backend_providers.dart';
+import '../../../core/network/system_music_io_client.dart';
+import 'official_song_count_reader.dart';
 
 typedef SongCountIdentity = (TrackSource, String);
 
@@ -77,7 +75,10 @@ class SongFavoriteCountCache {
   ) {
     final cached = _values[song];
     if (cached != null &&
-        DateTime.now().difference(cached.time) < const Duration(minutes: 5)) {
+        DateTime.now().difference(cached.time) <
+            (cached.count == null
+                ? const Duration(seconds: 15)
+                : const Duration(minutes: 5))) {
       return Future.value(cached.count);
     }
     return _pending.putIfAbsent(song, () async {
@@ -118,31 +119,26 @@ class SongFavoriteCountCache {
   }
 }
 
-final songFavoriteCountCacheProvider = Provider((ref) {
-  ref.watch(
-    platformAccountProvider.select(
-      (account) => (account.value?.ownerId, account.value?.token),
-    ),
-  );
-  return SongFavoriteCountCache();
+final songFavoriteCountCacheProvider = Provider(
+  (ref) => SongFavoriteCountCache(),
+);
+
+final _officialSongCountClientProvider = Provider((ref) {
+  final client = SystemMusicIoClient();
+  ref.onDispose(client.close);
+  return client;
 });
 
 final songFavoriteCountProvider = FutureProvider.autoDispose
     .family<int?, SongCountIdentity>((ref, song) {
       final cache = ref.watch(songFavoriteCountCacheProvider);
-      return cache.load(song, () async {
-        final account = ref.read(platformAccountProvider).value;
-        if (song.$1 == TrackSource.netease) {
-          final music = account?.platform == MusicPlatform.netease
-              ? ref.read(neteaseMusicRepositoryProvider)
-              : await ref.read(supplementaryNeteaseMusicProvider.future);
-          if (!ref.mounted) return const {};
-          return music.call('/song/red/count', {'id': song.$2});
-        }
-        final api = account?.platform == MusicPlatform.kugou
-            ? ref.read(musicPlatformApiProvider)
-            : await ref.read(supplementaryKugouApiProvider.future);
-        if (!ref.mounted) return const {};
-        return api.get('/favorite/count', query: {'mixsongids': song.$2});
-      }, () => ref.mounted);
+      final client = ref.watch(_officialSongCountClientProvider);
+      final keep = ref.keepAlive();
+      return cache
+          .load(
+            song,
+            () => readOfficialSongCount(client, song.$1, song.$2),
+            () => ref.mounted,
+          )
+          .whenComplete(keep.close);
     }, retry: (_, _) => null);

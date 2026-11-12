@@ -144,12 +144,16 @@ void main() {
         );
         final primary = find.byKey(const ValueKey('app-update-primary'));
         final before = tester.getRect(primary);
+        final progress = find.byKey(const ValueKey('app-update-progress'));
+        final progressBefore = tester.getRect(progress);
+        expect(progressBefore.bottom, lessThan(before.top));
         await tester.drag(
           find.byKey(const ValueKey('app-update-notes-scroll')),
           const Offset(0, -600),
         );
         await tester.pumpAndSettle();
         expect(tester.getRect(primary), before);
+        expect(tester.getRect(progress), progressBefore);
         expect(before.bottom, lessThanOrEqualTo(900));
         expect(find.text('查看此次更新'), findsNothing);
         expect(tester.takeException(), isNull);
@@ -220,6 +224,18 @@ void main() {
           last.code,
         );
         final platform = find.byKey(const ValueKey('playback-choice-音乐平台'));
+        // The expanded settings page can lazily dispose the earlier selector
+        // after the quality menu scrolls its trigger into view.
+        await tester.scrollUntilVisible(
+          platform,
+          -300,
+          scrollable: find
+              .descendant(
+                of: find.byType(ListView).first,
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         await tester.ensureVisible(platform);
         await tester.tap(platform);
         await tester.pumpAndSettle();

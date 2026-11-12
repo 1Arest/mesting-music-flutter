@@ -1,3 +1,4 @@
+import 'lifetime_duration_check.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -138,6 +139,7 @@ class _FootprintPageState extends ConsumerState<OfficialFootprintPage>
                     _reading('当前月收听 · $month', reader.month, month),
                     const Divider(),
                     _reading('历史总时长', reader.total, day),
+                    const LifetimeDurationCheck(),
                     const Text(
                       '今日统计可能延迟 1～2 分钟；历史总时长按天更新，具体时刻由网易云处理。周日下午 15 点前后更新的是周报。',
                     ),

@@ -1,3 +1,7 @@
+import 'style_option_grid.dart';
+import 'personal_style_previews.dart';
+import '../music_platform/presentation/platform_design.dart';
+import '../../shared/widgets/beta_glass_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,18 +47,13 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
         padding: const EdgeInsets.only(top: 20, bottom: 8),
         child: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (var i = 0; i < values.length; i++)
-            ChoiceChip(
-              key: ValueKey('$key-${values[i]}'),
-              label: Text(labels[i]),
-              selected: selected == values[i],
-              onSelected: (_) => _change({key: values[i]}),
-            ),
-        ],
+      StyleOptionGrid(
+        values: values,
+        labels: labels,
+        selected: '$selected',
+        keyPrefix: key,
+        onSelected: (value) => _change({key: value}),
+        preview: (value) => PersonalStylePreview(kind: key, value: value),
       ),
     ],
   );
@@ -68,7 +67,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label),
-      Slider(
+      CupertinoSlider(
         value: value.clamp(min, max),
         min: min,
         max: max,
@@ -79,19 +78,22 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(personalStyleProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('我的风格'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await _change(const PersonalStyle().toJson());
-            },
-            child: const Text('恢复默认'),
-          ),
-        ],
-      ),
-      body: SafeArea(
+    return PlatformPageFrame(
+      title: '我的风格',
+      musicChrome: false,
+      actions: [
+        BetaGlassButton(
+          height: 38,
+          width: 38,
+          label: '恢复默认',
+          horizontalPadding: 0,
+          onPressed: () async {
+            await _change(const PersonalStyle().toJson());
+          },
+          child: const Icon(CupertinoIcons.arrow_counterclockwise, size: 18),
+        ),
+      ],
+      child: SafeArea(
         child: Column(
           children: [
             Padding(
@@ -114,6 +116,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                   padding: const EdgeInsets.fromLTRB(20, 4, 20, 40),
                   children: [
                     if (index == 0) ...[
+                      const SizedBox(height: 8),
                       _choices(
                         '配色套装',
                         'palette',
@@ -121,41 +124,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                         personalPalettes.keys.toList(),
                         personalPalettes.keys.toList(),
                       ),
-                      Wrap(
-                        spacing: 12,
-                        children: [
-                          for (final color in personalPalettes.values)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: CircleAvatar(
-                                radius: 10,
-                                backgroundColor: color,
-                              ),
-                            ),
-                        ],
-                      ),
                       const Text('套装会推荐搭配歌词与挂件，可再逐项调整；进度条搭配独立保留。所有装扮免费，自动保存。'),
-                      _choices(
-                        '专辑封面相框',
-                        'frame',
-                        s.frame.name,
-                        CoverFrame.values.map((e) => e.name).toList(),
-                        const ['默认', '拍立得白边', '邮票边框'],
-                      ),
-                      SizedBox(
-                        height: 130,
-                        child: Center(
-                          child: SizedBox.square(
-                            dimension: 110,
-                            child: PersonalCoverFrame(
-                              child: ColoredBox(
-                                color: s.accent.withValues(alpha: .2),
-                                child: const Icon(Icons.music_note, size: 40),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
                       _choices(
                         '歌曲分享卡片',
                         'poster',
@@ -188,7 +157,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       if (s.atmosphere != ListeningAtmosphere.off)
                         _slider('氛围强度', 'strength', s.strength, 0, 1),
                       const Text('用于全屏播放器。随播放轻微变化，暂停后静止；这是播放氛围动画，不代表实时节拍分析。'),
-                      SwitchListTile(
+                      SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('发现页音符微光'),
                         subtitle: const Text('招呼语结束后出现一次，约2秒淡出'),
@@ -232,7 +201,9 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       Wrap(
                         spacing: 8,
                         children: [
-                          TextButton(
+                          BetaGlassButton(
+                            height: 38,
+                            horizontalPadding: 12,
                             onPressed: () => _change({
                               'lyricSize': 0,
                               'lineHeight': 0,
@@ -242,7 +213,9 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                             }),
                             child: const Text('默认'),
                           ),
-                          TextButton(
+                          BetaGlassButton(
+                            height: 38,
+                            horizontalPadding: 12,
                             onPressed: () => _change({
                               'lyricSize': 28,
                               'lineHeight': 1.4,
@@ -250,7 +223,9 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                             }),
                             child: const Text('清晰'),
                           ),
-                          TextButton(
+                          BetaGlassButton(
+                            height: 38,
+                            horizontalPadding: 12,
                             onPressed: () => _change({
                               'lyricSize': 26,
                               'lineHeight': 1.6,
@@ -258,7 +233,9 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                             }),
                             child: const Text('柔和'),
                           ),
-                          TextButton(
+                          BetaGlassButton(
+                            height: 38,
+                            horizontalPadding: 12,
                             onPressed: () => _change({
                               'lyricSize': 34,
                               'lineHeight': 1.5,
@@ -268,7 +245,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                           ),
                         ],
                       ),
-                      SwitchListTile(
+                      SwitchListTile.adaptive(
                         title: const Text('系统衬线字体'),
                         subtitle: const Text('使用设备提供的字体，不下载字体文件'),
                         value: s.serif,
@@ -292,7 +269,9 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       Wrap(
                         spacing: 8,
                         children: [
-                          TextButton(
+                          BetaGlassButton(
+                            height: 38,
+                            horizontalPadding: 12,
                             onPressed: () => _change({'lyricColor': null}),
                             child: const Text('默认'),
                           ),
