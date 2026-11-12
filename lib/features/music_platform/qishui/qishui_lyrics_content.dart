@@ -213,7 +213,7 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
           }
         }
         _follow(active, constraints.maxHeight);
-        return Stack(
+        final lyrics = Stack(
           children: [
             ShaderMask(
               blendMode: BlendMode.dstIn,
@@ -264,11 +264,9 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
                         child: InkWell(
                           key: ValueKey('qishui-lyric-line-$index'),
                           borderRadius: BorderRadius.circular(14),
-                          onTap: _selected == null
-                              ? widget.onReturnToCover
-                              : selected && !_jumping
+                          onTap: selected
                               ? () => _jump(index)
-                              : null,
+                              : widget.onReturnToCover,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 160),
                             decoration: BoxDecoration(
@@ -363,6 +361,11 @@ class _LyricLinesState extends ConsumerState<QishuiLyricLines> {
                 ),
               ),
           ],
+        );
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onReturnToCover,
+          child: lyrics,
         );
       },
     );

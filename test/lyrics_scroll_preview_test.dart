@@ -16,6 +16,8 @@ import 'package:mesting_music/features/lyrics/lyrics_providers.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyric_scroll_preview.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyrics_panel.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyric_timing_tools.dart';
+import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
+import 'package:mesting_music/features/music_platform/qishui/qishui_lyrics_content.dart';
 import 'package:mesting_music/features/experience/presentation/player_content_transition.dart';
 import 'package:mesting_music/shared/models/track.dart';
 import 'support/ui_fix_capture.dart';
@@ -117,6 +119,59 @@ void main() {
         expect(player.seeks, [time]);
       },
     );
+  }
+
+  for (final layout in ['immersive', 'panel', 'qishui']) {
+    testWidgets('$layout tap outside the selected lyric returns to the cover', (
+      tester,
+    ) async {
+      var returns = 0;
+      void showCover() => returns++;
+      final widget = switch (layout) {
+        'immersive' => ImmersiveLyrics(
+          referenceDesign: true,
+          onReturnToCover: showCover,
+        ),
+        'qishui' => QishuiLyricLines(
+          document: LyricsDocument(lines: _lines, isSynced: true),
+          onReturnToCover: showCover,
+        ),
+        _ => LyricsPanel(onReturnToCover: showCover),
+      };
+      final player = await _mount(tester, widget);
+      await _dragLyrics(tester);
+      expect(returns, 0);
+
+      final selection = layout == 'qishui'
+          ? find.byIcon(Icons.play_arrow_rounded)
+          : find.byType(LyricSeekRow);
+      expect(selection, findsOneWidget);
+      final list = tester.getRect(find.byType(ListView));
+      final selected = tester.getRect(selection);
+      final otherLine = _lines
+          .map((line) => find.text(line.text).hitTestable())
+          .firstWhere(
+            (line) =>
+                line.evaluate().isNotEmpty &&
+                (tester.getCenter(line).dy - selected.center.dy).abs() > 45,
+          );
+      await tester.tap(otherLine);
+      expect(returns, 1);
+      // The side padding is outside the highlighted row even at its height.
+      await tester.tapAt(Offset(list.right - 2, selected.center.dy));
+      expect(returns, 2);
+      expect(player.seeks, isEmpty);
+      expect(player.plays, 0);
+
+      final play = layout == 'qishui'
+          ? selection
+          : find.descendant(of: selection, matching: find.byType(IconButton));
+      await tester.tap(play);
+      await tester.pumpAndSettle();
+      expect(returns, 2);
+      expect(player.seeks, hasLength(1));
+      expect(player.plays, 1);
+    });
   }
 
   test('歌词偏移按歌曲保存，连续操作和重启后恢复，清零仅还原当前歌', () async {
@@ -534,6 +589,7 @@ Future<_Player> _mount(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
         audioHandlerProvider.overrideWithValue(player),
+        platformAccountProvider.overrideWithBuild((_, _) => null),
         currentTrackProvider.overrideWithValue(_track),
         lyricsProvider.overrideWith((ref, path) async => document),
         positionProvider.overrideWith(

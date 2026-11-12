@@ -242,13 +242,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                         ),
                       );
                       if (_preview.index == index) {
-                        final play = _preview.seeking
-                            ? null
-                            : () => _preview.playFrom(
-                                this.context,
-                                ref,
-                                line.time,
-                              );
+                        void play() =>
+                            _preview.playFrom(this.context, ref, line.time);
                         return GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: play,
@@ -258,16 +253,14 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                             alignment: centeredLines
                                 ? Alignment.center
                                 : Alignment.centerLeft,
-                            onPlay: play,
+                            onPlay: _preview.seeking ? null : play,
                             child: text,
                           ),
                         );
                       }
                       return GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: _preview.index == null
-                            ? widget.onReturnToCover
-                            : null,
+                        onTap: widget.onReturnToCover,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           child: focusLines
@@ -343,9 +336,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       ),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: _preview.index == null
-                        ? widget.onReturnToCover
-                        : null,
+                    onTap: widget.onReturnToCover,
                     child: lyrics,
                   ),
                 );

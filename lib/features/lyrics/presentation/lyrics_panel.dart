@@ -85,19 +85,15 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
           ),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: _preview.index == null ? widget.onReturnToCover : null,
+        onTap: widget.onReturnToCover,
         child: list,
       ),
     );
   }
 
   VoidCallback? _lineTap(LyricsDocument document, int index) {
-    if (_preview.index == null) return widget.onReturnToCover;
-    if (!document.isSynced) return null;
-    final time = document.lines[index].time;
-    return _preview.index == index && !_preview.seeking
-        ? () => _preview.playFrom(context, ref, time)
-        : null;
+    if (_preview.index != index) return widget.onReturnToCover;
+    return () => _preview.playFrom(context, ref, document.lines[index].time);
   }
 
   @override
@@ -213,7 +209,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                     ? LyricSeekRow(
                         time: line.time,
                         foreground: Colors.white,
-                        onPlay: onTap,
+                        onPlay: _preview.seeking ? null : onTap,
                         child: text,
                       )
                     : text,
@@ -294,7 +290,7 @@ class _LyricsPanelState extends ConsumerState<LyricsPanel> {
                             time: line.time,
                             foreground: const Color(0xFF4B63D0),
                             alignment: Alignment.centerLeft,
-                            onPlay: onTap,
+                            onPlay: _preview.seeking ? null : onTap,
                             child: text,
                           )
                         : text,
