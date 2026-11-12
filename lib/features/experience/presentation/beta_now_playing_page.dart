@@ -534,6 +534,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
         context,
         ref,
         ref.read(currentTrackProvider),
+        fromPlayer: true,
       );
     }
   }

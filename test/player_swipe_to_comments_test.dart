@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mesting_music/features/experience/presentation/player_pull_to_dismiss.dart';
+import 'package:mesting_music/features/music_platform/presentation/song_comments_route.dart';
 import 'package:mesting_music/features/experience/presentation/player_swipe_to_comments.dart';
 
 Widget _page({
@@ -32,7 +33,9 @@ void main() {
             onOpenComments: () async {
               opens++;
               await navigator.currentState!.push(
-                MaterialPageRoute<void>(
+                songCommentsRoute<void>(
+                  navigator.currentContext!,
+                  fromPlayer: true,
                   builder: (_) => const Scaffold(body: Text('当前歌曲评论')),
                 ),
               );

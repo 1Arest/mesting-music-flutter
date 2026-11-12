@@ -46,19 +46,20 @@ void main() {
     );
   });
   tearDown(() => container.dispose());
-  Widget host(Widget child, {double scale = 1}) => UncontrolledProviderScope(
-    container: container,
-    child: MaterialApp(
-      theme: ThemeData.dark(),
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: TextScaler.linear(scale)),
-        child: child!,
-      ),
-      home: RepaintBoundary(key: uiFixCaptureKey, child: child),
-    ),
-  );
+  Widget host(Widget child, {double scale = 1, bool dark = true}) =>
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: dark ? ThemeData.dark() : ThemeData.light(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
+          home: RepaintBoundary(key: uiFixCaptureKey, child: child),
+        ),
+      );
   test('defaults preserve existing appearance and atmosphere is opt-in', () {
     final s = container.read(personalStyleProvider);
     expect(s.atmosphere, ListeningAtmosphere.off);
@@ -160,6 +161,60 @@ void main() {
       theme.colorScheme.error,
     );
   });
+  testWidgets('新增清晰歌词预览选择，保存后重开仍保留且不覆盖字号行距', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await container.read(personalStyleProvider.notifier).change({
+      'lyricSize': 24,
+      'lineHeight': 1.2,
+    });
+    await tester.pumpWidget(host(const PersonalStylePage()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('歌词').first);
+    await tester.pumpAndSettle();
+    final choice = find.byKey(const ValueKey('lyric-presentation-clear'));
+    await tester.ensureVisible(choice);
+    await tester.pumpAndSettle();
+    await tester.tap(choice);
+    await tester.pumpAndSettle();
+    final style = container.read(personalStyleProvider);
+    expect(style.lyricPresentation, LyricPresentation.clear);
+    expect(style.lyricSize, 24);
+    expect(style.lineHeight, 1.2);
+    final lyricViewport = tester.state<ScrollableState>(
+      find
+          .descendant(
+            of: find.byType(ListView).hitTestable().last,
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    lyricViewport.position.jumpTo(0);
+    await tester.pumpAndSettle();
+    await captureUiFix(tester, 'clear-lyrics-picker-dark');
+    await tester.pumpWidget(host(const PersonalStylePage(), dark: false));
+    await tester.pumpAndSettle();
+    await captureUiFix(tester, 'clear-lyrics-picker-light');
+    final restored = ProviderContainer(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    );
+    expect(
+      restored.read(personalStyleProvider).lyricPresentation,
+      LyricPresentation.clear,
+    );
+    restored.dispose();
+    expect(
+      PersonalStyle.fromJson({'lyricPresentation': 'focus'}).lyricPresentation,
+      LyricPresentation.focus,
+    );
+    expect(
+      PersonalStyle.fromJson({}).lyricPresentation,
+      LyricPresentation.current,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'disabled atmosphere reads no audio provider and starts no ticker',
     (tester) async {

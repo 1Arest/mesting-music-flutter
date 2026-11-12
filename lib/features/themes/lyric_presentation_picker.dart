@@ -20,7 +20,7 @@ class LyricPresentationPicker extends StatelessWidget {
       const SizedBox(height: 10),
       StyleOptionGrid(
         values: LyricPresentation.values.map((v) => v.name).toList(),
-        labels: const ['当前样式', '聚焦歌词'],
+        labels: const ['当前样式', '聚焦歌词', '清晰歌词'],
         selected: selected.name,
         keyPrefix: 'lyric-presentation',
         onSelected: (value) =>
@@ -39,7 +39,7 @@ class LyricPresentationPicker extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         ['上一句，轻轻流过', '此刻，让音乐靠近', '下一句，缓缓浮现'][i],
-                        textAlign: value == 'focus'
+                        textAlign: value != 'current'
                             ? TextAlign.center
                             : TextAlign.left,
                         style: TextStyle(
@@ -48,7 +48,13 @@ class LyricPresentationPicker extends StatelessWidget {
                               ? FontWeight.w600
                               : FontWeight.w400,
                           color: Theme.of(context).colorScheme.onSurface
-                              .withValues(alpha: i == 1 ? 1 : .65),
+                              .withValues(
+                                alpha: i == 1
+                                    ? 1
+                                    : value == 'clear'
+                                    ? .38
+                                    : .65,
+                              ),
                         ),
                       ),
                     ),
@@ -60,7 +66,7 @@ class LyricPresentationPicker extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       Text(
-        '示例预览 · 聚焦歌词突出当前演唱行，上下歌词柔和虚化。',
+        '示例预览 · 聚焦歌词柔和虚化上下句；清晰歌词保留清楚文字，以亮度区分当前句。',
         style: Theme.of(context).textTheme.bodySmall,
       ),
       const SizedBox(height: 18),
