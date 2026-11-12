@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:ring_download_sdk/ring_download_sdk.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../core/persistence/app_preferences.dart';
@@ -37,6 +38,29 @@ final appUpdateDownloadTransportProvider =
       ref.onDispose(() => unawaited(transport.dispose()));
       return transport;
     });
+
+/// Kept at feature scope so reopening the sheet retains the live task snapshot.
+/// It adds no network requests and never starts a second download owner.
+final appUpdateStatisticsProvider = StreamProvider<RingTransferStatistics?>((
+  ref,
+) {
+  final source = ref.watch(appUpdateDownloadTransportProvider);
+  if (source is! AppUpdateStatisticsSource) return Stream.value(null);
+  final observed = source as AppUpdateStatisticsSource;
+  // Attach before replaying the latest snapshot. An async yield/yield* gap
+  // could otherwise miss the final event of a very fast cached download.
+  return Stream<RingTransferStatistics?>.multi((output) {
+    final subscription = observed.statistics.listen(
+      output.add,
+      onError: output.addError,
+      onDone: output.close,
+    );
+    output.add(observed.latestStatistics);
+    output.onCancel = subscription.cancel;
+    output.onPause = subscription.pause;
+    output.onResume = subscription.resume;
+  });
+});
 
 final appUpdateRepositoryProvider = Provider<AppUpdateRepository>((ref) {
   return AppUpdateRepository(

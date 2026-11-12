@@ -1,3 +1,5 @@
+import 'transfer_statistics.dart';
+import 'transfer_meter.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -17,6 +19,12 @@ class RingDownloadTask {
         request.fileSize,
       ) {
     _result.future.ignore();
+    _latestStatistics = RingTransferStatistics(
+      state: RingDownloadState.queued,
+      elapsed: Duration.zero,
+      receivedBytes: 0,
+      totalBytes: request.fileSize,
+    );
   }
   final RingDownloadRequest request;
   final _events = StreamController<RingDownloadProgress>.broadcast();
@@ -24,17 +32,57 @@ class RingDownloadTask {
   final _cancel = CancelToken();
   RingDownloadProgress _latest;
   bool _terminal = false;
+  final _statistics = StreamController<RingTransferStatistics>.broadcast();
+  final _meter = RingTransferMeter();
+  final _statisticsClock = Stopwatch();
+  Duration? _lastStatisticsAt;
+  Timer? _statisticsTimer;
+  RingTransferSample Function()? _readSample;
+  late RingTransferStatistics _latestStatistics;
+  Stream<RingTransferStatistics> get statistics => _statistics.stream;
+  RingTransferStatistics get latestStatistics => _latestStatistics;
+
+  void _observe({bool force = false}) {
+    if (_terminal) return;
+    final now = _statisticsClock.elapsed;
+    if (!force &&
+        _lastStatisticsAt != null &&
+        now - _lastStatisticsAt! < const Duration(milliseconds: 500)) {
+      return;
+    }
+    RingTransferSample sample;
+    try {
+      sample =
+          _readSample?.call() ?? const RingTransferSample(available: false);
+    } catch (_) {
+      sample = const RingTransferSample(available: false);
+    }
+    _latestStatistics = _meter.read(
+      now,
+      _latest,
+      sample,
+      cancelling:
+          _cancel.isCancelled && _latest.state != RingDownloadState.cancelled,
+    );
+    _lastStatisticsAt = now;
+    _statistics.add(_latestStatistics);
+  }
+
   Stream<RingDownloadProgress> get progress => _events.stream;
   RingDownloadProgress get latest => _latest;
   Future<RingDownloadResult> get completed => _result.future;
 
   /// Cancels transfer, retaining resume data. Completion waits for writer cleanup.
   void cancel() {
-    if (!_terminal) _cancel.cancel('client_interrupted');
+    if (!_terminal) {
+      _cancel.cancel('client_interrupted');
+      _observe(force: true);
+    }
   }
 
   void _publish(RingDownloadState state, int received, {int? total}) {
     if (_terminal) return;
+    final previousState = _latest.state;
     final knownTotal = request.fileSize > 0
         ? request.fileSize
         : total ?? _latest.totalBytes;
@@ -45,6 +93,7 @@ class RingDownloadTask {
       knownTotal,
     );
     _events.add(_latest);
+    _observe(force: previousState != state);
   }
 }
 
@@ -191,6 +240,7 @@ class RingDownloadSdk with WidgetsBindingObserver {
 
   Future<void> _run(RingDownloadTask task) async {
     final clock = Stopwatch()..start();
+    task._statisticsClock.start();
     RingDownloadResult? result;
     RingDownloadException? failure;
     try {
@@ -198,7 +248,7 @@ class RingDownloadSdk with WidgetsBindingObserver {
         throw const RingDownloadException(RingDownloadError.cancelled);
       }
       task._publish(RingDownloadState.transferring, 0);
-      final file = await _engine.download(task.request, (received, total) {
+      final pendingFile = _engine.download(task.request, (received, total) {
         if (task._cancel.isCancelled) return;
         task._publish(
           total > 0 && received >= total
@@ -208,6 +258,17 @@ class RingDownloadSdk with WidgetsBindingObserver {
           total: total,
         );
       }, task._cancel);
+      final source = _engine;
+      if (source is RingTransferStatisticsSource) {
+        task._readSample = () =>
+            (source as RingTransferStatisticsSource).transferSample;
+      }
+      task._observe(force: true);
+      task._statisticsTimer = Timer.periodic(
+        const Duration(milliseconds: 500),
+        (_) => task._observe(),
+      );
+      final file = await pendingFile;
       if (task._cancel.isCancelled) {
         throw const RingDownloadException(RingDownloadError.cancelled);
       }
@@ -270,6 +331,7 @@ class RingDownloadSdk with WidgetsBindingObserver {
           ? const RingDownloadException(RingDownloadError.network)
           : const RingDownloadException(RingDownloadError.internal);
     } finally {
+      task._statisticsTimer?.cancel();
       if (identical(_active, task)) _active = null;
       _busyApps.remove(config.appId);
     }
@@ -284,6 +346,9 @@ class RingDownloadSdk with WidgetsBindingObserver {
       total: failure == null ? result!.fileSize : null,
     );
     task._terminal = true;
+    task._statisticsClock.stop();
+    task._readSample = null;
+    unawaited(task._statistics.close());
     if (failure != null) {
       task._result.completeError(failure);
     } else {

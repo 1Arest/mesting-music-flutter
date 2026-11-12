@@ -314,7 +314,13 @@ void main() {
         conf,
         DefaultRingTransferEngine(conf, http: http),
       );
-      final result = await sdk.download(request()).completed;
+      final task = sdk.download(request());
+      final result = await task.completed;
+      expect(task.latestStatistics.available, true);
+      expect(task.latestStatistics.httpsReceivedBytes, bytes.length);
+      expect(task.latestStatistics.peerReceivedBytes, 0);
+      expect(task.latestStatistics.nodes, isEmpty);
+      expect(task.latestStatistics.state, RingDownloadState.completed);
       expect(await result.file.readAsBytes(), bytes);
       expect(result.file.path, contains('ring_download_sdk'));
       expect(result.file.path, contains('alpha'));

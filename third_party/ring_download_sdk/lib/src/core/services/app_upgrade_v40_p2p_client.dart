@@ -1,3 +1,4 @@
+import 'app_upgrade_transfer_observation.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -136,6 +137,12 @@ class AppUpgradeV40P2PClient {
   Future<int>? _flight;
   String? _flightKey;
   _P2PDownloadSession? _diagnosticSession;
+  AppUpgradeTransferObservation _transferObservation =
+      AppUpgradeTransferObservation();
+  AppUpgradeTransferObservation get transferObservation => _transferObservation;
+  void resetTransferObservation() =>
+      _transferObservation = AppUpgradeTransferObservation();
+
   bool _lastDownloadUsedP2P = false;
   int _lastBootstrapUsedBytes = 0;
   int get lastBootstrapUsedBytes => _lastBootstrapUsedBytes;
@@ -414,6 +421,7 @@ class AppUpgradeV40P2PClient {
     cacheVerifier: _cacheVerifier,
     candidateHistory: _candidateHistory,
     diagnostic: _diagnostic,
+    transferObservation: _transferObservation,
     timeouts: timeouts,
     preferredSeedBatchPieces: preferredSeedBatchPieces.clamp(1, 6),
     preferredPeerBatchPieces: preferredPeerBatchPieces.clamp(1, 4),
@@ -802,6 +810,7 @@ class _P2PDownloadSession {
     required this.cacheVerifier,
     required this.candidateHistory,
     required this.diagnostic,
+    required this.transferObservation,
     required this.timeouts,
     required this.preferredSeedBatchPieces,
     required this.preferredPeerBatchPieces,
@@ -824,6 +833,9 @@ class _P2PDownloadSession {
   final AppUpgradeCacheVerifier cacheVerifier;
   final _P2PCandidateHistory candidateHistory;
   final void Function(AppUpgradeP2PDiagnostic) diagnostic;
+  final AppUpgradeTransferObservation transferObservation;
+  _P2PPeer? _statisticsLegacyPeer;
+
   final AppUpgradeP2PTimeouts timeouts;
   final int preferredSeedBatchPieces;
   final int preferredPeerBatchPieces;
@@ -1124,6 +1136,16 @@ class _P2PDownloadSession {
           if (!_piecesFromHttps) _firstPieceMs ??= _sessionElapsed();
           _firstPiecePersisted = true;
           _startupTimer?.cancel();
+          transferObservation.persisted(
+            prefix ~/ AppUpgradeP2PManifest.chunkSize,
+            bytes.length,
+            _piecesFromHttps
+                ? null
+                : (fromPeer
+                          ? (_hybrid ? _hybridWinner : _statisticsLegacyPeer)
+                          : _server)
+                      ?.observation,
+          );
           prefix += bytes.length;
           if (_piecesFromHttps) {
             // HTTPS is counted by its HTTP session, never as peer/seed traffic.
@@ -1387,6 +1409,12 @@ class _P2PDownloadSession {
             _peerBytes += lease.bytes;
           }
         }
+        transferObservation.persisted(
+          lease.index,
+          lease.bytes,
+          (lease.source == 'server' ? _server : _peers[lease.source])
+              ?.observation,
+        );
         onProgress(book.persistedBytes, book.fileBytes);
         _scheduleHeartbeat();
       },
@@ -2220,6 +2248,7 @@ class _P2PDownloadSession {
           );
           final bootstrap = await _takeBootstrapPiece(index);
           if (bootstrap != null) return [bootstrap];
+          _statisticsLegacyPeer = peer;
           final available = (candidate['pieces'] as List).toSet();
           if (_firstPiecePersisted && peer.pipelineSupported) {
             return [await _receiveWindowPiece(peer, index, available.toList())];
@@ -2514,6 +2543,19 @@ class _P2PDownloadSession {
       throw const AppUpgradeP2PFailure('peer_capacity');
     }
     final peer = _P2PPeer(id, inbound);
+    if (!inbound && !_cacheSharing) {
+      peer.observation = transferObservation.addNode(
+        id == 'server'
+            ? AppUpgradeObservedSource.seed
+            : AppUpgradeObservedSource.peer,
+        () =>
+            _active &&
+            !peer.closed &&
+            peer.channel?.state == RTCDataChannelState.RTCDataChannelOpen,
+        () => !_active || peer.closed,
+      );
+    }
+
     if (id != 'server') _ordinaryPeerOwners.add(peer);
     _peakOrdinaryPeerOwners = max(
       _peakOrdinaryPeerOwners,
@@ -3820,6 +3862,13 @@ class _P2PDownloadSession {
             0,
             message.binary.length - P8PTransferProtocol.headerBytes,
           );
+          transferObservation.receive(
+            peer.observation,
+            peer.id == 'server'
+                ? AppUpgradeObservedSource.seed
+                : AppUpgradeObservedSource.peer,
+            count,
+          );
           if (peer.id == 'server') {
             _seedBodyBytes += count;
           } else {
@@ -3836,6 +3885,13 @@ class _P2PDownloadSession {
           if (peer.receiver != null ||
               peer.batch != null ||
               peer.window != null) {
+            transferObservation.receive(
+              peer.observation,
+              identical(peer, _server)
+                  ? AppUpgradeObservedSource.seed
+                  : AppUpgradeObservedSource.peer,
+              message.binary.length,
+            );
             if (identical(peer, _server)) {
               _seedBodyBytes += message.binary.length;
             } else {
@@ -5305,6 +5361,7 @@ class _P2PPeer {
   _P2PPeer(this.id, this.inbound);
   final String id;
   final bool inbound;
+  AppUpgradeObservedNode? observation;
   final answer = Completer<void>();
   final iceComplete = Completer<void>();
   final connectWatch = Stopwatch()..start();

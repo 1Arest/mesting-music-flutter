@@ -12,7 +12,8 @@ import 'models.dart';
 /// state is scoped to the exact source; without a digest it requires a strong
 /// ETag, so unsigned metadata cannot accidentally splice two different files.
 class DirectHttpsDownload {
-  DirectHttpsDownload(this.config, this.http);
+  DirectHttpsDownload(this.config, this.http, {this.onBodyBytes});
+  final void Function(int)? onBodyBytes;
   final RingDownloadConfig config;
   final Dio http;
 
@@ -234,6 +235,7 @@ class DirectHttpsDownload {
         while (await Future.any([chunks.moveNext(), cancelled])) {
           if (token.isCancelled) throw token.cancelError!;
           final chunk = chunks.current;
+          onBodyBytes?.call(chunk.length);
           if (offset + bodyBytes + chunk.length >
                   RingDownloadRequest.maxFileSize ||
               (responseBytes != null &&

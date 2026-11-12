@@ -1,0 +1,13 @@
+00:00 +0: loading ${QUALIFIED_SOURCE}/sdk119-android31-20261110/project/test/lab_test.dart
+00:00 +0: connected nodes do not falsely claim P2P contribution
+00:01 +1: recent payload and verified data enable the P2P label
+00:01 +2: receive observations retain measured and unknown values for copying
+00:01 +3: receive observation history remains bounded independently of UI events
+00:01 +4: switching away from Wi-Fi cancels once and never resumes a task
+00:01 +5: network event error cancels the test and releases its subscription
+00:01 +6: roster stays fixed through rotation and needs reset after registration changes
+00:01 +7: signal filtering keeps one locked peer and preserves capability fields
+00:01 +8: single-node adapter does not rewrite any online timeout
+00:01 +9: HTTPS file request passes and server seed offer alone is excluded
+00:01 +10: narrow-screen startup is idle with explicit controls
+00:03 +11: All tests passed!

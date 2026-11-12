@@ -8,7 +8,14 @@ import 'app_update_repository.dart';
 
 /// One lifecycle-aware SDK instance for Music's update feature. No user login,
 /// music playback, administrator credential or extra health lookup enters it.
-class RingAppUpdateTransport extends AppUpdateDownloadTransport {
+/// Optional observation capability; legacy HTTPS transports remain compatible.
+abstract interface class AppUpdateStatisticsSource {
+  RingTransferStatistics? get latestStatistics;
+  Stream<RingTransferStatistics?> get statistics;
+}
+
+class RingAppUpdateTransport extends AppUpdateDownloadTransport
+    implements AppUpdateStatisticsSource {
   RingAppUpdateTransport({
     required UpdateDirectoryProvider directoryProvider,
     RingDownloadSdk Function(RingDownloadConfig)? sdkFactory,
@@ -22,6 +29,18 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
   bool _disposed = false;
   bool _clearing = false;
   bool _downloading = false;
+  final _statistics = StreamController<RingTransferStatistics?>.broadcast();
+  RingTransferStatistics? _latestStatistics;
+  @override
+  RingTransferStatistics? get latestStatistics => _latestStatistics;
+  @override
+  Stream<RingTransferStatistics?> get statistics => _statistics.stream;
+
+  void _publishStatistics(RingTransferStatistics? value) {
+    if (_disposed || _statistics.isClosed) return;
+    _latestStatistics = value;
+    _statistics.add(value);
+  }
 
   Future<Directory> _storageDirectory() async {
     final base = await _directoryProvider();
@@ -95,6 +114,7 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
     UpdateDownloadCancellationToken? cancellationToken,
   }) async {
     StreamSubscription<RingDownloadProgress>? subscription;
+    StreamSubscription<RingTransferStatistics>? statisticsSubscription;
     RingDownloadTask? task;
     var ownsDownload = false;
     try {
@@ -102,12 +122,19 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
         throw const RingDownloadException(RingDownloadError.busy);
       }
       _downloading = ownsDownload = true;
+      _publishStatistics(null); // A resumed/new task never inherits old rates.
       final sdk = await _sdk();
       if (_disposed || cancellationToken?.isCancelled == true) {
         throw const RingDownloadException(RingDownloadError.cancelled);
       }
       task = sdk.download(requestFor(manifest));
       _active = task;
+      final observedTask = task;
+      _publishStatistics(task.latestStatistics);
+      statisticsSubscription = task.statistics.listen((value) {
+        // Old task callbacks cannot publish into its replacement's display.
+        if (identical(_active, observedTask)) _publishStatistics(value);
+      });
       subscription = task.progress.listen((progress) {
         if (cancellationToken?.isCancelled != true) {
           onProgress(progress.receivedBytes, progress.totalBytes);
@@ -162,8 +189,12 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
         // final display checkpoint after the writer cleanup barrier completes.
         onProgress(task.latest.receivedBytes, task.latest.totalBytes);
         cancellationToken?.detach();
-        if (identical(_active, task)) _active = null;
+        if (identical(_active, task)) {
+          _publishStatistics(task.latestStatistics);
+          _active = null;
+        }
       }
+      await statisticsSubscription?.cancel();
       await subscription?.cancel();
       if (ownsDownload) _downloading = false;
     }
@@ -205,6 +236,7 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
           _sdkFuture = null;
         }
       }
+      _publishStatistics(null);
       final directory = await _storageDirectory();
       if (await directory.exists()) await directory.delete(recursive: true);
     } finally {
@@ -221,5 +253,6 @@ class RingAppUpdateTransport extends AppUpdateDownloadTransport {
         await (await pending).dispose();
       } catch (_) {}
     }
+    unawaited(_statistics.close());
   }
 }

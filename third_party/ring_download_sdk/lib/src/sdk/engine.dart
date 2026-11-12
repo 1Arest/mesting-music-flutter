@@ -1,3 +1,5 @@
+import '../core/services/app_upgrade_transfer_observation.dart';
+import 'transfer_statistics.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as path;
@@ -26,6 +28,39 @@ abstract interface class RingTransferEngine {
   Future<void> dispose();
 }
 
+/// Optional receive-only observation. Implementations reset counters synchronously
+/// on download entry and retain the final sample until the next download.
+abstract interface class RingTransferStatisticsSource {
+  RingTransferSample get transferSample;
+}
+
+class RingTransferSample {
+  const RingTransferSample({
+    this.available = true,
+    this.httpsBytes = 0,
+    this.peerBytes = 0,
+    this.seedBytes = 0,
+    this.nodes = const [],
+  });
+  final bool available;
+  final int httpsBytes, peerBytes, seedBytes;
+  final List<RingNodeSample> nodes;
+}
+
+class RingNodeSample {
+  const RingNodeSample(
+    this.alias,
+    this.source,
+    this.state,
+    this.receivedBytes,
+    this.verifiedBytes,
+  );
+  final String alias;
+  final RingNodeSource source;
+  final RingNodeState state;
+  final int receivedBytes, verifiedBytes;
+}
+
 /// Optional capability: installation remains host-owned. External downloads
 /// produce no hosted installation telemetry and require no service connection.
 abstract interface class RingInstallationEvents {
@@ -51,7 +86,8 @@ class DefaultRingTransferEngine
         RingTransferEngine,
         RingInstallationEvents,
         RingCachedSharing,
-        RingSharingResourceEvents {
+        RingSharingResourceEvents,
+        RingTransferStatisticsSource {
   DefaultRingTransferEngine(this.config, {Dio? http}) {
     _http =
         http ??
@@ -161,6 +197,39 @@ class DefaultRingTransferEngine
 
   Future<void>? _disposing;
   bool _disposed = false;
+  bool _statisticsHosted = false, _statisticsStarted = false;
+  int _directBodyBytes = 0;
+  @override
+  RingTransferSample get transferSample {
+    if (!_statisticsStarted) return const RingTransferSample(available: false);
+    if (!_statisticsHosted) {
+      return RingTransferSample(httpsBytes: _directBodyBytes);
+    }
+    final observation = _p2p.transferObservation;
+    return RingTransferSample(
+      available: observation.complete,
+      httpsBytes: _client.lastHttpsBodyBytes,
+      peerBytes: observation.peerReceivedBytes,
+      seedBytes: observation.seedReceivedBytes,
+      nodes: [
+        for (final node in observation.nodes)
+          RingNodeSample(
+            node.alias,
+            node.source == AppUpgradeObservedSource.seed
+                ? RingNodeSource.seed
+                : RingNodeSource.peer,
+            node.isClosed()
+                ? RingNodeState.closed
+                : node.isConnected()
+                ? RingNodeState.connected
+                : RingNodeState.connecting,
+            node.receivedBytes,
+            node.verifiedBytes,
+          ),
+      ],
+    );
+  }
+
   RingSharingResourcesOwner? _sharingResources;
   late final Dio _http, _signal;
   late final AppUpgradeV40P2PClient _p2p;
@@ -193,6 +262,9 @@ class DefaultRingTransferEngine
         const RingDownloadException(RingDownloadError.disposed),
       );
     }
+    _statisticsStarted = true;
+    _statisticsHosted = request.usesHostedService;
+    _directBodyBytes = 0;
     if (!request.usesHostedService) {
       // External URLs never discover hosted metadata, peers, or seed sessions.
       // Their optional identity must not become a dependency on our uptime.
@@ -206,6 +278,7 @@ class DefaultRingTransferEngine
       return DirectHttpsDownload(
         config,
         _http,
+        onBodyBytes: (bytes) => _directBodyBytes += bytes,
       ).download(request, onProgress, cancelToken);
     }
     return _client.download(
