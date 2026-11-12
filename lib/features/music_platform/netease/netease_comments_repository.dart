@@ -70,6 +70,28 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
         : PlatformCommentSort.hottest,
   );
 
+  /// A notification references an exact parent. Do not manufacture a comment
+  /// from its preview, or silently substitute another available thread.
+  Future<PlatformComment> noticeThread(
+    PlatformCommentResource resource,
+    String commentId,
+  ) async {
+    final payload = await music.call('/comment/floor', {
+      'threadId': _thread(resource),
+      'parentId': commentId,
+      'limit': 1,
+      'time': -1,
+    });
+    final data = NeteaseMusicRepository.object(payload['data']);
+    final owner = NeteaseMusicRepository.object(data['ownerComment']);
+    if ('${owner['commentId'] ?? ''}' == commentId) return _comment(owner);
+    final row = NeteaseMusicRepository.rows(
+      data['comments'],
+    ).where((row) => '${row['commentId'] ?? ''}' == commentId).firstOrNull;
+    if (row != null) return _comment(row);
+    throw const MusicPlatformException('该评论已不可用');
+  }
+
   Future<PlatformCommentPage> loadSorted(
     PlatformCommentResource resource, {
     int page = 1,
@@ -124,11 +146,15 @@ class NeteaseCommentsRepository extends PlatformCommentsRepository {
     PlatformComment comment,
   ) async {
     requireWritable();
-    await music.api.request('/api/v2/resource/comments/hug/listener', {
-      'targetUserId': comment.userId,
-      'commentId': comment.id,
-      'threadId': _thread(resource),
-    }, expectedCredential: music.credential);
+    await music.api.request(
+      '/api/v2/resource/comments/hug/listener',
+      {
+        'targetUserId': comment.userId,
+        'commentId': comment.id,
+        'threadId': _thread(resource),
+      },
+      expectedCredential: music.credential,
+    );
   }
 
   Future<Map<String, dynamic>> hugs(

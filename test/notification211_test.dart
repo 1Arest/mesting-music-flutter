@@ -352,8 +352,9 @@ void main() {
         'platform': 'netease',
         'notice': 'a&path=/auth',
       })!;
-      expect(Uri.parse(route).path, '/music/notifications');
-      expect(Uri.parse(route).queryParameters['notice'], 'a&path=/auth');
+      expect(Uri.parse(route).path, '/music/notice-content');
+      expect(Uri.parse(route).queryParameters['kind'], 'category');
+      expect(Uri.parse(route).queryParameters.containsKey('notice'), isFalse);
     },
   );
 }

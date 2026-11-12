@@ -153,8 +153,10 @@ class NeteaseMessageNotice {
     this.resourceId = '',
     this.resourceType = '',
     this.threadId = '',
+    this.commentId = '',
+    this.eventId = '',
   });
-  final String id, text, resourceId, resourceType, threadId;
+  final String id, text, resourceId, resourceType, threadId, commentId, eventId;
   final NeteasePerson person;
   final DateTime time;
   factory NeteaseMessageNotice.parse(
@@ -179,7 +181,10 @@ class NeteaseMessageNotice {
       ),
       resourceId: '${resource['id'] ?? row['resourceId'] ?? ''}',
       resourceType: '${resource['type'] ?? row['resourceType'] ?? ''}',
-      threadId: '${row['threadId'] ?? resource['threadId'] ?? ''}',
+      threadId:
+          '${row['threadId'] ?? comment['threadId'] ?? notice['threadId'] ?? resource['threadId'] ?? ''}',
+      commentId: '${row['commentId'] ?? comment['commentId'] ?? ''}',
+      eventId: '${event['id'] ?? row['eventId'] ?? ''}',
     );
   }
 }

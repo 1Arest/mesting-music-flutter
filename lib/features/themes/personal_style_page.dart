@@ -1,3 +1,4 @@
+import 'lyric_highlight_swatch.dart';
 import '../../shared/widgets/beta_selection_controls.dart';
 import 'lyric_presentation_picker.dart';
 import 'music_typography.dart';
@@ -318,11 +319,11 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                             Colors.white,
                             ...personalPalettes.values,
                           ])
-                            IconButton(
-                              tooltip: '歌词颜色',
+                            LyricHighlightSwatch(
+                              color: color,
+                              selected: s.lyricColor == color.toARGB32(),
                               onPressed: () =>
                                   _change({'lyricColor': color.toARGB32()}),
-                              icon: Icon(Icons.circle, color: color),
                             ),
                         ],
                       ),

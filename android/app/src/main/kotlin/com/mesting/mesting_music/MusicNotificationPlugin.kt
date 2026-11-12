@@ -43,6 +43,15 @@ class MusicNotificationPlugin(private val done: (() -> Unit)? = null) : FlutterP
                 "release" -> { MusicNoticeStore.release(call.argument<String>("lease")); result.success(null) }
                 "error" -> { MusicNoticeStore.error(context, call.argument<String>("platform").orEmpty(), call.argument<String>("feed").orEmpty()); result.success(null) }
                 "entry" -> result.success(MusicNoticeStore.entry(context))
+                "openNotice" -> {
+                    val intent = Intent().putExtra("mesting_entry", "notifications")
+                        .putExtra("platform", call.argument<String>("platform"))
+                        .putExtra("scope", call.argument<String>("scope"))
+                        .putExtra("notice", call.argument<String>("notice"))
+                    MusicNoticeStore.enqueue(context, intent)
+                    channel.invokeMethod("entryAvailable", null)
+                    result.success(true)
+                }
                 "acknowledge" -> { MusicNoticeStore.acknowledge(context, call.argument<String>("id").orEmpty()); result.success(null) }
                 "lastPlatform" -> result.success(MusicNoticeStore.lastPlatform(context, call.argument<String>("platform")))
                 "finished" -> { result.success(null); done?.invoke() }

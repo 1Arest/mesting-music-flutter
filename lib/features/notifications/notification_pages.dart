@@ -200,10 +200,11 @@ class MusicNotificationInboxPage extends StatefulWidget {
   const MusicNotificationInboxPage({
     this.platform,
     this.noticeId,
+    this.category,
     this.bridge = const MusicNotificationBridge(),
     super.key,
   });
-  final String? platform, noticeId;
+  final String? platform, noticeId, category;
   final MusicNotificationBridge bridge;
   @override
   State<MusicNotificationInboxPage> createState() => _NoticeInboxState();
@@ -229,6 +230,9 @@ class _NoticeInboxState extends State<MusicNotificationInboxPage> {
               (r) =>
                   widget.platform == null || r['platform'] == widget.platform,
             )
+            .where(
+              (r) => widget.category == null || r['kind'] == widget.category,
+            )
             .toList()
           ..sort(
             (a, b) => ((b['time'] as num?)?.toInt() ?? 0).compareTo(
@@ -245,7 +249,17 @@ class _NoticeInboxState extends State<MusicNotificationInboxPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('消息提醒')),
+    appBar: AppBar(
+      title: Text(
+        widget.category == null
+            ? '消息提醒'
+            : MusicNoticeKind.values
+                      .where((kind) => kind.name == widget.category)
+                      .firstOrNull
+                      ?.label ??
+                  '消息提醒',
+      ),
+    ),
     body: _NoticePageBody(
       child: loading
           ? const Center(child: CupertinoActivityIndicator())
@@ -291,6 +305,15 @@ class _NoticeInboxState extends State<MusicNotificationInboxPage> {
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(noticeText(row['body'], 500)),
                       ),
+                      trailing: const Icon(
+                        CupertinoIcons.chevron_right,
+                        size: 18,
+                      ),
+                      onTap: () => widget.bridge.call<bool>('openNotice', {
+                        'platform': row['platform'],
+                        'scope': row['scope'],
+                        'notice': row['id'],
+                      }),
                     ),
                   ),
               ],

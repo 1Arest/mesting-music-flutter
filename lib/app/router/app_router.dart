@@ -1,3 +1,6 @@
+import '../../features/notifications/notification_content_page.dart';
+import '../../features/notifications/notification_target.dart';
+import '../../features/music_platform/domain/platform_session.dart';
 import '../../features/music_platform/presentation/platform_auth_page.dart';
 import '../../features/music_platform/qishui/qishui_pages.dart';
 import '../../shared/widgets/beta_page_motion.dart';
@@ -152,11 +155,26 @@ List<RouteBase> _musicShellRoutes() {
           _musicSlidePage(state: state, child: const QueuePage()),
     ),
     GoRoute(
+      path: '/music/notice-content',
+      pageBuilder: (context, state) => _musicSlidePage(
+        state: state,
+        child: MusicNoticeContentPage(
+          platform: state.uri.queryParameters['platform'] == 'netease'
+              ? MusicPlatform.netease
+              : MusicPlatform.kugou,
+          scope: state.uri.queryParameters['scope'] ?? '',
+          target: NoticeTarget.fromJson(state.uri.queryParameters),
+        ),
+      ),
+    ),
+    GoRoute(
       path: '/music/notifications',
       pageBuilder: (context, state) => _musicSlidePage(
         state: state,
-        child: MusicNotificationInboxPage(platform: state.uri.queryParameters['platform'],
-          noticeId: state.uri.queryParameters['notice']),
+        child: MusicNotificationInboxPage(
+          platform: state.uri.queryParameters['platform'],
+          noticeId: state.uri.queryParameters['notice'],
+        ),
       ),
     ),
     GoRoute(

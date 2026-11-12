@@ -1,3 +1,4 @@
+import 'footprint_scroll_link.dart';
 import 'official_report_extras_view.dart';
 import '../../presentation/song_actions_sheet.dart';
 import '../../../../shared/widgets/song_list_tools.dart';
@@ -48,12 +49,11 @@ class _ListeningFootprintPageState
   Timer? _calendar;
   bool _active = true;
   String _query = '';
-  final _scrolls = List.generate(3, (_) => ScrollController());
+  final _scrollLink = FootprintScrollLink();
+  List<ScrollController> get _scrolls => _scrollLink.controllers;
   final _scrollPageKeys = List.generate(3, (_) => GlobalKey());
   ScrollController get _scroll => _scrolls[_bound?.scale.index ?? 0];
   Drag? _headerDrag;
-  double? _swipeHeaderOffset;
-  int _headerSwipeGeneration = 0;
   final _selectedDays = <String, String>{};
   late final BetaPageSearchController _search;
 
@@ -89,45 +89,12 @@ class _ListeningFootprintPageState
   }
 
   bool _holdHeaderDuringSwipe(ScrollNotification event) {
-    if (event.depth != 0 || event.metrics.axis != Axis.horizontal) return false;
-    if (event is ScrollStartNotification && event.dragDetails != null) {
-      ++_headerSwipeGeneration;
-      // Different pages may retain different vertical offsets. Changing the
-      // active scale halfway across a swipe must not move the common title's
-      // alignment or resize its header while the finger is still paging.
-      _swipeHeaderOffset = _scroll.hasClients ? _scroll.offset : 0;
-    } else if (event is ScrollEndNotification && _swipeHeaderOffset != null) {
-      final generation = _headerSwipeGeneration;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted ||
-            generation != _headerSwipeGeneration ||
-            _swipeHeaderOffset == null) {
-          return;
-        }
-        setState(() => _swipeHeaderOffset = null);
-      });
-      WidgetsBinding.instance.ensureVisualUpdate();
+    if (event.depth == 0 &&
+        event.metrics.axis == Axis.horizontal &&
+        event is ScrollStartNotification) {
+      _scrollLink.preparePages();
     }
     return false;
-  }
-
-  void _revealReport() {
-    if (!_scroll.hasClients) return;
-    final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
-    final target = 116.0 + ((scale - 1) * 112).clamp(0, 160);
-    if (_scroll.offset <= target) return;
-    // A pinned segment can be changed while the user is far down today's
-    // songs. Bring the new report's navigation directly below the toolbar;
-    // otherwise the selection changes invisibly hundreds of pixels above it.
-    unawaited(
-      _scroll.animateTo(
-        target,
-        duration: MediaQuery.disableAnimationsOf(context)
-            ? Duration.zero
-            : const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-      ),
-    );
   }
 
   Future<void> _refresh() async {
@@ -148,9 +115,7 @@ class _ListeningFootprintPageState
     _calendar?.cancel();
     _headerDrag?.cancel();
     _search.dispose();
-    for (final scroll in _scrolls) {
-      scroll.dispose();
-    }
+    _scrollLink.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -164,14 +129,13 @@ class _ListeningFootprintPageState
       _summary = summary;
       _selectedDays.clear();
       _query = '';
-      _swipeHeaderOffset = null;
-      ++_headerSwipeGeneration;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted ||
             !identical(detail, _bound) ||
             !identical(summary, _summary)) {
           return;
         }
+        _scrollLink.reset();
         _search.clearResults();
         unawaited(_refresh());
       });
@@ -191,7 +155,7 @@ class _ListeningFootprintPageState
                   top: MediaQuery.paddingOf(context).top,
                   textScale: MediaQuery.textScalerOf(context).scale(16) / 16,
                 );
-                final scroll = _scrolls[scale.index];
+                _scrollLink.range = metrics.maxExtent - metrics.minExtent;
                 return Stack(
                   children: [
                     Positioned.fill(
@@ -202,6 +166,7 @@ class _ListeningFootprintPageState
                           length: 3,
                           onChanged: (index) {
                             if (detail == null) return;
+                            _scrollLink.select(index);
                             detail.selectScale(FootprintScale.values[index]);
                             unawaited(detail.loadSelected());
                           },
@@ -221,7 +186,7 @@ class _ListeningFootprintPageState
                       left: 0,
                       right: 0,
                       child: AnimatedBuilder(
-                        animation: scroll,
+                        animation: _scrollLink,
                         builder: (context, _) => GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onVerticalDragStart: _startHeaderDrag,
@@ -232,9 +197,7 @@ class _ListeningFootprintPageState
                           onVerticalDragCancel: () => _headerDrag?.cancel(),
                           child: _FootprintHeader(
                             metrics: metrics,
-                            scrollOffset:
-                                _swipeHeaderOffset ??
-                                (scroll.hasClients ? scroll.offset : 0),
+                            scrollOffset: _scrollLink.collapse,
                             scale: scale,
                             total:
                                 summary?.total ?? const FootprintReading<int>(),
@@ -244,8 +207,8 @@ class _ListeningFootprintPageState
                             onScale: detail == null
                                 ? null
                                 : (scale) {
+                                    _scrollLink.select(scale.index);
                                     detail.selectScale(scale);
-                                    _revealReport();
                                     unawaited(detail.loadSelected());
                                   },
                             onRefresh: detail == null
@@ -802,44 +765,56 @@ class _FootprintHeader extends StatelessWidget {
                   left: 22,
                   right: 22,
                   bottom: 10,
-                  child: SizedBox(
-                    height: metrics.segmentHeight,
-                    child: CupertinoSlidingSegmentedControl<FootprintScale>(
-                      key: const ValueKey('footprint-scale-control'),
-                      groupValue: scale,
-                      backgroundColor: BetaAppearance.panel(
-                        Theme.of(context).brightness,
-                      ),
-                      thumbColor:
-                          Theme.of(context).brightness == Brightness.dark
-                          ? scheme.surfaceContainerHighest
-                          : Colors.white,
-                      proportionalWidth: false,
-                      onValueChanged: (value) {
-                        if (value != null) onScale?.call(value);
-                      },
-                      children: {
-                        for (final value in FootprintScale.values)
-                          value: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 5,
-                            ),
-                            child: Text(
-                              switch (value) {
-                                FootprintScale.week => '周',
-                                FootprintScale.month => '月',
-                                FootprintScale.year => '年',
-                              },
-                              key: ValueKey('footprint-scale-${value.name}'),
-                              style: TextStyle(
-                                fontSize: MusicTypography.subheadlineSize,
-                                color: scheme.onSurface,
-                                fontWeight: MusicTypography.bodyWeight,
-                              ),
-                            ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Center(
+                      child: SizedBox(
+                        key: const ValueKey('footprint-segment-width'),
+                        width: lerpDouble(
+                          constraints.maxWidth,
+                          constraints.maxWidth.clamp(0.0, 230.0),
+                          t,
+                        ),
+                        height: metrics.segmentHeight,
+                        child: CupertinoSlidingSegmentedControl<FootprintScale>(
+                          key: const ValueKey('footprint-scale-control'),
+                          groupValue: scale,
+                          backgroundColor: BetaAppearance.panel(
+                            Theme.of(context).brightness,
                           ),
-                      },
+                          thumbColor:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? scheme.surfaceContainerHighest
+                              : Colors.white,
+                          proportionalWidth: false,
+                          onValueChanged: (value) {
+                            if (value != null) onScale?.call(value);
+                          },
+                          children: {
+                            for (final value in FootprintScale.values)
+                              value: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 5,
+                                ),
+                                child: Text(
+                                  switch (value) {
+                                    FootprintScale.week => '周',
+                                    FootprintScale.month => '月',
+                                    FootprintScale.year => '年',
+                                  },
+                                  key: ValueKey(
+                                    'footprint-scale-${value.name}',
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: MusicTypography.subheadlineSize,
+                                    color: scheme.onSurface,
+                                    fontWeight: MusicTypography.bodyWeight,
+                                  ),
+                                ),
+                              ),
+                          },
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -267,7 +267,7 @@ void main() {
               .widget<Text>(byKey('footprint-collapsing-title'))
               .style!
               .fontSize,
-          destination == FootprintScale.month ? 28 : 17,
+          17,
         );
       }
       expect(activeScroll(tester).controller!.offset, closeTo(weekOffset, .1));
@@ -301,13 +301,13 @@ void main() {
 
       await swipe(tester, -1);
       expect(reader(container).scale, FootprintScale.month);
-      expect(activeScroll(tester).controller!.offset, 0);
+      expect(activeScroll(tester).controller!.offset, 116);
       expect(
         tester
             .widget<Text>(byKey('footprint-collapsing-title'))
             .style!
             .fontSize,
-        28,
+        17,
       );
       await tester.tap(byKey('footprint-previous'));
       await tester.pumpAndSettle();

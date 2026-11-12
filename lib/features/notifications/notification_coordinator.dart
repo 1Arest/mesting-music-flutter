@@ -16,6 +16,7 @@ import 'notification_bridge.dart';
 import 'notification_models.dart';
 import 'notification_runner.dart';
 import 'notification_sources.dart';
+import 'notification_target.dart';
 
 final musicNoticeRevision = ValueNotifier<int>(0);
 
@@ -177,7 +178,12 @@ class _NoticeCoordinatorState
       await controller.switchPlatform(platform);
     }
     if (!mounted) return null;
-    if (!mounted) return null;
+    // A login can change while switching the visible platform. Verify the
+    // original notification's retained scope once more before navigation.
+    if (entry['action'] == 'notifications' &&
+        (await readNoticeAccount(platform))?.scope != entry['scope']) {
+      return null;
+    }
     loginOpened = false;
     return route;
   }
@@ -223,12 +229,6 @@ String? musicEntryRoute(Map<String, dynamic> entry) =>
       'recognize' => '/music/recognize',
       'search' => '/music/search',
       'notifications' when ['netease', 'kugou'].contains(entry['platform']) =>
-        Uri(
-          path: '/music/notifications',
-          queryParameters: {
-            'platform': '${entry['platform']}',
-            'notice': '${entry['notice'] ?? ''}',
-          },
-        ).toString(),
+        noticeDestinationRoute(entry),
       _ => null,
     };

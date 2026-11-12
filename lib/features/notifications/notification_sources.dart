@@ -16,6 +16,7 @@ import '../music_platform/netease/netease_session.dart';
 import '../music_platform/netease/netease_music_repository.dart';
 import '../music_platform/netease/messages/netease_messages_repository.dart';
 import 'notification_models.dart';
+import 'notification_target.dart';
 
 class NoticeAccount {
   NoticeAccount(this.identity, {this.netease})
@@ -100,6 +101,12 @@ class NoticeSources implements NoticeSourceBundle {
                 body: noticeText(row.last.text),
                 time: row.last.time.millisecondsSinceEpoch,
                 peer: row.peer.id,
+                target: NoticeTarget(
+                  kind: NoticeTargetKind.conversation,
+                  id: row.peer.id,
+                  name: row.peer.name,
+                  category: 'privateMessage',
+                ),
               ),
         ]);
       }, kind: MusicNoticeKind.privateMessage),
@@ -115,6 +122,16 @@ class NoticeSources implements NoticeSourceBundle {
                 title: kind == NeteaseNoticeKind.fans ? '有新的关注' : '有新的互动',
                 body: noticeText('${row.person.name} ${row.text}'),
                 time: row.time.millisecondsSinceEpoch,
+                target: neteaseNoticeTarget(
+                  category: kind.name,
+                  userId: row.person.id,
+                  userName: row.person.name,
+                  commentId: row.commentId,
+                  threadId: row.threadId,
+                  resourceKind: row.resourceType,
+                  resourceId: row.resourceId,
+                  eventId: row.eventId,
+                ),
               ),
           ]),
           kind: MusicNoticeKind.interaction,
@@ -143,6 +160,12 @@ class NoticeSources implements NoticeSourceBundle {
                 title: '关注歌手有新作品',
                 body: noticeText('${_artists(row)} · ${row['name'] ?? '新作品'}'),
                 time: _milliseconds(row['publishTime']),
+                target: NoticeTarget(
+                  kind: NoticeTargetKind.song,
+                  id: '${row['id']}',
+                  name: noticeText(row['name']),
+                  category: 'artist',
+                ),
               ),
         ]);
       }, kind: MusicNoticeKind.artist),
@@ -163,14 +186,7 @@ class NoticeSources implements NoticeSourceBundle {
       // Official 20.8.8 MsgPullProtocol uses sync/poll + opaque `s`, separate
       // from MsgReadProtocol. Messages stay unread on the upstream platform.
       NoticeSource('messages', (cursor) async {
-        final directory = await getApplicationSupportDirectory();
-        final file = File(
-          '${directory.path}/music_platform/runtime/device_info.json',
-        );
-        if (!await file.exists() || await file.length() > 16384) {
-          throw const FormatException('Registered device unavailable');
-        }
-        final device = noticeMap(jsonDecode(await file.readAsString()));
+        final device = await readKugouNoticeDevice();
         final query = kugouNoticeParameters(
           account.identity,
           device,
@@ -222,6 +238,14 @@ class NoticeSources implements NoticeSourceBundle {
                   '${row['singername'] ?? row['singer_name'] ?? ''} · ${row['album_name'] ?? row['albumname'] ?? row['name'] ?? '新作品'}',
                 ),
                 time: _milliseconds(row['publish_time'] ?? row['addtime']),
+                target: NoticeTarget(
+                  kind: NoticeTargetKind.album,
+                  id: '${row['album_id'] ?? row['albumid'] ?? row['id']}',
+                  name: noticeText(
+                    row['album_name'] ?? row['albumname'] ?? row['name'],
+                  ),
+                  category: 'artist',
+                ),
               ),
         ]);
       }, kind: MusicNoticeKind.artist),
@@ -254,6 +278,10 @@ class NoticeSources implements NoticeSourceBundle {
                 title: '今天的音乐推荐已更新',
                 body: noticeText(titles.take(4).join('、')),
                 time: now.millisecondsSinceEpoch,
+                target: const NoticeTarget(
+                  kind: NoticeTargetKind.daily,
+                  category: 'recommendation',
+                ),
               ),
             ],
     );
@@ -383,8 +411,76 @@ MusicNotice? _kugouEvent(Map<String, dynamic> row, MusicPlatform platform) {
     body: body.isEmpty ? '收到一条新消息' : body,
     time: _milliseconds(row['addtime']),
     peer: '${row['uid'] ?? ''}',
+    target: kugouNoticeTarget(row, message, kind),
   );
 }
+
+Future<Map<String, dynamic>> readKugouNoticeDevice() async {
+  final directory = await getApplicationSupportDirectory();
+  final file = File(
+    '${directory.path}/music_platform/runtime/device_info.json',
+  );
+  if (!await file.exists() || await file.length() > 16384) {
+    throw const FormatException('Registered device unavailable');
+  }
+  return noticeMap(jsonDecode(await file.readAsString()));
+}
+
+/// Public schema boundaries only: typed resource fields can route a notice;
+/// text, marketing links and arbitrary jump URLs cannot drive navigation.
+NoticeTarget kugouNoticeTarget(
+  Map<String, dynamic> row,
+  Map<String, dynamic> message,
+  MusicNoticeKind kind,
+) {
+  if (kind == MusicNoticeKind.privateMessage) {
+    return NoticeTarget.fromJson({
+      'kind': 'conversation',
+      'id': row['uid'],
+      'tag': row['tag'],
+      'name': message['title'],
+      'category': kind.name,
+    });
+  }
+  final content = noticeMap(message['content']);
+  final resource = noticeMap(message['resource'] ?? content['resource']);
+  final rawKind =
+      '${resource['type'] ?? message['resource_type'] ?? content['resource_type'] ?? ''}';
+  final id = NoticeTarget.identifier(
+    resource['id'] ?? message['resource_id'] ?? content['resource_id'],
+  );
+  final comment = NoticeTarget.identifier(
+    message['comment_id'] ?? content['comment_id'],
+  );
+  if (comment.isNotEmpty &&
+      NoticeTarget.resourceKinds.contains(rawKind) &&
+      id.isNotEmpty) {
+    return NoticeTarget(
+      kind: NoticeTargetKind.comment,
+      id: comment,
+      resourceId: id,
+      resourceKind: rawKind,
+      category: kind.name,
+    );
+  }
+  final destination = switch (rawKind) {
+    'song' => NoticeTargetKind.song,
+    'album' => NoticeTargetKind.album,
+    'playlist' => NoticeTargetKind.playlist,
+    'artist' => NoticeTargetKind.artist,
+    'user' => NoticeTargetKind.user,
+    _ => NoticeTargetKind.category,
+  };
+  return NoticeTarget.fromJson({
+    'kind': destination.name,
+    'id': id,
+    'hash': resource['hash'] ?? message['hash'] ?? content['hash'],
+    'name': resource['name'] ?? message['title'],
+    'category': kind.name,
+  });
+}
+
+String kugouNoticeMessageBody(Object? value) => _messageBody(value);
 
 /// Display message content, never a raw JSON envelope or its metadata fields.
 String _messageBody(Object? value, [int depth = 0]) {

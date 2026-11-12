@@ -202,6 +202,7 @@ object MusicNoticeStore {
             .setAction("com.mesting.music.OPEN_NOTICE")
             .putExtra("mesting_entry", "notifications").putExtra("platform", platform)
             .putExtra("scope", scope).putExtra("notice", id)
+            .putExtra("kind", kind)
             .setData(android.net.Uri.parse("mesting://notice/${android.net.Uri.encode("$scope:$kind:$id")}"))
         val pending = PendingIntent.getActivity(context, 0, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -248,6 +249,24 @@ object MusicNoticeStore {
             val scope = intent.getStringExtra("scope") ?: return
             if (scope.isEmpty() || platform !in platforms || objectAt(state, "owners").optString(platform) != scope) return
             entry.put("platform", platform).put("scope", scope).put("notice", intent.getStringExtra("notice").orEmpty().take(240))
+            // Resolve content from this account's durable inbox. External
+            // intents cannot inject an arbitrary destination or upstream URL.
+            val inbox = state.optJSONArray("inbox") ?: JSONArray()
+            var matched: JSONObject? = null
+            for (i in 0 until inbox.length()) {
+                val row = inbox.optJSONObject(i) ?: continue
+                if (row.optString("id") == entry.optString("notice") &&
+                    row.optString("scope") == scope && row.optString("platform") == platform) {
+                    matched = row; break
+                }
+            }
+            val kind = matched?.optString("kind") ?: intent.getStringExtra("kind").orEmpty()
+            entry.put("kind", if (kind in kinds) kind else "interaction")
+            if (matched != null) {
+                entry.put("peer", matched.optString("peer")).put("title", matched.optString("title"))
+                entry.put("sourceId", matched.optString("id"))
+                matched.optJSONObject("target")?.let { entry.put("target", it) }
+            }
         }
         state.put("entry", entry)
         save(context, state)

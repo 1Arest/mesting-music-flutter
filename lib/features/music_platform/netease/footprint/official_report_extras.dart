@@ -54,13 +54,26 @@ class OfficialReportExtras {
       String? identifier,
       bool ratio = false,
     }) {
-      final raw = object(data[block])['sections'];
+      final source = object(data[block]);
+      final raw = source['sections'];
       if (raw is! List) return const [];
+      final extra = source['songItems'];
       return List.unmodifiable(
         raw
             .take(24)
-            .map((v) {
-              final row = object(v), number = row['percent'];
+            .toList()
+            .asMap()
+            .entries
+            .map((entry) {
+              // Official listen-home's We renderer zips sections with songItems
+              // by index. Era/language metadata and representative cover/ID are
+              // separate arrays; reading sections alone loses real cover art.
+              final row = <Object?, Object?>{
+                ...object(entry.value),
+                if (extra is List && entry.key < extra.length)
+                  ...object(extra[entry.key]),
+              };
+              final number = row['percent'];
               final percent = number is num
                   ? number.toDouble()
                   : double.tryParse('$number');

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../music_platform/domain/platform_session.dart';
+import 'notification_target.dart';
 
 enum MusicNoticeKind {
   privateMessage('私信'),
@@ -23,11 +24,13 @@ class MusicNotice {
     required this.body,
     this.time = 0,
     this.peer = '',
+    this.target,
   });
   final String id, title, body, peer;
   final MusicPlatform platform;
   final MusicNoticeKind kind;
   final int time;
+  final NoticeTarget? target;
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -37,6 +40,7 @@ class MusicNotice {
     'body': body,
     'time': time,
     'peer': peer,
+    if (target != null) 'target': target!.toJson(),
   };
 }
 

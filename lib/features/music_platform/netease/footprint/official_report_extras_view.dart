@@ -12,6 +12,7 @@ import '../../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../../player/presentation/beta_playback_actions.dart';
 import 'official_report_extras.dart';
 import 'official_record_wall.dart';
+import 'official_report_language_chart.dart';
 
 export 'official_record_wall.dart' show OfficialRecordWall;
 
@@ -249,7 +250,10 @@ class OfficialReportExtrasView extends ConsumerWidget {
         if (data.genres.isNotEmpty) section('$prefix曲风', ratios(data.genres)),
         if (data.ages.isNotEmpty) section('$prefix听歌年代', ranked(data.ages)),
         if (data.languages.isNotEmpty)
-          section('$prefix听歌语言', ratios(data.languages)),
+          section(
+            '$prefix听歌语言',
+            OfficialReportLanguageChart(languages: data.languages),
+          ),
         const Padding(
           padding: EdgeInsets.only(top: 18),
           child: Text(
