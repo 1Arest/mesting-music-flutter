@@ -9,66 +9,12 @@ import '../../../shared/widgets/artwork_image.dart';
 import '../../themes/mesting_palette.dart';
 import '../player_visual_style.dart';
 import 'vinyl_disc.dart';
+import 'official_vinyl_parts.dart';
 import '../../themes/music_typography.dart';
 import '../../library/presentation/song_favorite_count_badge.dart';
 
 const double alternativePlayerStageDefaultTopInset = 90;
 const double alternativePlayerStageHeaderClearance = 68;
-
-/// Geometric replacement for the outlined bitmap. Coordinates follow the
-/// record width: the stylus stays on the outer grooves, outside its cover.
-class _BetaTonearmPainter extends CustomPainter {
-  const _BetaTonearmPainter(this.angle);
-  final double angle;
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final pivot = Offset(w * .50, w * .035);
-    canvas.save();
-    canvas.translate(pivot.dx, pivot.dy);
-    canvas.rotate(angle);
-    canvas.translate(-pivot.dx, -pivot.dy);
-    final path = Path()
-      ..moveTo(pivot.dx, pivot.dy)
-      ..quadraticBezierTo(w * .56, w * .18, w * .65, w * .32)
-      ..quadraticBezierTo(w * .69, w * .40, w * .82, w * .50);
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFFF8F8F9)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * .014
-        ..strokeCap = StrokeCap.round,
-    );
-    canvas.drawCircle(pivot, w * .024, Paint()..color = Colors.white);
-    canvas.drawCircle(
-      pivot,
-      w * .009,
-      Paint()..color = const Color(0xFFD5D7D9),
-    );
-    canvas.translate(w * .82, w * .50);
-    canvas.rotate(.42);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(-w * .006, -w * .018, w * .064, w * .036),
-        Radius.circular(w * .009),
-      ),
-      Paint()..color = Colors.white,
-    );
-    canvas.drawLine(
-      Offset(w * .008, -w * .008),
-      Offset(w * .04, -w * .008),
-      Paint()
-        ..color = const Color(0xFFC3C6C9)
-        ..strokeWidth = w * .005,
-    );
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_BetaTonearmPainter oldDelegate) =>
-      oldDelegate.angle != angle;
-}
 
 /// Artwork-only stage for Beta's shared transport shell. Reuses the production
 /// motion surfaces continuously, without the preview's one-cycle animation.
@@ -1895,12 +1841,26 @@ class ClassicVinylArtwork extends StatelessWidget {
     builder: (context, c) {
       final side = math.min(c.maxWidth, c.maxHeight);
       final reduced = MediaQuery.disableAnimationsOf(context);
+      final recordDiameter = side * .85;
+      final recordTop = side * .15;
+      // Measure against the platter so the lifted stylus clears the rim and
+      // the lowered stylus stays in the grooves at every stage size.
+      final armWidth = recordDiameter * .62;
+      final armHeight = armWidth * 474 / 528;
+      final pivotTop = recordTop - recordDiameter * .27;
       return Center(
         child: SizedBox.square(
           dimension: side,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              Positioned(
+                left: side * .036,
+                top: side * .111,
+                width: side * .928,
+                height: side * .928,
+                child: const OfficialRecordBackdrop(),
+              ),
               Positioned(
                 left: side * .075,
                 top: side * .15,
@@ -1912,18 +1872,12 @@ class ClassicVinylArtwork extends StatelessWidget {
                   labelSizeFactor: .64,
                 ),
               ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(end: playing ? 0 : -25 * math.pi / 180),
-                    duration: reduced
-                        ? Duration.zero
-                        : const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, angle, _) =>
-                        CustomPaint(painter: _BetaTonearmPainter(angle)),
-                  ),
-                ),
+              Positioned(
+                left: (side - armWidth) / 2,
+                top: pivotTop - armHeight * 44 / 474,
+                width: armWidth,
+                height: armHeight,
+                child: OfficialVinylTonearm(playing: playing),
               ),
             ],
           ),

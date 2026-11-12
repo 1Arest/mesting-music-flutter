@@ -18,9 +18,53 @@ import 'package:mesting_music/features/lyrics/presentation/lyrics_panel.dart';
 import 'package:mesting_music/features/lyrics/presentation/lyric_timing_tools.dart';
 import 'package:mesting_music/features/experience/presentation/player_content_transition.dart';
 import 'package:mesting_music/shared/models/track.dart';
+import 'support/ui_fix_capture.dart';
 
 void main() {
+  setUpAll(initializeUiFixCapture);
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('聚焦歌词居中显示长句，滚动选句仍可播放', (tester) async {
+    final positions = StreamController<Duration>();
+    addTearDown(positions.close);
+    var returns = 0;
+    final player = await _mount(
+      tester,
+      ImmersiveLyrics(referenceDesign: true, onReturnToCover: () => returns++),
+      positions: positions.stream,
+      style: const PersonalStyle(lyricPresentation: LyricPresentation.focus),
+      scale: 1.4,
+    );
+    positions.add(_lines[7].time);
+    await tester.pumpAndSettle();
+    final sung = find.text(_lines[7].text);
+    final list = find.byType(ListView);
+    expect(tester.getCenter(sung).dy, closeTo(tester.getCenter(list).dy, 1));
+    expect(tester.getCenter(sung).dx, closeTo(tester.getCenter(list).dx, 1));
+    final treatment = find.ancestor(
+      of: sung,
+      matching: find.byType(ImageFiltered),
+    );
+    expect(tester.widget<ImageFiltered>(treatment).enabled, false);
+    expect(
+      tester
+          .widgetList<ImageFiltered>(find.byType(ImageFiltered))
+          .any((x) => x.enabled),
+      true,
+    );
+    await captureUiFix(tester, 'focus-lyrics');
+    await tester.tap(sung);
+    expect(returns, 1);
+    await _dragLyrics(tester);
+    final selected = find.byType(LyricSeekRow);
+    final time = tester.widget<LyricSeekRow>(selected).time;
+    await tester.tap(
+      find.descendant(of: selected, matching: find.byType(IconButton)),
+    );
+    await tester.pumpAndSettle();
+    expect(player.seeks, [time]);
+    expect(player.plays, 1);
+  });
 
   for (final immersive in [true, false]) {
     for (final synced in [true, false]) {
@@ -399,7 +443,10 @@ Future<_Player> _mount(
               height: 400,
               child: MediaQuery(
                 data: MediaQueryData(textScaler: TextScaler.linear(scale)),
-                child: lyrics,
+                child: RepaintBoundary(
+                  key: uiFixCaptureKey,
+                  child: ColoredBox(color: Colors.black, child: lyrics),
+                ),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/track.dart';
 import '../data/song_favorite_count.dart';
+import 'official_count_heart.dart';
 
 /// Decorates existing song controls without replacing their tap or animation.
 class SongFavoriteCountBadge extends ConsumerWidget {
@@ -11,6 +12,7 @@ class SongFavoriteCountBadge extends ConsumerWidget {
     required this.child,
     this.color,
     this.inline = false,
+    this.heartFavorite,
     super.key,
   });
 
@@ -18,6 +20,7 @@ class SongFavoriteCountBadge extends ConsumerWidget {
   final Widget child;
   final Color? color;
   final bool inline;
+  final bool? heartFavorite;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -41,6 +44,35 @@ class SongFavoriteCountBadge extends ConsumerWidget {
         ),
       ),
     );
+    if (heartFavorite case final favorite? when inline) {
+      return SizedBox(
+        width: 58,
+        height: 28,
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              top: 0,
+              child: OfficialCountHeart(
+                favorite: favorite,
+                size: 28,
+                color: color,
+              ),
+            ),
+            Positioned(
+              left: 22,
+              right: 0,
+              top: 2,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: label,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     if (inline) {
       return Row(
         mainAxisSize: MainAxisSize.min,

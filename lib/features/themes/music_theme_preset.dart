@@ -32,19 +32,20 @@ String? companionAssetForIp(MusicThemeIp ip) => switch (ip) {
   MusicThemeIp.helloKitty =>
     'assets/images/theme_gallery/hello-kitty-progress-head.png',
   MusicThemeIp.kuromi => 'assets/images/theme_gallery/kuromi-progress-head.png',
-  MusicThemeIp.myMelody => 'assets/images/theme_gallery/my-melody-progress.png',
-  MusicThemeIp.usagi => 'assets/images/theme_gallery/usagi-progress.png',
-  MusicThemeIp.chiikawa => 'assets/images/theme_gallery/chiikawa-progress.png',
+  MusicThemeIp.myMelody =>
+    'assets/images/theme_gallery/my-melody-progress.webp',
+  MusicThemeIp.usagi => 'assets/images/theme_gallery/usagi-progress.webp',
+  MusicThemeIp.chiikawa => 'assets/images/theme_gallery/chiikawa-progress.webp',
   MusicThemeIp.hachiware =>
-    'assets/images/theme_gallery/hachiware-progress.png',
+    'assets/images/theme_gallery/hachiware-progress.webp',
   MusicThemeIp.puppyWhite =>
-    'assets/images/theme_gallery/puppy-white-progress.png',
+    'assets/images/theme_gallery/puppy-white-progress.webp',
   MusicThemeIp.puppyGray =>
-    'assets/images/theme_gallery/puppy-gray-progress.png',
+    'assets/images/theme_gallery/puppy-gray-progress.webp',
   MusicThemeIp.cinnamoroll =>
-    'assets/images/theme_gallery/cinnamoroll-progress.png',
+    'assets/images/theme_gallery/cinnamoroll-progress.webp',
   MusicThemeIp.sleepingKirby =>
-    'assets/images/theme_gallery/sleeping-kirby-progress.png',
+    'assets/images/theme_gallery/sleeping-kirby-progress.webp',
 };
 
 enum ThemeMotion {

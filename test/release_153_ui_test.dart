@@ -78,7 +78,7 @@ void main() {
               await tester.runAsync(
                 () => precacheImage(
                   const AssetImage(
-                    'assets/branding/welcome/companions-atlas.png',
+                    'assets/branding/welcome/companions-atlas.webp',
                   ),
                   tester.element(find.byType(BetaWelcomePage)),
                 ),

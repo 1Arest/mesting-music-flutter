@@ -1,21 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/beta_glass_action.dart';
-import '../../../shared/widgets/liquid_glass_sheet.dart';
+import 'centered_update_dialog.dart';
 import '../../themes/music_typography.dart';
 
 Future<void> showMusicReleaseNotes(
   BuildContext context, {
   required String version,
   required List<String> notes,
-}) => showLiquidGlassBottomSheet<void>(
-  context: context,
-  useRootNavigator: true,
-  isScrollControlled: true,
-  useSafeArea: true,
-  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
-      ? AnimationStyle.noAnimation
-      : null,
+}) => showCenteredUpdateDialog(
+  context,
   builder: (context) => Material(
     key: const ValueKey('release-notes-sheet'),
     type: MaterialType.transparency,

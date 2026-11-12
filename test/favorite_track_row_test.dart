@@ -181,7 +181,7 @@ void main() {
       album: 'Long Album',
       duration: Duration(minutes: 4, seconds: 36),
       audioAsset: 'test/audio/long.mp3',
-      coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
       lyricsAsset: '',
     );
 

@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../themes/music_theme_tokens.dart';
 import '../app_update_providers.dart';
 import '../../../core/platform/distribution_channel.dart';
-import '../../../shared/widgets/beta_glass_popover.dart';
+import 'centered_update_dialog.dart';
 import 'beta_app_update_sheet.dart';
 import '../../themes/music_typography.dart';
 
@@ -41,42 +40,12 @@ Future<void> showAppUpdateSheet(BuildContext context) async {
       current != null && manifest != null && manifest.isMandatoryFor(current);
   _updateSheetOpen = true;
   try {
-    if (DistributionChannel.isBeta) {
-      await showModalBottomSheet<void>(
-        context: context,
-        useRootNavigator: true,
-        useSafeArea: true,
-        isScrollControlled: true,
-        isDismissible: !mandatory,
-        enableDrag: !mandatory,
-        showDragHandle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        barrierColor: Colors.black.withValues(alpha: .32),
-        sheetAnimationStyle: AnimationStyle(
-          duration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 360),
-          reverseDuration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 240),
-        ),
-        builder: (_) => const Padding(
-          padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
-          child: BetaGlassMenuSurface(radius: 34, child: BetaAppUpdateSheet()),
-        ),
-      );
-      return;
-    }
-    await showLiquidGlassBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      useSafeArea: true,
-      isScrollControlled: true,
-      isDismissible: !mandatory,
-      enableDrag: !mandatory,
-      barrierColor: Colors.black.withValues(alpha: .62),
-      builder: (_) => const AppUpdateSheet(),
+    await showCenteredUpdateDialog(
+      context,
+      dismissible: !mandatory,
+      builder: (_) => DistributionChannel.isBeta
+          ? const BetaAppUpdateSheet()
+          : const AppUpdateSheet(),
     );
   } finally {
     _updateSheetOpen = false;
@@ -114,17 +83,6 @@ class AppUpdateSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: tokens.textMuted.withValues(alpha: .26),
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

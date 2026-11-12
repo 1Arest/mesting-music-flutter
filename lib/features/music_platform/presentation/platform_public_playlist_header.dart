@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../../../shared/widgets/collection_play_all_button.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/platform/share_bridge.dart';
@@ -305,7 +306,7 @@ class _PublicHeaderState extends ConsumerState<PlatformPublicPlaylistHeader> {
               ),
               BetaGlassAction(
                 label: '下载完整歌单',
-                icon: Icons.download_outlined,
+                icon: CupertinoIcons.arrow_down_to_line,
                 blue: false,
                 loading: _busy && !_playing,
                 onPressed: _busy || widget.tracks.isEmpty

@@ -160,16 +160,6 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: scheme.onSurface.withValues(alpha: .2),
-                            borderRadius: BorderRadius.circular(9),
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [

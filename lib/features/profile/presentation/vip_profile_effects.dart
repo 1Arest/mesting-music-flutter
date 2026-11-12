@@ -89,10 +89,12 @@ class _VipProfileEffectsState extends ConsumerState<VipProfileEffects>
   }
 
   void _sync() {
+    final style = ref.read(profileEffectProvider);
     final animate =
         widget.enabled &&
-        ref.read(profileEffectProvider) != ProfileEffectStyle.none &&
-        ref.read(profileEffectProvider) != ProfileEffectStyle.rhythm &&
+        style != ProfileEffectStyle.none &&
+        style != ProfileEffectStyle.rhythm &&
+        style != ProfileEffectStyle.aurora &&
         _foreground &&
         _headerVisible &&
         (widget.inGallery || _chrome?.covered != true) &&
@@ -200,22 +202,33 @@ class _VipProfileEffectsState extends ConsumerState<VipProfileEffects>
                               MusicRhythmSurface(
                                 respectChrome: !widget.inGallery,
                                 enabled:
-                                    selectedEffect ==
-                                        ProfileEffectStyle.rhythm &&
+                                    (selectedEffect ==
+                                            ProfileEffectStyle.rhythm ||
+                                        selectedEffect ==
+                                            ProfileEffectStyle.aurora) &&
                                     headerVisible,
                                 builder: (context, frame) => Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    CustomPaint(
-                                      painter: VipProfilePainter(
-                                        style: selectedEffect,
+                                    if (selectedEffect ==
+                                        ProfileEffectStyle.aurora)
+                                      ProfileAuroraRibbon(
                                         frame: frame,
-                                        animation: _clock,
-                                        geometryChanges: _geometryChanges,
                                         avatarRect: _avatarRect,
-                                        reduced: reduced,
+                                        geometryChanges: _geometryChanges,
+                                        animate: headerVisible && !reduced,
+                                      )
+                                    else
+                                      CustomPaint(
+                                        painter: VipProfilePainter(
+                                          style: selectedEffect,
+                                          frame: frame,
+                                          animation: _clock,
+                                          geometryChanges: _geometryChanges,
+                                          avatarRect: _avatarRect,
+                                          reduced: reduced,
+                                        ),
                                       ),
-                                    ),
                                     if (selectedEffect ==
                                             ProfileEffectStyle.rhythm &&
                                         !reduced &&

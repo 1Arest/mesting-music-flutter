@@ -1,8 +1,61 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mesting_music/features/music_platform/data/song_menu_details.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_api.dart';
+import 'package:mesting_music/features/music_platform/netease/netease_music_repository.dart';
+import 'package:http/testing.dart';
+import 'netease_data_adapters_test.dart' show json, session;
 import 'release_148_ui_test.dart' show song148;
 
 void main() {
+  test('网易云资料使用真实请求适配层并在一次失败后恢复', () async {
+    var catalogueCalls = 0;
+    var lyricsCalls = 0;
+    final transport = MockClient((request) async {
+      if (request.url.path.endsWith('/v3/song/detail')) {
+        catalogueCalls++;
+        expect(request.bodyFields['params'], isNotEmpty);
+        if (catalogueCalls == 1) return json({'code': 404});
+        return json({
+          'code': 200,
+          'songs': [
+            {
+              'id': 9001,
+              'ar': [
+                {'id': 8, 'name': '验证歌手'},
+              ],
+              'al': {'id': 9, 'name': '验证专辑'},
+            },
+          ],
+        });
+      }
+      lyricsCalls++;
+      return json({
+        'code': 200,
+        'lrc': {'lyric': '[00:00]作词：验证署名'},
+      });
+    });
+    addTearDown(transport.close);
+    final music = NeteaseMusicRepository(
+      NeteaseApi(transport)..configure(session),
+    );
+    final details = SongMenuDetailsRepository(
+      netease: music.call,
+      kugou: (_, _) async => {},
+    );
+    final before = await details.load(song148(1));
+    expect(before.failed, {SongDetailsSection.catalogue});
+    final recovered = await details.load(
+      song148(1),
+      previous: before,
+      only: SongDetailsSection.catalogue,
+    );
+    expect(recovered.failed, isEmpty);
+    expect(recovered.artists.single.id, '8');
+    expect(recovered.albumId, '9');
+    expect(recovered.creators.single.name, '验证署名');
+    expect(catalogueCalls, 2);
+    expect(lyricsCalls, 1);
+  });
   test(
     'successful prior creators survive an empty or foreign catalogue result',
     () async {

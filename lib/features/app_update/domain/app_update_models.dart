@@ -6,11 +6,16 @@ class AppVersionInfo {
     required this.packageName,
     required this.versionName,
     required this.versionCode,
+    this.firstInstallTime = 0,
+    this.lastUpdateTime = 0,
   });
 
   final String packageName;
   final String versionName;
   final int versionCode;
+  final int firstInstallTime, lastUpdateTime;
+  bool get isUpgradedInstall =>
+      firstInstallTime > 0 && lastUpdateTime > firstInstallTime;
 
   String get displayLabel => versionName;
 }

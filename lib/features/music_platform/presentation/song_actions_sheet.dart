@@ -294,27 +294,33 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
     // FutureBuilder 保留上一个已取得的值，只更新失败部分的结果。
     _details = widget.reloadDetails?.call(data, section) ?? _load();
   });
-  Widget _action(String label, IconData icon, Object intent, {Color? color}) =>
-      ListTile(
-        key: intent is String ? ValueKey('song-menu-$intent') : null,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 3),
-        minVerticalPadding: 12,
-        leading: intent == 'favorite'
-            ? SongFavoriteCountBadge(
-                track: widget.track,
-                color: color,
-                inline: true,
-                child: Icon(icon, size: 25, color: color),
-              )
-            : Icon(icon, size: 25, color: color),
-        title: Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: MusicTypography.calloutSize, color: color),
-        ),
-        onTap: () => widget.onSelect(intent),
-      );
+  Widget _action(
+    String label,
+    IconData icon,
+    Object intent, {
+    Color? color,
+    bool? heartFavorite,
+  }) => ListTile(
+    key: intent is String ? ValueKey('song-menu-$intent') : null,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 3),
+    minVerticalPadding: 12,
+    leading: intent == 'favorite'
+        ? SongFavoriteCountBadge(
+            track: widget.track,
+            color: color,
+            inline: true,
+            heartFavorite: heartFavorite,
+            child: Icon(icon, size: 25, color: color),
+          )
+        : Icon(icon, size: 25, color: color),
+    title: Text(
+      label,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: MusicTypography.calloutSize, color: color),
+    ),
+    onTap: () => widget.onSelect(intent),
+  );
   @override
   Widget build(BuildContext context) {
     final track = widget.track;
@@ -395,7 +401,8 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
                             ? CupertinoIcons.heart_fill
                             : CupertinoIcons.heart,
                         'favorite',
-                        color: favorite ? scheme.primary : null,
+                        color: favorite ? favoriteFeedbackColor(context) : null,
+                        heartFavorite: favorite,
                       ),
                       _action(
                         netease ? '收藏到歌单' : '加入歌单',
@@ -406,7 +413,7 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
                     if (track.isRemote)
                       _action(
                         '下载',
-                        CupertinoIcons.arrow_down_circle,
+                        CupertinoIcons.arrow_down_to_line,
                         'download',
                       ),
                     if (widget.platformAvailable)

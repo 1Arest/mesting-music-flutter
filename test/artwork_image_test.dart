@@ -11,7 +11,7 @@ void main() {
     );
     expect(
       canonicalArtworkUri('assets/images/themes/shinchan_progress.png'),
-      'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     );
     expect(
       canonicalArtworkUri('https://cdn.example/cover.png'),

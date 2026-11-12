@@ -11,6 +11,9 @@ import '../../../../shared/widgets/beta_glass_controls.dart';
 import '../../../../shared/widgets/liquid_glass_sheet.dart';
 import '../../../player/presentation/beta_playback_actions.dart';
 import 'official_report_extras.dart';
+import 'official_record_wall.dart';
+
+export 'official_record_wall.dart' show OfficialRecordWall;
 
 /// Official values retain their own labels and percentages. They are never
 /// reconstructed from the top three songs or the device's listening history.
@@ -259,93 +262,6 @@ class OfficialReportExtrasView extends ConsumerWidget {
   }
 }
 
-/// One surface is shown on the page and captured for the two export sizes.
-class OfficialRecordWall extends StatelessWidget {
-  const OfficialRecordWall({
-    required this.data,
-    required this.period,
-    this.wallpaper = false,
-    super.key,
-  });
-  final OfficialReportExtras data;
-  final String period;
-  final bool wallpaper;
-  @override
-  Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: wallpaper ? 9 / 16 : 4 / 5,
-    child: ColoredBox(
-      color: const Color(0xFF15171D),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text(
-              '云村听歌足迹',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              period,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, c) {
-                  final rows = (data.covers.length.clamp(1, 20) / 4).ceil();
-                  return GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    itemCount: data.covers.length.clamp(0, 20),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 3,
-                      mainAxisSpacing: 3,
-                      childAspectRatio:
-                          ((c.maxWidth - 9) / 4) /
-                          ((c.maxHeight - (rows - 1) * 3) / rows),
-                    ),
-                    itemBuilder: (_, i) => ArtworkImage(
-                      uri: data.covers[i],
-                      fit: BoxFit.cover,
-                      decodeWidth: 200,
-                      decodeHeight: 200,
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (data.songCount != null)
-              Text(
-                '听过 ${data.songCount} 首歌',
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            const SizedBox(height: 4),
-            const Text(
-              '网易云官方报表 · Mesting Music',
-              textAlign: TextAlign.right,
-              style: TextStyle(color: Colors.white60, fontSize: 10),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
 class _RecordWallExport extends StatefulWidget {
   const _RecordWallExport({
     required this.data,
@@ -375,7 +291,11 @@ class _RecordWallExportState extends State<_RecordWallExport> {
             .take(20)
             .map(
               (url) => precacheImage(
-                networkArtworkProvider(url),
+                ResizeImage.resizeIfNeeded(
+                  240,
+                  null,
+                  networkArtworkProvider(url),
+                ),
                 context,
                 onError: (_, _) {},
               ).timeout(const Duration(seconds: 8), onTimeout: () {}),
@@ -426,6 +346,7 @@ class _RecordWallExportState extends State<_RecordWallExport> {
                   data: widget.data,
                   period: widget.period,
                   wallpaper: widget.wallpaper,
+                  animate: false,
                 ),
               ),
             ),

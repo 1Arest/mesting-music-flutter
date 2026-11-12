@@ -73,8 +73,13 @@ class _MarkPainter extends CustomPainter {
 }
 
 class BetaLoginSuccess extends StatefulWidget {
-  const BetaLoginSuccess({required this.onComplete, super.key});
+  const BetaLoginSuccess({
+    required this.onComplete,
+    this.message = '登录成功',
+    super.key,
+  });
   final VoidCallback onComplete;
+  final String message;
   @override
   State<BetaLoginSuccess> createState() => _BetaLoginSuccessState();
 }
@@ -118,7 +123,7 @@ class _BetaLoginSuccessState extends State<BetaLoginSuccess>
   @override
   Widget build(BuildContext context) => Semantics(
     liveRegion: true,
-    label: '登录成功',
+    label: widget.message,
     excludeSemantics: true,
     child: SafeArea(
       // Only the compact HUD paints here. The coordinator supplies the
@@ -159,7 +164,7 @@ class _BetaLoginSuccessState extends State<BetaLoginSuccess>
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          '登录成功',
+                          widget.message,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(
                                 color: Colors.white,

@@ -253,7 +253,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(ClassicVinylArtwork),
-        matching: find.byType(TweenAnimationBuilder<double>),
+        matching: find.byType(AnimatedRotation),
       ),
       findsOneWidget,
     );

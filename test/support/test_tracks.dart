@@ -8,7 +8,7 @@ const testTracks = <Track>[
     album: 'Test Album',
     duration: Duration(minutes: 3, seconds: 12),
     audioAsset: 'test/audio/one.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
   ),
   Track(
@@ -18,7 +18,7 @@ const testTracks = <Track>[
     album: 'Test Album',
     duration: Duration(minutes: 4, seconds: 8),
     audioAsset: 'test/audio/two.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
   ),
   Track(
@@ -28,7 +28,7 @@ const testTracks = <Track>[
     album: 'Another Album',
     duration: Duration(minutes: 2, seconds: 45),
     audioAsset: 'test/audio/three.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
   ),
   Track(
@@ -38,7 +38,7 @@ const testTracks = <Track>[
     album: 'Another Album',
     duration: Duration(minutes: 3, seconds: 28),
     audioAsset: 'test/audio/four.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
   ),
 ];

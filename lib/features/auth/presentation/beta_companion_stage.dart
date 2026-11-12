@@ -31,7 +31,7 @@ class _BetaCompanionStageState extends State<BetaCompanionStage>
     super.didChangeDependencies();
     if (_stream == null) {
       _stream = const AssetImage(
-        'assets/branding/welcome/companions-atlas.png',
+        'assets/branding/welcome/companions-atlas.webp',
       ).resolve(createLocalImageConfiguration(context));
       _listener = ImageStreamListener((info, _) {
         if (!mounted) {

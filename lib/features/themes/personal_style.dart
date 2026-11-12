@@ -16,6 +16,10 @@ enum KeepsakeTemplate { original, postcard, collection }
 
 enum ListeningAtmosphere { off, glow, stars, record }
 
+/// Presentation is independent of lyric typography and palette. Existing
+/// preference documents keep their current player until explicitly changed.
+enum LyricPresentation { current, focus }
+
 const personalPalettes = <String, Color>{
   '默认': Color(0xFF0A84FF),
   '樱花汽水': Color(0xFFC3507B),
@@ -71,6 +75,7 @@ class PersonalStyle {
     this.lyricColor,
     this.serif = false,
     this.lyricWeight = 0,
+    this.lyricPresentation = LyricPresentation.current,
     this.discoveryNotes = true,
   });
   final String palette;
@@ -84,6 +89,7 @@ class PersonalStyle {
   final int? lyricColor;
   final bool serif, discoveryNotes;
   final int lyricWeight;
+  final LyricPresentation lyricPresentation;
   Color get accent => personalPalettes[palette] ?? personalPalettes['默认']!;
   Map<String, Object?> toJson() => {
     'palette': palette,
@@ -99,6 +105,7 @@ class PersonalStyle {
     'lyricColor': lyricColor,
     'serif': serif,
     'lyricWeight': lyricWeight,
+    'lyricPresentation': lyricPresentation.name,
     'discoveryNotes': discoveryNotes,
   };
   factory PersonalStyle.fromJson(Map<String, dynamic> j) {
@@ -128,6 +135,7 @@ class PersonalStyle {
       poster: choice(PosterTemplate.values, 'poster'),
       keepsake: choice(KeepsakeTemplate.values, 'keepsake'),
       atmosphere: choice(ListeningAtmosphere.values, 'atmosphere'),
+      lyricPresentation: choice(LyricPresentation.values, 'lyricPresentation'),
       strength: number('strength', .35, 0, 1),
       lyricSize: typography('lyricSize', 20, 40),
       lineHeight: typography('lineHeight', 1.1, 2.4),

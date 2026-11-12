@@ -7,6 +7,7 @@ import '../../../shared/widgets/music_notice.dart';
 import '../../../core/platform/distribution_channel.dart';
 import '../../themes/beta_appearance.dart';
 import 'library_access.dart';
+import 'official_count_heart.dart';
 import '../../themes/mesting_palette.dart';
 import '../library_providers.dart';
 import '../data/song_favorite_count.dart';
@@ -46,6 +47,7 @@ class FavoriteToggleButton extends ConsumerWidget {
     final count = song != null
         ? ref.watch(songFavoriteCountProvider(song)).value
         : null;
+    final notched = DistributionChannel.isBeta && !star && count != null;
 
     return _FavoritePressFeedback(
       child: Semantics(
@@ -140,15 +142,16 @@ class FavoriteToggleButton extends ConsumerWidget {
                                 ? 21
                                 : 23,
                             thin: player,
+                            notched: notched,
                           ),
                   ),
                 ),
               ),
               if (count != null)
                 Positioned(
-                  left: player ? 32 : 26,
+                  left: notched ? (player ? 26 : 25) : (player ? 32 : 26),
                   right: 0,
-                  top: player ? 8 : 6,
+                  top: notched ? (player ? 11 : 12) : (player ? 8 : 6),
                   child: IgnorePointer(
                     child: ExcludeSemantics(
                       child: SizedBox(
@@ -192,10 +195,12 @@ class _FavoriteGlyph extends StatefulWidget {
     required this.favorite,
     required this.size,
     this.thin = false,
+    this.notched = false,
   });
   final bool favorite;
   final double size;
   final bool thin;
+  final bool notched;
   @override
   State<_FavoriteGlyph> createState() => _FavoriteGlyphState();
 }
@@ -233,16 +238,22 @@ class _FavoriteGlyphState extends State<_FavoriteGlyph>
         scale: 1 + .12 * (1 - Curves.easeOutCubic.transform(_motion.value)),
         child: child,
       ),
-      child: Icon(
-        widget.thin
-            ? (widget.favorite
-                  ? CupertinoIcons.heart_fill
-                  : CupertinoIcons.heart)
-            : widget.favorite
-            ? Icons.favorite_rounded
-            : Icons.favorite_border_rounded,
-        size: widget.size,
-      ),
+      child: widget.notched
+          ? OfficialCountHeart(
+              key: const ValueKey('favorite-count-notched-heart'),
+              favorite: widget.favorite,
+              size: widget.size,
+            )
+          : Icon(
+              widget.thin
+                  ? (widget.favorite
+                        ? CupertinoIcons.heart_fill
+                        : CupertinoIcons.heart)
+                  : widget.favorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              size: widget.size,
+            ),
     ),
   );
 }

@@ -9,6 +9,7 @@ import '../../lyrics/presentation/lyric_scroll_preview.dart';
 import '../../lyrics/lyric_timing.dart';
 import '../../themes/music_typography.dart';
 import '../../themes/personal_style.dart';
+import '../../lyrics/presentation/lyric_focus_treatment.dart';
 
 /// Position ticks resolve to an index here, so a long lyric list rebuilds only
 /// when the sung LINE changes, rather than at the audio position frequency.
@@ -47,6 +48,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   TextStyle? _measuredStyle;
   TextDirection? _measuredDirection;
   final _offsets = <double>[];
+  bool _focused = false;
   @override
   void dispose() {
     _preview.clear(notify: false);
@@ -58,6 +60,12 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   Widget build(BuildContext context) {
     final track = ref.watch(currentTrackProvider);
     final personal = ref.watch(personalStyleProvider);
+    final focused = personal.lyricPresentation == LyricPresentation.focus;
+    if (_focused != focused) {
+      _focused = focused;
+      _active = -2;
+      _preview.clear(notify: false);
+    }
     if (_track != track.id) {
       _track = track.id;
       _active = -2;
@@ -90,6 +98,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
               );
             }
             final active = ref.watch(activeLyricIndexProvider(document));
+            final focusLines = focused && document.isSynced;
             return LayoutBuilder(
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
@@ -148,8 +157,12 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                 }
                 if (_preview.index == null && _active != active) {
                   _active = active;
-                  final target =
-                      _offsets[active.clamp(0, document.lines.length - 1)];
+                  final index = active.clamp(0, document.lines.length - 1);
+                  // The focus layout pads the viewport to its center. Add
+                  // half the measured row so even wrapped lyrics center exactly.
+                  final target = focusLines
+                      ? (_offsets[index] + _offsets[index + 1]) / 2
+                      : _offsets[index];
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted ||
                         !_scroll.hasClients ||
@@ -174,7 +187,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                     }
                   });
                 }
-                final topPadding = constraints.maxHeight * .2;
+                final topPadding =
+                    constraints.maxHeight * (focusLines ? .5 : .2);
                 final lyrics = ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     begin: Alignment.topCenter,
@@ -195,7 +209,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       24,
                       topPadding,
                       24,
-                      constraints.maxHeight * .7,
+                      constraints.maxHeight * (focusLines ? .5 : .7),
                     ),
                     physics: const ArtworkFrontierPhysics(
                       parent: BouncingScrollPhysics(),
@@ -209,6 +223,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       final line = document.lines[index];
                       final text = Text(
                         line.text,
+                        textAlign: focusLines
+                            ? TextAlign.center
+                            : TextAlign.start,
                         style: style.copyWith(
                           color:
                               (!document.isSynced ||
@@ -232,7 +249,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                           child: LyricSeekRow(
                             time: line.time,
                             foreground: Colors.white,
-                            alignment: Alignment.centerLeft,
+                            alignment: focusLines
+                                ? Alignment.center
+                                : Alignment.centerLeft,
                             onPlay: play,
                             child: text,
                           ),
@@ -245,40 +264,56 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                             : null,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(
-                              end:
-                                  !document.isSynced ||
-                                      index == (_preview.index ?? active)
-                                  ? 0
-                                  : 1,
-                            ),
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 460),
-                            curve: Curves.easeOutCubic,
-                            child: text,
-                            builder: (_, distance, child) => ImageFiltered(
-                              imageFilter: ImageFilter.blur(
-                                sigmaX: distance * 3.4,
-                                sigmaY: distance * 3.4,
-                              ),
-                              enabled: widget.referenceDesign && distance > .01,
-                              child: Opacity(
-                                opacity:
-                                    1 -
-                                    distance *
-                                        (widget.referenceDesign ? .55 : .35),
-                                child: Transform.scale(
-                                  scale: widget.referenceDesign
-                                      ? 1 - distance * .035
-                                      : 1,
-                                  alignment: Alignment.centerLeft,
-                                  child: child,
+                          child: focusLines
+                              ? LyricFocusTreatment(
+                                  distance: (index - (_preview.index ?? active))
+                                      .abs()
+                                      .toDouble(),
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: text,
+                                  ),
+                                )
+                              : TweenAnimationBuilder<double>(
+                                  tween: Tween(
+                                    end:
+                                        !document.isSynced ||
+                                            index == (_preview.index ?? active)
+                                        ? 0
+                                        : 1,
+                                  ),
+                                  duration:
+                                      MediaQuery.disableAnimationsOf(context)
+                                      ? Duration.zero
+                                      : const Duration(milliseconds: 460),
+                                  curve: Curves.easeOutCubic,
+                                  child: text,
+                                  builder: (_, distance, child) =>
+                                      ImageFiltered(
+                                        imageFilter: ImageFilter.blur(
+                                          sigmaX: distance * 3.4,
+                                          sigmaY: distance * 3.4,
+                                        ),
+                                        enabled:
+                                            widget.referenceDesign &&
+                                            distance > .01,
+                                        child: Opacity(
+                                          opacity:
+                                              1 -
+                                              distance *
+                                                  (widget.referenceDesign
+                                                      ? .55
+                                                      : .35),
+                                          child: Transform.scale(
+                                            scale: widget.referenceDesign
+                                                ? 1 - distance * .035
+                                                : 1,
+                                            alignment: Alignment.centerLeft,
+                                            child: child,
+                                          ),
+                                        ),
+                                      ),
                                 ),
-                              ),
-                            ),
-                          ),
                         ),
                       );
                     },

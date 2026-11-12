@@ -6,6 +6,75 @@ import '../../../core/audio/music_rhythm.dart';
 import '../../../shared/widgets/music_spectrum_ring.dart';
 import '../../themes/profile_effect_style.dart';
 
+/// Ease to a still ribbon after PCM stops. No repeating clock is needed for
+/// this style, and reduced-motion mode draws its static preview immediately.
+class ProfileAuroraRibbon extends StatelessWidget {
+  const ProfileAuroraRibbon({
+    required this.frame,
+    required this.avatarRect,
+    required this.geometryChanges,
+    required this.animate,
+    super.key,
+  });
+  final MusicRhythmFrame frame;
+  final Rect? Function() avatarRect;
+  final Listenable geometryChanges;
+  final bool animate;
+
+  @override
+  Widget build(BuildContext context) => TweenAnimationBuilder<double>(
+    tween: Tween(end: frame.available ? frame.level : 0),
+    duration: animate
+        ? Duration(milliseconds: frame.available ? 55 : 230)
+        : Duration.zero,
+    curve: Curves.easeOutCubic,
+    builder: (_, energy, _) => CustomPaint(
+      painter: _AuroraRibbonPainter(
+        energy: energy,
+        frame: frame,
+        avatarRect: avatarRect,
+        geometryChanges: geometryChanges,
+      ),
+    ),
+  );
+}
+
+class _AuroraRibbonPainter extends CustomPainter {
+  _AuroraRibbonPainter({
+    required this.energy,
+    required this.frame,
+    required this.avatarRect,
+    required Listenable geometryChanges,
+  }) : super(repaint: geometryChanges);
+  final double energy;
+  final MusicRhythmFrame frame;
+  final Rect? Function() avatarRect;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = avatarRect();
+    if (rect == null || rect.bottom < 0 || rect.top > size.height) return;
+    paintProfileAccent(
+      canvas,
+      size,
+      rect,
+      ProfileEffectStyle.aurora,
+      .18,
+      MusicRhythmFrame(
+        level: energy,
+        bands: frame.bands,
+        available: energy > 0,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_AuroraRibbonPainter old) =>
+      old.energy != energy ||
+      old.frame != frame ||
+      old.avatarRect != avatarRect;
+}
+
 /// Shares the same scene between the profile header and the outfit preview.
 void paintProfileAccent(
   Canvas canvas,
@@ -15,8 +84,48 @@ void paintProfileAccent(
   double phase,
   MusicRhythmFrame frame,
 ) {
+  if (style == ProfileEffectStyle.none) return;
   final center = avatar.center;
   final radius = avatar.shortestSide / 2 + 6;
+  if (style == ProfileEffectStyle.aurora) {
+    // A fixed, bounded ribbon is driven by measured PCM bands. With no audio
+    // frame it settles to a quiet outline rather than inventing a beat.
+    final energy = frame.available ? frame.level : 0.0;
+    for (var ribbon = 0; ribbon < 3; ribbon++) {
+      final path = Path();
+      for (var step = 0; step <= 96; step++) {
+        final angle = step / 96 * math.pi * 2;
+        final band = frame.bandAt(step / 96);
+        final wave = math.sin(angle * (3 + ribbon) + phase * math.pi * 2);
+        final r =
+            radius +
+            3 +
+            ribbon * 4 +
+            wave * 1.4 +
+            energy * (3 + wave * 2 + band * 7);
+        final point = center + Offset(math.cos(angle), math.sin(angle)) * r;
+        step == 0
+            ? path.moveTo(point.dx, point.dy)
+            : path.lineTo(point.dx, point.dy);
+      }
+      path.close();
+      final pen = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8 - ribbon * .25
+        ..shader = SweepGradient(
+          colors: const [
+            Color(0xFF63DFC6),
+            Color(0xFF83BCFF),
+            Color(0xFFD0A0FF),
+            Color(0xFF63DFC6),
+          ],
+          transform: GradientRotation(phase * math.pi * 2 + ribbon * .7),
+        ).createShader(Rect.fromCircle(center: center, radius: radius + 24))
+        ..color = Colors.white.withValues(alpha: .80 - ribbon * .17);
+      canvas.drawPath(path, pen);
+    }
+    return;
+  }
   if (style == ProfileEffectStyle.rhythm) {
     paintMusicSpectrumRing(
       canvas,

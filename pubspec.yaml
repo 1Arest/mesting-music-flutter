@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.96+117
+version: 1.0.97+118
 
 environment:
   sdk: ^3.11.0
@@ -165,7 +165,7 @@ flutter:
     - assets/branding/mesting-launch-lockup-master.png
     - assets/branding/startup/
     # Shared platform/guest entry now owns every channel's first welcome page.
-    - assets/branding/welcome/companions-atlas.png
+    - assets/branding/welcome/companions-atlas.webp
     - assets/web/verify_captcha.html
     # Retired Beta skin/brand images remain available to formal distributions.
     # Explicit progress assets below prevent an entire gallery entering Beta.
@@ -179,6 +179,10 @@ flutter:
       flavors: [stable]
     - assets/images/playlists/
     - assets/images/player/netease-style-tonearm.png
+    - assets/images/player/netease-tonearm-9_6_15.webp
+    - assets/images/player/netease-record-backdrop-9_6_15.webp
+    - assets/images/player/netease-heart-count-filled.webp
+    - assets/images/player/netease-heart-count-outline.webp
     - path: assets/images/theme_gallery/hello-kitty-angel.png
       flavors: [stable]
     - path: assets/images/theme_gallery/hello-kitty-friends.png
@@ -249,7 +253,7 @@ flutter:
       flavors: [stable]
     - path: assets/images/theme_playlists/kuromi/
       flavors: [stable]
-    - assets/images/theme_gallery/shinchan-avatar-v2.png
+    - assets/images/theme_gallery/shinchan-avatar-v2.webp
     - assets/images/theme_gallery/progress-shinchan-walk-stride.png
     - assets/images/theme_gallery/progress-shinchan-walk-mid.png
     - assets/images/theme_gallery/progress-shinchan-walk-pass.png
@@ -258,14 +262,14 @@ flutter:
     - assets/images/theme_gallery/progress-shiro-walk-pass.png
     - assets/images/theme_gallery/hello-kitty-progress-head.png
     - assets/images/theme_gallery/kuromi-progress-head.png
-    - assets/images/theme_gallery/my-melody-progress.png
-    - assets/images/theme_gallery/usagi-progress.png
-    - assets/images/theme_gallery/chiikawa-progress.png
-    - assets/images/theme_gallery/hachiware-progress.png
-    - assets/images/theme_gallery/puppy-white-progress.png
-    - assets/images/theme_gallery/puppy-gray-progress.png
-    - assets/images/theme_gallery/cinnamoroll-progress.png
-    - assets/images/theme_gallery/sleeping-kirby-progress.png
+    - assets/images/theme_gallery/my-melody-progress.webp
+    - assets/images/theme_gallery/usagi-progress.webp
+    - assets/images/theme_gallery/chiikawa-progress.webp
+    - assets/images/theme_gallery/hachiware-progress.webp
+    - assets/images/theme_gallery/puppy-white-progress.webp
+    - assets/images/theme_gallery/puppy-gray-progress.webp
+    - assets/images/theme_gallery/cinnamoroll-progress.webp
+    - assets/images/theme_gallery/sleeping-kirby-progress.webp
     - assets/images/theme_gallery/nailong-progress.png
     - assets/images/theme_gallery/nailong-laugh.webp
     # The existing classic-turntable preview still uses this single cover.

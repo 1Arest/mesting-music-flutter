@@ -174,7 +174,11 @@ class SongMenuDetailsRepository {
       if (id.isEmpty) return SongMenuDetails.local(track);
       Map<String, dynamic> payload;
       try {
-        payload = await netease('/song/detail', {'ids': id});
+        // The shared NetEase transport serializes a list into the official
+        // `c` request. A scalar fails its cast before any HTTP request starts.
+        payload = await netease('/song/detail', {
+          'ids': [id],
+        });
       } catch (_) {
         return catalogueFailure();
       }

@@ -394,7 +394,7 @@ const _track = Track(
   album: '',
   duration: Duration(minutes: 3, seconds: 54),
   audioAsset: 'assets/audio/test.mp3',
-  coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+  coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
   lyricsAsset: 'lyrics-player-visual.lrc',
 );
 

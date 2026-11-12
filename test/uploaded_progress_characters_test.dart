@@ -185,20 +185,25 @@ void main() {
       );
       await tester.pumpAndSettle();
       for (final value in uploaded) {
+        final card = find.byKey(ValueKey('progress-character-${value.name}'));
+        expect(card, findsOneWidget);
         expect(
           find.descendant(
-            of: find.byType(InkWell),
+            of: card,
             matching: find.text(progressDecorationLabel(value)),
           ),
-          findsOneWidget,
+          findsWidgets,
         );
         expect(
           find.text('${progressDecorationLabel(value)}轨道'),
           findsOneWidget,
         );
       }
-      expect(find.text('三丽鸥'), findsNWidgets(2));
-      expect(find.text('线条小狗'), findsNWidgets(2));
+      expect(find.byKey(const ValueKey('progress-series-三丽鸥')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('progress-series-线条小狗')),
+        findsOneWidget,
+      );
       await tester.tap(find.byKey(const ValueKey('progress-track-myMelody')));
       await tester.pumpAndSettle();
       expect(

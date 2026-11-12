@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/platform/distribution_channel.dart';
+import '../../shared/widgets/beta_glass_controls.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../player/presentation/ip_progress_decoration.dart';
 import '../player/presentation/shinchan_progress_walker.dart';
@@ -13,7 +14,7 @@ import 'music_typography.dart';
 import 'theme_controller.dart';
 import 'theme_follow_icons.dart';
 
-class ProgressDecorationPicker extends StatelessWidget {
+class ProgressDecorationPicker extends ConsumerStatefulWidget {
   const ProgressDecorationPicker({
     required this.selected,
     required this.character,
@@ -28,6 +29,18 @@ class ProgressDecorationPicker extends StatelessWidget {
   final ValueChanged<ProgressDecoration> onSelected;
 
   @override
+  ConsumerState<ProgressDecorationPicker> createState() =>
+      _ProgressDecorationPickerState();
+}
+
+/// Category filtering never edits the selected outfit. Scene expansion belongs
+/// to the Shin-chan row; its saved weather still belongs to the theme owner.
+class _ProgressDecorationPickerState
+    extends ConsumerState<ProgressDecorationPicker> {
+  String _series = '全部';
+  bool _scenesOpen = true;
+
+  @override
   Widget build(BuildContext context) {
     final groups = <String, List<ProgressDecoration>>{};
     for (final value in ProgressDecoration.values) {
@@ -38,10 +51,142 @@ class ProgressDecorationPicker extends StatelessWidget {
       final series = progressDecorationSeries(value);
       groups.putIfAbsent(series, () => []).add(value);
     }
+    final selected = widget.selected;
+    final character = widget.character;
+    final preset = widget.preset;
+    final onSelected = widget.onSelected;
     final fontSize = MediaQuery.textScalerOf(
       context,
     ).scale(MusicTypography.captionSize);
-    final minimumCardWidth = 66 + fontSize * 6;
+    final minimumCardWidth = 62 + fontSize * 4.8;
+    if (character) {
+      final choices = _series == '全部'
+          ? groups.values.expand((values) => values).toList()
+          : groups[_series] ?? const <ProgressDecoration>[];
+      final settings = ref.watch(themeVisualSettingsProvider);
+      final weather =
+          settings.shinchanWeather ??
+          shinchanWeatherForPreset((preset ?? musicThemePresets.first).id);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth < minimumCardWidth * 2 + 9
+              ? 1
+              : 2;
+          final height = 36 + fontSize * 2.6;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SingleChildScrollView(
+                key: const ValueKey('progress-series-filter'),
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    for (final series in ['全部', ...groups.keys])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Semantics(
+                          selected: _series == series,
+                          child: BetaGlassButton(
+                            key: ValueKey('progress-series-$series'),
+                            height: 44,
+                            blue: _series == series,
+                            horizontalPadding: 14,
+                            onPressed: () => setState(() => _series = series),
+                            child: Text(series),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              for (var start = 0; start < choices.length; start += columns) ...[
+                SizedBox(
+                  height: height,
+                  child: Row(
+                    children: [
+                      for (var column = 0; column < columns; column++) ...[
+                        if (column > 0) const SizedBox(width: 9),
+                        Expanded(
+                          child: start + column >= choices.length
+                              ? const SizedBox.shrink()
+                              : _DecorationChoice(
+                                  key: ValueKey(
+                                    'progress-character-${choices[start + column].name}',
+                                  ),
+                                  value: choices[start + column],
+                                  preset: preset ?? musicThemePresets.first,
+                                  active: selected == choices[start + column],
+                                  character: true,
+                                  subtitle:
+                                      DistributionChannel.isBeta &&
+                                          choices[start + column] ==
+                                              ProgressDecoration.shinchan &&
+                                          selected ==
+                                              ProgressDecoration.shinchan
+                                      ? '${weather.label} · 7 种场景'
+                                      : progressDecorationSeries(
+                                          choices[start + column],
+                                        ),
+                                  expanded:
+                                      DistributionChannel.isBeta &&
+                                          choices[start + column] ==
+                                              ProgressDecoration.shinchan &&
+                                          selected ==
+                                              ProgressDecoration.shinchan
+                                      ? _scenesOpen
+                                      : null,
+                                  onTap: () {
+                                    final value = choices[start + column];
+                                    if (DistributionChannel.isBeta &&
+                                        value == ProgressDecoration.shinchan) {
+                                      setState(
+                                        () => _scenesOpen =
+                                            selected != value || !_scenesOpen,
+                                      );
+                                      if (selected == value) return;
+                                    }
+                                    onSelected(value);
+                                  },
+                                ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 9),
+                if (DistributionChannel.isBeta &&
+                    _scenesOpen &&
+                    selected == ProgressDecoration.shinchan &&
+                    choices.skip(start).take(columns).contains(selected))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: DecoratedBox(
+                      key: const ValueKey('progress-shinchan-scenes'),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: ShinchanWeatherPicker(
+                          selected: weather,
+                          onCollapse: () => setState(() => _scenesOpen = false),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ],
+          );
+        },
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,19 +241,36 @@ class ProgressDecorationPicker extends StatelessWidget {
 /// Only the selected weather animates. Choices are static, so opening settings
 /// does not start seven independent character/weather tickers.
 class ShinchanWeatherPicker extends ConsumerWidget {
-  const ShinchanWeatherPicker({required this.selected, super.key});
+  const ShinchanWeatherPicker({
+    required this.selected,
+    this.onCollapse,
+    super.key,
+  });
   final ShinchanProgressWeather selected;
+  final VoidCallback? onCollapse;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        '小新天气',
-        style: TextStyle(
-          fontSize: MusicTypography.calloutSize,
-          fontWeight: MusicTypography.bodyWeight,
-        ),
+      Row(
+        children: [
+          const Expanded(
+            child: Text(
+              '小新场景',
+              style: TextStyle(
+                fontSize: MusicTypography.calloutSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
+            ),
+          ),
+          if (onCollapse != null)
+            TextButton.icon(
+              onPressed: onCollapse,
+              icon: const Icon(Icons.expand_less_rounded),
+              label: const Text('收起'),
+            ),
+        ],
       ),
       const SizedBox(height: 5),
       Text(
@@ -124,26 +286,31 @@ class ShinchanWeatherPicker extends ConsumerWidget {
         runSpacing: 8,
         children: [
           for (final weather in ShinchanProgressWeather.values)
-            ChoiceChip(
-              key: ValueKey('shinchan-weather-${weather.name}'),
-              label: Text(weather.label),
+            Semantics(
               selected: weather == selected,
-              onSelected: (_) async {
-                try {
-                  await ref
-                      .read(themeVisualSettingsProvider.notifier)
-                      .setShinchanWeather(weather);
-                } on Object {
-                  if (context.mounted) {
-                    showMusicNotice(
-                      context,
-                      icon: Icons.error_outline_rounded,
-                      title: '天气未保存',
-                      message: '请稍后重试',
-                    );
+              child: BetaGlassButton(
+                key: ValueKey('shinchan-weather-${weather.name}'),
+                blue: weather == selected,
+                height: 44,
+                horizontalPadding: 14,
+                onPressed: () async {
+                  try {
+                    await ref
+                        .read(themeVisualSettingsProvider.notifier)
+                        .setShinchanWeather(weather);
+                  } on Object {
+                    if (context.mounted) {
+                      showMusicNotice(
+                        context,
+                        icon: Icons.error_outline_rounded,
+                        title: '天气未保存',
+                        message: '请稍后重试',
+                      );
+                    }
                   }
-                }
-              },
+                },
+                child: Text(weather.label),
+              ),
             ),
         ],
       ),
@@ -170,6 +337,8 @@ class _DecorationChoice extends StatelessWidget {
     required this.active,
     required this.character,
     required this.onTap,
+    this.subtitle,
+    this.expanded,
     super.key,
   });
 
@@ -178,6 +347,8 @@ class _DecorationChoice extends StatelessWidget {
   final bool active;
   final bool character;
   final VoidCallback onTap;
+  final String? subtitle;
+  final bool? expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +401,39 @@ class _DecorationChoice extends StatelessWidget {
                   children: [
                     _DecorationChoiceIcon(value: value, character: true),
                     const SizedBox(width: 9),
-                    Expanded(child: _label(label, tokens.textPrimary)),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _label(label, tokens.textPrimary),
+                          if (subtitle != null) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              subtitle!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: MusicTypography.captionSize - 1,
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (active) ...[
+                      const SizedBox(width: 3),
+                      Icon(
+                        expanded == null
+                            ? Icons.check_circle_rounded
+                            : expanded!
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        size: 17,
+                        color: selectionAccent,
+                      ),
+                    ],
                   ],
                 )
               : Column(
@@ -287,7 +490,7 @@ class _DecorationChoiceIcon extends StatelessWidget {
     }
     final asset = switch (value) {
       ProgressDecoration.shinchan =>
-        'assets/images/theme_gallery/shinchan-avatar-v2.png',
+        'assets/images/theme_gallery/shinchan-avatar-v2.webp',
       ProgressDecoration.helloKitty =>
         'assets/images/theme_gallery/hello-kitty-progress-head.png',
       ProgressDecoration.kuromi =>

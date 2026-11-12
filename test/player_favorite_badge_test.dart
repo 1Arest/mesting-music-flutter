@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mesting_music/features/library/data/song_favorite_count.dart';
 import 'package:mesting_music/features/library/library_providers.dart';
 import 'package:mesting_music/features/library/presentation/favorite_toggle_button.dart';
+import 'package:mesting_music/features/library/presentation/official_count_heart.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'package:mesting_music/shared/models/track.dart';
 
 const _track = Track(
@@ -79,23 +81,32 @@ void main() {
             const ValueKey('favorite-button-netease_362937'),
           );
           expect(tester.getSize(button), const Size(72, 48));
-          expect(
-            find.byIcon(
-              favorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-            ),
-            findsOneWidget,
-          );
+          final notched = DistributionChannel.isBeta && count != null;
+          final heart = notched
+              ? find.byType(OfficialCountHeart)
+              : find.byIcon(
+                  favorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                );
+          expect(heart, findsOneWidget);
           expect(find.byIcon(Icons.star_border_rounded), findsNothing);
           if (count != null) {
             final number = find.byKey(
               const ValueKey('song-favorite-count-netease_362937'),
             );
-            final heart = find.byIcon(
-              favorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-            );
             final numberRect = tester.getRect(number),
                 heartRect = tester.getRect(heart);
-            expect(numberRect.left, greaterThanOrEqualTo(heartRect.right - 1));
+            if (notched) {
+              expect(numberRect.left, closeTo(heartRect.right - 6, 1));
+              expect(
+                tester.widget<OfficialCountHeart>(heart).favorite,
+                favorite,
+              );
+            } else {
+              expect(
+                numberRect.left,
+                greaterThanOrEqualTo(heartRect.right - 1),
+              );
+            }
             expect(numberRect.center.dy, lessThan(heartRect.center.dy));
             expect(numberRect.bottom, greaterThan(heartRect.top));
             final buttonRect = tester.getRect(button);

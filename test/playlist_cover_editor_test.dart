@@ -42,7 +42,7 @@ void main() {
     tester,
   ) async {
     final path = File(
-      'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     ).absolute.path;
     await open(tester, cover: path);
     final images = tester.widgetList<Image>(find.byType(Image));

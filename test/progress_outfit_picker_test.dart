@@ -178,6 +178,32 @@ void main() {
           find.byKey(const ValueKey('shinchan-weather-storm')),
           DistributionChannel.isBeta ? findsOneWidget : findsNothing,
         );
+        if (DistributionChannel.isBeta) {
+          for (final scene in ShinchanProgressWeather.values) {
+            expect(
+              find.byKey(ValueKey('shinchan-weather-${scene.name}')),
+              findsOneWidget,
+            );
+          }
+          await captureUiFix(
+            tester,
+            'outfit-scenes-${spec.width.toInt()}-${spec.scale}',
+          );
+          final series = find.byKey(const ValueKey('progress-series-三丽鸥'));
+          await tester.ensureVisible(series);
+          await tester.pumpAndSettle();
+          await tester.tap(series);
+          await tester.pumpAndSettle();
+          expect(shinchan, findsNothing);
+          expect(
+            find.byKey(const ValueKey('progress-character-myMelody')),
+            findsOneWidget,
+          );
+          expect(
+            container.read(themeVisualSettingsProvider).shinchanWeather,
+            ShinchanProgressWeather.storm,
+          );
+        }
 
         // A later custom mix survives closing/reopening the settings container.
         await container

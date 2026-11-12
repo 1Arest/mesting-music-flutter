@@ -171,7 +171,7 @@ void main() {
         const bool.fromEnvironment('CAPTURE_DUAL_PLATFORM')) {
       await tester.runAsync(
         () => precacheImage(
-          const AssetImage('assets/branding/welcome/companions-atlas.png'),
+          const AssetImage('assets/branding/welcome/companions-atlas.webp'),
           tester.element(find.byType(BetaWelcomePage)),
         ),
       );

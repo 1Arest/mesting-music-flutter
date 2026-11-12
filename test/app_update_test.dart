@@ -9,13 +9,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
+import 'package:mesting_music/features/auth/presentation/first_launch_auth_coordinator.dart';
 import 'package:mesting_music/features/app_update/app_update_providers.dart';
 import 'package:mesting_music/features/app_update/data/app_update_platform.dart';
 import 'package:mesting_music/features/app_update/data/app_update_repository.dart';
 import 'package:mesting_music/features/app_update/domain/app_update_models.dart';
 import 'package:mesting_music/features/app_update/presentation/app_update_sheet.dart';
-import 'package:mesting_music/shared/widgets/liquid_glass_sheet.dart';
+import 'package:mesting_music/features/app_update/presentation/app_update_coordinator.dart';
+import 'package:mesting_music/features/app_update/data/upgrade_celebration_receipt.dart';
+import 'package:mesting_music/shared/widgets/beta_glass_popover.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/ui_fix_capture.dart';
 
 const _currentVersion = AppVersionInfo(
   packageName: 'com.mesting.music',
@@ -110,6 +116,153 @@ class _StreamClient extends http.BaseClient {
 }
 
 void main() {
+  testWidgets('覆盖更新首进提示一次，装好同一版本后不再播放', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      firstLaunchAuthCompletedPreferenceKey: true,
+    });
+    final prefs = await SharedPreferences.getInstance();
+    const installed = AppVersionInfo(
+      packageName: 'com.mesting.music',
+      versionName: '1.0.97',
+      versionCode: 118,
+      firstInstallTime: 100,
+      lastUpdateTime: 200,
+    );
+    var taps = 0;
+    Widget host() {
+      final navigator = GlobalKey<NavigatorState>();
+      return ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          appVersionProvider.overrideWith((_) async => installed),
+          autoAppUpdateChecksEnabledProvider.overrideWithValue(false),
+          autoInstalledReleaseNotesEnabledProvider.overrideWithValue(false),
+        ],
+        child: MaterialApp(
+          navigatorKey: navigator,
+          builder: (_, child) =>
+              AppUpdateCoordinator(navigatorKey: navigator, child: child!),
+          home: Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () => taps++,
+                child: const Text('操作'),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(host());
+    await tester.pump(const Duration(milliseconds: 1850));
+    await tester.pump(const Duration(milliseconds: 420));
+    expect(find.text('更新成功'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('upgrade-celebration-overlay')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('操作'));
+    expect(taps, 1);
+    await tester.pump(const Duration(milliseconds: 2200));
+    await tester.pumpAndSettle();
+    expect(find.text('更新成功'), findsNothing);
+    expect(UpgradeCelebrationReceipt(prefs).shouldCelebrate(installed), false);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(host());
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('更新成功'), findsNothing);
+  }, skip: !DistributionChannel.isBeta);
+
+  test('首次安装和回退不会消耗更高版本已确认的升级记录', () async {
+    SharedPreferences.setMockInitialValues({});
+    final receipt = UpgradeCelebrationReceipt(
+      await SharedPreferences.getInstance(),
+    );
+    const fresh = AppVersionInfo(
+      packageName: 'com.mesting.music',
+      versionName: '1.0.97',
+      versionCode: 118,
+      firstInstallTime: 100,
+      lastUpdateTime: 100,
+    );
+    const older = AppVersionInfo(
+      packageName: 'com.mesting.music',
+      versionName: '1.0.96',
+      versionCode: 117,
+      firstInstallTime: 100,
+      lastUpdateTime: 150,
+    );
+    expect(receipt.shouldCelebrate(fresh), false);
+    await receipt.acknowledge(fresh);
+    expect(receipt.shouldCelebrate(older), false);
+    await receipt.acknowledge(older);
+    const reinstalled = AppVersionInfo(
+      packageName: 'com.mesting.music',
+      versionName: '1.0.97',
+      versionCode: 118,
+      firstInstallTime: 100,
+      lastUpdateTime: 250,
+    );
+    expect(receipt.shouldCelebrate(reinstalled), false);
+  });
+
+  testWidgets('下载更新在屏幕中央并保持说明与操作区域分离', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 760));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    if (uiFixCaptureDirectory.isNotEmpty) {
+      await tester.runAsync(initializeUiFixCapture);
+    }
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          appUpdateControllerProvider.overrideWith(
+            _DownloadingUpdateController.new,
+          ),
+        ],
+        child: MaterialApp(
+          builder: (context, child) =>
+              RepaintBoundary(key: uiFixCaptureKey, child: child),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showAppUpdateSheet(context),
+                child: const Text('检查更新'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('检查更新'));
+    await tester.pumpAndSettle();
+    final dialog = find.byKey(const ValueKey('app-update-centered-dialog'));
+    expect(tester.getCenter(dialog), const Offset(195, 380));
+    await captureUiFix(tester, '207-update-dialog');
+    final actions = find.byKey(const ValueKey('app-update-fixed-actions'));
+    final before = tester.getRect(actions);
+    await tester.drag(
+      find.byKey(const ValueKey('app-update-notes-scroll')),
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getRect(actions), before);
+    expect(
+      find.descendant(
+        of: actions,
+        matching: find.byKey(const ValueKey('app-update-progress')),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    // Close the route so its shared open guard is released before the next test.
+    Navigator.of(tester.element(dialog)).pop();
+    await tester.pumpAndSettle();
+    expect(dialog, findsNothing);
+  }, skip: !DistributionChannel.isBeta);
   test('更新清单严格比较包名、版本号与强制更新范围', () {
     final manifest = AppUpdateManifest.fromJson(
       _manifestJson(apkBytes: const [4, 5, 6], minimumVersionCode: 16),
@@ -513,14 +666,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('open-app-update-sheet')));
     await tester.pumpAndSettle();
 
-    final glassSurface = tester.widget<LiquidGlassSurface>(
-      find.byKey(liquidGlassSheetSurfaceKey),
-    );
-    expect(glassSurface.blurSigma, 24);
     expect(
       find.descendant(
-        of: find.byKey(liquidGlassSheetSurfaceKey),
-        matching: find.byType(BackdropFilter),
+        of: find.byKey(const ValueKey('app-update-centered-dialog')),
+        matching: find.byType(BetaGlassMenuSurface),
       ),
       findsOneWidget,
     );
@@ -529,6 +678,8 @@ void main() {
     );
     expect(contentMaterial.type, MaterialType.transparency);
     expect(tester.takeException(), isNull);
+    Navigator.of(tester.element(find.byKey(appUpdateSheetContentKey))).pop();
+    await tester.pumpAndSettle();
   });
 
   testWidgets('下载抽屉可以暂停并显示持久化续传进度', (tester) async {

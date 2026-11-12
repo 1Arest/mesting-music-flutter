@@ -67,6 +67,7 @@ void main() {
     expect(s.poster, PosterTemplate.original);
     expect(s.mini, MiniPlayerFinish.original);
     expect(s.lyricSize, 0);
+    expect(s.lyricPresentation, LyricPresentation.current);
   });
   test(
     'independent choices survive restart, reset and ordered rapid writes',
@@ -82,6 +83,7 @@ void main() {
         'atmosphere': 'stars',
         'serif': true,
         'lyricSize': 32,
+        'lyricPresentation': 'focus',
         'lyricColor': 0xffbbddff,
       });
       await Future.wait([
@@ -98,6 +100,7 @@ void main() {
       expect(s.poster, PosterTemplate.ticket);
       expect(s.strength, .8);
       expect(s.lyricSize, 32);
+      expect(s.lyricPresentation, LyricPresentation.focus);
       expect(s.accessory, AvatarAccessory.moon);
       expect(s.atmosphere, ListeningAtmosphere.stars);
       restored.dispose();

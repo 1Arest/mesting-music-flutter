@@ -249,7 +249,7 @@ final _hotTracks = List<Track>.generate(
     album: '热门音乐',
     duration: const Duration(minutes: 3),
     audioAsset: 'assets/audio/hot-$index.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
   ),
   growable: false,

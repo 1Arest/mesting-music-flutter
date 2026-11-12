@@ -103,7 +103,7 @@ void main() {
 
   test('主题分类使用三组比例正确的 IP 头像素材', () {
     const avatars = <String>[
-      'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      'assets/images/theme_gallery/shinchan-avatar-v2.webp',
       'assets/images/theme_gallery/hello-kitty-progress-head.png',
       'assets/images/theme_gallery/kuromi-progress-head.png',
     ];

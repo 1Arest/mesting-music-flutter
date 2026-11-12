@@ -343,6 +343,10 @@ open class MainActivity : AudioServiceActivity() {
             "packageName" to packageName,
             "versionName" to (info.versionName ?: ""),
             "versionCode" to packageVersionCode(info),
+            // Local install metadata distinguishes an actual upgrade from a
+            // first install. No music-account or network state is involved.
+            "firstInstallTime" to info.firstInstallTime,
+            "lastUpdateTime" to info.lastUpdateTime,
         )
     }
 

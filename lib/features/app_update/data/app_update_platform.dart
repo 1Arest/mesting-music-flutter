@@ -28,6 +28,8 @@ class AppUpdatePlatform {
       packageName: packageName,
       versionName: versionName,
       versionCode: versionCode,
+      firstInstallTime: (result?['firstInstallTime'] as num?)?.toInt() ?? 0,
+      lastUpdateTime: (result?['lastUpdateTime'] as num?)?.toInt() ?? 0,
     );
   }
 

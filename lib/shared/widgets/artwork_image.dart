@@ -23,11 +23,11 @@ const _legacyArtworkAssetAliases = <String, String>{
   'assets/branding/dress-morning-launch.png':
       'assets/branding/dress-morning-launch.webp',
   'assets/images/themes/shinchan_progress.png':
-      'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      'assets/images/theme_gallery/shinchan-avatar-v2.webp',
   'assets/images/themes/shinchan_sunny.png':
       'assets/images/theme_gallery/motion-walk-shinchan-scene.webp',
   'assets/images/theme_gallery/shinchan-progress-head.png':
-      'assets/images/theme_gallery/shinchan-avatar-v2.png',
+      'assets/images/theme_gallery/shinchan-avatar-v2.webp',
 };
 
 String canonicalArtworkUri(String value) =>

@@ -31,7 +31,7 @@ final _dailyTracks = List<Track>.generate(
     album: '每日推荐',
     duration: const Duration(minutes: 3),
     audioAsset: 'https://example.com/daily-$index.mp3',
-    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.png',
+    coverAsset: 'assets/images/theme_gallery/shinchan-avatar-v2.webp',
     lyricsAsset: '',
     source: TrackSource.kugou,
     provider: '测试音乐',

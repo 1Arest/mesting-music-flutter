@@ -34,7 +34,7 @@ enum StartupStyle {
   final String label;
   final String? assetBase;
   final bool staticImage;
-  String? get posterAsset => assetBase == null ? null : '$assetBase.png';
+  String? get posterAsset => assetBase == null ? null : '$assetBase.webp';
 }
 
 /// Explicitly confirmed upgrade rule: switch once, then respect later choices.

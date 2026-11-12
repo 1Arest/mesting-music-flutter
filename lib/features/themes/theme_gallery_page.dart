@@ -1265,7 +1265,7 @@ class _IpAvatar extends StatelessWidget {
     final asset = switch (ip) {
       MusicThemeIp.classic => null,
       MusicThemeIp.shinchan =>
-        'assets/images/theme_gallery/shinchan-avatar-v2.png',
+        'assets/images/theme_gallery/shinchan-avatar-v2.webp',
       MusicThemeIp.helloKitty =>
         'assets/images/theme_gallery/hello-kitty-progress-head.png',
       MusicThemeIp.kuromi =>

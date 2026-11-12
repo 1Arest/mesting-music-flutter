@@ -1,3 +1,4 @@
+import 'lyric_presentation_picker.dart';
 import 'style_option_grid.dart';
 import 'personal_style_previews.dart';
 import '../music_platform/presentation/platform_design.dart';
@@ -166,6 +167,11 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       ),
                     ],
                     if (index == 1) ...[
+                      LyricPresentationPicker(
+                        selected: s.lyricPresentation,
+                        onSelected: (value) =>
+                            _change({'lyricPresentation': value.name}),
+                      ),
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(

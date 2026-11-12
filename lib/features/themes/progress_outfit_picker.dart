@@ -1,10 +1,9 @@
+import '../player/presentation/shinchan_progress_walker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/platform/distribution_channel.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../player/presentation/ip_progress_decoration.dart';
-import '../player/presentation/shinchan_progress_walker.dart';
 import 'music_theme_preset.dart';
 import 'music_typography.dart';
 import 'progress_decoration_picker.dart';
@@ -131,24 +130,29 @@ class _ProgressOutfitPickerState extends ConsumerState<ProgressOutfitPicker> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      key: const ValueKey('progress-outfit-customize'),
-                      onPressed: _saving
-                          ? null
-                          : () => setState(() => _customizing = !_customizing),
-                      icon: Icon(
-                        _customizing ? Icons.check_rounded : Icons.tune_rounded,
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    children: [
+                      Text(
+                        _customizing ? '自定义轨道' : '选择角色',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      label: Text(_customizing ? '完成搭配' : '自定义搭配'),
-                    ),
-                  ),
-                  Text(
-                    _customizing ? '自定义轨道' : '选择角色',
-                    style: const TextStyle(
-                      fontWeight: MusicTypography.titleWeight,
-                    ),
+                      TextButton.icon(
+                        key: const ValueKey('progress-outfit-customize'),
+                        onPressed: _saving
+                            ? null
+                            : () =>
+                                  setState(() => _customizing = !_customizing),
+                        icon: Icon(
+                          _customizing
+                              ? Icons.check_rounded
+                              : Icons.tune_rounded,
+                        ),
+                        label: Text(_customizing ? '完成搭配' : '自定义搭配'),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 5),
                   Text(
@@ -167,16 +171,6 @@ class _ProgressOutfitPickerState extends ConsumerState<ProgressOutfitPicker> {
                       onSelected: _select,
                     ),
                   ),
-                  if (!_customizing &&
-                      DistributionChannel.isBeta &&
-                      character == ProgressDecoration.shinchan) ...[
-                    const SizedBox(height: 18),
-                    ShinchanWeatherPicker(
-                      selected:
-                          settings.shinchanWeather ??
-                          shinchanWeatherForPreset(preset.id),
-                    ),
-                  ],
                 ],
               ),
             ),

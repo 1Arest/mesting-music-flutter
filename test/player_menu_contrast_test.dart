@@ -249,7 +249,10 @@ void main() {
             .descendant(of: selectedLabel, matching: find.byType(RichText))
             .first,
       );
-      expect(selectedText.text.style?.color, player.colorScheme.primary);
+      expect(
+        selectedText.text.style?.color,
+        BetaAppearance.favorite(player.brightness),
+      );
       expect(find.text('取消喜欢'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('song-menu-next')));
       expect(intents, ['next']);

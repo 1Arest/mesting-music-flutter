@@ -244,7 +244,7 @@ void main() {
     final context = tester.element(find.byType(MestingMusicCompanions).first);
     await tester.runAsync(() async {
       await precacheImage(
-        const AssetImage('assets/branding/welcome/companions-atlas.png'),
+        const AssetImage('assets/branding/welcome/companions-atlas.webp'),
         context,
       );
     });

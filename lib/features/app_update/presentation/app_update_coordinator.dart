@@ -11,6 +11,8 @@ import '../data/release_notes_receipt.dart';
 import '../domain/release_history.dart';
 import 'app_update_sheet.dart';
 import 'release_notes_sheet.dart';
+import '../data/upgrade_celebration_receipt.dart';
+import 'upgrade_celebration.dart';
 
 class AppUpdateCoordinator extends ConsumerStatefulWidget {
   const AppUpdateCoordinator({
@@ -32,6 +34,7 @@ class _AppUpdateCoordinatorState extends ConsumerState<AppUpdateCoordinator>
   bool _scheduled = false;
   bool _presenting = false;
   bool _notesChecked = false;
+  bool _celebrationChecked = false;
   bool _foreground = true;
   DateTime? _lastCheck;
 
@@ -61,7 +64,8 @@ class _AppUpdateCoordinatorState extends ConsumerState<AppUpdateCoordinator>
     }
     final notesPending =
         ref.read(autoInstalledReleaseNotesEnabledProvider) && !_notesChecked;
-    if (!notesPending &&
+    if (_celebrationChecked &&
+        !notesPending &&
         (!ref.read(autoAppUpdateChecksEnabledProvider) || _checkThrottled)) {
       return;
     }
@@ -113,9 +117,38 @@ class _AppUpdateCoordinatorState extends ConsumerState<AppUpdateCoordinator>
     }
   }
 
+  Future<void> _showUpgradeSuccess() async {
+    if (_celebrationChecked) return;
+    try {
+      final installed = await ref.read(appVersionProvider.future);
+      if (!mounted || !_eligible()) return;
+      final receipt = UpgradeCelebrationReceipt(
+        ref.read(sharedPreferencesProvider),
+      );
+      if (receipt.shouldCelebrate(installed)) {
+        final presentation = _presentationContext;
+        if (presentation == null || !presentation.mounted) return;
+        _presenting = true;
+        try {
+          if (!await showUpgradeCelebration(presentation)) return;
+        } finally {
+          _presenting = false;
+        }
+        if (!mounted) return;
+      }
+      await receipt.acknowledge(installed);
+      _celebrationChecked = true;
+    } catch (_) {
+      // A failed local read/save can retry at the next foreground entry.
+      // Celebration must never prevent playback or normal update discovery.
+    }
+  }
+
   Future<void> _checkAfterLaunch() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 1800));
+      if (!mounted || !_eligible()) return;
+      await _showUpgradeSuccess();
       if (!mounted || !_eligible()) return;
       await _showInstalledNotes();
       if (!mounted ||

@@ -6,6 +6,7 @@ enum ProfileEffectStyle {
   rhythm('音律光环', '光环随音乐起伏，重拍带出飘落音符'),
   orbit('星轨流光', '紫蓝星屑沿光轨缓缓飘落'),
   fireflies('萤火光尘', '暖色萤光绕头像缓缓飘落'),
+  aurora('极光音浪', '渐变光带环绕头像，随真实音乐柔和起伏'),
   none('关闭特效', '仅保留头像与个人资料');
 
   const ProfileEffectStyle(this.label, this.description);

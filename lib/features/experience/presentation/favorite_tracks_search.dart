@@ -221,9 +221,7 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                               IconButton(
                                 tooltip: '新建歌单',
                                 onPressed: widget.onCreatePlaylist,
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
-                                ),
+                                icon: const Icon(Icons.add_rounded),
                               ),
                             ],
                           );
@@ -237,9 +235,7 @@ class _FavoriteTracksSearchState extends ConsumerState<FavoriteTracksSearch> {
                               IconButton(
                                 tooltip: '新建歌单',
                                 onPressed: widget.onCreatePlaylist,
-                                icon: const Icon(
-                                  Icons.add_circle_outline_rounded,
-                                ),
+                                icon: const Icon(Icons.add_rounded),
                               ),
                               IconButton(
                                 tooltip: _editing ? '关闭收藏搜索' : '搜索我的喜欢',

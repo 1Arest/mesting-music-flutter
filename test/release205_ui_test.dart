@@ -10,12 +10,14 @@ import 'package:mesting_music/features/music_platform/music_platform_providers.d
 import 'package:mesting_music/features/music_platform/netease/footprint/official_report_extras.dart';
 import 'package:mesting_music/features/music_platform/netease/footprint/official_report_extras_view.dart';
 import 'package:mesting_music/features/player/presentation/player_visual_stages.dart';
+import 'package:mesting_music/features/player/presentation/official_vinyl_parts.dart';
 import 'package:mesting_music/features/player/presentation/vinyl_disc.dart';
 import 'package:mesting_music/features/themes/app_theme.dart';
 import 'package:mesting_music/features/themes/music_theme_preset.dart';
 import 'package:mesting_music/features/themes/personal_style.dart';
 import 'package:mesting_music/features/themes/personal_style_page.dart';
 import 'package:mesting_music/features/themes/profile_effect_picker.dart';
+import 'package:mesting_music/features/themes/profile_effect_style.dart';
 import 'package:mesting_music/features/themes/progress_outfit_picker.dart';
 import 'package:mesting_music/features/themes/style_option_grid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -124,6 +126,9 @@ void main() {
         await captureUiFix(tester, '205-$key-$suffix', settleAnimations: false);
       }
       expect(tester.takeException(), isNull);
+      await container
+          .read(profileEffectProvider.notifier)
+          .select(ProfileEffectStyle.aurora);
       await tester.pumpWidget(
         host(
           const Scaffold(
@@ -141,11 +146,8 @@ void main() {
         ),
       );
       await settle();
-      await captureUiFix(
-        tester,
-        '205-effects-$suffix',
-        settleAnimations: false,
-      );
+      await captureUiFix(tester, '207-aurora-$suffix', settleAnimations: false);
+      expect(find.text('极光音浪'), findsOneWidget);
       expect(find.byType(ChoiceChip), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(
@@ -261,12 +263,14 @@ void main() {
       expect(paused, angle);
       expect(
         tester
-            .widget<TweenAnimationBuilder<double>>(
-              find.byType(TweenAnimationBuilder<double>),
+            .widget<AnimatedRotation>(
+              find.descendant(
+                of: find.byType(OfficialVinylTonearm),
+                matching: find.byType(AnimatedRotation),
+              ),
             )
-            .tween
-            .end,
-        lessThan(0),
+            .turns,
+        officialTonearmPauseTurns,
       );
       await tester.pumpWidget(host(true));
       await tester.pump(const Duration(milliseconds: 500));

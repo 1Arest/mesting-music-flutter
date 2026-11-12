@@ -316,7 +316,7 @@ void main() {
         await mount(tester, const BetaWelcomePage(), dark: dark);
         await tester.runAsync(
           () => precacheImage(
-            const AssetImage('assets/branding/welcome/companions-atlas.png'),
+            const AssetImage('assets/branding/welcome/companions-atlas.webp'),
             tester.element(find.byType(BetaWelcomePage)),
           ),
         );
@@ -331,7 +331,7 @@ void main() {
         );
         await tester.runAsync(
           () => precacheImage(
-            const AssetImage('assets/branding/welcome/companions-atlas.png'),
+            const AssetImage('assets/branding/welcome/companions-atlas.webp'),
             tester.element(find.byType(BetaWelcomePage)),
           ),
         );
