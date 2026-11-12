@@ -350,7 +350,13 @@ class _PlatformCommentsPageState extends ConsumerState<PlatformCommentsPage> {
       );
       if (!mounted || !_current) return;
       _text.clear();
-      setState(() => _reply = null);
+      setState(() {
+        _reply = null;
+        _sort = PlatformCommentSort.newest;
+        _scope = PlatformCommentScope.all;
+        _sortNotice = null;
+      });
+      if (_scroll.hasClients) _scroll.jumpTo(0);
       // A committed write is already successful. Readback must neither delay
       // that acknowledgement nor insert an initial-loading panel in the list.
       showMusicNotice(

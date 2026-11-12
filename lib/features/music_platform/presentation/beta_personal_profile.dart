@@ -1,0 +1,649 @@
+import '../../themes/profile_effect_style.dart';
+import '../netease/netease_official_ranking_page.dart';
+import '../../profile/presentation/vip_profile_effects.dart';
+import '../membership_badge_provider.dart';
+import '../../../shared/widgets/beta_content_insets.dart';
+import 'netease_personal_statistics.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import '../domain/platform_session.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/database/app_database.dart';
+import '../../../shared/widgets/artwork_image.dart';
+import '../../../shared/widgets/beta_glass_controls.dart';
+import '../../../shared/widgets/beta_page_motion.dart';
+import '../../../shared/widgets/beta_glass_popover.dart';
+import '../../auth/presentation/beta_account_card.dart';
+import '../../downloads/audio_downloads_page.dart';
+import '../../experience/presentation/editorial_widgets.dart';
+import '../../themes/beta_appearance.dart';
+import '../../library/library_providers.dart';
+import '../data/cloud_library_repository.dart';
+import '../music_platform_providers.dart';
+import '../platform_backend_providers.dart';
+import '../platform_profile_provider.dart';
+import '../netease/netease_library_repository.dart';
+import '../netease/netease_membership_page.dart';
+import '../netease/full/netease_full_page.dart';
+import 'platform_account_page.dart';
+import 'platform_avatar.dart';
+import 'platform_design.dart';
+import 'platform_library_page.dart';
+import 'platform_login_options_page.dart';
+import 'kugou_accounts_page.dart';
+import 'kugou_listening_profile_pages.dart';
+import 'kugou_official_page.dart';
+import 'kugou_standard_authorization_page.dart';
+import 'platform_profile_edit_page.dart';
+import 'unified_reward_page.dart';
+import '../../themes/music_typography.dart';
+
+/// Personal library composition is independent of the account card used by
+/// Settings. Only real library/profile data is shown; reference statistics are
+/// never copied from the supplied screenshot.
+class BetaPersonalProfile extends ConsumerStatefulWidget {
+  const BetaPersonalProfile({super.key});
+  @override
+  ConsumerState<BetaPersonalProfile> createState() =>
+      BetaPersonalProfileState();
+}
+
+class BetaPersonalProfileState extends ConsumerState<BetaPersonalProfile> {
+  final _accountAnchor = GlobalKey(debugLabel: 'personal-account-menu-anchor');
+  bool _menuOpen = false;
+  final _vipAvatarKey = VipEffectAnchorHandle();
+  void _open(Widget page) =>
+      Navigator.of(context).push(betaContentRoute<void>(page));
+  Future<void> _sign() async => _open(const UnifiedRewardPage());
+
+  /// Shared by the real button and the fixed interaction diagnostic. Never
+  /// enqueue duplicate popovers when two taps arrive before the barrier paints.
+  Future<void> openAccountMenu({
+    ValueChanged<ModalRoute<dynamic>>? onRouteCreated,
+  }) async {
+    if (_menuOpen) return;
+    final box = _accountAnchor.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final anchor = box.localToGlobal(Offset.zero) & box.size;
+    _menuOpen = true;
+    try {
+      // Reuse Qishui's anchored glass route and reversible liquid motion. The
+      // existing diagnostic still leases the exact route through this callback.
+      final action = await showBetaGlassPopover<String>(
+        context: context,
+        anchor: anchor,
+        onRouteCreated: onRouteCreated,
+        builder: (sheet) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final entry in [
+                ('edit', '编辑个人资料', CupertinoIcons.person_crop_circle),
+                ('switch', '切换音乐平台', CupertinoIcons.arrow_2_circlepath),
+                ('kugouAccounts', '切换酷狗账号', CupertinoIcons.person_2),
+                if (ref.read(platformAccountProvider).value?.platform ==
+                    MusicPlatform.kugou)
+                  (
+                    'authorizeKugou',
+                    '验证酷狗官方功能',
+                    CupertinoIcons.checkmark_shield,
+                  ),
+                (
+                  'account',
+                  '管理当前账号',
+                  CupertinoIcons.person_crop_circle_badge_checkmark,
+                ),
+              ])
+                ListTile(
+                  leading: Icon(entry.$3),
+                  title: Text(entry.$2),
+                  onTap: () => Navigator.pop(sheet, entry.$1),
+                ),
+            ],
+          ),
+        ),
+      );
+      if (!mounted) return;
+      if (action == 'edit') _open(const PlatformProfileEditPage());
+      if (action == 'switch') {
+        await openMusicPlatformSwitch(context);
+        return;
+      }
+      if (action == 'kugouAccounts') _open(const KugouAccountsPage());
+      if (action == 'authorizeKugou') {
+        final session = ref.read(platformAccountProvider).value;
+        if (session?.platform == MusicPlatform.kugou) {
+          await openKugouStandardAuthorization(context, session!);
+        }
+      }
+      if (action == 'account') {
+        final session = ref.read(platformAccountProvider).value;
+        if (session != null) {
+          _open(PlatformAccountPage(platform: session.platform));
+        }
+      }
+    } finally {
+      _menuOpen = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Only identity changes rebuild the page structure. Profile metadata,
+    // favorites, counts and playlists subscribe inside their own sections.
+    final session = ref.watch(platformAccountProvider).value;
+    final netease = ref.watch(usesNeteaseProvider);
+    return PlatformStyle(
+      // Keep the scroll/sliver tree stable when membership facts arrive.
+      child: Consumer(
+        builder: (context, ref, child) => VipProfileEffects(
+          enabled:
+              session != null &&
+              (ref.watch(membershipPresentationTierProvider) != null ||
+                  ref.watch(profileEffectProvider) !=
+                      ProfileEffectStyle.petals),
+          avatarKey: _vipAvatarKey,
+          child: child!,
+        ),
+        child: CustomScrollView(
+          key: PageStorageKey(
+            'personal-profile:${session?.ownerId ?? 'guest'}',
+          ),
+          slivers: [
+            _ProfilePart(
+              key: const ValueKey('profile-heading-sliver'),
+              child: _PersonalHeading(
+                signedIn: session != null,
+                accountAnchor: _accountAnchor,
+                onAccount: openAccountMenu,
+              ),
+            ),
+            _ProfilePart(
+              key: const ValueKey('profile-identity-sliver'),
+              child: session == null
+                  ? const Padding(
+                      padding: EdgeInsets.all(22),
+                      child: BetaAccountCard(),
+                    )
+                  : _PersonalIdentity(session, avatarKey: _vipAvatarKey),
+            ),
+            _ProfilePart(
+              key: const ValueKey('profile-quick-sliver'),
+              child: _PersonalQuickActions(
+                signedIn: session != null,
+                netease: netease,
+                signing: false,
+                onSign: _sign,
+              ),
+            ),
+            if (netease)
+              _ProfilePart(
+                child: ListTile(
+                  key: const ValueKey('personal-netease-official-ranking'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
+                  leading: const Icon(Icons.bar_chart_rounded),
+                  title: const Text('网易云听歌排行'),
+                  subtitle: const Text('最近一周 · 累计播放次数'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: session == null
+                      ? null
+                      : () => _open(const NeteaseOfficialRankingPage()),
+                ),
+              ),
+            _ProfilePart(
+              child: _PersonalMusicHeading(signedIn: session != null),
+            ),
+            const _ProfilePart(child: _PersonalLikedPlaylist()),
+            const _PersonalPlaylists(),
+            if (netease)
+              const _ProfilePart(child: NeteaseFullNavigation(tab: '我的')),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: BetaContentInsets.musicBottomOf(
+                  context,
+                  editorialBottomClearance,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A separate sliver is important here: a single large Column keeps all six
+/// glass layers in its paint traversal while any part of the header is visible.
+/// The viewport can omit a fully offscreen part, without disposing its state or
+/// replacing its live material with a screenshot. Text/image repaints stay local.
+class _ProfilePart extends StatelessWidget {
+  const _ProfilePart({required this.child, super.key});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) =>
+      SliverToBoxAdapter(child: RepaintBoundary(child: child));
+}
+
+class _PersonalHeading extends StatelessWidget {
+  const _PersonalHeading({
+    required this.signedIn,
+    required this.onAccount,
+    required this.accountAnchor,
+  });
+  final bool signedIn;
+  final VoidCallback onAccount;
+  final GlobalKey accountAnchor;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 14),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(22, 8, 18, 12),
+      child: GlassBackdropGroup(
+        // Sharing is opt-in and conservative: scales, shadows or read margins
+        // that overlap return to independent passes, including during a press.
+        requireDisjointBounds: true,
+        child: Row(
+          children: [
+            Text(
+              '我的',
+              style: TextStyle(
+                fontSize: MusicTypography.largeTitleSize,
+                fontWeight: MusicTypography.titleWeight,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const Spacer(),
+            if (signedIn)
+              BetaGlassButton(
+                key: accountAnchor,
+                label: '账号选项',
+                width: 48,
+                height: 48,
+                onPressed: onAccount,
+                child: const Icon(CupertinoIcons.ellipsis),
+              ),
+            const SizedBox(width: 12),
+            BetaGlassButton(
+              label: '设置',
+              width: 48,
+              height: 48,
+              onPressed: () => context.push('/music/settings'),
+              child: const Icon(CupertinoIcons.gear_alt),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _PersonalIdentity extends ConsumerWidget {
+  const _PersonalIdentity(this.session, {required this.avatarKey});
+  final VipEffectAnchorHandle avatarKey;
+  final PlatformSession session;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(platformProfileProvider).value;
+    final membership = ref.watch(membershipPresentationTierProvider);
+    final nickname = Text(
+      profile?.nickname ?? session.nickname,
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontSize: MusicTypography.titleSize,
+        fontWeight: MusicTypography.titleWeight,
+      ),
+    );
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () => Navigator.of(
+            context,
+          ).push(betaContentRoute<void>(const PlatformProfileEditPage())),
+          child: Semantics(
+            button: true,
+            label: '编辑个人资料',
+            child: VipEffectAnchor(
+              handle: avatarKey,
+              child: PlatformAvatar(
+                url: profile?.avatarUrl ?? session.avatarUrl,
+                size: 104,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 8,
+            children: [
+              if (membership != null)
+                VipGoldText(child: nickname)
+              else
+                nickname,
+              const NeteaseLocalSvipBadge(inline: true),
+            ],
+          ),
+        ),
+        if (membership != null) ...[
+          const SizedBox(height: 6),
+          VipGoldText(
+            child: Text(
+              'ID ${session.userId}',
+              style: const TextStyle(fontSize: MusicTypography.captionSize),
+            ),
+          ),
+        ],
+        const SizedBox(height: 9),
+        Text(
+          '${session.platformLabel}账号',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        if (profile?.signature?.isNotEmpty == true)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 10, 32, 0),
+            child: Text(
+              profile!.signature!,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        const SizedBox(height: 18),
+        if (session.platform == MusicPlatform.netease)
+          NeteasePersonalStatistics(session: session)
+        else ...[
+          KugouPersonalStatistics(
+            session: session,
+            onOpenOfficial: (uri) =>
+                openKugouOfficialPage(context, ref, session, uri),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The page displays only a count and the first cover, not every track field.
+/// A metadata/availability update for another one of 674 favorites must not
+/// rebuild the avatar, glass controls or playlist slivers.
+final _personalFavoriteSummary = Provider((ref) {
+  final count = ref.watch(favoriteCollectionCountProvider);
+  return ref.watch(
+    favoriteTracksProvider.select((value) {
+      final tracks = value.value;
+      return (count: count, cover: tracks?.firstOrNull?.coverAsset ?? '');
+    }),
+  );
+});
+
+class _PersonalQuickActions extends StatelessWidget {
+  const _PersonalQuickActions({
+    required this.signedIn,
+    required this.netease,
+    required this.signing,
+    required this.onSign,
+  });
+  final bool signedIn, netease, signing;
+  final VoidCallback onSign;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(18, 24, 18, 16),
+    child: GlassBackdropGroup(
+      requireDisjointBounds: true,
+      child: Row(
+        children: [
+          _PersonalQuickLink(
+            '最近',
+            CupertinoIcons.clock,
+            () => context.push('/music/library?view=recent'),
+            tone: BetaFeatureTone.insights,
+          ),
+          _PersonalQuickLink(
+            '已下载',
+            CupertinoIcons.arrow_down_circle,
+            () => openAudioDownloads(context, downloadedOnly: true),
+            tone: BetaFeatureTone.downloads,
+          ),
+          _PersonalQuickLink(
+            '签到',
+            CupertinoIcons.calendar,
+            signedIn && !signing ? onSign : null,
+            loading: signing,
+          ),
+          _PersonalQuickLink(
+            '会员',
+            CupertinoIcons.star_circle,
+            signedIn
+                ? () => Navigator.of(context).push(
+                    betaContentRoute<void>(
+                      netease
+                          ? const NeteaseMembershipPage()
+                          : const UnifiedRewardPage(),
+                    ),
+                  )
+                : null,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _PersonalQuickLink extends StatelessWidget {
+  const _PersonalQuickLink(
+    this.title,
+    this.icon,
+    this.action, {
+    this.loading = false,
+    this.tone = BetaFeatureTone.action,
+  });
+  final String title;
+  final IconData icon;
+  final VoidCallback? action;
+  final bool loading;
+  final BetaFeatureTone tone;
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: BetaGlassButton(
+        onPressed: action,
+        loading: loading,
+        height: 62,
+        horizontalPadding: 5,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: action == null
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : BetaAppearance.feature(context, tone),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: MusicTypography.captionSize,
+                fontWeight: MusicTypography.bodyWeight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _PersonalMusicHeading extends ConsumerWidget {
+  const _PersonalMusicHeading({required this.signedIn});
+  final bool signedIn;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Column(
+    children: [
+      const SizedBox(height: 10),
+      EditorialSection(
+        '我的音乐',
+        fontWeight: MusicTypography.titleWeight,
+        actionLabel: '新建歌单',
+        onTap: signedIn ? () => createPlatformPlaylist(context, ref) : null,
+      ),
+    ],
+  );
+}
+
+class _PersonalLikedPlaylist extends ConsumerWidget {
+  const _PersonalLikedPlaylist();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favorites = ref.watch(_personalFavoriteSummary);
+    final scheme = Theme.of(context).colorScheme;
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: SizedBox.square(
+          dimension: 64,
+          child: favorites.cover.isNotEmpty
+              ? ArtworkImage(
+                  uri: favorites.cover,
+                  width: 64,
+                  height: 64,
+                  decodeWidth: 64,
+                  decodeHeight: 64,
+                  retryOnNetworkError: true,
+                )
+              : ColoredBox(
+                  color: scheme.surfaceContainerLow,
+                  child: Icon(
+                    CupertinoIcons.heart_fill,
+                    color: BetaAppearance.favorite(scheme.brightness),
+                  ),
+                ),
+        ),
+      ),
+      title: const Text(
+        '我喜欢的音乐',
+        style: TextStyle(fontWeight: MusicTypography.titleWeight),
+      ),
+      subtitle: Text('${favorites.count} 首歌曲'),
+      trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+      onTap: () => context.push('/music?view=favorites'),
+    );
+  }
+}
+
+class _PersonalPlaylists extends ConsumerWidget {
+  const _PersonalPlaylists();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(playlistsProvider);
+    final repository = ref.watch(libraryRepositoryProvider);
+    final owner = ref.watch(
+      platformAccountProvider.select((a) => a.value?.ownerId),
+    );
+    final lists = playlists.value ?? const <UserPlaylist>[];
+    final liked = repository is NeteaseLibraryRepository
+        ? repository.likedPlaylistId
+        : null;
+    final owned = <UserPlaylist>[], saved = <UserPlaylist>[];
+    for (final playlist in lists) {
+      if (playlist.id == liked) continue;
+      if (repository is! CloudLibraryRepository ||
+          repository.canManage(playlist.id)) {
+        owned.add(playlist);
+      } else {
+        saved.add(playlist);
+      }
+    }
+    Widget group(String title, List<UserPlaylist> items) => SliverMainAxisGroup(
+      slivers: [
+        _ProfilePart(
+          child: EditorialSection(
+            '$title · ${items.length}',
+            fontWeight: MusicTypography.titleWeight,
+          ),
+        ),
+        if (items.isEmpty)
+          _ProfilePart(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
+              child: Text(
+                '还没有$title',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ),
+        SliverList.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return ListTile(
+              key: ValueKey('profile-playlist:$owner:${item.id}'),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 22,
+                vertical: 7,
+              ),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: ArtworkImage(
+                  uri: item.coverAsset ?? '',
+                  width: 64,
+                  height: 64,
+                  retryOnNetworkError: true,
+                  persistentNetworkCacheKey: 'playlist-cover:$owner:${item.id}',
+                ),
+              ),
+              title: Text(
+                item.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: MusicTypography.titleWeight),
+              ),
+              subtitle: Text(title == '创建的歌单' ? '我的歌单' : '收藏的歌单'),
+              trailing: const Icon(CupertinoIcons.chevron_right, size: 16),
+              onTap: () => context.push(
+                '/music/playlists/${Uri.encodeComponent(item.id)}',
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    return SliverMainAxisGroup(
+      slivers: [
+        if (playlists.isLoading)
+          const _ProfilePart(
+            child: Padding(
+              padding: EdgeInsets.all(22),
+              child: BetaActivityIndicator(),
+            ),
+          ),
+        if (playlists.hasError)
+          _ProfilePart(
+            child: EditorialEmpty(
+              '歌单暂时无法加载',
+              onRetry: () => ref.invalidate(playlistsProvider),
+            ),
+          ),
+        group('创建的歌单', owned),
+        group('收藏的歌单', saved),
+      ],
+    );
+  }
+}

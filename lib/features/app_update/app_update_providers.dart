@@ -154,6 +154,11 @@ final appUpdateControllerProvider =
       AppUpdateController.new,
     );
 
+/// The app injects a durable playback checkpoint before the installer handoff.
+final beforeAppUpdateInstallProvider = Provider<Future<void> Function()?>(
+  (_) => null,
+);
+
 class AppUpdateController extends Notifier<AppUpdateState> {
   AppUpdateRepository get _repository => ref.read(appUpdateRepositoryProvider);
   UpdateDownloadCancellationToken? _downloadCancellation;
@@ -348,6 +353,18 @@ class AppUpdateController extends Notifier<AppUpdateState> {
         phase: AppUpdatePhase.launchingInstaller,
         errorMessage: null,
       );
+      final checkpoint = ref.read(beforeAppUpdateInstallProvider);
+      if (checkpoint != null) {
+        try {
+          await checkpoint();
+        } on Object {
+          state = state.copyWith(
+            phase: AppUpdatePhase.failed,
+            errorMessage: '播放进度未保存，请重试安装',
+          );
+          return;
+        }
+      }
       await _repository.installApk(path);
       state = state.copyWith(phase: AppUpdatePhase.installLaunched);
     } on PlatformException catch (error) {

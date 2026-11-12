@@ -1,14 +1,14 @@
-# Mesting Music 1.0.93
+# Mesting Music 1.0.94
 
-Android versionCode 114. This archive contains the product source corresponding to the original signed APK.
+Android versionCode 115. This archive contains the product source corresponding to the original signed APK.
 
 Build with Flutter 3.41.9 and JDK 17 using tool/build_android_release_apk.ps1. The pinned engine, dependencies and licenses are included. Supply your own private signing configuration.
 
 Physical device and account acceptance remains pending. See PRODUCT-SOURCE-MANIFEST.json for the original APK digest and exact archived file hashes.
 
-- 更新弹窗固定底部操作区，更新说明独立滚动，移除重复的“查看此次更新”入口。
-- 装扮中心改为分区总览，保留角色、轨道与小新天气；新增音律光环、星轨流光和萤火光尘个人页特效。
-- 新增音律声环播放器样式；我的、发现和功能页头像共用音律光环，使用当前歌曲解码音频的实际强弱驱动，隐藏或暂停时停止采样。
-- 新增按音源保存的默认音质与播放顺序设置，默认优先最高可用音质，播放失败时回退；播放器仍显示实际音质。
-- 完善网易云动态、历史评论与通用内容页的展示、日期、自动分页和操作入口；我的页面新增官方最近一周与累计听歌排行。
-- 本版为本地正式包；真实安装、返回手势、音频律动同步、声音效果和长期性能仍需设备验收。
+- 播放设置的音乐平台和默认音质改用 Apple 玻璃下拉框。装扮恢复原有预览，角色和轨道目录可按需展开。
+- 个人页新增飘落的音符、星屑和暖色萤光。头像光环和音律声环按当前播放位置读取音频，各频段分别推动波环。
+- 覆盖更新后重新打开会恢复胶囊、歌曲、队列和已保存的进度，点播放继续。应用内更新在打开系统安装器前保存进度。
+- 同步歌词支持滚动选句、从该句播放及单曲时间微调。歌曲红心显示音乐平台返回的收藏总数。
+- 播放封面上滑进入评论。发送评论成功后自动切到最新评论并刷新。
+- 下载 SDK 升级至 1.1.9，改进下载断流时的换源与重试。

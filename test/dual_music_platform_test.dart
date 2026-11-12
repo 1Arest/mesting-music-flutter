@@ -209,6 +209,86 @@ void main() {
   }, skip: !DistributionChannel.isBeta);
 
   test(
+    'saved online track remains resumable when the stream is offline',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final player = DeterministicAudioPlayer();
+      final handler = MestingAudioHandler(tracks: [], player: player);
+      final persistence = PlaybackPersistenceController(
+        database: db,
+        audioHandler: handler,
+      );
+      const owner = 'netease:7';
+      const next = Track(
+        id: 'netease_21',
+        title: 'Next',
+        artist: '',
+        album: '',
+        duration: Duration(minutes: 4),
+        audioAsset: 'file:///next.mp3',
+        coverAsset: '',
+        lyricsAsset: '',
+        source: TrackSource.netease,
+      );
+      const current = Track(
+        id: 'netease_42',
+        title: 'Saved track',
+        artist: '',
+        album: '',
+        duration: Duration(minutes: 4),
+        audioAsset: 'file:///saved.mp3',
+        coverAsset: '',
+        lyricsAsset: '',
+        source: TrackSource.netease,
+      );
+      var requests = 0;
+      var online = false;
+      handler.configureTrackPlaybackResolver((track) async {
+        requests++;
+        if (!online) throw StateError('offline');
+        return track;
+      }, skipUnplayableTrack: (_, _) => true);
+      try {
+        await db.savePlaybackSession(
+          ownerId: owner,
+          queue: [next, current],
+          currentIndex: 1,
+          position: const Duration(seconds: 81),
+          playbackMode: const PlaybackOrder().serialized,
+        );
+        await persistence.activateOwner(owner);
+        expect(requests, 0);
+        expect(handler.mediaItem.value?.id, current.id);
+        expect(handler.currentPosition, const Duration(seconds: 81));
+        expect(player.active, false);
+        expect(handler.persistedQueue.map((track) => track.id), [
+          current.id,
+          next.id,
+        ]);
+
+        await expectLater(handler.play(), throwsStateError);
+        expect(requests, 1);
+        expect(handler.mediaItem.value?.id, current.id);
+        expect(handler.currentPosition, const Duration(seconds: 81));
+        expect(player.active, false);
+
+        online = true;
+        await handler.play();
+        expect(requests, 2);
+        expect(player.at, const Duration(seconds: 81));
+        expect(player.active, true);
+        await handler.seek(const Duration(seconds: 89));
+        await persistence.saveBeforeUpdate();
+        expect((await db.loadPlaybackSession(owner))?.positionMs, 89000);
+      } finally {
+        await persistence.dispose();
+        await handler.debugDispose();
+        await db.close();
+      }
+    },
+  );
+
+  test(
     'switching preserves per-owner queues, positions and paused state',
     () async {
       final db = AppDatabase(NativeDatabase.memory());

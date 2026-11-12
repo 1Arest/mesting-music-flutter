@@ -375,10 +375,16 @@ void main() {
     );
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
+    final checkpointStarted = Completer<void>();
+    final finishCheckpoint = Completer<void>();
     final container = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(preferences),
         appUpdateRepositoryProvider.overrideWithValue(resumedRepository),
+        beforeAppUpdateInstallProvider.overrideWithValue(() async {
+          checkpointStarted.complete();
+          await finishCheckpoint.future;
+        }),
       ],
     );
     addTearDown(container.dispose);
@@ -390,7 +396,11 @@ void main() {
     expect(state.receivedBytes, prefixLength);
     expect(state.totalBytes, bytes.length);
 
-    await controller.downloadAndInstall();
+    final install = controller.downloadAndInstall();
+    await checkpointStarted.future;
+    expect(platform.installedPath, isNull);
+    finishCheckpoint.complete();
+    await install;
     state = container.read(appUpdateControllerProvider);
     expect(resumeRange, 'bytes=$prefixLength-');
     expect(state.phase, AppUpdatePhase.installLaunched);

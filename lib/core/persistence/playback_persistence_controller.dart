@@ -51,6 +51,7 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
   // logout. Serializing it prevents an older async restore from overwriting
   // the session selected by a newer account switch.
   Future<void> _ownerSwitch = Future<void>.value();
+  Future<void> _snapshotWrites = Future<void>.value();
   Future<bool> Function(String ownerId)? _librarySynchronizer;
 
   void configureLibrarySynchronizer(
@@ -90,6 +91,8 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
     if (_ownerId == ownerId) return;
     _switchingOwner = true;
     final previousOwnerId = _ownerId;
+    final restoreRevision = _audioHandler.transportRevision;
+    bool isCurrent() => restoreRevision == _audioHandler.transportRevision;
     try {
       if (previousOwnerId != null) {
         await _sampleListeningProgress(ownerId: previousOwnerId);
@@ -100,11 +103,13 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
       _listeningCounter = null;
       _sampledHeardMs = 0;
       final session = await _database.loadPlaybackSession(ownerId);
+      if (!isCurrent()) return;
       if (session == null) {
         await _audioHandler.clearSession();
         return;
       }
       final restoredTracks = await decodeTrackQueue(session.queueSnapshot);
+      if (!isCurrent()) return;
       final currentId = restoredTracks.isEmpty
           ? null
           : restoredTracks[session.currentIndex.clamp(
@@ -131,11 +136,12 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
             : Duration(milliseconds: session.positionMs),
         mode: order.legacy,
         order: order,
+        deferSource: true,
       );
     } on Object {
       // A damaged or obsolete snapshot must neither stop startup nor leak the
       // previous account's current track into the newly active account.
-      await _audioHandler.clearSession();
+      if (isCurrent()) await _audioHandler.clearSession();
     } finally {
       _switchingOwner = false;
       _resetMeasurement();
@@ -208,7 +214,9 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
     );
     _subscriptions.add(
       _audioHandler.seekingStream.listen((seeking) {
-        if (!_switchingOwner) _listeningCounter?.update(seeking: seeking);
+        if (_switchingOwner) return;
+        _listeningCounter?.update(seeking: seeking);
+        if (!seeking) unawaited(saveNow());
       }),
     );
     _saveTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
@@ -289,13 +297,30 @@ class PlaybackPersistenceController with WidgetsBindingObserver {
     if (persistedQueue.isEmpty) return;
     final position = _audioHandler.currentPosition;
     final playbackMode = _audioHandler.playbackOrder.serialized;
-    await _database.savePlaybackSession(
-      ownerId: ownerId,
-      queue: persistedQueue,
-      currentIndex: 0,
-      position: position,
-      playbackMode: playbackMode,
+    // Capture one track/position pair before awaiting previous writes. The
+    // installer checkpoint must always commit after an older timer snapshot.
+    final write = _snapshotWrites.then(
+      (_) => _database.savePlaybackSession(
+        ownerId: ownerId,
+        queue: persistedQueue,
+        currentIndex: 0,
+        position: position,
+        playbackMode: playbackMode,
+      ),
     );
+    _snapshotWrites = write.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    await write;
+  }
+
+  /// Android may terminate this process once the package installer replaces
+  /// the app. Save a fresh checkpoint before handing off to it.
+  Future<void> saveBeforeUpdate() async {
+    await _ownerSwitch;
+    final ownerId = _ownerId;
+    if (ownerId != null && !_switchingOwner) await _saveSnapshot(ownerId);
   }
 
   @override

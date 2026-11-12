@@ -23,6 +23,7 @@ import 'core/persistence/app_preferences.dart';
 import 'core/persistence/playback_persistence_controller.dart';
 import 'core/performance/frame_timing_probe.dart';
 import 'core/performance/startup_timing_probe.dart';
+import 'features/app_update/app_update_providers.dart';
 import 'features/library/library_providers.dart';
 import 'features/themes/app_brand_style.dart';
 import 'features/themes/theme_controller.dart';
@@ -287,6 +288,9 @@ class _MestingDependencies {
       sharedPreferencesProvider.overrideWithValue(preferences),
       playbackPersistenceControllerProvider.overrideWithValue(
         playbackPersistence,
+      ),
+      beforeAppUpdateInstallProvider.overrideWithValue(
+        playbackPersistence.saveBeforeUpdate,
       ),
     ],
   );

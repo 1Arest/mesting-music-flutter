@@ -1,0 +1,774 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../../../core/performance/background_json.dart' show largeJsonValue;
+import '../../../shared/models/track.dart';
+import '../../../shared/models/track_page.dart';
+import '../../../core/cache/browse_response_cache.dart';
+import '../data/track_page_utils.dart';
+import '../data/music_platform_api.dart';
+import '../data/platform_category_search.dart';
+import '../data/platform_explore.dart';
+import '../data/platform_search_repository.dart';
+import '../domain/platform_audio_quality.dart';
+import 'netease_api.dart';
+import 'netease_song_metadata.dart';
+import '../domain/platform_search_user.dart';
+import 'netease_playback_log.dart';
+import 'netease_footprint.dart';
+import 'netease_preview.dart';
+import '../../../shared/models/song_search_facts.dart';
+
+/// NetEase DTOs stop here. Existing pages, bottom controls and search fields use
+/// the same Track / catalogue models as Kugou, with provider-qualified IDs.
+class NeteaseMusicRepository {
+  NeteaseMusicRepository(
+    this.api, {
+    this.nativeLogEnabled = const bool.fromEnvironment(
+      'MESTING_NATIVE_PLAYBACK_LOGGING',
+    ),
+  }) : credential = api.session?.credentialId;
+  final NeteaseApi api;
+  final String? credential;
+  final bool nativeLogEnabled;
+  final _playlistIndexes = <String, Future<_NeteasePlaylistIndex>>{};
+  final _playlistPages = <String, Future<TrackPage>>{};
+  final _fixedCollections = <String, Future<List<Track>>>{};
+  int _playlistRevision = 0;
+
+  /// A library mutation starts a new collection snapshot. Old in-flight pages
+  /// may finish for their original caller, but cannot populate the new cache.
+  void invalidatePlaylists() {
+    _playlistRevision++;
+    _playlistIndexes.clear();
+    _playlistPages.clear();
+    _fixedCollections.clear();
+  }
+
+  /// `startplay` updates recent plays; the separate `play` event carries only
+  /// actual elapsed seconds. A 200 response is receipt, not proof of indexing.
+  /// Real/media clocks and original timestamps were checked against official
+  /// Android 9.6.15. The existing weblog transport remains request-local.
+  Future<Map<String, dynamic>> reportPlayback({
+    required String id,
+    required bool started,
+    int seconds = 0,
+    String sourceId = '0',
+    int? realSeconds,
+    DateTime? startedAt,
+    int? nativeSequence,
+    DateTime? eventTime,
+    String endReason = 'playend',
+  }) {
+    final log = neteasePlaybackLog(
+      id: id,
+      started: started,
+      mediaSeconds: seconds,
+      realSeconds: realSeconds ?? seconds,
+      startedAt: startedAt ?? DateTime.now(),
+      sourceId: sourceId,
+    );
+    if (nativeSequence != null) {
+      // Disabled builds never promote a retained native row to another write.
+      // The reporter normally holds it before claiming; keep this boundary too.
+      if (!nativeLogEnabled) {
+        return Future.error(const MusicPlatformException('候选原生上报已停用，记录保留待核对'));
+      }
+      if (!started) (log['json'] as Map)['end'] = endReason;
+      return api.reportNativePlayback(
+        log: log,
+        sequence: nativeSequence,
+        eventTime: eventTime ?? startedAt ?? DateTime.now(),
+        expectedCredential: credential,
+      );
+    }
+    return api.request(
+      '/api/feedback/weblog',
+      {
+        'logs': jsonEncode([log]),
+      },
+      playbackLog: true,
+      expectedCredential: credential,
+    );
+  }
+
+  Future<NeteaseFootprint?> footprint() async => NeteaseFootprint.parse(
+    await api.request(
+      '/api/music/multi/terminal/widget/listen/data',
+      const {},
+      expectedCredential: credential,
+    ),
+  );
+
+  Future<Map<String, dynamic>> call(
+    String route, [
+    Map<String, Object?> query = const {},
+    Future<void>? abort,
+  ]) => api.call(
+    route,
+    query: query,
+    expectedCredential: credential,
+    abortTrigger: abort,
+  );
+
+  static Map<String, dynamic> object(Object? value) =>
+      MusicPlatformApi.objectMap(value);
+  static List<Map<String, dynamic>> rows(Object? value) => value is List
+      ? value.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
+      : const [];
+  static String clean(Object? value) =>
+      PlatformCategorySearchRepository.clean(value);
+  static String songId(String value) {
+    final id = value.startsWith('netease_') ? value.substring(8) : value;
+    if (!RegExp(r'^\d+$').hasMatch(id)) {
+      throw const MusicPlatformException('网易云歌曲标识无效');
+    }
+    return id;
+  }
+
+  static Track? track(Map<String, dynamic> row) {
+    row = neteaseSongMetadata(row);
+    final id = '${row['id'] ?? ''}';
+    if (!RegExp(r'^\d+$').hasMatch(id)) return null;
+    final album = object(row['al'] ?? row['album']);
+    final artists = rows(row['ar'] ?? row['artists']);
+    return Track(
+      id: 'netease_$id',
+      title: clean(row['name']),
+      artist: artists
+          .map((a) => clean(a['name']))
+          .where((s) => s.isNotEmpty)
+          .join(' / '),
+      album: clean(album['name']),
+      duration: Duration(
+        milliseconds: neteaseMilliseconds(row['dt'] ?? row['duration']),
+      ),
+      audioAsset: 'mesting-platform://netease/$id',
+      coverAsset: neteaseArtwork({
+        ...row,
+        ...{'al': album},
+      }),
+      lyricsAsset: 'mesting-lyrics://netease/$id',
+      source: TrackSource.netease,
+      provider: '网易云音乐',
+      platformSongId: id,
+      externalUrl: 'https://music.163.com/#/song?id=$id',
+      availabilityMessage: '点击获取网易云播放地址',
+    );
+  }
+
+  static List<Track> tracks(Object? values) =>
+      rows(values).map(track).whereType<Track>().toList();
+
+  /// Sparse heart-mode IDs are enriched in bounded batches, once before rows
+  /// are published. Detail responses are joined by ID, never response order.
+  Future<List<Map<String, dynamic>>> hydrateSparseSongs(
+    List<Map<String, dynamic>> values,
+  ) async {
+    final normalized = values.map(neteaseSongMetadata).toList();
+    final missing = normalized
+        .where((row) {
+          final value = track(row);
+          return value != null &&
+              (value.title.isEmpty ||
+                  value.artist.isEmpty ||
+                  value.coverAsset.isEmpty);
+        })
+        .map((row) => '${row['id']}')
+        .toSet()
+        .toList();
+    final details = <String, Map<String, dynamic>>{};
+    for (var start = 0; start < missing.length; start += 200) {
+      final ids = missing.sublist(
+        start,
+        (start + 200).clamp(0, missing.length),
+      );
+      final result = await call('/song/detail', {'ids': ids});
+      for (final row in rows(result['songs'])) {
+        if (ids.contains('${row['id']}')) details['${row['id']}'] = row;
+      }
+    }
+    return [
+      for (final row in normalized) {...row, ...?details['${row['id']}']},
+    ];
+  }
+
+  static Future<List<Track>> tracksAsync(Object? value) {
+    final values = rows(value);
+    return values.length < 100
+        ? Future.value(tracks(values))
+        : compute(tracks, values, debugLabel: 'netease-track-metadata');
+  }
+
+  Future<PlatformSearchPage> search(
+    String query, {
+    int page = 1,
+    Future<void>? abort,
+  }) async {
+    final result = object(
+      (await call('/search', {
+        'keywords': query,
+        'offset': (page - 1) * 30,
+      }, abort))['result'],
+    );
+    final values = rows(result['songs']);
+    final total = int.tryParse('${result['songCount']}');
+    final originals = <String>{};
+    final present = values.map((row) => '${row['id']}').toSet();
+    for (final row in values) {
+      final original = object(row['originSongSimpleData']);
+      final id = '${original['songId'] ?? ''}';
+      // Recover only the server's explicit original link for this exact song.
+      // A cover's text or a guessed singer/ID can never manufacture a result.
+      final originalName = clean(
+        original['name'],
+      ).replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      final term = query.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+      final related =
+          originalName.isNotEmpty &&
+          term.contains(originalName) &&
+          (term == originalName ||
+              rows(original['artists']).any(
+                (a) =>
+                    clean(a['name']).isNotEmpty &&
+                    term.contains(
+                      clean(
+                        a['name'],
+                      ).replaceAll(RegExp(r'\s+'), '').toLowerCase(),
+                    ),
+              ));
+      if (RegExp(r'^[1-9][0-9]*$').hasMatch(id) &&
+          !present.contains(id) &&
+          related) {
+        originals.add(id);
+      }
+    }
+    final recovered = <Map<String, dynamic>>[];
+    if (originals.isNotEmpty) {
+      try {
+        final detail = await call('/song/detail', {
+          'ids': originals.take(6).toList(),
+        }, abort);
+        final privileges = {
+          for (final p in rows(detail['privileges'])) '${p['id']}': p,
+        };
+        for (final row in rows(detail['songs'])) {
+          if (originals.contains('${row['id']}')) {
+            recovered.add({
+              ...row,
+              'originCoverType': 1,
+              'privilege': row['privilege'] ?? privileges['${row['id']}'],
+            });
+          }
+        }
+      } on Object {
+        // A failed enrichment retains all upstream songs, including trials.
+      }
+    }
+    final complete = [...values, ...recovered];
+    return PlatformSearchPage(
+      tracks(complete),
+      total,
+      total == null ? values.length >= 30 : page * 30 < total,
+      facts: {
+        for (final row in complete)
+          if (track(row) != null) track(row)!.id: searchFacts(row),
+      },
+    );
+  }
+
+  static SongSearchFacts searchFacts(Map<String, dynamic> row) {
+    final original = object(row['originSongSimpleData']);
+    return SongSearchFacts(
+      kind: switch (int.tryParse('${row['originCoverType']}')) {
+        1 => SearchRecordingKind.original,
+        2 => SearchRecordingKind.cover,
+        3 => SearchRecordingKind.rework,
+        _ => SearchRecordingKind.unknown,
+      },
+      membership: row['fee'] == 1 || row['fee'] == 4,
+      originalArtists: rows(
+        original['artists'],
+      ).map((a) => clean(a['name'])).where((n) => n.isNotEmpty).toList(),
+      originalTitle: clean(original['name']),
+      originalWorkId: '${original['songId'] ?? ''}',
+      originalAlbum: clean(object(original['albumMeta'])['name']),
+    );
+  }
+
+  /// Resolve account-specific permission using only the normal URL metadata.
+  /// Search keeps restricted songs; no media is played/downloaded/reported.
+  Future<SongSearchFacts> inspectSearchAvailability(
+    Track value,
+    SongSearchFacts facts, {
+    Future<void>? abortTrigger,
+  }) async {
+    if (api.session == null) {
+      return facts.withAccess(SearchPlaybackAccess.restricted, label: '需登录网易云');
+    }
+    final payload = await call('/song/url', {
+      'id': songId(value.id),
+      'level': 'standard',
+    }, abortTrigger);
+    final values = rows(payload['data']);
+    if (values.isEmpty) {
+      return facts.withAccess(SearchPlaybackAccess.restricted);
+    }
+    final row = values.first;
+    final uri = Uri.tryParse('${row['url'] ?? ''}');
+    if (uri == null ||
+        !{'http', 'https'}.contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      return facts.withAccess(SearchPlaybackAccess.restricted);
+    }
+    if (neteaseResponseIsPreview(row, value.duration)) {
+      return facts.withAccess(SearchPlaybackAccess.preview);
+    }
+    return facts.withAccess(
+      neteaseMilliseconds(row['time']) > 0 && value.duration > Duration.zero
+          ? SearchPlaybackAccess.full
+          : SearchPlaybackAccess.unknown,
+    );
+  }
+
+  Future<PlatformCategoryPage> category(
+    String query,
+    PlatformSearchKind kind, {
+    int page = 1,
+    Future<void>? abort,
+  }) async {
+    final (type, field, count) = switch (kind) {
+      PlatformSearchKind.albums => (10, 'albums', 'albumCount'),
+      PlatformSearchKind.artists => (100, 'artists', 'artistCount'),
+      PlatformSearchKind.playlists => (1000, 'playlists', 'playlistCount'),
+      PlatformSearchKind.lyrics => (1006, 'songs', 'songCount'),
+      PlatformSearchKind.users => (1002, 'userprofiles', 'userprofileCount'),
+      _ => (1, 'songs', 'songCount'),
+    };
+    final result = object(
+      (await call('/search', {
+        'keywords': query,
+        'type': type,
+        'offset': (page - 1) * 30,
+        'limit': 30,
+      }, abort))['result'],
+    );
+    final values = rows(result[field]);
+    final items = values
+        .map((row) {
+          if (kind == PlatformSearchKind.users) {
+            final user = PlatformSearchUser.fromNetease(row);
+            return PlatformSearchHit(
+              kind: kind,
+              id: user.id,
+              title: user.nickname,
+              subtitle: user.signature,
+              cover: user.avatar,
+              user: user,
+            );
+          }
+          final song =
+              kind == PlatformSearchKind.lyrics ||
+                  kind == PlatformSearchKind.songs
+              ? track(row)
+              : null;
+          final creator = object(row['creator'] ?? row['artist']);
+          final lyric = row['lyrics'];
+          return PlatformSearchHit(
+            kind: kind,
+            id: song?.id ?? '${row['id']}',
+            globalId: '${row['id']}',
+            title: song?.title ?? clean(row['name']),
+            subtitle:
+                song?.artist ?? clean(creator['nickname'] ?? creator['name']),
+            cover:
+                song?.coverAsset ??
+                '${row['coverImgUrl'] ?? row['picUrl'] ?? row['img1v1Url'] ?? ''}',
+            count: int.tryParse('${row['trackCount']}'),
+            track: song,
+            lyric: lyric is List ? lyric.map(clean).join('\n') : clean(lyric),
+          );
+        })
+        .where(
+          (hit) =>
+              kind != PlatformSearchKind.users ||
+              RegExp(r'^[1-9][0-9]*$').hasMatch(hit.id),
+        )
+        .toList();
+    final total = int.tryParse('${result[count]}');
+    return PlatformCategoryPage(
+      items,
+      total,
+      total == null ? values.length >= 30 : page * 30 < total,
+    );
+  }
+
+  Future<List<Track>> daily() async {
+    final value = await call('/recommend/songs');
+    return tracksAsync(
+      object(value['data'])['dailySongs'] ?? value['recommend'],
+    );
+  }
+
+  Future<List<Track>> newSongs() async =>
+      tracksAsync((await call('/top/song'))['data']);
+  Future<List<Track>> fm() async =>
+      tracks((await call('/personal/fm'))['data']);
+  Future<List<Map<String, dynamic>>> featured() async {
+    final payload = await call('/recommend/resource');
+    return rows(payload['recommend'])
+        .map(
+          (r) => <String, dynamic>{
+            'global_collection_id': '${r['id']}',
+            'name': r['name'],
+            'pic': r['picUrl'],
+            'sizable_cover': r['picUrl'],
+            'intro': r['copywriter'],
+          },
+        )
+        .toList();
+  }
+
+  Future<_NeteasePlaylistIndex> _fetchPlaylistIndex(String id) async {
+    final revision = _playlistRevision;
+    final playlist = object(
+      // n=0 asks for the ordered ID index, not thousands of song DTOs. The
+      // transport keeps the legacy default for callers that omit this field.
+      (await call('/playlist/detail', {'id': id, 'n': 0}))['playlist'],
+    );
+    final index = largeJsonValue(playlist)
+        ? await compute(
+            _parsePlaylistIndex,
+            playlist,
+            debugLabel: 'netease-playlist-index',
+          )
+        : _parsePlaylistIndex(playlist);
+    if (revision == _playlistRevision) {
+      // Observed previews and direct continuation share one source index.
+      _playlistIndexes[id] = Future.value(index);
+    }
+    return index;
+  }
+
+  static _NeteasePlaylistIndex _parsePlaylistIndex(
+    Map<String, dynamic> playlist,
+  ) {
+    final ids = rows(playlist['trackIds']).map((e) => '${e['id']}').toList();
+    final known = {
+      for (final t in tracks(playlist['tracks'])) t.platformSongId: t,
+    };
+    return _NeteasePlaylistIndex(
+      ids.isEmpty ? known.keys.toList() : ids,
+      known,
+    );
+  }
+
+  Future<_NeteasePlaylistIndex> _playlistIndex(String id) {
+    if (BrowseResponseCache.observing) return _fetchPlaylistIndex(id);
+    final revision = _playlistRevision;
+    return _playlistIndexes[id] ??= _fetchPlaylistIndex(id).catchError((
+      Object error,
+    ) {
+      if (revision == _playlistRevision) _playlistIndexes.remove(id);
+      throw error;
+    });
+  }
+
+  Future<void> _hydrateIds(
+    _NeteasePlaylistIndex index,
+    List<String> ids,
+  ) async {
+    final missing = ids.where((id) => !index.known.containsKey(id)).toList();
+    for (var i = 0; i < missing.length; i += 500) {
+      final end = (i + 500).clamp(0, missing.length);
+      final payload = await call('/song/detail', {
+        'ids': missing.sublist(i, end),
+      });
+      for (final t in await tracksAsync(payload['songs'])) {
+        index.known[t.platformSongId] = t;
+      }
+    }
+  }
+
+  /// Exposes a real source slice: unavailable IDs still advance nextOffset,
+  /// preventing a sparse provider response from looping or skipping later IDs.
+  Future<TrackPage> playlistPage(String id, {int offset = 0, int limit = 30}) {
+    final start = offset.clamp(0, 1 << 31);
+    final size = limit.clamp(1, 1000);
+    final revision = _playlistRevision;
+    Future<TrackPage> load() async {
+      final index = await _playlistIndex(id);
+      final begin = start.clamp(0, index.ids.length);
+      final end = (begin + size).clamp(begin, index.ids.length);
+      final ids = index.ids.sublist(begin, end);
+      await _hydrateIds(index, ids);
+      return TrackPage(
+        ids.map((id) => index.known[id]).whereType<Track>().toList(),
+        offset: begin,
+        nextOffset: end,
+        total: index.ids.length,
+        hasMore: end < index.ids.length,
+      );
+    }
+
+    if (BrowseResponseCache.observing) return load();
+    final key = '$id:$start:$size';
+    return _playlistPages[key] ??= load().catchError((Object error) {
+      if (revision == _playlistRevision) _playlistPages.remove(key);
+      throw error;
+    });
+  }
+
+  /// Complete operations (search/export/explicit Play All) retain the complete
+  /// collection. Normal list rendering uses playlistPage instead.
+  Future<List<Track>> playlist(String id) async {
+    final index = await _playlistIndex(id);
+    await _hydrateIds(index, index.ids);
+    return index.ids.map((id) => index.known[id]).whereType<Track>().toList();
+  }
+
+  Future<TrackPage> categoryTrackPage(
+    PlatformSearchHit hit, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    if (hit.kind == PlatformSearchKind.playlists) {
+      return playlistPage(hit.globalId, offset: offset, limit: limit);
+    }
+    if (hit.kind == PlatformSearchKind.artists) {
+      final start = offset.clamp(0, 1 << 31);
+      final size = limit.clamp(1, 500);
+      final payload = await call('/artist/songs', {
+        'id': hit.id,
+        'offset': start,
+        'limit': size,
+        'order': 'hot',
+      });
+      final values = rows(payload['songs']);
+      final total = int.tryParse('${payload['total']}');
+      return TrackPage(
+        tracks(values),
+        offset: start,
+        nextOffset: start + values.length,
+        total: total,
+        hasMore: payload['more'] is bool
+            ? payload['more'] == true
+            : total != null
+            ? start + values.length < total
+            : values.length >= size,
+      );
+    }
+    return exploreTrackPage(
+      PlatformExploreItem(
+        id: hit.id,
+        title: hit.title,
+        cover: hit.cover,
+        kind: PlatformExploreKind.album,
+      ),
+      offset: offset,
+      limit: limit,
+    );
+  }
+
+  Future<TrackPage> exploreTrackPage(
+    PlatformExploreItem item, {
+    int offset = 0,
+    int limit = 30,
+  }) async {
+    if (item.kind != PlatformExploreKind.album) {
+      return playlistPage(item.id, offset: offset, limit: limit);
+    }
+    Future<List<Track>> load() async =>
+        tracksAsync((await call('/album', {'id': item.id}))['songs']);
+    final key = 'album:${item.id}';
+    final values = await (BrowseResponseCache.observing
+        ? load()
+        : (_fixedCollections[key] ??= load().catchError((Object error) {
+            _fixedCollections.remove(key);
+            throw error;
+          })));
+    return sliceTrackPage(values, offset: offset, limit: limit);
+  }
+
+  Future<List<Track>> categoryTracks(PlatformSearchHit hit) async {
+    if (hit.kind == PlatformSearchKind.playlists) return playlist(hit.globalId);
+    final payload = await call(
+      hit.kind == PlatformSearchKind.artists ? '/artist' : '/album',
+      {'id': hit.id},
+    );
+    return tracks(payload['hotSongs'] ?? payload['songs']);
+  }
+
+  Future<List<PlatformExploreItem>> explore(
+    PlatformExploreKind kind, {
+    int page = 1,
+  }) async {
+    final route = switch (kind) {
+      PlatformExploreKind.rank => '/toplist',
+      PlatformExploreKind.album => '/album/new',
+      _ => '/top/playlist',
+    };
+    final payload = await call(route, {'offset': (page - 1) * 30});
+    final values = rows(
+      payload['list'] ?? payload['albums'] ?? payload['playlists'],
+    );
+    return values
+        .map(
+          (r) => PlatformExploreItem(
+            id: '${r['id']}',
+            title: clean(r['name']),
+            cover: '${r['coverImgUrl'] ?? r['picUrl'] ?? ''}',
+            kind: kind,
+            subtitle: clean(r['description'] ?? object(r['artist'])['name']),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<Track>> exploreTracks(PlatformExploreItem item) async {
+    if (item.kind != PlatformExploreKind.album) return playlist(item.id);
+    return tracksAsync((await call('/album', {'id': item.id}))['songs']);
+  }
+
+  Future<Set<PlatformAudioQuality>> qualities(String id) async {
+    final payload = await call('/song/detail', {
+      'ids': [songId(id)],
+    });
+    final values = rows(payload['songs']);
+    if (values.isEmpty) throw const MusicPlatformException('暂未获取网易云音质信息');
+    final row = values.first;
+    bool has(String key) {
+      final resource = object(row[key]);
+      return resource.isNotEmpty &&
+          (int.tryParse('${resource['size']}') ??
+                  int.tryParse('${resource['br']}') ??
+                  0) >
+              0;
+    }
+
+    return {
+      if (has('l') || has('h')) PlatformAudioQuality.standard,
+      if (has('h')) PlatformAudioQuality.high,
+      if (has('sq')) PlatformAudioQuality.lossless,
+      if (has('hr')) PlatformAudioQuality.hiRes,
+      if (has('m')) PlatformAudioQuality.higher,
+      if (has('je')) PlatformAudioQuality.jyEffect,
+      if (has('sk')) PlatformAudioQuality.sky,
+      if (has('jm')) PlatformAudioQuality.jyMaster,
+      if (has('db')) PlatformAudioQuality.dolby,
+      if (has('vivid')) PlatformAudioQuality.vivid,
+    };
+  }
+
+  /// Sparse/restored rows can retain a preview's 30s duration. Playback needs
+  /// catalogue duration to distinguish that from a genuinely short recording.
+  /// Keep every other field and the original identity; failure is non-mutating
+  /// and the normal URL request still performs the account/access checks.
+  Future<Track> playbackCatalog(
+    Track value, {
+    Future<void>? abortTrigger,
+  }) async {
+    if (value.duration > const Duration(seconds: 90)) return value;
+    try {
+      final payload = await call('/song/detail', {
+        'ids': [songId(value.id)],
+      }, abortTrigger);
+      final row = rows(
+        payload['songs'],
+      ).where((row) => '${row['id']}' == songId(value.id)).firstOrNull;
+      final duration = neteaseMilliseconds(row?['dt'] ?? row?['duration']);
+      return duration > 0
+          ? value.copyWith(duration: Duration(milliseconds: duration))
+          : value;
+    } catch (_) {
+      return value;
+    }
+  }
+
+  Future<Track> resolve(
+    Track track,
+    PlatformAudioQuality quality, {
+    bool requireQuality = false,
+    Future<void>? abortTrigger,
+  }) async {
+    if (track.source != TrackSource.netease) return track;
+    if (api.session == null) throw const MusicPlatformException('请先登录网易云账号');
+    // The normal playback policy may downgrade. A current-song manual switch
+    // remains strict and must never report success for a different tier.
+    final tiers = PlatformAudioQuality.neteaseOrder;
+    final start = tiers.indexOf(quality);
+    final candidates = requireQuality
+        ? [quality]
+        : tiers.take(start + 1).toList().reversed.toList();
+    Object? failure;
+    Track? preview;
+    for (final tier in candidates) {
+      try {
+        final resolved = await _resolveTier(
+          track,
+          tier,
+          requireQuality: requireQuality,
+          abortTrigger: abortTrigger,
+        );
+        if (resolved.isPreview && !requireQuality) {
+          preview ??= resolved;
+          continue;
+        }
+        return resolved;
+      } on MusicPlatformException catch (error) {
+        if (api.session?.credentialId != credential ||
+            requireQuality ||
+            {'301', '302', '405', '415', '460'}.contains(error.code)) {
+          rethrow;
+        }
+        failure = error;
+      }
+    }
+    if (preview != null) return preview;
+    throw failure ?? const MusicPlatformException('网易云暂未提供可播放音质');
+  }
+
+  Future<Track> _resolveTier(
+    Track track,
+    PlatformAudioQuality quality, {
+    required bool requireQuality,
+    Future<void>? abortTrigger,
+  }) async {
+    final level = quality.neteaseLevel;
+    final payload = await call('/song/url', {
+      'id': songId(track.id),
+      'level': level,
+    }, abortTrigger);
+    final values = rows(payload['data']);
+    final row = values.isEmpty ? <String, dynamic>{} : values.first;
+    final url = '${row['url'] ?? ''}';
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        !{'http', 'https'}.contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      throw const MusicPlatformException('网易云暂未提供播放权限，请核对账号会员或版权范围');
+    }
+    final delivered =
+        PlatformAudioQuality.fromNeteaseLevel(row['level'])?.code ?? '';
+    if (requireQuality && delivered != quality.code) {
+      throw const MusicPlatformException('网易云未返回所选音质，已保留原音源');
+    }
+    final preview = neteaseResponseIsPreview(row, track.duration);
+    return track.copyWith(
+      audioAsset: url,
+      audioOrigin: AudioOrigin(AudioOrigin.netease, track.id),
+      audioHeaders: const {},
+      audioBitrate: int.tryParse('${row['br']}') ?? 0,
+      playbackQuality: delivered,
+      isPreview: preview,
+      availabilityMessage: preview ? '网易云试听片段' : '网易云音乐',
+    );
+  }
+}
+
+/// Metadata is stored separately from the immutable source-order index. A
+/// partial detail response cannot accidentally shorten the playlist itself.
+class _NeteasePlaylistIndex {
+  _NeteasePlaylistIndex(this.ids, this.known);
+  final List<String> ids;
+  final Map<String, Track> known;
+}

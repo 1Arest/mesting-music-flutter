@@ -13,7 +13,10 @@ import 'theme_controller.dart';
 /// One role catalogue is the normal entry point. Customization replaces that
 /// catalogue with rail previews, keeping the current character unchanged.
 class ProgressOutfitPicker extends ConsumerStatefulWidget {
-  const ProgressOutfitPicker({super.key});
+  const ProgressOutfitPicker({this.collapsible = false, super.key});
+
+  /// The gallery keeps the selected outfit in view while the catalog is closed.
+  final bool collapsible;
 
   @override
   ConsumerState<ProgressOutfitPicker> createState() =>
@@ -21,6 +24,7 @@ class ProgressOutfitPicker extends ConsumerStatefulWidget {
 }
 
 class _ProgressOutfitPickerState extends ConsumerState<ProgressOutfitPicker> {
+  bool _catalogOpen = false;
   bool _customizing = false;
   bool _saving = false;
 
@@ -82,46 +86,65 @@ class _ProgressOutfitPickerState extends ConsumerState<ProgressOutfitPicker> {
           ),
         ),
         const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            key: const ValueKey('progress-outfit-customize'),
-            onPressed: _saving
-                ? null
-                : () => setState(() => _customizing = !_customizing),
-            icon: Icon(_customizing ? Icons.check_rounded : Icons.tune_rounded),
-            label: Text(_customizing ? '完成搭配' : '自定义搭配'),
+        if (widget.collapsible)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              key: const ValueKey('progress-outfit-catalog'),
+              onPressed: () => setState(() => _catalogOpen = !_catalogOpen),
+              icon: Icon(
+                _catalogOpen
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+              ),
+              label: Text(_catalogOpen ? '收起角色与轨道' : '选择角色与轨道'),
+            ),
           ),
-        ),
-        Text(
-          _customizing ? '自定义轨道' : '选择角色',
-          style: const TextStyle(fontWeight: MusicTypography.titleWeight),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          _customizing ? '只更换轨道，保留当前角色。' : '选择角色时，会同时搭配同系列轨道。',
-          style: TextStyle(
-            fontSize: MusicTypography.footnoteSize,
-            color: scheme.onSurfaceVariant,
+        if (!widget.collapsible || _catalogOpen) ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const ValueKey('progress-outfit-customize'),
+              onPressed: _saving
+                  ? null
+                  : () => setState(() => _customizing = !_customizing),
+              icon: Icon(
+                _customizing ? Icons.check_rounded : Icons.tune_rounded,
+              ),
+              label: Text(_customizing ? '完成搭配' : '自定义搭配'),
+            ),
           ),
-        ),
-        IgnorePointer(
-          ignoring: _saving,
-          child: ProgressDecorationPicker(
-            selected: _customizing ? style : character,
-            character: !_customizing,
-            preset: preset,
-            onSelected: _select,
+          Text(
+            _customizing ? '自定义轨道' : '选择角色',
+            style: const TextStyle(fontWeight: MusicTypography.titleWeight),
           ),
-        ),
-        if (!_customizing &&
-            DistributionChannel.isBeta &&
-            character == ProgressDecoration.shinchan) ...[
-          const SizedBox(height: 18),
-          ShinchanWeatherPicker(
-            selected:
-                settings.shinchanWeather ?? shinchanWeatherForPreset(preset.id),
+          const SizedBox(height: 5),
+          Text(
+            _customizing ? '只更换轨道，保留当前角色。' : '选择角色时，会同时搭配同系列轨道。',
+            style: TextStyle(
+              fontSize: MusicTypography.footnoteSize,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
+          IgnorePointer(
+            ignoring: _saving,
+            child: ProgressDecorationPicker(
+              selected: _customizing ? style : character,
+              character: !_customizing,
+              preset: preset,
+              onSelected: _select,
+            ),
+          ),
+          if (!_customizing &&
+              DistributionChannel.isBeta &&
+              character == ProgressDecoration.shinchan) ...[
+            const SizedBox(height: 18),
+            ShinchanWeatherPicker(
+              selected:
+                  settings.shinchanWeather ??
+                  shinchanWeatherForPreset(preset.id),
+            ),
+          ],
         ],
       ],
     );
