@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/material.dart';
 import '../../../core/errors/user_facing_error.dart';
 import '../../../shared/widgets/beta_glass_controls.dart';
@@ -37,7 +38,7 @@ class _BetaSignOutDialogState extends State<BetaSignOutDialog> {
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !_busy,
-    child: Dialog(
+    child: BetaPanelDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Padding(
         padding: const EdgeInsets.all(24),

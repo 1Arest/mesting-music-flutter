@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/beta_diagnostic_dialog.dart';
+import '../../../../shared/widgets/beta_glass_popover.dart';
 import '../../../../shared/widgets/music_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,9 +44,9 @@ class _AuditPageState extends ConsumerState<NeteaseListeningAuditPage> {
   Future<void> _preview(NeteaseListeningAudit report) async {
     if (!_current(report)) return;
     final text = report.json;
-    final copy = await showDialog<bool>(
+    final copy = await showBetaGlassDialog<bool>(
       context: context,
-      builder: (dialog) => AlertDialog(
+      builder: (dialog) => BetaDiagnosticDialog(
         title: Text('$_month 脱敏诊断'),
         content: SizedBox(
           width: 420,

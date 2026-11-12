@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../playlists/presentation/playlist_audit_page.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -99,7 +100,7 @@ class PlatformLibraryPage extends ConsumerWidget {
             else ...[
               Align(
                 alignment: Alignment.centerLeft,
-                child: FilledButton.icon(
+                child: BetaActionButton.icon(
                   onPressed: () => createPlatformPlaylist(context, ref),
                   icon: const Icon(Icons.add),
                   label: const Text('新建歌单'),

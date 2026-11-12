@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,7 +115,7 @@ class _SongShareSheetState extends ConsumerState<SongShareSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
+              BetaActionButton.outlinedIcon(
                 onPressed: _busy
                     ? null
                     : () => _perform(() async {
@@ -132,7 +133,7 @@ class _SongShareSheetState extends ConsumerState<SongShareSheet> {
                 label: const Text('保存海报'),
               ),
             ] else
-              OutlinedButton.icon(
+              BetaActionButton.outlinedIcon(
                 onPressed: _busy
                     ? null
                     : () => _perform(() async {
@@ -153,7 +154,7 @@ class _SongShareSheetState extends ConsumerState<SongShareSheet> {
                 label: const Text('生成分享海报'),
               ),
             const SizedBox(height: 8),
-            FilledButton.icon(
+            BetaActionButton.icon(
               onPressed: _busy || url == null
                   ? null
                   : () => _perform(() async {

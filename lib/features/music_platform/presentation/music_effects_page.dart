@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../qishui/qishui_providers.dart';
 import '../qishui/qishui_effects_page.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -297,7 +298,7 @@ class _EffectsCatalogViewState extends ConsumerState<_EffectsCatalogView> {
               spacing: 8,
               children: [
                 for (final newest in [false, true])
-                  ChoiceChip(
+                  BetaSelectionChip(
                     label: Text(newest ? '最新' : '热门'),
                     selected: newest == _newest,
                     onSelected: (_) {

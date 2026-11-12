@@ -104,7 +104,14 @@ class AppHaptics {
   int _last = -1000;
 
   Future<bool> perform(AppHapticEvent event, {bool preview = false}) async {
-    final settings = preferences();
+    // Standalone control previews may have a ProviderScope but no persisted
+    // settings owner. Optional feedback must not break the action itself.
+    late final HapticPreferences settings;
+    try {
+      settings = preferences();
+    } catch (_) {
+      return false;
+    }
     if (!settings.enabled) return false;
     // Nested controls may describe the same gesture. Coalesce their tactile
     // intent, while preview deliberately plays the currently selected strength.

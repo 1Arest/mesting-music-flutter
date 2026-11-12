@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -306,7 +307,7 @@ class _KugouListeningStatisticsPageState
                   runSpacing: 8,
                   children: [
                     for (final period in KugouListenPeriod.values)
-                      ChoiceChip(
+                      BetaSelectionChip(
                         label: Text(period.label),
                         selected: _period == period,
                         onSelected: (_) => _select(period),
@@ -934,7 +935,7 @@ class _KugouGradeRanksState extends State<_KugouGradeRanks> {
                 runSpacing: 8,
                 children: [
                   for (final kind in KugouGradeRank.values)
-                    ChoiceChip(
+                    BetaSelectionChip(
                       key: ValueKey('kugou-grade-rank-${kind.code}'),
                       label: Text(kind.label),
                       selected: _kind == kind,

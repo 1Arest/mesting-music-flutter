@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../themes/beta_appearance.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -1240,7 +1241,8 @@ class _DailyHeroContent extends StatelessWidget {
         Positioned(
           left: 18,
           bottom: 18,
-          child: FilledButton.icon(
+          child: BetaActionButton.icon(
+            red: true,
             onPressed: onPlay,
             icon: const Icon(Icons.play_arrow_rounded, size: 18),
             label: const Text('播放全部'),
@@ -2235,7 +2237,8 @@ class _FavoritesHero extends StatelessWidget {
                             const SizedBox(width: 7),
                             SizedBox(
                               height: 34,
-                              child: FilledButton.icon(
+                              child: BetaActionButton.icon(
+                                red: true,
                                 key: const ValueKey('favorites-play-all'),
                                 onPressed: onPlayAll,
                                 style: FilledButton.styleFrom(

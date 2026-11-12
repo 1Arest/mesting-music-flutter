@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'player_more_menu.dart';
@@ -113,7 +114,7 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                     for (final month in replayMonthsForYear(_year, today))
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
+                        child: BetaSelectionChip(
                           label: Text(month == null ? '全年' : '$month 月'),
                           selected: _month == month,
                           key: _month == month ? _selectedMonth : null,
@@ -180,7 +181,7 @@ class _ListeningReplayPageState extends ConsumerState<ListeningReplayPage> {
                     else ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 22),
-                        child: OutlinedButton.icon(
+                        child: BetaActionButton.outlinedIcon(
                           onPressed: () => showListeningKeepsake(
                             context,
                             replay,

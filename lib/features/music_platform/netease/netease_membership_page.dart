@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../membership_badge_provider.dart';
 import '../presentation/animated_membership_badge.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
@@ -114,7 +115,7 @@ class _NeteaseMembershipPageState extends ConsumerState<NeteaseMembershipPage> {
             ),
           ),
           const SizedBox(height: 16),
-          SwitchListTile.adaptive(
+          BetaSwitchTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('当前账号启用至尊SVIP'),
             subtitle: Text(

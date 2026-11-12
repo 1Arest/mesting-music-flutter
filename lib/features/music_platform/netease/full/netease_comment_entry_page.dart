@@ -1,7 +1,7 @@
+import '../../../../shared/widgets/beta_selection_controls.dart';
 import '../../../../shared/widgets/beta_page_motion.dart';
 import '../../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/widgets/beta_glass_controls.dart';
 import '../../data/platform_comments_repository.dart';
@@ -103,26 +103,23 @@ class _NeteaseCommentEntryPageState
         children: [
           const Text('选择想查看的内容，即可阅读、点赞、回复和发布评论。'),
           const SizedBox(height: 22),
-          RadioGroup<PlatformCommentKind>(
-            groupValue: _kind,
-            onChanged: (kind) {
-              if (kind != null) setState(() => _kind = kind);
-            },
-            child: Column(
-              children: [
-                for (final kind in PlatformCommentKind.values)
-                  RadioListTile<PlatformCommentKind>(
-                    title: Text(
-                      neteaseEntityLabel(
-                        kind == PlatformCommentKind.podcast
-                            ? 'program'
-                            : kind.name,
-                      ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final kind in PlatformCommentKind.values)
+                BetaSelectionChip(
+                  label: Text(
+                    neteaseEntityLabel(
+                      kind == PlatformCommentKind.podcast
+                          ? 'program'
+                          : kind.name,
                     ),
-                    value: kind,
                   ),
-              ],
-            ),
+                  selected: _kind == kind,
+                  onSelected: (_) => setState(() => _kind = kind),
+                ),
+            ],
           ),
           const SizedBox(height: 18),
           BetaGlassButton(

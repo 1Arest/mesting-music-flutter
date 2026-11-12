@@ -9,6 +9,7 @@ import '../features/music_platform/qishui/qishui_download_playback.dart';
 import '../features/music_platform/qishui/qishui_playback_recovery.dart';
 import '../features/downloads/audio_downloads.dart';
 import '../shared/widgets/beta_scroll_behavior.dart';
+import '../shared/widgets/beta_control_scope.dart';
 import '../features/music_platform/domain/platform_session.dart';
 import '../features/music_platform/netease/netease_fallback.dart';
 import '../features/downloads/download_source_coordinator.dart';
@@ -275,6 +276,10 @@ class MestingMusicApp extends ConsumerWidget {
         ),
       ),
     );
+    final presentation = BetaControlScope(
+      apple: DistributionChannel.isBeta && !ref.watch(qishuiNavigationProvider),
+      child: application,
+    );
     return DistributionChannel.isBeta
         ? LiquidGlassWidgets.wrap(
             brightnessResolver: Theme.maybeBrightnessOf,
@@ -282,8 +287,8 @@ class MestingMusicApp extends ConsumerWidget {
             // and scrolling are active. The adaptive ceiling overrides an
             // explicit premium setting, so keep it disabled; optimize rebuilds.
             adaptiveQuality: false,
-            child: application,
+            child: presentation,
           )
-        : application;
+        : presentation;
   }
 }

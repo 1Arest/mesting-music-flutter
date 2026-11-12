@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class EqualizerPresetPicker extends StatelessWidget {
           for (final name in names)
             SizedBox(
               width: width,
-              child: ChoiceChip(
+              child: BetaSelectionChip(
                 key: ValueKey('equalizer-preset-$name'),
                 label: Text(name),
                 labelStyle: style,

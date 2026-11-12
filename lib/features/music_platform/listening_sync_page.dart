@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_selection_controls.dart';
 import '../../shared/widgets/music_notice.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,7 @@ class ListeningSyncPage extends ConsumerWidget {
           EdgeInsets.fromLTRB(24, 20, 24, 210),
         ),
         children: [
-          SwitchListTile.adaptive(
+          BetaSwitchTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('同步播放历史与听歌时长'),
             subtitle: const Text('使用当前登录的酷狗账号'),

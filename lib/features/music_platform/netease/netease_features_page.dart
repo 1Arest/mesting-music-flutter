@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../presentation/source_comments_page.dart';
 import '../../experience/presentation/music_discovery_sections.dart';
 import '../presentation/platform_collection_play.dart';
@@ -665,7 +666,7 @@ class _NeteaseFeaturesPageState extends ConsumerState<NeteaseFeaturesPage> {
                                                     '日本',
                                                     '韩国',
                                                   ])
-                                          ChoiceChip(
+                                          BetaSelectionChip(
                                             label: Text(area),
                                             selected:
                                                 widget.feed ==

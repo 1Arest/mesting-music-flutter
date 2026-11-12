@@ -8,6 +8,7 @@ import '../../../shared/widgets/player_comment_glyph.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/audio/media_volume_controller.dart';
 import '../../../core/audio/playback_providers.dart';
+import '../../../core/audio/playback_scrub_controller.dart';
 import '../../../core/haptics/app_haptics.dart';
 import '../../../shared/utils/duration_format.dart';
 import '../../music_platform/music_platform_providers.dart';
@@ -43,8 +44,26 @@ class ApplePlayerControls extends ConsumerStatefulWidget {
 }
 
 class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
-  double? _scrub, _volumeDrag;
+  final _scrub = PlaybackScrubController();
+  double? _volumeDrag;
   String? _trackId;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrub.addListener(_scrubChanged);
+  }
+
+  void _scrubChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _scrub.dispose();
+    super.dispose();
+  }
+
   Future<void> _act(Future<void> Function() operation) async {
     try {
       await operation();
@@ -57,7 +76,7 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
   void didUpdateWidget(covariant ApplePlayerControls oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.queueActive && !oldWidget.queueActive) {
-      _scrub = null;
+      _scrub.reset();
       _volumeDrag = null;
     }
   }
@@ -67,32 +86,29 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
     final track = ref.watch(currentTrackProvider);
     if (_trackId != track.id) {
       _trackId = track.id;
-      _scrub = null;
+      _scrub.reset(notify: false);
     }
     final handler = ref.watch(audioHandlerProvider);
     final playback = ref.watch(playbackStateProvider).value;
     final playing = playback?.playing ?? false;
     final busy = playback?.processingState == AudioProcessingState.loading;
-    final sourceReady =
-        playback?.processingState == AudioProcessingState.ready ||
-        playback?.processingState == AudioProcessingState.buffering ||
-        playback?.processingState == AudioProcessingState.completed;
     final measuredPosition = ref.watch(positionProvider).value;
     final measuredDuration = ref.watch(durationProvider).value;
-    final position = sourceReady
-        ? measuredPosition ?? Duration.zero
-        : Duration.zero;
-    final duration = sourceReady
-        ? measuredDuration ?? track.duration
+    ref.listen(positionProvider, (_, next) => _scrub.observe(next.value));
+    // Cold restoration deliberately defers the URL and decoder until Play.
+    // Idle is therefore a valid paused session with a real resume position.
+    final position = measuredPosition ?? handler.currentPosition;
+    final duration =
+        measuredDuration != null && measuredDuration > Duration.zero
+        ? measuredDuration
         : track.duration;
     final maximum = duration.inMilliseconds.toDouble().clamp(
       1.0,
       double.infinity,
     );
-    final value = (_scrub ?? position.inMilliseconds.toDouble()).clamp(
-      0.0,
-      maximum,
-    );
+    final value =
+        (_scrub.previewMilliseconds ?? position.inMilliseconds.toDouble())
+            .clamp(0.0, maximum);
     final visual = ref.watch(themeVisualSettingsProvider);
     final preset = ref.watch(effectiveMusicThemeProvider);
     final railIp = decorationIp(visual.progressStyle, preset);
@@ -145,7 +161,8 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                                 widget.onToggleLyrics == null &&
                                     characterIp == MusicThemeIp.classic
                                 ? RoundSliderThumbShape(
-                                    enabledThumbRadius: _scrub == null
+                                    enabledThumbRadius:
+                                        _scrub.previewMilliseconds == null
                                         ? 2.5
                                         : 5,
                                   )
@@ -164,10 +181,10 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                                 value: value,
                                 max: maximum,
                                 onChangeStart: duration > Duration.zero
-                                    ? (v) => setState(() => _scrub = v)
+                                    ? _scrub.begin
                                     : null,
                                 onChanged: duration > Duration.zero
-                                    ? (v) => setState(() => _scrub = v)
+                                    ? _scrub.update
                                     : null,
                                 onChangeEnd: duration > Duration.zero
                                     ? (v) async {
@@ -176,13 +193,13 @@ class _ApplePlayerControlsState extends ConsumerState<ApplePlayerControls> {
                                           AppHapticEvent.impact,
                                         );
                                         await _act(
-                                          () => handler.seek(
-                                            Duration(milliseconds: v.round()),
+                                          () => _scrub.commit(
+                                            v,
+                                            handler.seek,
+                                            confirmedPosition: () =>
+                                                handler.currentPosition,
                                           ),
                                         );
-                                        if (mounted && _trackId == track.id) {
-                                          setState(() => _scrub = null);
-                                        }
                                       }
                                     : null,
                               ),

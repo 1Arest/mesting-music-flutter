@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'dart:async';
@@ -493,7 +494,8 @@ class _DailyMixHero extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    FilledButton.icon(
+                    BetaActionButton.icon(
+                      red: true,
                       key: const ValueKey('daily-mix-play'),
                       onPressed: tracks.isEmpty ? null : onPlay,
                       icon: const Icon(Icons.play_arrow_rounded, size: 21),

@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -111,7 +112,7 @@ void main() {
     );
     expect(artwork.fit, BoxFit.cover);
     expect(artwork.decodeWidth, artwork.decodeHeight);
-    final playAll = tester.widget<FilledButton>(
+    final playAll = tester.widget<BetaActionButton>(
       find.byKey(const ValueKey('curated-playlist-play-all')),
     );
     expect(

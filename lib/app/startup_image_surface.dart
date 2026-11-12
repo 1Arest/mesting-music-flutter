@@ -56,23 +56,34 @@ class _StartupImageSurfaceState extends State<StartupImageSurface> {
         color: widget.style == StartupStyle.staticOne
             ? const Color(0xFFEC4B43)
             : const Color(0xFFE55449),
-        child: SizedBox.expand(
-          child: Image.asset(
-            widget.style.posterAsset!,
-            frameBuilder: (context, child, frame, _) {
-              if (frame != null) _decodedFrame();
-              return child;
-            },
-            errorBuilder: (context, error, stack) {
-              // A missing/undecodable image must not hold dependency-ready
-              // navigation forever. The bootstrap chooses its normal fallback.
-              _decodedFrame(failed: true);
-              return const SizedBox.expand();
-            },
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.medium,
-            excludeFromSemantics: true,
-          ),
+        child: LayoutBuilder(
+          builder: (context, window) {
+            final tablet = window.biggest.shortestSide >= 600;
+            return SizedBox.expand(
+              child: Image.asset(
+                widget.style.posterForWindow(
+                  width: window.maxWidth,
+                  height: window.maxHeight,
+                )!,
+                frameBuilder: (context, child, frame, _) {
+                  if (frame != null) _decodedFrame();
+                  return child;
+                },
+                errorBuilder: (context, error, stack) {
+                  // A missing/undecodable image must not hold dependency-ready
+                  // navigation forever. The bootstrap chooses its normal fallback.
+                  _decodedFrame(failed: true);
+                  return const SizedBox.expand();
+                },
+                // Tablet assets have independent safe compositions for 4:3 and
+                // 16:10 windows. Cover trims only the surrounding studio backdrop.
+                // The original phone artwork and presentation remain unchanged.
+                fit: tablet ? BoxFit.cover : BoxFit.contain,
+                filterQuality: FilterQuality.medium,
+                excludeFromSemantics: true,
+              ),
+            );
+          },
         ),
       ),
     ),

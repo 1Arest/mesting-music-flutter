@@ -71,7 +71,11 @@ class _StartupStylePickerState extends ConsumerState<StartupStylePicker> {
         pageBuilder: (context, _, secondary) => SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).shortestSide >= 600
+                    ? double.infinity
+                    : 430,
+              ),
               child: Stack(
                 children: [
                   Positioned.fill(

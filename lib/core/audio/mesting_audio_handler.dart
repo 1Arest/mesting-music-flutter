@@ -218,6 +218,11 @@ class MestingAudioHandler extends BaseAudioHandler
       StreamController<bool>.broadcast(sync: true);
   bool _isSeeking = false;
   int _seeksInFlight = 0;
+  // Serialize user seeks so a slow earlier native command cannot finish after
+  // the latest release and move playback back. Other transport commands retain
+  // their own epoch and can invalidate a queued seek before it reaches audio.
+  Future<void> _userSeekTail = Future<void>.value();
+  int _userSeekRevision = 0;
   final Map<String, Uri> _artworkUriCache = <String, Uri>{};
   // Existing pinned audio/cache or schema migration API; covered by regression tests.
   // ignore: experimental_member_use
@@ -1624,21 +1629,54 @@ class MestingAudioHandler extends BaseAudioHandler
     if (togetherGuard?.call() == false) return;
     _markUserCommand('seek', together: togetherGuard != null);
     final togetherRevision = transportRevision;
-    await _ready;
-    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
-    await _pauseFadeController.cancel();
-    await _cancelTransition();
-    if (!_togetherCurrent(togetherGuard, togetherRevision)) return;
+    final trackId = mediaItem.value?.id;
+    final seekRevision = ++_userSeekRevision;
+    final queueEpoch = _queueLoadEpoch;
+    // Pausing affects sound, not the last chosen position. Only a newer seek,
+    // another queue/decoder, or an invalid together command retires this seek.
+    bool current() =>
+        seekRevision == _userSeekRevision &&
+        queueEpoch == _queueLoadEpoch &&
+        mediaItem.value?.id == trackId &&
+        _togetherCurrent(togetherGuard, togetherRevision);
     if (_deferredPosition != null && _pendingQueueEpoch == null) {
-      // A lyric/progress selection before Play changes only the resume point.
+      // Publish synchronously so an immediate Play already sees this target.
+      // Deferred startup has no decoder or fade to wait for.
       _deferredRestore = (id: mediaItem.value!.id, position: position);
       _deferredPositions.add(position);
       _broadcastState(_player.playbackEvent);
+      _seekingController.add(false);
       return;
     }
-    final current = _player.position;
-    _completionGate.onSeek(from: current, to: position);
-    await _seekPlayer(position);
+    final command = _userSeekTail.then((_) async {
+      await _ready;
+      if (!current()) return;
+      await _pauseFadeController.cancel();
+      await _cancelTransition();
+      if (!current()) return;
+      if (_deferredPosition != null && _pendingQueueEpoch == null) {
+        // A selection before Play updates and persists only the resume point;
+        // it must not resolve a URL, start the decoder, or make sound.
+        _deferredRestore = (id: mediaItem.value!.id, position: position);
+        _deferredPositions.add(position);
+        _broadcastState(_player.playbackEvent);
+        _seekingController.add(false);
+        return;
+      }
+      _completionGate.onSeek(from: _player.position, to: position);
+      await _seekPlayer(position);
+      if (current()) {
+        // just_audio's periodic stream may not tick while paused. Publish the
+        // confirmed position now to hand the UI back without a stale frame.
+        _positions.add(currentPosition);
+        _broadcastState(_player.playbackEvent);
+      }
+    });
+    _userSeekTail = command.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    await command;
   }
 
   Future<void> _seekPlayer(Duration position) async {

@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_selection_controls.dart';
 import 'lyric_presentation_picker.dart';
 import 'style_option_grid.dart';
 import 'personal_style_previews.dart';
@@ -169,7 +170,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       if (s.atmosphere != ListeningAtmosphere.off)
                         _slider('氛围强度', 'strength', s.strength, 0, 1),
                       const Text('用于全屏播放器。随播放轻微变化，暂停后静止；这是播放氛围动画，不代表实时节拍分析。'),
-                      SwitchListTile.adaptive(
+                      BetaSwitchTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('发现页音符微光'),
                         subtitle: const Text('招呼语结束后出现一次，约2秒淡出'),
@@ -265,7 +266,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      SwitchListTile.adaptive(
+                      BetaSwitchTile(
                         title: const Text('系统衬线字体'),
                         subtitle: const Text('使用设备提供的字体，不下载字体文件'),
                         value: s.serif,

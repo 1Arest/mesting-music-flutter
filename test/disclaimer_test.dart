@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,7 +38,7 @@ void main() {
     expect(find.text('使用前请先了解'), findsOneWidget);
     expect(find.text('我已阅读并同意《用户协议》'), findsOneWidget);
     expect(find.text('我已阅读并同意《隐私政策》'), findsOneWidget);
-    final confirm = tester.widget<FilledButton>(
+    final confirm = tester.widget<BetaActionButton>(
       find.byKey(const ValueKey('legal-consent-confirm')),
     );
     expect(confirm.onPressed, isNull);

@@ -35,6 +35,15 @@ enum StartupStyle {
   final String? assetBase;
   final bool staticImage;
   String? get posterAsset => assetBase == null ? null : '$assetBase.webp';
+
+  /// Select from the actual launch window, not device identity: a tablet in
+  /// split screen can legitimately need the preserved phone composition.
+  String? posterForWindow({required double width, required double height}) {
+    if (assetBase == null) return null;
+    if (width < 600 || height < 600) return posterAsset;
+    final direction = width > height ? 'landscape' : 'portrait';
+    return '$assetBase-tablet-$direction.webp';
+  }
 }
 
 /// Explicitly confirmed upgrade rule: switch once, then respect later choices.

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import 'dart:async';
@@ -284,7 +285,7 @@ class _TimedDisclaimerSheetState extends State<_TimedDisclaimerSheet> {
               child: SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: FilledButton(
+                child: BetaActionButton(
                   key: const ValueKey('disclaimer-read-confirm'),
                   onPressed: _secondsRemaining <= 0
                       ? () => Navigator.pop(context, true)
@@ -536,7 +537,7 @@ class _RequiredLegalConsentCardState extends State<_RequiredLegalConsentCard> {
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: FilledButton(
+                child: BetaActionButton(
                   key: const ValueKey('legal-consent-confirm'),
                   onPressed: canContinue ? () => widget.onResult(true) : null,
                   child: const Text('同意并继续使用'),
@@ -696,7 +697,7 @@ class _LegalConsentChoice extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Checkbox(
+            BetaCheckbox(
               key: ValueKey('legal-consent-${document.type.name}-checkbox'),
               value: checked,
               onChanged: (value) => onChanged(value ?? false),

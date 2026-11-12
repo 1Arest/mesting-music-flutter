@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'package:mesting_music/features/music_platform/source_media_scope.dart';
 import 'package:mesting_music/features/music_platform/retained_kugou_scope.dart';
 import 'package:mesting_music/features/music_platform/linked_music_providers.dart';
@@ -733,7 +734,7 @@ void main() {
           Theme.of(sheetContext).brightness,
           dark ? Brightness.dark : Brightness.light,
         );
-        for (final chip in tester.elementList(find.byType(ChoiceChip))) {
+        for (final chip in tester.elementList(find.byType(BetaSelectionChip))) {
           expect(
             Theme.of(chip).brightness,
             dark ? Brightness.dark : Brightness.light,

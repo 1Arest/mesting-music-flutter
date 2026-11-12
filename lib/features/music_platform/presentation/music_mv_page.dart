@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../linked_music_providers.dart';
 import '../data/linked_music_mvs.dart';
@@ -499,7 +500,7 @@ class _MusicMvPageState extends ConsumerState<MusicMvPage>
               runSpacing: 8,
               children: [
                 for (final quality in _mv!.qualities)
-                  ChoiceChip(
+                  BetaSelectionChip(
                     label: Text(quality.label),
                     selected: quality.hash == _quality?.hash,
                     onSelected: _loading

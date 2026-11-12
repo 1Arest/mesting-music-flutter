@@ -1,3 +1,5 @@
+import '../../../../shared/widgets/beta_diagnostic_dialog.dart';
+import '../../../../shared/widgets/beta_glass_popover.dart';
 import '../../../../shared/widgets/music_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,9 +22,9 @@ class NeteaseMessageDiagnosticAction extends StatelessWidget {
 
   Future<void> _preview(BuildContext context) async {
     if (!isCurrent()) return;
-    final copy = await showDialog<bool>(
+    final copy = await showBetaGlassDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => BetaDiagnosticDialog(
         title: const Text('导出此条消息诊断'),
         content: SizedBox(
           width: 420,

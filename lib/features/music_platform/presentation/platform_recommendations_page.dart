@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'library_collection_masthead.dart';
 import 'platform_ranking_header.dart';
 import '../../../shared/widgets/collection_play_all_button.dart';
@@ -93,7 +94,7 @@ class PlatformFmSection extends ConsumerWidget {
                 spacing: 8,
                 children: [
                   for (final option in PlatformFmStation.values)
-                    ChoiceChip(
+                    BetaSelectionChip(
                       label: Text(option.label),
                       selected: station == option,
                       onSelected: (_) => ref

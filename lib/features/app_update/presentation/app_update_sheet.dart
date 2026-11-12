@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/artwork_scroll_frontier.dart';
 import '../../../shared/widgets/music_activity_indicator.dart';
 import 'package:flutter/material.dart';
@@ -240,7 +241,7 @@ class AppUpdateSheet extends ConsumerWidget {
                 const SizedBox(height: 20),
                 SizedBox(
                   height: 52,
-                  child: FilledButton.icon(
+                  child: BetaActionButton.icon(
                     key: const ValueKey('app-update-primary'),
                     onPressed: _primaryEnabled(state)
                         ? () => _performPrimaryAction(ref, state)

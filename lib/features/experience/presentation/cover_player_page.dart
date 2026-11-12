@@ -1,5 +1,6 @@
 import '../../player/presentation/music_rhythm_artwork.dart';
 import 'player_swipe_to_comments.dart';
+import '../../../shared/widgets/beta_popup_menu_button.dart';
 import 'dart:ui';
 import '../../themes/listening_atmosphere.dart';
 import 'package:flutter/material.dart';
@@ -140,7 +141,7 @@ class _CoverPlayerPageState extends ConsumerState<CoverPlayerPage> {
                               const Spacer(),
                               if (DistributionChannel.isBeta)
                                 const PlatformQualityButton(),
-                              PopupMenuButton<PlayerVisualStyle>(
+                              BetaPopupMenuButton<PlayerVisualStyle>(
                                 tooltip: '播放器样式',
                                 icon: const Icon(
                                   Icons.more_horiz_rounded,

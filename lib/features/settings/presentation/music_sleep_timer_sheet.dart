@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,7 +153,7 @@ class _SleepTimerSheetState extends State<_SleepTimerSheet> {
                   alignment: WrapAlignment.center,
                   children: [
                     for (final minutes in [15, 30, 45, 60, 90])
-                      ChoiceChip(
+                      BetaSelectionChip(
                         label: Text('$minutes 分钟'),
                         selected: _minutes == minutes,
                         onSelected: (_) => setState(() => _minutes = minutes),

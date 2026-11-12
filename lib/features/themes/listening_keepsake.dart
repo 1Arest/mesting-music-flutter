@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_selection_controls.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -64,7 +65,7 @@ class _KeepsakeState extends ConsumerState<_KeepsakeDialog> {
   Widget build(BuildContext context) {
     final design = ref.watch(personalStyleProvider.select((s) => s.keepsake));
 
-    return Dialog(
+    return BetaPanelDialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
         child: SingleChildScrollView(
@@ -82,7 +83,7 @@ class _KeepsakeState extends ConsumerState<_KeepsakeDialog> {
                 ),
               ),
               const SizedBox(height: 12),
-              FilledButton.icon(
+              BetaActionButton.icon(
                 onPressed: _busy ? null : _save,
                 icon: const Icon(Icons.save_alt),
                 label: Text(_busy ? '正在保存' : '保存纪念卡'),

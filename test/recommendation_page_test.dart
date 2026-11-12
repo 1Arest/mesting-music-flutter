@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -160,7 +161,7 @@ void main() {
       find.byKey(const ValueKey('daily-mix-hero-background')),
       findsOneWidget,
     );
-    final playButton = tester.widget<FilledButton>(
+    final playButton = tester.widget<BetaActionButton>(
       find.byKey(const ValueKey('daily-mix-play')),
     );
     expect(

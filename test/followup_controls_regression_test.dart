@@ -524,10 +524,10 @@ void main() {
               .color,
           Colors.white,
         );
-        final panel = tester.widget<Container>(
-          find.descendant(of: button, matching: find.byType(Container)).first,
+        final panel = tester.widget<GlassButton>(
+          find.descendant(of: button, matching: find.byType(GlassButton)).first,
         );
-        final color = (panel.decoration! as BoxDecoration).color;
+        final color = panel.settings!.glassColor;
         surface ??= color;
         expect(color, surface);
         await tester.tap(button);

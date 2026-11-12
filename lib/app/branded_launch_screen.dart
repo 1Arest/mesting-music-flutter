@@ -78,7 +78,17 @@ class MestingBrandedLaunchScreen extends StatelessWidget {
       AppBrandStyle.midnightVinyl => mestingMidnightCanvas,
     };
     final darkSystemUi = brandStyle == AppBrandStyle.morningMist;
-    final screenWidth = MediaQuery.sizeOf(context).width;
+    final window = MediaQuery.sizeOf(context);
+    final screenWidth = window.width;
+    final tablet = window.shortestSide >= 600;
+    // Classic is a transparent brand lockup, so adapt its layout instead of
+    // baking it into another phone-shaped bitmap. Bound it by both axes.
+    final lockupHeight = tablet
+        ? (window.shortestSide * .64).clamp(360.0, 720.0)
+        : (screenWidth * .72).clamp(250.0, 360.0);
+    final lockupWidth = tablet
+        ? (window.width * .72).clamp(540.0, 1080.0)
+        : screenWidth;
     final alternateLockupColor = switch (brandStyle) {
       AppBrandStyle.coral => null,
       AppBrandStyle.morningMist => mestingMorningInk,
@@ -135,13 +145,13 @@ class MestingBrandedLaunchScreen extends StatelessWidget {
                       ),
                       child: SizedBox(
                         key: const ValueKey('mesting-launch-lockup'),
-                        width: screenWidth,
-                        height: (screenWidth * .72).clamp(250, 360),
+                        width: lockupWidth,
+                        height: lockupHeight,
                         child: OverflowBox(
-                          maxWidth: screenWidth * 1.24,
+                          maxWidth: tablet ? lockupWidth : screenWidth * 1.24,
                           child: Image.asset(
                             mestingLaunchLockupAsset,
-                            width: screenWidth * 1.24,
+                            width: tablet ? lockupWidth : screenWidth * 1.24,
                             fit: BoxFit.contain,
                             filterQuality: FilterQuality.high,
                             semanticLabel: 'Mesting Music',
@@ -162,7 +172,9 @@ class MestingBrandedLaunchScreen extends StatelessWidget {
                         key: ValueKey(
                           'mesting-${brandStyle == AppBrandStyle.morningMist ? 'morning' : 'midnight'}-launch-lockup',
                         ),
-                        dimension: (screenWidth * .76).clamp(250, 390),
+                        dimension: tablet
+                            ? lockupHeight
+                            : (screenWidth * .76).clamp(250, 390),
                         child: Image.asset(
                           mestingLaunchLockupAsset,
                           fit: BoxFit.contain,

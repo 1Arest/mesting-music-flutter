@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/material.dart';
 import '../../../shared/widgets/automatic_song_paging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -136,7 +137,7 @@ class _AddToPlaylistSheet extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          FilledButton.icon(
+                          BetaActionButton.icon(
                             onPressed: () {
                               Navigator.pop(context, _openProfileAction);
                             },

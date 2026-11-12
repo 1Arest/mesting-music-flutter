@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -369,7 +370,7 @@ class _GuideContent extends ConsumerWidget {
                       ('classic-dark', '深色'),
                       ('classic-system', '跟随系统'),
                     ])
-                      ChoiceChip(
+                      BetaSelectionChip(
                         label: Text(
                           mode.$2,
                           style: Theme.of(context).textTheme.labelLarge,

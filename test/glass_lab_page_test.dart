@@ -1,3 +1,6 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mesting_music/core/persistence/app_preferences.dart';
+import 'package:mesting_music/shared/widgets/beta_choice_field.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -40,6 +43,11 @@ class _Store extends GlassLabReportStore {
 }
 
 void main() {
+  late SharedPreferences preferences;
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    preferences = await SharedPreferences.getInstance();
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(
     () async => LiquidGlassWidgets.initialize(enablePerformanceMonitor: false),
@@ -61,6 +69,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
         child: MaterialApp(
           builder: (context, child) => MediaQuery(
             data: MediaQuery.of(
@@ -99,12 +108,16 @@ void main() {
         chrome: chrome,
       );
       expect(chrome.covered, isTrue);
-      final dropdown = tester.widget<DropdownButton<GlassLabScenario>>(
-        find.byType(DropdownButton<GlassLabScenario>),
-      );
-      expect(dropdown.items, hasLength(8));
+      final selector = find.byType(BetaChoiceField<GlassLabScenario>);
       for (final scene in GlassLabScenario.values) {
-        dropdown.onChanged!(scene);
+        await tester.tap(selector);
+        await tester.pumpAndSettle();
+        for (final option in GlassLabScenario.values) {
+          expect(find.text(option.label), findsWidgets);
+        }
+        await tester.ensureVisible(find.text(scene.label).last);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(scene.label).last);
         await tester.pumpAndSettle();
         expect(find.byKey(ValueKey('glass-lab-${scene.name}')), findsOneWidget);
         expect(tester.takeException(), isNull);

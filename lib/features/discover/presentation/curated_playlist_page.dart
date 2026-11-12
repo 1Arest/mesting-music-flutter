@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/song_list_tools.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class CuratedPlaylistPage extends ConsumerWidget {
       return _withBackFallback(
         context,
         Center(
-          child: FilledButton(
+          child: BetaActionButton(
             onPressed: () => _returnFromPlaylist(context),
             child: const Text('歌单不存在，返回发现页'),
           ),
@@ -257,7 +258,8 @@ class _PlaylistHero extends ConsumerWidget {
                   style: TextStyle(color: tokens.textSecondary),
                 ),
                 const SizedBox(height: 16),
-                FilledButton.icon(
+                BetaActionButton.icon(
+                  red: true,
                   key: const ValueKey('curated-playlist-play-all'),
                   onPressed: tracks == null || tracks!.isEmpty
                       ? null

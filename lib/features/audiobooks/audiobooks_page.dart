@@ -1,3 +1,4 @@
+import '../../shared/widgets/beta_selection_controls.dart';
 import '../../shared/widgets/beta_content_insets.dart';
 import '../../shared/widgets/beta_page_motion.dart';
 import 'dart:async';
@@ -285,7 +286,7 @@ class _AudiobooksPageState extends ConsumerState<AudiobooksPage> {
                           separatorBuilder: (_, _) => const SizedBox(width: 8),
                           itemBuilder: (context, index) {
                             final category = _categories[index];
-                            return ChoiceChip(
+                            return BetaSelectionChip(
                               label: Text(category.name),
                               selected:
                                   _query.isEmpty && _category == category.id,

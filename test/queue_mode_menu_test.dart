@@ -1,3 +1,6 @@
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -12,6 +15,7 @@ const output = String.fromEnvironment('QUEUE_MODE_CAPTURE_PATH');
 
 void main() {
   setUpAll(() async {
+    await LiquidGlassWidgets.initialize();
     if (!capture) return;
     await (FontLoader('Roboto')..addFont(
           File(
@@ -100,7 +104,14 @@ void main() {
             findsOneWidget,
           );
         }
-        expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+        expect(
+          find.byIcon(
+            DistributionChannel.isBeta
+                ? CupertinoIcons.check_mark
+                : Icons.check_rounded,
+          ),
+          findsOneWidget,
+        );
         expect(tester.takeException(), isNull);
         if (capture && dark && output.isNotEmpty) {
           final boundary = tester.renderObject<RenderRepaintBoundary>(

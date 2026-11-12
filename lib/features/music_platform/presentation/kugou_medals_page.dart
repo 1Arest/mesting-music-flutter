@@ -1,4 +1,6 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -218,7 +220,7 @@ class _KugouMedalGalleryState extends _OwnerState<KugouMedalGalleryPage> {
                                 for (final category in categories)
                                   Padding(
                                     padding: const EdgeInsets.only(right: 7),
-                                    child: ChoiceChip(
+                                    child: BetaSelectionChip(
                                       label: Text(category.name),
                                       selected: _group == category.type,
                                       onSelected: (_) {
@@ -245,7 +247,7 @@ class _KugouMedalGalleryState extends _OwnerState<KugouMedalGalleryPage> {
                               runSpacing: 5,
                               children: [
                                 for (final choice in group!.children)
-                                  ChoiceChip(
+                                  BetaSelectionChip(
                                     label: Text(
                                       '${choice.name}${choice.count == null ? '' : ' ${choice.count}'}',
                                     ),
@@ -602,24 +604,20 @@ class _MedalWearState extends _OwnerState<KugouMedalWearPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: SegmentedButton<int>(
-                    segments: const [
-                      ButtonSegment(value: 1, label: Text('个人主页')),
-                      ButtonSegment(value: 2, label: Text('歌曲评论')),
-                    ],
-                    selected: {_source},
-                    onSelectionChanged: _busy
-                        ? null
-                        : (values) {
-                            setState(() {
-                              _source = values.single;
-                              _items.clear();
-                              _selected.clear();
-                              _page = 0;
-                              _more = true;
-                            });
-                            unawaited(_load(reset: true));
-                          },
+                  child: CupertinoSlidingSegmentedControl<int>(
+                    children: const {1: Text('个人主页'), 2: Text('歌曲评论')},
+                    groupValue: _source,
+                    onValueChanged: (value) {
+                      if (_busy || value == null || value == _source) return;
+                      setState(() {
+                        _source = value;
+                        _items.clear();
+                        _selected.clear();
+                        _page = 0;
+                        _more = true;
+                      });
+                      unawaited(_load(reset: true));
+                    },
                   ),
                 ),
                 Padding(
@@ -653,7 +651,7 @@ class _MedalWearState extends _OwnerState<KugouMedalWearPage> {
                       final selected = _selected.indexWhere(
                         (v) => v.key == item.key,
                       );
-                      return CheckboxListTile(
+                      return BetaCheckboxTile(
                         value: selected >= 0,
                         secondary: _MedalArt(item, size: 48),
                         title: Text(item.name),

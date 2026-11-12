@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_content_insets.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class _PlaybackSettingsState
           EdgeInsets.fromLTRB(22, 12, 22, 190),
         ),
         children: [
-          SwitchListTile.adaptive(
+          BetaSwitchTile(
             title: const Text('备用音源'),
             subtitle: const Text('原曲不可播放或仅可试听时尝试补源，严格匹配同一录音版本'),
             value: ref.watch(neteaseFallbackEnabledProvider),
@@ -100,7 +101,7 @@ class _PlaybackSettingsState
             ),
           ),
           const NeteaseSourceSettingsPanel(),
-          SwitchListTile.adaptive(
+          BetaSwitchTile(
             title: const Text('网易云播放记录上报'),
             subtitle: const Text('实际开始播放后同步最近播放；时长仅累计真实收听，暂停、缓冲与拖动不计入'),
             value: ref.watch(neteaseListeningEnabledProvider),

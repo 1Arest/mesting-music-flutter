@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'playlist_audit_page.dart';
 import '../../music_platform/presentation/song_actions_sheet.dart';
@@ -72,7 +73,7 @@ class PlaylistDetailPage extends ConsumerWidget {
         data: (item) {
           if (item == null) {
             return Center(
-              child: FilledButton(
+              child: BetaActionButton(
                 onPressed: () => _returnToMyPlaylists(context),
                 child: const Text('歌单不存在，返回列表'),
               ),

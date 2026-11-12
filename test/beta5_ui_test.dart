@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'package:mesting_music/shared/widgets/beta_page_motion.dart';
 import 'package:mesting_music/features/player/presentation/open_now_playing.dart';
 import 'package:mesting_music/features/music_platform/presentation/song_actions_sheet.dart';
@@ -1813,7 +1814,9 @@ void main() {
       viewport(tester);
       await prepare();
       await pump(tester, const ListeningReplayPage());
-      final months = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip));
+      final months = tester.widgetList<BetaSelectionChip>(
+        find.byType(BetaSelectionChip),
+      );
       expect(months.length, DateTime.now().month + 1);
       await disposeFixture(tester);
     },

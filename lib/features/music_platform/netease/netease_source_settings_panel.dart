@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import '../../../shared/widgets/beta_choice_field.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +101,7 @@ class _NeteaseSourceSettingsPanelState
                   if (v != null) _save(options.copyWith(strategy: v));
                 },
         ),
-        SwitchListTile.adaptive(
+        BetaSwitchTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('允许无损音源'),
           subtitle: const Text('选择无损音质时尝试真实 FLAC；返回有损文件时不标为无损'),
@@ -125,7 +126,7 @@ class _NeteaseSourceSettingsPanelState
         ),
         const SizedBox(height: 12),
         for (final source in NeteasePublicSource.values)
-          SwitchListTile.adaptive(
+          BetaSwitchTile(
             contentPadding: EdgeInsets.zero,
             title: Text(
               source == NeteasePublicSource.kugou ? '酷狗（公开音源）' : source.label,
@@ -145,7 +146,7 @@ class _NeteaseSourceSettingsPanelState
                   },
           ),
         const SizedBox(height: 12),
-        SwitchListTile.adaptive(
+        BetaSwitchTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('缓存音源解析'),
           subtitle: const Text('短时缓存并在复用前检测地址；切换账号后重建'),
@@ -157,7 +158,7 @@ class _NeteaseSourceSettingsPanelState
               ref.read(neteaseFallbackResolverProvider).clearCache(),
           child: const Text('清除解析缓存'),
         ),
-        SwitchListTile.adaptive(
+        BetaSwitchTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('音源诊断日志'),
           subtitle: const Text(

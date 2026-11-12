@@ -1,3 +1,4 @@
+import '../../../shared/widgets/beta_selection_controls.dart';
 import '../../music_platform/presentation/platform_avatar.dart';
 import '../../music_platform/presentation/song_actions_sheet.dart';
 import '../../../shared/widgets/collection_play_all_button.dart';
@@ -594,7 +595,8 @@ class EditorialCollectionHero extends ConsumerWidget {
                   total: total ?? tracks.length,
                   onPressed: tracks.isEmpty ? null : () => _play(context, ref),
                 )
-              : FilledButton.icon(
+              : BetaActionButton.icon(
+                  red: true,
                   onPressed: tracks.isEmpty ? null : () => _play(context, ref),
                   icon: const Icon(Icons.play_arrow_rounded),
                   style: FilledButton.styleFrom(

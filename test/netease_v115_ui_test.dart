@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -196,7 +197,7 @@ void main() {
     'membership toggle saves per account and enables fallback on activation',
     (tester) async {
       final c = await mount(tester, const NeteaseMembershipPage());
-      final toggle = find.widgetWithText(SwitchListTile, '当前账号启用至尊SVIP');
+      final toggle = find.widgetWithText(BetaSwitchTile, '当前账号启用至尊SVIP');
       await tester.tap(toggle);
       await settle(tester);
       expect(c.read(neteaseLocalSvipProvider), isFalse);

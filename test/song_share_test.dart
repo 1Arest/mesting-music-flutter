@@ -1,3 +1,4 @@
+import 'package:mesting_music/shared/widgets/beta_selection_controls.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,8 +105,8 @@ void main() {
           ),
         ),
       );
-      final button = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, '分享链接给微信好友'),
+      final button = tester.widget<BetaActionButton>(
+        find.widgetWithText(BetaActionButton, '分享链接给微信好友'),
       );
       expect(button.onPressed, isNull);
       expect(find.text('这首歌暂无公开链接，可以生成海报分享。'), findsOneWidget);

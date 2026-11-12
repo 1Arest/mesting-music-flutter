@@ -8,6 +8,8 @@ import '../../../core/diagnostics/diagnostic_activity.dart';
 import '../../../core/diagnostics/glass_lab_run.dart';
 import '../../../core/diagnostics/glass_lab_store.dart';
 import '../../../shared/widgets/beta_music_chrome_scope.dart';
+import '../../../shared/widgets/beta_choice_field.dart';
+import '../../../shared/widgets/beta_glass_controls.dart';
 import 'glass_lab_scene.dart';
 
 /// Synthetic render experiments live on their own opaque route. Production
@@ -210,9 +212,9 @@ class _GlassLabPageState extends ConsumerState<GlassLabPage>
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DropdownButton<GlassLabScenario>(
+                  child: BetaChoiceField<GlassLabScenario>(
                     isExpanded: true,
-                    value: _selected,
+                    initialValue: _selected,
                     items: [
                       for (final s in GlassLabScenario.values)
                         DropdownMenuItem(value: s, child: Text(s.label)),
@@ -234,19 +236,19 @@ class _GlassLabPageState extends ConsumerState<GlassLabPage>
                   runSpacing: 4,
                   alignment: WrapAlignment.center,
                   children: [
-                    FilledButton(
+                    BetaGlassButton(
                       onPressed: enabled
                           ? () => unawaited(_start(all: false))
                           : null,
                       child: const Text('运行当前场景'),
                     ),
-                    OutlinedButton(
+                    BetaGlassButton(
                       onPressed: enabled
                           ? () => unawaited(_start(all: true))
                           : null,
                       child: const Text('依次运行八场景'),
                     ),
-                    TextButton(
+                    BetaGlassButton(
                       onPressed: _run.running ? _run.cancel : null,
                       child: const Text('停止'),
                     ),
@@ -270,12 +272,21 @@ class _GlassLabPageState extends ConsumerState<GlassLabPage>
                     padding: const EdgeInsets.all(6),
                     child: Text('运行完成不代表性能达标，仍需结合真实设备、渲染后端和实际页面对照。'),
                   ),
-                TextButton.icon(
+                BetaGlassButton(
+                  height: MediaQuery.textScalerOf(context).scale(15) > 20
+                      ? 76
+                      : 52,
                   onPressed: enabled && records.isNotEmpty && !_run.savingFailed
                       ? _export
                       : null,
-                  icon: const Icon(Icons.ios_share),
-                  label: const Text('导出本轮 JSON 报告'),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.ios_share),
+                      SizedBox(width: 8),
+                      Flexible(child: Text('导出本轮 JSON 报告')),
+                    ],
+                  ),
                 ),
                 if (_exportMessage != null)
                   Padding(
