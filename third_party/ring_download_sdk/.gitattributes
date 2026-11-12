@@ -3,3 +3,5 @@
 # Analyzer receipts contain intentional terminal padding.
 validation/**/formal-analysis.txt -whitespace
 validation/release-1.1.5/candidate-analysis.txt -whitespace
+validation/release-1.2.0/formal-analysis.txt whitespace=-blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+validation/release-1.2.0/host-analysis.txt whitespace=-blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

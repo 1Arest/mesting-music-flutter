@@ -121,6 +121,30 @@ class _Payload implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+class _StatisticsEngine extends _Engine
+    implements RingTransferStatisticsSource {
+  _StatisticsEngine(super.directory);
+  RingTransferSample sample = const RingTransferSample();
+  Completer<void> finish = Completer<void>();
+  @override
+  RingTransferSample get transferSample => sample;
+  @override
+  Future<File> download(
+    RingDownloadRequest request,
+    void Function(int, int) progress,
+    CancelToken cancel,
+  ) async {
+    progress(0, request.fileSize);
+    if (!started.isCompleted) started.complete();
+    await Future.any([finish.future, cancel.whenCancel]);
+    if (cancel.isCancelled) {
+      cleanupFinished = true;
+      throw const RingDownloadException(RingDownloadError.cancelled);
+    }
+    return super.download(request, progress, cancel);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory directory;
@@ -554,6 +578,108 @@ void main() {
         isTrue,
       );
       expect(legacyRequests, 0);
+    },
+  );
+
+  test(
+    'telemetry survives sheet reattachment, resets on retry and closes on dispose',
+    () async {
+      await transport.dispose();
+      final observed = _StatisticsEngine(
+        Directory('${directory.path}/statistics'),
+      );
+      transport = RingAppUpdateTransport(
+        directoryProvider: () async => directory,
+        sdkFactory: (config) => RingDownloadSdk.withEngine(config, observed),
+      );
+      final events = <RingTransferStatistics?>[];
+      final closed = Completer<void>();
+      final listener = transport.statistics.listen(
+        events.add,
+        onDone: closed.complete,
+      );
+      final task = transport.download(_manifest(), onProgress: (_, _) {});
+      await observed.started.future;
+      final nextPayload = transport.statistics.firstWhere(
+        (s) =>
+            s?.state == RingDownloadState.transferring &&
+            s!.peerReceivedBytes == 2048,
+      );
+      observed.sample = const RingTransferSample(
+        httpsBytes: 1024,
+        peerBytes: 2048,
+        nodes: [
+          RingNodeSample(
+            'node1',
+            RingNodeSource.peer,
+            RingNodeState.connected,
+            2048,
+            1024,
+          ),
+        ],
+      );
+      await nextPayload.timeout(const Duration(seconds: 3));
+      expect(transport.latestStatistics!.peerReceivedBytes, 2048);
+      final container = ProviderContainer(
+        overrides: [
+          appUpdateDownloadTransportProvider.overrideWithValue(transport),
+        ],
+      );
+      final attachment = container.listen(
+        appUpdateStatisticsProvider,
+        (previous, value) {},
+        fireImmediately: true,
+      );
+      final first = await container
+          .read(appUpdateStatisticsProvider.future)
+          .timeout(const Duration(seconds: 3));
+      expect(
+        first!.peerReceivedBytes,
+        2048,
+      ); // Reopen without losing current sample.
+      attachment.close();
+      container.dispose();
+      observed.finish.complete();
+      await task;
+      await Future<void>.delayed(Duration.zero);
+      expect(transport.latestStatistics!.state, RingDownloadState.completed);
+      expect(transport.latestStatistics!.bytesPerSecond, 0);
+      final old = transport.latestStatistics;
+      observed.sample = const RingTransferSample();
+      observed.finish = Completer<void>();
+      final cancellation = UpdateDownloadCancellationToken();
+      final secondStarted = transport.statistics.firstWhere(
+        (sample) =>
+            sample?.state == RingDownloadState.transferring &&
+            sample?.available == true &&
+            sample?.peerReceivedBytes == 0,
+      );
+      final next = transport.download(
+        _manifest(),
+        onProgress: (_, _) {},
+        cancellationToken: cancellation,
+      );
+      expect(transport.latestStatistics, isNull);
+      final error = expectLater(
+        next,
+        throwsA(
+          isA<AppUpdateException>().having((e) => e.code, 'code', 'paused'),
+        ),
+      );
+      await secondStarted.timeout(const Duration(seconds: 3));
+      await cancellation.cancel();
+      await error;
+      expect(transport.latestStatistics!.state, RingDownloadState.cancelled);
+      expect(transport.latestStatistics!.peerReceivedBytes, 0);
+      expect(old!.peerReceivedBytes, 2048);
+      expect(observed.cleanupFinished, true);
+      final pausedObserver = transport.statistics.listen((_) {});
+      pausedObserver.pause();
+      await transport.dispose().timeout(const Duration(seconds: 1));
+      await pausedObserver.cancel();
+      await closed.future;
+      await listener.cancel();
+      expect(events.any((e) => e == null), true);
     },
   );
 

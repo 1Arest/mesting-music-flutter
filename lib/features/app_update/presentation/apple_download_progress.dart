@@ -10,10 +10,12 @@ class AppleDownloadProgress extends StatelessWidget {
     required this.receivedBytes,
     required this.totalBytes,
     this.semanticLabel = '更新下载进度',
+    this.showLabels = true,
     super.key,
   });
   final int receivedBytes, totalBytes;
   final String semanticLabel;
+  final bool showLabels;
   @override
   Widget build(BuildContext context) {
     final fraction = totalBytes > 0
@@ -62,27 +64,29 @@ class AppleDownloadProgress extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          DefaultTextStyle.merge(
-            style: TextStyle(
-              fontSize: MusicTypography.footnoteSize,
-              color: scheme.onSurfaceVariant,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-            child: Row(
-              children: [
-                Expanded(child: Text(bytes)),
-                const SizedBox(width: 16),
-                Text(
-                  percent,
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: MusicTypography.titleWeight,
+          if (showLabels) ...[
+            const SizedBox(height: 10),
+            DefaultTextStyle.merge(
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                color: scheme.onSurfaceVariant,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+              child: Row(
+                children: [
+                  Expanded(child: Text(bytes)),
+                  const SizedBox(width: 16),
+                  Text(
+                    percent,
+                    style: TextStyle(
+                      color: scheme.onSurface,
+                      fontWeight: MusicTypography.titleWeight,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

@@ -267,7 +267,7 @@ void main() {
         final request = harness.requests.firstWhere(
           (r) => r.uri.pathSegments.last == 'session',
         );
-        expect((request.data as Map)['sdk_version'], '1.1.9');
+        expect((request.data as Map)['sdk_version'], RingSdkStatus.sdkVersion);
         secondGate.complete();
         expect(
           await result.timeout(const Duration(seconds: 15)),
@@ -3614,6 +3614,28 @@ void main() {
         expect(httpPieces, isNotEmpty);
         expect(harness.part.readAsBytesSync(), harness.bytes);
         expect(progress.last, harness.bytes.length);
+        final observation = harness.client.transferObservation;
+        expect(observation.nodes, isNotEmpty);
+        expect(observation.nodes.every((n) => n.isClosed()), true);
+        final verifiedNodes = observation.nodes.fold<int>(
+          0,
+          (sum, node) => sum + node.verifiedBytes,
+        );
+        expect(verifiedNodes, greaterThan(0));
+        expect(
+          verifiedNodes,
+          harness.bytes.length -
+              httpPieces.toSet().fold<int>(
+                0,
+                (sum, index) =>
+                    sum +
+                    (harness.bytes.length - index * 1048576).clamp(0, 1048576),
+              ),
+        );
+        expect(
+          observation.seedReceivedBytes + observation.peerReceivedBytes,
+          greaterThanOrEqualTo(verifiedNodes),
+        );
         final completed = harness.logs.where(
           (event) =>
               event.stage == 'transfer' && event.code == 'source_completed',

@@ -102,6 +102,7 @@ class AppUpgradeV40DownloadClient {
     _flightKey = key;
     _lastHttpsBodyBytes = 0;
     _lastBootstrapBodyBytes = 0;
+    _p2pClient.resetTransferObservation();
     late Future<File> flight;
     flight =
         _runDownload(
@@ -470,13 +471,9 @@ class AppUpgradeV40DownloadClient {
             ? null
             : (index) async {
                 await stopBootstrap();
-                if (cancelToken.isCancelled || httpsRejected) {
-                  return null;
-                }
-                // Keep a stable reference across awaits. Dart versions differ
-                // in promotion of the nullable variable captured by this closure.
-                final bootstrap = bootstrapFile!;
-                if (!bootstrap.existsSync()) {
+                if (cancelToken.isCancelled ||
+                    httpsRejected ||
+                    !bootstrapFile!.existsSync()) {
                   return null;
                 }
                 final start = index * AppUpgradeP2PManifest.chunkSize;
@@ -484,8 +481,8 @@ class AppUpgradeV40DownloadClient {
                   0,
                   currentInfo.fileSize,
                 );
-                if (await bootstrap.length() < end) return null;
-                final bytes = await bootstrap
+                if (await bootstrapFile.length() < end) return null;
+                final bytes = await bootstrapFile!
                     .openRead(start, end)
                     .fold<BytesBuilder>(
                       BytesBuilder(copy: false),
@@ -1439,6 +1436,7 @@ class AppUpgradeV40DownloadClient {
     final handle = await partFile.open(
       mode: append ? FileMode.append : FileMode.write,
     );
+    if (!append) _p2pClient.transferObservation.clearCoverage();
     final range = status == 206
         ? parseContentRange(
             response.headers.value(HttpHeaders.contentRangeHeader),

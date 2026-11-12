@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
+import 'package:mesting_music/core/platform/distribution_channel.dart';
+import 'package:mesting_music/shared/widgets/beta_glass_popover.dart';
 import 'package:mesting_music/features/app_update/app_update_providers.dart';
 import 'package:mesting_music/features/app_update/data/app_update_platform.dart';
 import 'package:mesting_music/features/app_update/data/app_update_repository.dart';
@@ -503,17 +505,28 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('open-app-update-sheet')));
     await tester.pumpAndSettle();
 
-    final glassSurface = tester.widget<LiquidGlassSurface>(
-      find.byKey(liquidGlassSheetSurfaceKey),
-    );
-    expect(glassSurface.blurSigma, 24);
-    expect(
-      find.descendant(
-        of: find.byKey(liquidGlassSheetSurfaceKey),
-        matching: find.byType(BackdropFilter),
-      ),
-      findsOneWidget,
-    );
+    if (DistributionChannel.isBeta) {
+      final glass = tester.widget<BetaGlassMenuSurface>(
+        find.byType(BetaGlassMenuSurface),
+      );
+      expect(glass.radius, 34);
+      expect(
+        find.byKey(const ValueKey('beta13-glass-menu-surface')),
+        findsOneWidget,
+      );
+    } else {
+      final glassSurface = tester.widget<LiquidGlassSurface>(
+        find.byKey(liquidGlassSheetSurfaceKey),
+      );
+      expect(glassSurface.blurSigma, 24);
+      expect(
+        find.descendant(
+          of: find.byKey(liquidGlassSheetSurfaceKey),
+          matching: find.byType(BackdropFilter),
+        ),
+        findsOneWidget,
+      );
+    }
     final contentMaterial = tester.widget<Material>(
       find.byKey(appUpdateSheetContentKey),
     );

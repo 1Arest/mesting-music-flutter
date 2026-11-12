@@ -6,7 +6,7 @@ import '../../../shared/widgets/beta_icon_button.dart';
 import '../../themes/beta_appearance.dart';
 import '../app_update_providers.dart';
 import '../domain/release_history.dart';
-import 'apple_download_progress.dart';
+import 'update_download_card.dart';
 import 'release_notes_sheet.dart';
 import '../../themes/music_typography.dart';
 
@@ -21,6 +21,8 @@ class BetaAppUpdateSheet extends ConsumerStatefulWidget {
 
 class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
     with WidgetsBindingObserver {
+  final _notesScroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +32,7 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _notesScroll.dispose();
     super.dispose();
   }
 
@@ -138,122 +141,194 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
         manifest != null &&
         installed != null &&
         manifest.isMandatoryFor(installed);
-    return PopScope(
-      canPop: !mandatory,
-      child: Material(
-        type: MaterialType.transparency,
-        key: const ValueKey('app-update-sheet-content'),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * .86,
-          ),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              10,
-              24,
-              24 + MediaQuery.viewPaddingOf(context).bottom,
+    final showProgress =
+        manifest != null &&
+        !checking &&
+        !current &&
+        (state.receivedBytes > 0 ||
+            phase == AppUpdatePhase.downloading ||
+            verifying);
+    final notesEntry = notesVersion == null || checking
+        ? null
+        : Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              key: const ValueKey('app-update-view-notes'),
+              onPressed: () => showMusicReleaseNotes(
+                context,
+                version: notesVersion,
+                notes: releaseNotes,
+              ),
+              child: const Text('查看此次更新'),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: scheme.onSurface.withValues(alpha: .2),
-                      borderRadius: BorderRadius.circular(9),
+          );
+    final copy = checking
+        ? '正在获取最新发布信息，请稍候。'
+        : current
+        ? 'Mesting Music 已保持最新。'
+        : phase == AppUpdatePhase.failed
+        ? state.errorMessage ?? '请检查网络后重试，下载进度会保留。'
+        : phase == AppUpdatePhase.permissionRequired
+        ? '请允许 Mesting Music 安装应用更新，返回后继续。'
+        : phase == AppUpdatePhase.installLaunched
+        ? '请在系统安装页面完成确认，或返回后再次安装。'
+        : verifying
+        ? '下载已完成，正在确认文件完整性。'
+        : '下载完成并校验后，由系统确认覆盖升级。';
+    final header = Padding(
+      padding: const EdgeInsets.fromLTRB(24, 10, 16, 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 5,
+              decoration: BoxDecoration(
+                color: scheme.onSurface.withValues(alpha: .22),
+                borderRadius: BorderRadius.circular(9),
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  '版本更新',
+                  style: TextStyle(
+                    fontSize: MusicTypography.headingSize,
+                    fontWeight: MusicTypography.titleWeight,
+                  ),
+                ),
+              ),
+              if (mandatory)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    '必须更新',
+                    style: TextStyle(
+                      fontSize: MusicTypography.captionSize,
+                      color: scheme.error,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
+              BetaIconButton(
+                tooltip: '关闭版本更新',
+                onPressed: mandatory ? null : () => Navigator.pop(context),
+                icon: Icon(
+                  CupertinoIcons.xmark_circle_fill,
+                  color: scheme.onSurface.withValues(alpha: .45),
+                  size: 27,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    final content = Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.asset(
+                  'assets/branding/mesting-app-icon.png',
+                  width: 54,
+                  height: 54,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
-                      child: Text(
-                        '版本更新',
-                        style: TextStyle(
-                          fontSize: MusicTypography.headingSize,
-                          fontWeight: MusicTypography.titleWeight,
-                        ),
+                    const Text(
+                      'Mesting Music',
+                      style: TextStyle(
+                        fontSize: MusicTypography.sectionTitleSize,
+                        fontWeight: MusicTypography.titleWeight,
+                        letterSpacing: -.4,
                       ),
                     ),
-                    BetaIconButton(
-                      tooltip: '关闭版本更新',
-                      onPressed: mandatory
-                          ? null
-                          : () => Navigator.pop(context),
-                      icon: Icon(
-                        CupertinoIcons.xmark_circle_fill,
-                        color: scheme.onSurface.withValues(alpha: .45),
-                        size: 29,
+                    const SizedBox(height: 4),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: MusicTypography.subheadlineSize,
+                          fontWeight: MusicTypography.titleWeight,
+                          color: phase == AppUpdatePhase.failed
+                              ? scheme.error
+                              : blue,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(18),
-                    child: Image.asset(
-                      'assets/branding/mesting-app-icon.png',
-                      width: 64,
-                      height: 64,
-                    ),
-                  ),
+              ),
+              if (checking) BetaActivityIndicator(color: blue, radius: 10),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (manifest != null && !checking && !current) ...[
+            Text(
+              '当前版本 ${installed?.versionName ?? "—"}  →  ${manifest.versionName}',
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                height: 1.45,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              '安装包 ${manifest.sizeLabel}',
+              style: TextStyle(
+                fontSize: MusicTypography.footnoteSize,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ] else if (installed != null)
+            _detail(context, '当前版本', installed.versionName),
+          if (!showProgress || verifying || phase == AppUpdatePhase.failed)
+            Padding(
+              padding: const EdgeInsets.only(top: 9),
+              child: Text(
+                copy,
+                style: TextStyle(
+                  fontSize: MusicTypography.footnoteSize,
+                  height: 1.45,
+                  color: phase == AppUpdatePhase.failed
+                      ? scheme.error
+                      : scheme.onSurfaceVariant,
                 ),
-                const SizedBox(height: 20),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: MusicTypography.titleSize,
-                      fontWeight: MusicTypography.titleWeight,
-                      height: 1.18,
-                      letterSpacing: -.5,
-                    ),
-                  ),
+              ),
+            ),
+          if (manifest != null &&
+              !checking &&
+              !current &&
+              manifest.releaseNotes.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: .36),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: scheme.onSurface.withValues(alpha: .06),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  checking
-                      ? '正在获取最新发布信息，请稍候。'
-                      : current
-                      ? 'Mesting Music 已保持最新。'
-                      : phase == AppUpdatePhase.failed
-                      ? state.errorMessage ?? '请检查网络后重试，下载进度会保留。'
-                      : phase == AppUpdatePhase.permissionRequired
-                      ? '请允许 Mesting Music 安装应用更新，返回后继续。'
-                      : phase == AppUpdatePhase.installLaunched
-                      ? '请在系统安装页面完成确认，或返回后再次安装。'
-                      : verifying
-                      ? '下载已完成，正在确认文件完整性。'
-                      : '下载完成并校验后，由系统确认覆盖升级。',
-                  style: TextStyle(
-                    fontSize: MusicTypography.subheadlineSize,
-                    height: 1.5,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                if (checking)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: BetaActivityIndicator(color: blue, radius: 12),
-                  ),
-                if (installed != null) ...[
-                  if (checking) const SizedBox(height: 20),
-                  _detail(context, '当前版本', installed.versionName),
-                ],
-                if (manifest != null && !checking && !current) ...[
-                  _detail(context, '新版本', manifest.versionName),
-                  _detail(context, '安装包大小', manifest.sizeLabel),
-                  if (manifest.releaseNotes.isNotEmpty) ...[
-                    const SizedBox(height: 18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(15, 14, 15, 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     const Text(
                       '本次更新',
                       style: TextStyle(
@@ -261,80 +336,191 @@ class _BetaAppUpdateSheetState extends ConsumerState<BetaAppUpdateSheet>
                         fontWeight: MusicTypography.titleWeight,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
+                    // Keep the original server-supplied strings in full. Only
+                    // this content region scrolls; actions remain reachable.
                     for (final note in manifest.releaseNotes)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 7),
-                        child: Text(
-                          note,
-                          style: TextStyle(
-                            fontSize: MusicTypography.subheadlineSize,
-                            height: 1.45,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        padding: const EdgeInsets.only(bottom: 9),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 7),
+                              child: Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: scheme.onSurfaceVariant,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                note,
+                                style: TextStyle(
+                                  fontSize: MusicTypography.subheadlineSize,
+                                  height: 1.48,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ?notesEntry,
                   ],
-                  if (state.receivedBytes > 0 ||
-                      phase == AppUpdatePhase.downloading ||
-                      verifying) ...[
-                    const SizedBox(height: 22),
-                    AppleDownloadProgress(
-                      key: const ValueKey('app-update-progress'),
-                      receivedBytes: state.receivedBytes,
-                      totalBytes: state.totalBytes,
-                    ),
-                  ],
-                ],
-                if (notesVersion != null && !checking)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      key: const ValueKey('app-update-view-notes'),
-                      onPressed: () => showMusicReleaseNotes(
-                        context,
-                        version: notesVersion,
-                        notes: releaseNotes,
-                      ),
-                      child: const Text('查看此次更新'),
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                BetaGlassButton(
-                  key: const ValueKey('app-update-primary'),
-                  blue: true,
-                  height: 54,
-                  loading: waiting,
-                  label: primary,
-                  onPressed: () => _primary(state),
-                  child: Text(primary),
                 ),
-                if (manifest != null &&
-                    !mandatory &&
-                    !checking &&
-                    !current &&
-                    !waiting &&
-                    phase != AppUpdatePhase.downloading) ...[
-                  const SizedBox(height: 8),
-                  TextButton(
-                    key: const ValueKey('app-update-later'),
-                    onPressed: () async {
-                      await ref
-                          .read(appUpdateControllerProvider.notifier)
-                          .snooze();
-                      if (context.mounted) Navigator.pop(context);
-                    },
-                    child: Text(
-                      '稍后提醒我',
-                      style: TextStyle(
-                        fontSize: MusicTypography.subheadlineSize,
-                        color: blue,
-                      ),
-                    ),
+              ),
+            ),
+          ] else ...[
+            ?notesEntry,
+          ],
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+    final progress = showProgress
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+            child: UpdateDownloadCard(state: state),
+          )
+        : const SizedBox.shrink();
+    final footer = Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        14,
+        24,
+        16 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          BetaGlassButton(
+            key: const ValueKey('app-update-primary'),
+            blue: true,
+            height: 52,
+            loading: waiting,
+            label: primary,
+            onPressed: () => _primary(state),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (phase == AppUpdatePhase.downloading ||
+                    phase == AppUpdatePhase.paused) ...[
+                  Icon(
+                    phase == AppUpdatePhase.downloading
+                        ? CupertinoIcons.pause_fill
+                        : CupertinoIcons.play_fill,
+                    size: 15,
                   ),
+                  const SizedBox(width: 9),
                 ],
+                Flexible(child: Text(primary)),
               ],
             ),
+          ),
+          if (manifest != null &&
+              !mandatory &&
+              !checking &&
+              !current &&
+              !waiting &&
+              phase != AppUpdatePhase.downloading) ...[
+            const SizedBox(height: 4),
+            TextButton(
+              key: const ValueKey('app-update-later'),
+              onPressed: () async {
+                await ref.read(appUpdateControllerProvider.notifier).snooze();
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(
+                '稍后提醒我',
+                style: TextStyle(
+                  fontSize: MusicTypography.subheadlineSize,
+                  color: blue,
+                ),
+              ),
+            ),
+          ],
+          if (showProgress) ...[
+            const SizedBox(height: 10),
+            Text(
+              phase == AppUpdatePhase.paused
+                  ? '下载进度已保留，可随时继续'
+                  : '下载进度已保留，安装需系统确认',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: MusicTypography.captionSize,
+                height: 1.4,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+    return PopScope(
+      canPop: !mandatory,
+      child: Material(
+        type: MaterialType.transparency,
+        key: const ValueKey('app-update-sheet-content'),
+        child: Container(
+          // One translucent backing inside the existing premium glass lens:
+          // artwork cannot wash out release notes as in the previous sheet.
+          decoration: BoxDecoration(
+            color: scheme.surface.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark
+                  ? .86
+                  : .92,
+            ),
+            borderRadius: BorderRadius.circular(34),
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .86,
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact =
+                  constraints.maxHeight < 600 ||
+                  MediaQuery.textScalerOf(context).scale(1) > 1.4;
+              // On short/large-text displays, all content scrolls together so no
+              // fixed telemetry panel can consume the entire usable viewport.
+              if (compact) {
+                return SingleChildScrollView(
+                  key: const ValueKey('update-sheet-compact-scroll'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [header, content, progress, footer],
+                  ),
+                );
+              }
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  header,
+                  Flexible(
+                    child: Scrollbar(
+                      controller: _notesScroll,
+                      thumbVisibility: true,
+                      radius: const Radius.circular(3),
+                      thickness: 3,
+                      child: SingleChildScrollView(
+                        key: const ValueKey('update-notes-scroll'),
+                        controller: _notesScroll,
+                        child: content,
+                      ),
+                    ),
+                  ),
+                  progress,
+                  footer,
+                ],
+              );
+            },
           ),
         ),
       ),
