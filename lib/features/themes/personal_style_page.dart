@@ -6,6 +6,7 @@ import '../../shared/widgets/beta_glass_controls.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import '../../shared/widgets/beta_swipe_pages.dart';
 import 'personal_style.dart';
 import 'personal_decorations.dart';
@@ -65,15 +66,25 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
     double min,
     double max,
   ) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Text(label),
-      CupertinoSlider(
-        value: value.clamp(min, max),
-        min: min,
-        max: max,
-        onChanged: (v) => _change({key: v}),
+      Semantics(
+        label: label,
+        child: GlassSlider(
+          key: ValueKey('style-slider-$key'),
+          value: value.clamp(min, max),
+          min: min,
+          max: max,
+          quality: GlassQuality.standard,
+          useOwnLayer: true,
+          activeColor: Theme.of(context).colorScheme.primary,
+          inactiveColor: Theme.of(context).colorScheme.outlineVariant,
+          thumbRadius: 11,
+          onChanged: (v) => _change({key: v}),
+        ),
       ),
+      const SizedBox(height: 12),
     ],
   );
   @override
@@ -204,8 +215,10 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children: [
                           BetaGlassButton(
                             height: 38,
@@ -251,6 +264,7 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
                       SwitchListTile.adaptive(
                         title: const Text('系统衬线字体'),
                         subtitle: const Text('使用设备提供的字体，不下载字体文件'),
@@ -272,8 +286,10 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                         2.4,
                       ),
                       const Text('高亮颜色'),
+                      const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children: [
                           BetaGlassButton(
                             height: 38,

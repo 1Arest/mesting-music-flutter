@@ -125,6 +125,28 @@ void main() {
         await settle();
         await captureUiFix(tester, '205-$key-$suffix', settleAnimations: false);
       }
+      await tester.tap(find.text('歌词').first);
+      await settle();
+      final lyricSettings = find.byKey(
+        const ValueKey('style-slider-lyricSize'),
+      );
+      await tester.scrollUntilVisible(
+        lyricSettings,
+        240,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView).hitTestable().last,
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
+      await settle();
+      expect(tester.getSize(lyricSettings).width, greaterThan(spec.width * .7));
+      await captureUiFix(
+        tester,
+        '208-lyric-settings-$suffix',
+        settleAnimations: false,
+      );
       expect(tester.takeException(), isNull);
       await container
           .read(profileEffectProvider.notifier)

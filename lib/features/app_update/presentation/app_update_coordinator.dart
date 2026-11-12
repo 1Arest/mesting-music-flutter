@@ -92,6 +92,13 @@ class _AppUpdateCoordinatorState extends ConsumerState<AppUpdateCoordinator>
       if (!mounted || !_eligible()) return;
       final notes = notesForMusicVersion(installed.versionName);
       final receipt = ReleaseNotesReceipt(ref.read(sharedPreferencesProvider));
+      // An installed upgrade already has its own success HUD. Recording this
+      // build also keeps the notes from surfacing on a later foreground entry.
+      if (installed.isUpgradedInstall) {
+        if (!receipt.hasSeen(installed)) await receipt.acknowledge(installed);
+        _notesChecked = true;
+        return;
+      }
       if (notes.isEmpty || receipt.hasSeen(installed)) {
         _notesChecked = true;
         return;

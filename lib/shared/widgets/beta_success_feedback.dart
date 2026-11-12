@@ -73,6 +73,9 @@ class _MarkPainter extends CustomPainter {
 }
 
 class BetaLoginSuccess extends StatefulWidget {
+  static const cardTop = 76.0;
+  static const cardSize = 104.0;
+
   const BetaLoginSuccess({
     required this.onComplete,
     this.message = '登录成功',
@@ -133,7 +136,7 @@ class _BetaLoginSuccessState extends State<BetaLoginSuccess>
         child: Padding(
           // The confirmed reference places a 104dp square below the guide
           // header's 64dp row, in the upper central breathing space.
-          padding: const EdgeInsets.only(top: 76),
+          padding: const EdgeInsets.only(top: BetaLoginSuccess.cardTop),
           child: FadeTransition(
             opacity: _motion,
             child: ScaleTransition(
@@ -147,8 +150,8 @@ class _BetaLoginSuccessState extends State<BetaLoginSuccess>
               child: RepaintBoundary(
                 child: Container(
                   key: const ValueKey('beta10-login-success'),
-                  width: 104,
-                  height: 104,
+                  width: BetaLoginSuccess.cardSize,
+                  height: BetaLoginSuccess.cardSize,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: const Color(0xF20D1012),

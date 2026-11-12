@@ -293,6 +293,9 @@ class NeteaseApi {
           'encodeType': q('level') == 'vivid' ? 'mp3' : 'flac',
           if (q('level') == 'sky') 'immerseType': 'c51',
         };
+      case '/song/other/message':
+        path = '/api/song/other/message';
+        data = {'songId': int.parse('${q('songId')}')};
       case '/lyric':
         path = '/api/song/lyric/v1';
         data = {

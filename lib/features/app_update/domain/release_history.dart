@@ -2,6 +2,11 @@
 /// offline and must never be shown as the notes of an unknown future build.
 /// The distribution service may also supply notes for a newer release.
 const musicReleaseNotes = <String, List<String>>{
+  "1.0.98": [
+    "更新成功时，碎彩纸从提示卡片周围散开。覆盖升级后首次进入只显示成功提示和礼花。",
+    "歌曲菜单改用分组玻璃抽屉，网易云创作者资料使用官方歌曲接口，有资料时展示。",
+    "歌词预设补齐按钮间距，字号和行距改用玻璃滑块，歌曲列表的收藏和菜单键靠右。",
+  ],
   "1.0.97": [
     "黑胶唱片加入透光外圈和网易云同款唱臂，播放落臂，暂停抬臂并保留唱片角度。",
     "收藏数贴合爱心右上角的缺口，歌曲菜单的已喜欢状态改为红色，修复网易云歌手与专辑资料无法读取的问题。",

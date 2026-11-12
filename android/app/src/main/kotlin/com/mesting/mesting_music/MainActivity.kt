@@ -279,6 +279,39 @@ open class MainActivity : AudioServiceActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
+            "com.mesting.music/netease_creator",
+        ).setMethodCallHandler { call, result ->
+            if (call.method != "open") {
+                result.notImplemented()
+                return@setMethodCallHandler
+            }
+            val songId = call.argument<String>("songId")?.toLongOrNull()
+            if (songId == null || songId <= 0) {
+                result.success(false)
+                return@setMethodCallHandler
+            }
+            // Rebuild the official route with the selected ID. Never dispatch
+            // arbitrary server URLs or attach Mesting credentials.
+            val uri = Uri.Builder()
+                .scheme("orpheus")
+                .authority("rnpage")
+                .appendQueryParameter("component", "rn-creatorlist")
+                .appendQueryParameter("songId", songId.toString())
+                .appendQueryParameter("mainProcessCompat", "1")
+                .appendQueryParameter("isTheme", "true")
+                .build()
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, uri).setPackage("com.netease.cloudmusic"))
+                result.success(true)
+            } catch (_: android.content.ActivityNotFoundException) {
+                result.success(false)
+            } catch (_: SecurityException) {
+                result.success(false)
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
             SHARE_CHANNEL,
         ).setMethodCallHandler { call, result ->
             when (call.method) {

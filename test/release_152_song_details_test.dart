@@ -9,7 +9,7 @@ import 'release_148_ui_test.dart' show song148;
 void main() {
   test('网易云资料使用真实请求适配层并在一次失败后恢复', () async {
     var catalogueCalls = 0;
-    var lyricsCalls = 0;
+    var creatorCalls = 0;
     final transport = MockClient((request) async {
       if (request.url.path.endsWith('/v3/song/detail')) {
         catalogueCalls++;
@@ -28,10 +28,19 @@ void main() {
           ],
         });
       }
-      lyricsCalls++;
+      expect(request.url.path, endsWith('/song/other/message'));
+      expect(request.bodyFields['params'], isNotEmpty);
+      creatorCalls++;
       return json({
         'code': 200,
-        'lrc': {'lyric': '[00:00]作词：验证署名'},
+        'data': [
+          {'type': 101, 'title': '乐谱'},
+          {
+            'type': 100,
+            'title': '创作者: 验证署名',
+            'jumpUrl': 'orpheus://rnpage?component=rn-creatorlist&songId=9001',
+          },
+        ],
       });
     });
     addTearDown(transport.close);
@@ -53,8 +62,9 @@ void main() {
     expect(recovered.artists.single.id, '8');
     expect(recovered.albumId, '9');
     expect(recovered.creators.single.name, '验证署名');
+    expect(recovered.creators.single.officialCreatorSongId, '9001');
     expect(catalogueCalls, 2);
-    expect(lyricsCalls, 1);
+    expect(creatorCalls, 1);
   });
   test(
     'successful prior creators survive an empty or foreign catalogue result',
@@ -96,13 +106,15 @@ void main() {
           paths.add(path);
           if (path == '/song/detail') throw StateError('catalogue offline');
           return {
-            'lrc': {'lyric': '[00:00]作曲：已读取创作者'},
+            'data': [
+              {'type': 100, 'title': '创作者：已读取创作者'},
+            ],
           };
         },
         kugou: (_, _) async => {},
       );
       final data = await repository.load(song148(1));
-      expect(paths, ['/song/detail', '/lyric']);
+      expect(paths, ['/song/detail', '/song/other/message']);
       expect(data.creators.single.name, '已读取创作者');
       expect(data.failed, {SongDetailsSection.catalogue});
     },
@@ -130,7 +142,9 @@ void main() {
           }
           if (failed) throw StateError('fixture unavailable');
           return {
-            'lrc': {'lyric': '[00:00]作词：词作者'},
+            'data': [
+              {'type': 100, 'title': '创作者：词作者'},
+            ],
           };
         },
         kugou: (_, _) async => {},
@@ -145,13 +159,44 @@ void main() {
         previous: first,
         only: SongDetailsSection.creators,
       );
-      expect(paths, ['/song/detail', '/lyric', '/lyric']);
+      expect(paths, [
+        '/song/detail',
+        '/song/other/message',
+        '/song/other/message',
+      ]);
       expect(next.failed, isEmpty);
       expect(next.albumId, '9');
       expect(next.artists.single.name, '真实歌手');
       expect(next.creators.single.name, '词作者');
     },
   );
+  test('successful NetEase response can omit creators', () async {
+    final repository = SongMenuDetailsRepository(
+      netease: (path, query) async {
+        if (path == '/song/detail') {
+          return {
+            'songs': [
+              {
+                'id': 9001,
+                'al': {'name': '专辑', 'id': 9},
+              },
+            ],
+          };
+        }
+        expect(query, {'songId': '9001'});
+        return {
+          'data': [
+            {'type': 101, 'title': '乐谱'},
+          ],
+        };
+      },
+      kugou: (_, _) async => {},
+    );
+    final data = await repository.load(song148(1));
+    expect(data.creators, isEmpty);
+    expect(data.failed, isEmpty);
+    expect(data.albumId, '9');
+  });
   test('catalogue retry preserves earlier successful creators', () async {
     var fail = true;
     final paths = <String>[];

@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -14,8 +16,10 @@ import 'package:mesting_music/features/auth/presentation/first_launch_auth_coord
 import 'package:mesting_music/features/app_update/app_update_providers.dart';
 import 'package:mesting_music/features/app_update/data/app_update_platform.dart';
 import 'package:mesting_music/features/app_update/data/app_update_repository.dart';
+import 'package:mesting_music/features/app_update/data/release_notes_receipt.dart';
 import 'package:mesting_music/features/app_update/domain/app_update_models.dart';
 import 'package:mesting_music/features/app_update/presentation/app_update_sheet.dart';
+import 'package:mesting_music/features/app_update/presentation/upgrade_celebration.dart';
 import 'package:mesting_music/features/app_update/presentation/app_update_coordinator.dart';
 import 'package:mesting_music/features/app_update/data/upgrade_celebration_receipt.dart';
 import 'package:mesting_music/shared/widgets/beta_glass_popover.dart';
@@ -28,6 +32,43 @@ const _currentVersion = AppVersionInfo(
   versionName: '1.0.14',
   versionCode: 15,
 );
+
+void _checkConfettiBurst() {
+  testWidgets('升级礼花从提示卡片中心向四个方向散开', (tester) async {
+    const boundaryKey = ValueKey('confetti-capture');
+    const width = 390;
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Center(
+          child: RepaintBoundary(
+            key: boundaryKey,
+            child: SizedBox(width: 390, height: 620, child: UpgradeConfetti()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 450));
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(boundaryKey),
+    );
+    final image = boundary.toImageSync();
+    addTearDown(image.dispose);
+    final pixels = (await tester.runAsync(
+      () => image.toByteData(format: ui.ImageByteFormat.rawRgba),
+    ))!;
+    final visible = List<int>.filled(4, 0);
+    // Sample beyond the card footprint so a central glow cannot satisfy this.
+    for (var y = 0; y < 320; y++) {
+      for (var x = 0; x < width; x++) {
+        if ((x - width / 2).abs() < 54 && (y - 128).abs() < 54) continue;
+        if (pixels.getUint8((y * width + x) * 4 + 3) < 64) continue;
+        final quadrant = (y > 128 ? 2 : 0) + (x > width / 2 ? 1 : 0);
+        visible[quadrant]++;
+      }
+    }
+    expect(visible, everyElement(greaterThan(8)));
+  });
+}
 
 Map<String, Object?> _manifestJson({
   required List<int> apkBytes,
@@ -116,6 +157,7 @@ class _StreamClient extends http.BaseClient {
 }
 
 void main() {
+  _checkConfettiBurst();
   testWidgets('覆盖更新首进提示一次，装好同一版本后不再播放', (tester) async {
     SharedPreferences.setMockInitialValues({
       firstLaunchAuthCompletedPreferenceKey: true,
@@ -136,7 +178,7 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           appVersionProvider.overrideWith((_) async => installed),
           autoAppUpdateChecksEnabledProvider.overrideWithValue(false),
-          autoInstalledReleaseNotesEnabledProvider.overrideWithValue(false),
+          autoInstalledReleaseNotesEnabledProvider.overrideWithValue(true),
         ],
         child: MaterialApp(
           navigatorKey: navigator,
@@ -167,6 +209,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 2200));
     await tester.pumpAndSettle();
     expect(find.text('更新成功'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('app-update-centered-dialog')),
+      findsNothing,
+    );
+    expect(ReleaseNotesReceipt(prefs).hasSeen(installed), true);
     expect(UpgradeCelebrationReceipt(prefs).shouldCelebrate(installed), false);
     await tester.pumpWidget(const SizedBox());
     await tester.pumpWidget(host());

@@ -4,8 +4,13 @@ import 'platform_category_search.dart';
 import '../netease/netease_music_repository.dart';
 
 class SongMenuPerson {
-  const SongMenuPerson(this.name, {this.id = '', this.role = ''});
-  final String name, id, role;
+  const SongMenuPerson(
+    this.name, {
+    this.id = '',
+    this.role = '',
+    this.officialCreatorSongId = '',
+  });
+  final String name, id, role, officialCreatorSongId;
 }
 
 enum SongDetailsSection {
@@ -292,8 +297,35 @@ class SongMenuDetailsRepository {
             ? track.platformSongId
             : track.id.replaceFirst('netease_', ''),
       );
-      final lyric = await netease('/lyric', {'id': id});
-      return lyricCredits(_text(_map(lyric['lrc'])['lyric']));
+      if (id.isEmpty) return const [];
+      final response = await netease('/song/other/message', {'songId': id});
+      final rows = response['data'];
+      if (rows == null) return const [];
+      if (rows is! List) throw const FormatException('网易云歌曲资料格式无效');
+      for (final raw in rows) {
+        final row = _map(raw);
+        // The official menu uses type 100 for credits. Other entries can
+        // describe unrelated features such as sheet music.
+        if ('${row['type']}' != '100') continue;
+        final title = _text(
+          row['title'],
+        ).replaceFirst(RegExp(r'^创作者\s*[:：]\s*'), '').trim();
+        if (title.isEmpty || title == '无') continue;
+        final url = Uri.tryParse(_text(row['jumpUrl']));
+        final opensCreatorList =
+            url != null &&
+            url.scheme == 'orpheus' &&
+            url.host == 'rnpage' &&
+            url.queryParameters['component'] == 'rn-creatorlist' &&
+            url.queryParameters['songId'] == id;
+        return [
+          SongMenuPerson(
+            title,
+            officialCreatorSongId: opensCreatorList ? id : '',
+          ),
+        ];
+      }
+      return const [];
     }
     if (track.source != TrackSource.kugou || !track.id.startsWith('kugou_')) {
       return const [];

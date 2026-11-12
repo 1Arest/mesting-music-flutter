@@ -24,6 +24,7 @@ import '../domain/platform_session.dart';
 import '../music_platform_providers.dart';
 import '../platform_backend_providers.dart';
 import '../netease/fallback/netease_source_picker.dart';
+import '../netease/netease_creator_link.dart';
 import 'platform_catalog_detail_page.dart';
 import 'platform_comments_page.dart';
 import 'platform_feedback.dart';
@@ -131,6 +132,8 @@ Future<void> showSongActions(
     useRootNavigator: true,
     useSafeArea: true,
     isScrollControlled: true,
+    showDragHandle: true,
+    showDecorativeGlow: false,
     builder: (sheet) {
       sheetRoute = ModalRoute.of(sheet);
       return SongActionsPanel(
@@ -302,8 +305,8 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
     bool? heartFavorite,
   }) => ListTile(
     key: intent is String ? ValueKey('song-menu-$intent') : null,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 3),
-    minVerticalPadding: 12,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+    minVerticalPadding: 9,
     leading: intent == 'favorite'
         ? SongFavoriteCountBadge(
             track: widget.track,
@@ -321,6 +324,26 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
     ),
     onTap: () => widget.onSelect(intent),
   );
+
+  Widget _group(BuildContext context, List<Widget> rows) {
+    final scheme = Theme.of(context).colorScheme;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: Material(
+        color: scheme.onSurface.withValues(alpha: .055),
+        child: Column(
+          children: [
+            for (var index = 0; index < rows.length; index++) ...[
+              if (index != 0)
+                const Divider(height: 1, indent: 54, endIndent: 14),
+              rows[index],
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final track = widget.track;
@@ -373,141 +396,143 @@ class _SongActionsPanelState extends ConsumerState<SongActionsPanel> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      tooltip: '关闭歌曲菜单',
-                      onPressed: () => Navigator.maybePop(context),
-                      icon: const Icon(CupertinoIcons.xmark, size: 19),
+                    Tooltip(
+                      message: '关闭歌曲菜单',
+                      excludeFromSemantics: true,
+                      child: BetaGlassButton(
+                        label: '关闭歌曲菜单',
+                        height: 40,
+                        width: 40,
+                        horizontalPadding: 0,
+                        onPressed: () => Navigator.maybePop(context),
+                        child: const Icon(CupertinoIcons.xmark, size: 17),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
               Expanded(
                 child: ListView(
-                  padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  primary: false,
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                   children: [
-                    if (widget.favorites && favorite)
-                      _action(
-                        pins.contains(owner, track.id) ? '取消置顶' : '置顶',
-                        CupertinoIcons.pin,
-                        'pin',
-                      ),
-                    if (widget.playable)
-                      _action('下一首播放', CupertinoIcons.text_badge_plus, 'next'),
-                    if (widget.libraryAvailable) ...[
-                      _action(
-                        favorite ? '取消喜欢' : '喜欢',
-                        favorite
-                            ? CupertinoIcons.heart_fill
-                            : CupertinoIcons.heart,
-                        'favorite',
-                        color: favorite ? favoriteFeedbackColor(context) : null,
-                        heartFavorite: favorite,
-                      ),
-                      _action(
-                        netease ? '收藏到歌单' : '加入歌单',
-                        CupertinoIcons.add_circled,
-                        'playlist',
-                      ),
-                    ],
-                    if (track.isRemote)
-                      _action(
-                        '下载',
-                        CupertinoIcons.arrow_down_to_line,
-                        'download',
-                      ),
-                    if (widget.platformAvailable)
-                      _action('评论', Icons.chat_bubble_outline, 'comments'),
-                    _action('分享', CupertinoIcons.share, 'share'),
+                    _group(context, [
+                      if (widget.favorites && favorite)
+                        _action(
+                          pins.contains(owner, track.id) ? '取消置顶' : '置顶',
+                          CupertinoIcons.pin,
+                          'pin',
+                        ),
+                      if (widget.playable)
+                        _action(
+                          '下一首播放',
+                          CupertinoIcons.text_badge_plus,
+                          'next',
+                        ),
+                      if (widget.libraryAvailable) ...[
+                        _action(
+                          favorite ? '取消喜欢' : '喜欢',
+                          favorite
+                              ? CupertinoIcons.heart_fill
+                              : CupertinoIcons.heart,
+                          'favorite',
+                          color: favorite
+                              ? favoriteFeedbackColor(context)
+                              : null,
+                          heartFavorite: favorite,
+                        ),
+                        _action(
+                          netease ? '收藏到歌单' : '加入歌单',
+                          CupertinoIcons.add_circled,
+                          'playlist',
+                        ),
+                      ],
+                      if (track.isRemote)
+                        _action(
+                          '下载',
+                          CupertinoIcons.arrow_down_to_line,
+                          'download',
+                        ),
+                      if (widget.platformAvailable)
+                        _action('评论', Icons.chat_bubble_outline, 'comments'),
+                      _action('分享', CupertinoIcons.share, 'share'),
+                    ]),
+                    const SizedBox(height: 12),
                     FutureBuilder<SongMenuDetails>(
                       future: _details,
                       builder: (context, result) {
                         final data =
                             result.data ?? SongMenuDetails.local(track);
-                        return Column(
-                          children: [
-                            const Divider(
-                              height: 16,
-                              indent: 22,
-                              endIndent: 22,
-                            ),
-                            if (data.artists.isNotEmpty)
-                              _action(
-                                '歌手：${data.artists.map((p) => p.name).join(' / ')}',
-                                CupertinoIcons.person,
-                                _SongInfoIntent('artist', data),
-                              ),
+                        final rows = <Widget>[
+                          if (data.artists.isNotEmpty)
                             _action(
-                              '创作者${data.creators.isEmpty ? '' : '：${data.creators.map((p) => p.name).join(' / ')}'}',
+                              '歌手：${data.artists.map((p) => p.name).join(' / ')}',
+                              CupertinoIcons.person,
+                              _SongInfoIntent('artist', data),
+                            ),
+                          if (data.creators.isNotEmpty)
+                            _action(
+                              '创作者：${data.creators.map((p) => p.name).join(' / ')}',
                               CupertinoIcons.person_2,
                               _SongInfoIntent('creators', data),
                             ),
-                            if (data.album.isNotEmpty)
-                              _action(
-                                '专辑：${data.album}',
-                                CupertinoIcons.square_stack,
-                                _SongInfoIntent('album', data),
-                              ),
-                            if (result.connectionState != ConnectionState.done)
-                              const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: BetaActivityIndicator(),
-                              ),
-                            if (result.hasError)
-                              TextButton.icon(
-                                onPressed: () => setState(() {
-                                  _details = _load();
-                                }),
-                                icon: const Icon(
-                                  CupertinoIcons.arrow_clockwise,
-                                ),
-                                label: const Text('歌手、专辑资料读取失败，重试'),
-                              ),
-                            for (final section in data.failed)
-                              TextButton.icon(
-                                onPressed:
-                                    result.connectionState ==
-                                        ConnectionState.done
-                                    ? () => _retry(data, section)
-                                    : null,
-                                icon: const Icon(
-                                  CupertinoIcons.arrow_clockwise,
-                                ),
-                                label: Text('${section.label}读取失败，重试'),
-                              ),
-                            if (!result.hasError &&
-                                result.connectionState ==
-                                    ConnectionState.done &&
-                                data.creators.isEmpty &&
-                                !data.failed.contains(
-                                  SongDetailsSection.creators,
-                                ) &&
-                                widget.loadDetails != null)
-                              TextButton(
-                                onPressed: () => setState(() {
-                                  _details = _load();
-                                }),
-                                child: const Text('重新读取歌曲资料'),
-                              ),
-                          ],
-                        );
+                          if (data.album.isNotEmpty)
+                            _action(
+                              '专辑：${data.album}',
+                              CupertinoIcons.square_stack,
+                              _SongInfoIntent('album', data),
+                            ),
+                          if (result.connectionState != ConnectionState.done)
+                            const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: BetaActivityIndicator(),
+                            ),
+                          if (result.hasError)
+                            TextButton.icon(
+                              onPressed: () => setState(() {
+                                _details = _load();
+                              }),
+                              icon: const Icon(CupertinoIcons.arrow_clockwise),
+                              label: const Text('歌手、专辑资料读取失败，重试'),
+                            ),
+                          for (final section in data.failed)
+                            TextButton.icon(
+                              onPressed:
+                                  result.connectionState == ConnectionState.done
+                                  ? () => _retry(data, section)
+                                  : null,
+                              icon: const Icon(CupertinoIcons.arrow_clockwise),
+                              label: Text('${section.label}读取失败，重试'),
+                            ),
+                        ];
+                        return rows.isEmpty
+                            ? const SizedBox.shrink()
+                            : _group(context, rows);
                       },
                     ),
                     if (track.source == TrackSource.netease &&
-                        !track.hasLocalAudio &&
-                        widget.platformAvailable)
-                      _action(
-                        '选择音乐来源',
-                        CupertinoIcons.antenna_radiowaves_left_right,
-                        'source',
-                      ),
-                    for (final extra in widget.extras)
-                      _action(
-                        extra.label,
-                        extra.icon,
-                        extra,
-                        color: extra.destructive ? scheme.error : null,
-                      ),
+                            !track.hasLocalAudio &&
+                            widget.platformAvailable ||
+                        widget.extras.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _group(context, [
+                        if (track.source == TrackSource.netease &&
+                            !track.hasLocalAudio &&
+                            widget.platformAvailable)
+                          _action(
+                            '选择音乐来源',
+                            CupertinoIcons.antenna_radiowaves_left_right,
+                            'source',
+                          ),
+                        for (final extra in widget.extras)
+                          _action(
+                            extra.label,
+                            extra.icon,
+                            extra,
+                            color: extra.destructive ? scheme.error : null,
+                          ),
+                      ]),
+                    ],
                   ],
                 ),
               ),
@@ -532,6 +557,11 @@ Future<void> _openSongInfo(
   bool Function() current,
 ) async {
   final details = intent.details;
+  final officialCreator = intent.kind == 'creators'
+      ? details.creators
+            .where((person) => person.officialCreatorSongId.isNotEmpty)
+            .firstOrNull
+      : null;
   Future<void> open(PlatformSearchKind kind, String id, String title) async {
     if (!context.mounted || !current()) return;
     await Navigator.of(context, rootNavigator: true).push(
@@ -593,8 +623,6 @@ Future<void> _openSongInfo(
               ),
               const SizedBox(height: 16),
               if (intent.kind == 'album') Text(details.album),
-              if (intent.kind == 'creators' && details.creators.isEmpty)
-                const Text('当前歌曲资料未提供可核实的创作者信息。'),
               for (final person
                   in intent.kind == 'creators'
                       ? details.creators
@@ -612,6 +640,26 @@ Future<void> _openSongInfo(
                       ? () => Navigator.pop(sheet, person)
                       : null,
                 ),
+              if (officialCreator != null) ...[
+                const SizedBox(height: 12),
+                BetaGlassButton(
+                  onPressed: () async {
+                    if (!current()) return;
+                    final opened = await openNeteaseCreatorPage(
+                      officialCreator.officialCreatorSongId,
+                    );
+                    if (!opened && sheet.mounted) {
+                      showMusicNotice(
+                        sheet,
+                        icon: CupertinoIcons.info_circle,
+                        title: '请在网易云音乐查看完整署名',
+                        message: '',
+                      );
+                    }
+                  },
+                  child: const Text('在网易云音乐查看完整署名'),
+                ),
+              ],
             ],
           ),
         ),

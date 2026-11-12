@@ -57,8 +57,10 @@ void main() {
         ))
         .load();
     await (FontLoader('MaterialIcons')..addFont(
-          File(
-            'D:/flutter_windows_3.47.7-stable/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf',
+          File.fromUri(
+            File(
+              Platform.resolvedExecutable,
+            ).uri.resolve('../../material_fonts/MaterialIcons-Regular.otf'),
           ).readAsBytes().then(ByteData.sublistView),
         ))
         .load();
@@ -188,9 +190,15 @@ void main() {
                               builder: (_) => SongActionsPanel(
                                 track: track,
                                 onSelect: intents.add,
-                                loadDetails: () async => const SongMenuDetails(
-                                  artists: [SongMenuPerson('陈壹千', id: '17')],
-                                  creators: [SongMenuPerson('陈壹千', role: '作词')],
+                                loadDetails: () async => SongMenuDetails(
+                                  artists: const [
+                                    SongMenuPerson('陈壹千', id: '17'),
+                                  ],
+                                  creators: dark
+                                      ? const []
+                                      : const [
+                                          SongMenuPerson('陈壹千', role: '作词'),
+                                        ],
                                   album: '梦了吧',
                                   albumId: '19',
                                 ),
@@ -262,6 +270,8 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(0, -340));
       await tester.pumpAndSettle();
       expect(find.text('专辑：梦了吧').hitTestable(), findsOneWidget);
+      expect(find.text('重新读取歌曲资料'), findsNothing);
+      expect(find.textContaining('创作者：'), dark ? findsNothing : findsOneWidget);
       if (_capture) {
         await _shot(
           tester,

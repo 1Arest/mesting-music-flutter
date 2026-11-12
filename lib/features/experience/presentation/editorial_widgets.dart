@@ -429,7 +429,7 @@ class EditorialTrackRow extends ConsumerWidget {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 9),
+        padding: const EdgeInsetsDirectional.fromSTEB(22, 9, 14, 9),
         child: Row(
           children: [
             ClipRRect(
