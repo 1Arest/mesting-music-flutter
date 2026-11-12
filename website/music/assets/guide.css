@@ -1,0 +1,183 @@
+.app-guide {
+  padding-bottom: 116px;
+  scroll-margin-top: 8px;
+}
+
+.guide-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 30px;
+}
+
+.guide-heading h2 {
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1.2;
+}
+
+.guide-heading p {
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+.guide-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+
+.guide-jumps a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 13px;
+}
+
+.guide-jumps a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.guide-card {
+  padding: clamp(22px, 3vw, 36px);
+  border-radius: 25px;
+}
+
+.guide-card header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.guide-card h3 {
+  font-size: 21px;
+  letter-spacing: -.02em;
+}
+
+.guide-card dl {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+}
+
+.guide-card dt {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.guide-card dd {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.guide-route {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  margin-top: 19px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.guide-route strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.start-guide {
+  margin-top: 24px;
+  padding: clamp(22px, 3vw, 36px);
+  border-radius: 25px;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--accent-soft) 42%, var(--glass)),
+    var(--glass)
+  );
+}
+
+.start-guide h3 {
+  font-size: 21px;
+}
+
+.start-guide ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: 16px 0 0;
+  padding-left: 1.3em;
+}
+
+.start-guide li {
+  padding-left: 4px;
+}
+
+.start-guide li::marker {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.start-guide li p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.start-guide a {
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+@media (max-width: 720px) {
+  .app-guide {
+    padding-bottom: 72px;
+  }
+
+  .guide-heading,
+  .guide-grid,
+  .start-guide ol {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guide-heading {
+    gap: 12px;
+    margin-bottom: 21px;
+  }
+
+  .guide-heading p {
+    font-size: 14px;
+  }
+
+  .guide-jumps {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .guide-jumps a {
+    padding-inline: 13px;
+  }
+
+  .guide-card header {
+    margin-bottom: 14px;
+  }
+
+  .start-guide ol {
+    gap: 12px;
+  }
+}
