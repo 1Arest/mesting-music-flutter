@@ -7,6 +7,7 @@ import 'package:mesting_music/core/audio/music_rhythm.dart';
 import 'package:mesting_music/core/persistence/app_preferences.dart';
 import 'package:mesting_music/shared/models/track.dart';
 import 'package:mesting_music/features/music_platform/default_playback_quality.dart';
+import 'package:mesting_music/features/music_platform/music_platform_providers.dart';
 import 'package:mesting_music/features/music_platform/domain/platform_audio_quality.dart';
 import 'package:mesting_music/features/music_platform/netease/netease_official_ranking_page.dart';
 import 'package:mesting_music/features/music_platform/netease/full/netease_content.dart';
@@ -14,6 +15,7 @@ import 'package:mesting_music/features/music_platform/netease/full/netease_socia
 import 'package:mesting_music/features/themes/profile_effect_style.dart';
 import 'package:mesting_music/features/themes/profile_effect_picker.dart';
 import 'support/ui_fix_capture.dart';
+import 'support/personal_profile_fixture.dart';
 
 void main() {
   setUpAll(initializeUiFixCapture);
@@ -205,7 +207,10 @@ void main() {
         final prefs = await SharedPreferences.getInstance();
         await tester.pumpWidget(
           ProviderScope(
-            overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              platformAccountProvider.overrideWith(SyntheticProfileAccount.new),
+            ],
             child: MaterialApp(
               theme: ThemeData(brightness: brightness),
               home: MediaQuery(

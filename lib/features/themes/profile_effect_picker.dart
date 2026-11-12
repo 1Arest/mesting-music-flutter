@@ -70,7 +70,11 @@ class _ProfileEffectPickerState extends ConsumerState<ProfileEffectPicker> {
                 child: Center(
                   child: VipEffectAnchor(
                     handle: _avatar,
-                    child: PlatformAvatar(url: avatarUrl, size: 66),
+                    child: PlatformAvatar(
+                      url: avatarUrl,
+                      size: 66,
+                      personal: true,
+                    ),
                   ),
                 ),
               ),

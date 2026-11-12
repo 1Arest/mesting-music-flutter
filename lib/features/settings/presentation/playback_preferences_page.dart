@@ -106,18 +106,17 @@ class _PlaybackPreferencesPageState
           const SizedBox(height: 32),
           Text('播放顺序', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),
-          DropdownButtonFormField<PlaybackRepeat>(
-            key: ValueKey(order.repeat),
-            initialValue: order.repeat,
-            decoration: const InputDecoration(labelText: '循环方式'),
-            items: [
+          _PlaybackChoice<PlaybackRepeat>(
+            value: order.repeat,
+            label: '循环方式',
+            options: [
               for (final repeat in PlaybackRepeat.values)
-                DropdownMenuItem(value: repeat, child: Text(repeat.label)),
+                (value: repeat, label: repeat.label),
             ],
             onChanged: _saving
                 ? null
                 : (v) => apply(
-                    () => handler.setRepeatMode(switch (v!) {
+                    () => handler.setRepeatMode(switch (v) {
                       PlaybackRepeat.off => AudioServiceRepeatMode.none,
                       PlaybackRepeat.all => AudioServiceRepeatMode.all,
                       PlaybackRepeat.one => AudioServiceRepeatMode.one,
@@ -140,9 +139,8 @@ class _PlaybackPreferencesPageState
   }
 }
 
-/// Both preferences use the existing anchored glass route. The route bounds
-/// the menu to the space above/below the trigger, so long quality lists scroll.
-class _PlaybackChoice<T extends Object> extends StatelessWidget {
+/// Playback preferences share one downward-opening glass selector.
+class _PlaybackChoice<T extends Object> extends StatefulWidget {
   const _PlaybackChoice({
     required this.label,
     required this.value,
@@ -156,9 +154,92 @@ class _PlaybackChoice<T extends Object> extends StatelessWidget {
   final ValueChanged<T>? onChanged;
 
   @override
+  State<_PlaybackChoice<T>> createState() => _PlaybackChoiceState<T>();
+}
+
+class _PlaybackChoiceState<T extends Object> extends State<_PlaybackChoice<T>> {
+  bool _opening = false;
+
+  Rect? _triggerRect(BuildContext context) {
+    final box = context.findRenderObject();
+    return box is RenderBox && box.attached && box.hasSize
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
+  }
+
+  Future<void> _openMenu(BuildContext trigger, T selected) async {
+    if (_opening || widget.onChanged == null) return;
+    _opening = true;
+    try {
+      var anchor = _triggerRect(trigger);
+      if (anchor == null) return;
+      final width = anchor.width.clamp(1.0, 360.0).toDouble();
+      final layout = BetaMenuLayout(
+        anchor: anchor,
+        media: MediaQuery.of(trigger),
+        width: width,
+        placement: BetaMenuPlacement.below,
+      );
+      if (layout.availableBelow < 112 && Scrollable.maybeOf(trigger) != null) {
+        // Move the trigger before measuring the anchor. The popover itself
+        // remains below it and scrolls within the remaining safe area.
+        await Scrollable.ensureVisible(trigger, alignment: .22);
+        if (!trigger.mounted || !mounted) return;
+        await WidgetsBinding.instance.endOfFrame;
+        if (!trigger.mounted || !mounted) return;
+        anchor = _triggerRect(trigger);
+        if (anchor == null) return;
+      }
+      if (ModalRoute.isCurrentOf(trigger) == false) return;
+      final available = BetaMenuLayout(
+        anchor: anchor,
+        media: MediaQuery.of(trigger),
+        width: width,
+        placement: BetaMenuPlacement.below,
+      ).availableBelow;
+      if (available <= 0) return;
+      final options = widget.options;
+      final next = await showBetaGlassPopover<T>(
+        context: trigger,
+        anchor: anchor,
+        width: width,
+        placement: BetaMenuPlacement.below,
+        label: '关闭${widget.label}选项',
+        builder: (menu) => SizedBox(
+          width: width,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final option in options)
+                  ListTile(
+                    selected: option.value == selected,
+                    title: Text(option.label),
+                    trailing: option.value == selected
+                        ? const Icon(Icons.check_rounded)
+                        : null,
+                    onTap: () => Navigator.pop(menu, option.value),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+      if (mounted && next != null && next != widget.value) {
+        widget.onChanged?.call(next);
+      }
+    } finally {
+      _opening = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final options = widget.options;
+    final label = widget.label;
+    final onChanged = widget.onChanged;
     final selected = options.firstWhere(
-      (option) => option.value == value,
+      (option) => option.value == widget.value,
       orElse: () => options.first,
     );
     if (!DistributionChannel.isBeta) {
@@ -174,7 +255,7 @@ class _PlaybackChoice<T extends Object> extends StatelessWidget {
         onChanged: onChanged == null
             ? null
             : (next) {
-                if (next != null && next != value) onChanged!(next);
+                if (next != null && next != widget.value) onChanged(next);
               },
       );
     }
@@ -189,41 +270,7 @@ class _PlaybackChoice<T extends Object> extends StatelessWidget {
             label: '$label，${selected.label}',
             onPressed: onChanged == null
                 ? null
-                : () async {
-                    final box = anchorContext.findRenderObject() as RenderBox;
-                    final width = box.size.width.clamp(1.0, 360.0).toDouble();
-                    final next = await showBetaGlassPopover<T>(
-                      context: anchorContext,
-                      anchor: box.localToGlobal(Offset.zero) & box.size,
-                      width: width,
-                      label: '关闭$label选项',
-                      builder: (menu) => SizedBox(
-                        width: width,
-                        child: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              for (final option in options)
-                                ListTile(
-                                  selected: option.value == selected.value,
-                                  title: Text(option.label),
-                                  trailing: option.value == selected.value
-                                      ? const Icon(Icons.check_rounded)
-                                      : null,
-                                  onTap: () =>
-                                      Navigator.pop(menu, option.value),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                    if (anchorContext.mounted &&
-                        next != null &&
-                        next != value) {
-                      onChanged!(next);
-                    }
-                  },
+                : () => _openMenu(anchorContext, selected.value),
             child: Row(
               children: [
                 Expanded(

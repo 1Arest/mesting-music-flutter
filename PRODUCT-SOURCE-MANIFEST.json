@@ -1,10 +1,10 @@
 {
-  "version": "1.0.94",
-  "androidVersionCode": 115,
-  "originalApkSha256": "ae1ce2c717ddbc0ab49637f2f4ae2e63df2705bc20480f3c0112e35c3b210cd6",
+  "version": "1.0.95",
+  "androidVersionCode": 116,
+  "originalApkSha256": "40c978352c971292dd196af604306e8d417555dc99c03c9e9a8bf766633aa235",
   "sourceOrigin": "Frozen per-version local product files; build input hashes verified",
-  "localSourceCommit": "7b4e07cd50507e8d607182fb00b19933ef16df1f",
-  "buildCommit": "7b3dc94d229aeaad0ff6107e5628d3fab5bb8ff3",
+  "localSourceCommit": "3a4355c4224b779ae60efac824c877dcc0330577",
+  "buildCommit": "b8e56ff6ab1ee26221646049cfc55401c2aae124",
   "originalSignatureVerifiedAtBuild": true,
   "deviceAcceptance": false,
   "privateRecordsExcluded": true,
@@ -18,8 +18,8 @@
       "sha256": "2aae3e28653cf201e1ee761217944bd855c00af839de1ea773d6dbe13f9ce8f9"
     },
     "README.md": {
-      "size": 1222,
-      "sha256": "73ab7b8a24000515834b772f83bb7bf6a98eb06f24f9bd92dd8d16fda3cc2751"
+      "size": 1490,
+      "sha256": "5a9bbb6472e77d69aa57b01f45ed8d0c88ec437eaf57051a35d2ad98f4a55e4a"
     },
     "analysis_options.yaml": {
       "size": 1758,
@@ -598,8 +598,8 @@
       "sha256": "12dfb1986971bcec1401ad817e4b9c943c5d027225b55d7d7043a33bebf949b5"
     },
     "assets/data/release-notes.json": {
-      "size": 855,
-      "sha256": "5ce4c7029c0f40a0bff3f53fc3cdd5cfb6a156466d17419c00bc17330b9028e8"
+      "size": 1128,
+      "sha256": "301f627678cf05a5f78921f9d05d1e9a9a7e526ec8a20516ea31a755ff8063cc"
     },
     "assets/images/player/netease-style-tonearm.png": {
       "size": 110366,
@@ -1113,6 +1113,10 @@
       "size": 2762,
       "sha256": "569ceb3937831395a4086ddcb1a7625812987e7445fcac7d3b3c227761f70a26"
     },
+    "docs/personal-dress-up.md": {
+      "size": 3052,
+      "sha256": "60836e83f9d55335027874af9602dc466d12ca0c9184d7836e26f1f65284cefa"
+    },
     "integration_test/audio_advance_lock_regression_test.dart": {
       "size": 2545,
       "sha256": "81f0167765ea4d1b11696334a6c1b5b84ea6877774e83b6b0c4bdcc253f9cc97"
@@ -1170,8 +1174,8 @@
       "sha256": "4e8eb736aef7d8e3d55f604cc2e2d5c522fc3b17ac61b5ca7db0597ccc4815ee"
     },
     "lib/app/mesting_music_app.dart": {
-      "size": 12866,
-      "sha256": "52bb968cfd339003883f5634f8cbce999354a962bb4dbdf528515ff592510d0d"
+      "size": 12995,
+      "sha256": "a73cb80d745e5e98ea3996425f545776a9bf93db8668cf20db60c78714c1898b"
     },
     "lib/app/router/app_router.dart": {
       "size": 19972,
@@ -1442,8 +1446,8 @@
       "sha256": "5bbf89f720fea36aa9fbe1a8a59f59e77e6f6b9b9da1ce866b04254fd352c9cb"
     },
     "lib/features/app_update/domain/release_history.dart": {
-      "size": 57749,
-      "sha256": "8285a91bfb4f345ea4e95cb96ab3ed0c47cce09b0bc1759db457f9e97c264ef3"
+      "size": 58835,
+      "sha256": "d7e14d5d9548d24d01ad80b27cb56aee40f9667329ac41da6d81b35ac451aace"
     },
     "lib/features/app_update/presentation/app_update_coordinator.dart": {
       "size": 5660,
@@ -1646,40 +1650,40 @@
       "sha256": "4f67f06f9ed15da8050c5709f891138deb146caf64f24572ca331aecd29fac2e"
     },
     "lib/features/experience/presentation/beta_now_playing_page.dart": {
-      "size": 33630,
-      "sha256": "5d68acfb0ca440ce6d51e7712338b294ce1aab2f5b3f55e42e3269a7a7965a8b"
+      "size": 33824,
+      "sha256": "0f28c736da94392b5477018607eb4d4fb65f8527b2487013fffbde0c6b399645"
     },
     "lib/features/experience/presentation/beta_search_back_history.dart": {
       "size": 2753,
       "sha256": "10832aac723c6f31e8e9a4f132daff9805a26d6770a78edfe9b711c2a6f0dcff"
     },
     "lib/features/experience/presentation/cold_start_greeting.dart": {
-      "size": 4853,
-      "sha256": "947eee3509cc3308c7c46eee9517dc7f07edc71b9917b24fb0d6a0a23386f435"
+      "size": 7549,
+      "sha256": "25a23d582d3abf9570bcf92fc253e9e26eed4f3f2813858c3a2e6b6cf4edacb8"
     },
     "lib/features/experience/presentation/cover_player_page.dart": {
-      "size": 26428,
-      "sha256": "f8baab92a89036d0e70ff8a2946803f052a6c832f26e8ce1da838ddd13adc0b8"
+      "size": 26816,
+      "sha256": "7dce9a2842c7a442ffa7aa6d91b7744b613245dfa7ebcea02d5189fdf305e889"
     },
     "lib/features/experience/presentation/editorial_widgets.dart": {
-      "size": 21465,
-      "sha256": "02c676322f247d2bf3f515f4eeb015d486a64450881e16481e0bf4ffbd257c27"
+      "size": 21547,
+      "sha256": "52a8950f95edfc1e1fe34a9379b3eea68a3ff8e5b8b2d93cd747ee1530d3ebc4"
     },
     "lib/features/experience/presentation/favorite_tracks_search.dart": {
       "size": 12794,
       "sha256": "07b19c5d6aa044ee97fcd39670457d2c864df75e185e892cec84c414f956f108"
     },
     "lib/features/experience/presentation/floating_playback_pill.dart": {
-      "size": 10630,
-      "sha256": "baa4385def09de7c599754f364b71dcdb3ef269e69ac139a6f291e8ccc7ba47c"
+      "size": 10989,
+      "sha256": "25ea1d0dc8221ba3e6b0703d37757436af564f5871efa53e2d32a13482804806"
     },
     "lib/features/experience/presentation/immersive_lyrics.dart": {
-      "size": 12176,
-      "sha256": "459f1a6d266522b728e9d2d27ff20fb31fb2acaeb6ad30bcdff05ce550fa4c47"
+      "size": 13027,
+      "sha256": "7e4dfb3751ce775a10500834d3b18c331719bbdbbed811772f0a0df213392353"
     },
     "lib/features/experience/presentation/listening_replay_page.dart": {
-      "size": 10539,
-      "sha256": "2c49a0c3149a81da21e19239e306f664a3d82b7e1b6e659d6005ea794d40abae"
+      "size": 11167,
+      "sha256": "9b4815a513f1fec249f5347ce25e618405c4b6a65cb37f55b2c91dd74c7221e0"
     },
     "lib/features/experience/presentation/music_discovery_sections.dart": {
       "size": 14670,
@@ -1752,6 +1756,10 @@
     "lib/features/experience/presentation/player_queue_panel.dart": {
       "size": 381,
       "sha256": "de4444fe5499d4b629b0342ac672cac51a9814efd5086a51198f879a9bb88fbc"
+    },
+    "lib/features/experience/presentation/player_surface_theme.dart": {
+      "size": 1971,
+      "sha256": "8e442a7f13d3b1f844a407439a5fb47a8ce31cc425c2af20f437be41d589593e"
     },
     "lib/features/experience/presentation/player_swipe_to_comments.dart": {
       "size": 2569,
@@ -2187,7 +2195,7 @@
     },
     "lib/features/music_platform/netease/ad_probe/netease_ad_probe_report.dart": {
       "size": 12594,
-      "sha256": "dd2319ceba38c00872713273ae898a2971ff3a581bbb15b939e1b98695325409"
+      "sha256": "a61c8f8fd82ca073df3b1054a9f3fa7355a0f04c53669d38978b67dcfe0c5b34"
     },
     "lib/features/music_platform/netease/ad_probe/netease_ad_probe_repository.dart": {
       "size": 7085,
@@ -2382,16 +2390,16 @@
       "sha256": "4734431844732a496ba343695c69e7ce8b9e9762d30e8acd225dc9cd14af7394"
     },
     "lib/features/music_platform/netease/messages/netease_messages_page.dart": {
-      "size": 53684,
-      "sha256": "733fd95d4bee9f1d8f07241cd8f01111a80eb7a50927cf3766f16dd9ec69db84"
+      "size": 53134,
+      "sha256": "9a89ee75f8dc006c6c850c7c80d04a441668f5b7c9cd2f8072c794dce662288b"
     },
     "lib/features/music_platform/netease/messages/netease_messages_repository.dart": {
       "size": 15569,
       "sha256": "cd76abcfab58d39b3d7db21dd738df7e20fa4def78e38ba1e586caeae745cc0f"
     },
     "lib/features/music_platform/netease/messages/netease_unread.dart": {
-      "size": 4858,
-      "sha256": "1a0a38e8bf57e495afd9a73695a7228ef1f7211cf4b2f03b7b7c084a9a96a26c"
+      "size": 5415,
+      "sha256": "02de141cef86848f2d86668e8a220b3faeb6d4d289f28b63ee760def6ce79c99"
     },
     "lib/features/music_platform/netease/netease_account_overview.dart": {
       "size": 9675,
@@ -2506,8 +2514,8 @@
       "sha256": "0b078b4392eabc27a2e82220b39b5caf19288d02772d622c01a43bd74471f932"
     },
     "lib/features/music_platform/netease/netease_official_ranking_page.dart": {
-      "size": 7071,
-      "sha256": "9fde9df588c9d3b6ad7624b995ad3a0c1891948a4e30e7add95d3d9cc42d4ecb"
+      "size": 8453,
+      "sha256": "bc629037c86e86cd506692a68d53c50d4d8ef71b57294382ac1b0448d13d4b40"
     },
     "lib/features/music_platform/netease/netease_personal_connections_page.dart": {
       "size": 23215,
@@ -2730,8 +2738,8 @@
       "sha256": "c2e62d55a3994106ab25a11165e642ee3dc3ddc5d6cdb2627b689860ea47ddfd"
     },
     "lib/features/music_platform/presentation/beta_personal_profile.dart": {
-      "size": 23368,
-      "sha256": "e258ed048870390d06d30ede4ae4b64558ef711a1131d648238b04c974455919"
+      "size": 23403,
+      "sha256": "34118f7e60a1b26874bbf7ccfa56cce249ad54843789c77284199450d50dcf12"
     },
     "lib/features/music_platform/presentation/expandable_comment_body.dart": {
       "size": 2114,
@@ -2790,8 +2798,8 @@
       "sha256": "e8fd47d2327984a9ed9279f314fc70a76363501e884533c4be437f2e59823e6e"
     },
     "lib/features/music_platform/presentation/platform_avatar.dart": {
-      "size": 658,
-      "sha256": "8c60177555178b39d0a31454d69cc569806a3a579cfbd122b4b079ca2d6fdec9"
+      "size": 898,
+      "sha256": "9c94c4787cf5f4bd4ebba11bf50275b701f7f265abefb723846a93faf5c1198d"
     },
     "lib/features/music_platform/presentation/platform_catalog_detail_page.dart": {
       "size": 13545,
@@ -2902,8 +2910,8 @@
       "sha256": "62f7ada011a2d9d532ef4df716c35510844ce23a250277fbbe81522268e8be6e"
     },
     "lib/features/music_platform/presentation/rhythm_platform_avatar.dart": {
-      "size": 1639,
-      "sha256": "a1875aea1a9ff05a06cc95db0e6d7b96c86d04fb326178c6f0908737ff0dd6fb"
+      "size": 1732,
+      "sha256": "8e5ee9e27aa099b8d6bf706d9c619bb8bdc74d186b6988f09c5bd8687868b74a"
     },
     "lib/features/music_platform/presentation/song_actions_sheet.dart": {
       "size": 24356,
@@ -2971,7 +2979,7 @@
     },
     "lib/features/music_platform/qishui/qishui_diagnostics.dart": {
       "size": 11126,
-      "sha256": "cc780bf56c5de9d5cb61f9d8e8b3dd8071185add20797944334a59474296409f"
+      "sha256": "e2117516382fe7f1e5e1260935c4e4821c17dede12431c5ca4e7169dc31381d0"
     },
     "lib/features/music_platform/qishui/qishui_diagnostics_page.dart": {
       "size": 9574,
@@ -3306,8 +3314,8 @@
       "sha256": "3a72cc87f5ff3fe6a97f7df1a3a000b12910972a08a30d104e5a1074b5a891a7"
     },
     "lib/features/player/presentation/music_rhythm_artwork.dart": {
-      "size": 2583,
-      "sha256": "a3e7180862b73b204ee6dd675cdf316b5ceb9690bee203f38221d391f0031b77"
+      "size": 2968,
+      "sha256": "33b7936b04ca4db765e46413c51a30d38314c90baf9ab0f42123b12c1a386b32"
     },
     "lib/features/player/presentation/music_shell.dart": {
       "size": 5469,
@@ -3342,8 +3350,8 @@
       "sha256": "cc0357d5aea56f4ca8ed8cb1617bf2380cc8adb6638b8e8d628509cbb1b70f8e"
     },
     "lib/features/player/presentation/player_visual_stages.dart": {
-      "size": 60767,
-      "sha256": "6cf14379be7b714e81801c31d31cc0dc226f488fd4f90c62ad6c9a57aba93f14"
+      "size": 60842,
+      "sha256": "6fe804eabade975a7a864750f28388f33288e5f48449763e2a295874bbccee3e"
     },
     "lib/features/player/presentation/shinchan_progress_walker.dart": {
       "size": 20051,
@@ -3358,12 +3366,12 @@
       "sha256": "ad638ac4b2664f67c3e31fc391d00952c5e96cef2bc0e543c4c8df435e31b1fd"
     },
     "lib/features/player/sharing/song_share.dart": {
-      "size": 5959,
-      "sha256": "cc90f4a687699e79c1c0107fb1e9c9538180646251440c24c4b12e03e1b5abb5"
+      "size": 8596,
+      "sha256": "eb7119e3c74ad09120c55f03f5019b073f52474e42db42aa40cadcfe7731df12"
     },
     "lib/features/player/sharing/song_share_sheet.dart": {
-      "size": 6038,
-      "sha256": "4b3f50ecaaabc1221cdecc9aeb6d9198811033982520d607972643cdf97503bb"
+      "size": 6585,
+      "sha256": "ad9fb63f30f00e8775b5e30ef7b3146fbd3c57def92bc433b4a107bda67a41d4"
     },
     "lib/features/playlists/presentation/add_to_playlist_sheet.dart": {
       "size": 9504,
@@ -3546,8 +3554,8 @@
       "sha256": "95a6059c48519db0cfc81f6853635f850bc94fbd787d0f66a754560f216b39b4"
     },
     "lib/features/settings/presentation/playback_preferences_page.dart": {
-      "size": 9507,
-      "sha256": "2eb01b5bc5ee9443f882efccf468a1ba54d954f7efc9fec29aced00ba36370ef"
+      "size": 10637,
+      "sha256": "acd99529b64a2cb74523672ed1f3b86099847392c56916bd5244fd0c0dec2f79"
     },
     "lib/features/settings/presentation/production_diagnostic_driver.dart": {
       "size": 46033,
@@ -3577,6 +3585,14 @@
       "size": 3216,
       "sha256": "d48bdc1587a3bfb25175dfe448d63b05a2a1f7d45d0b6484656294de117a0db1"
     },
+    "lib/features/themes/listening_atmosphere.dart": {
+      "size": 5790,
+      "sha256": "86e33f3392ebe2d1eda10481311776b8fc17c4ac24a609cb3819b88d849acd41"
+    },
+    "lib/features/themes/listening_keepsake.dart": {
+      "size": 6526,
+      "sha256": "dab7e2e2d38b4ed54dce43327dbf648be56e113082be2b429b6910a43e0b3d23"
+    },
     "lib/features/themes/mesting_palette.dart": {
       "size": 1441,
       "sha256": "f8805b5f62a5c8fc6b57f52ffc8f818c1008b173c368b64ba74c0fb2952aab30"
@@ -3601,9 +3617,21 @@
       "size": 3228,
       "sha256": "e1a3798468ad61cb41211601cc3cd31d614ba1ddccf5594056ae8c21a7036dc3"
     },
+    "lib/features/themes/personal_decorations.dart": {
+      "size": 5892,
+      "sha256": "b0b12b25de19386fa7adc71c4547163e6e3740a00e483ea6a954c4556f1e691e"
+    },
+    "lib/features/themes/personal_style.dart": {
+      "size": 6958,
+      "sha256": "1cd572f028c3b79d437697d945253788f6fc03a138b488d573b6a24b369a07ee"
+    },
+    "lib/features/themes/personal_style_page.dart": {
+      "size": 14144,
+      "sha256": "9efab5cc86da8259dde26b00cb077da62954c608f2b748f35ba9aa33d644d67b"
+    },
     "lib/features/themes/profile_effect_picker.dart": {
-      "size": 3619,
-      "sha256": "d7f5f488d587babfe0e530722804e8654f178a8145a23dccfdff3ec5222fa38f"
+      "size": 3724,
+      "sha256": "49f7e44c43fcb34b0781385b7a212801330cd7a09abf006c294f4572a2f40509"
     },
     "lib/features/themes/profile_effect_style.dart": {
       "size": 1288,
@@ -3634,8 +3662,8 @@
       "sha256": "e41c1dfde0aa5e8eb22a3ac79614aa705760218c41f2af666e46f511d702ebf6"
     },
     "lib/features/themes/theme_gallery_page.dart": {
-      "size": 72265,
-      "sha256": "76346ef3fb6aeb3464168d5513a8ce95be3266d487fb509c8946aa281cec364d"
+      "size": 72964,
+      "sha256": "77c7f3275bc92bf60bf91bd9beb3a05af3d993605284870430a8d354b3741db8"
     },
     "lib/main.dart": {
       "size": 11468,
@@ -3754,8 +3782,8 @@
       "sha256": "fd7bc79a2e95ac2142540bee14eaf55bcbfaba504620c4ff1e0cebed792953c9"
     },
     "lib/shared/widgets/beta_glass_popover.dart": {
-      "size": 24380,
-      "sha256": "f43bb6460ebfba22e3adceb9e45186d246736975b7c2d65bf2af3ebf7ee82876"
+      "size": 24877,
+      "sha256": "1443344a3b1a469c5760428e85a9bb9533d3e64ae4491ea0833eaf63c098149b"
     },
     "lib/shared/widgets/beta_glass_scroll_body.dart": {
       "size": 1882,
@@ -3939,7 +3967,7 @@
     },
     "pubspec.yaml": {
       "size": 13561,
-      "sha256": "8924973fdb340e6b3a9151a6e0c2303b0c712a76134b9806701fd18ed11807c9"
+      "sha256": "ca5e5537fd6ff1848ef62c9af5cd900c6a0ada8b6e003c9a1e2875013f5c64c4"
     },
     "test/accounts184_order_test.dart": {
       "size": 2794,
@@ -4157,6 +4185,10 @@
       "size": 2977,
       "sha256": "6b666ce7a5b7df9d6869eab514f93e7b41d3ae2bc3e2eaa719a5c11d399d1f9d"
     },
+    "test/discovery_flourish_test.dart": {
+      "size": 2807,
+      "sha256": "423d475917c8d182f089cc07d30fabffc759ea55e9084254090e235bfb94a4c3"
+    },
     "test/dual_music_platform_test.dart": {
       "size": 18010,
       "sha256": "99d7df77d3c938eb372b3d230d7ba908175515f8c1d06e5cb88dabd0bc388717"
@@ -4286,8 +4318,8 @@
       "sha256": "1e08905d39aefe88067b986b54706875866648271bb07f03f36bd31bb714321c"
     },
     "test/lyrics_scroll_preview_test.dart": {
-      "size": 9462,
-      "sha256": "2a53ee6f1aaf5a025692666ded81bc446b8e3b6b0a85d0dafefc3fba71a25a44"
+      "size": 11068,
+      "sha256": "30d42f7b82fd40606db3d4976f95f72a4a0136f76da95416b990dc9b3d20c360"
     },
     "test/lyrics_theme_readability_test.dart": {
       "size": 4923,
@@ -4499,7 +4531,7 @@
     },
     "test/netease_ad_probe182_test.dart": {
       "size": 14427,
-      "sha256": "20e7984293be6e7adf1d1bc2a8bfea92c5feac3c1e3da6c95dd8b53d20e726c7"
+      "sha256": "669fbf66c33837b4e77816f167f25e8c49091571756a8b02a1ed0472dc9fc789"
     },
     "test/netease_data_adapters_test.dart": {
       "size": 9856,
@@ -4629,6 +4661,10 @@
       "size": 5590,
       "sha256": "96ec3a9835d8e2ed4312095d77ef9fa05dca07b40c571f741de40cead809736a"
     },
+    "test/personal_style_test.dart": {
+      "size": 13301,
+      "sha256": "162a97a35a71622c64828237808ef7d6039278dffbb8b49887a68ca03294aa68"
+    },
     "test/personalized_recommendation_test.dart": {
       "size": 9655,
       "sha256": "5cf6d0736c9794ed464c74f20ff1a6af4229ccc70cdf13776f90fdb0681523e5"
@@ -4676,6 +4712,10 @@
     "test/playback_start_guard_test.dart": {
       "size": 1791,
       "sha256": "6f55b7d334bebba425cab57e5cbdca39e9f451d06c84fe32626610a6fc373aa1"
+    },
+    "test/player_menu_contrast_test.dart": {
+      "size": 11853,
+      "sha256": "5d44a8929396b831ed364849f58f029664ef8d9121dcbf713a7135792a853f0a"
     },
     "test/player_swipe_to_comments_test.dart": {
       "size": 5865,
@@ -4747,7 +4787,7 @@
     },
     "test/qishui_diagnostics178_test.dart": {
       "size": 11807,
-      "sha256": "6b84b780cebdbe9994b2bbaf2be1945a31271f699bca4e2f2cb15e5f12363347"
+      "sha256": "cd32766e59faa62f19eee4abaa2cf3c36475ce30f46965ea92e5a8fd8255d79e"
     },
     "test/qishui_diagnostics178_ui_test.dart": {
       "size": 12489,
@@ -4919,11 +4959,11 @@
     },
     "test/release185_notes_test.dart": {
       "size": 1318,
-      "sha256": "5935e8028898dd2fdc870cf1f2cdff1dfedd1936afbfed855d44ae8dfe237778"
+      "sha256": "386176a23d8c92b4b5e6e38ecfb7b2661de50e2d1367a2b8c4234dbb03e147c0"
     },
     "test/release198_features_test.dart": {
-      "size": 9141,
-      "sha256": "a1d5bead2440ef96e51881602334af1a9329a185acaa6ecb6e1269d820754d82"
+      "size": 9390,
+      "sha256": "2a7fcd6d9d19c9bc63afdc3589dbaa49ad85d7d479a47d65343102fbe403aee3"
     },
     "test/release198_profile_visual_test.dart": {
       "size": 4052,
@@ -4936,6 +4976,14 @@
     "test/release198_ui_test.dart": {
       "size": 15965,
       "sha256": "ef0a480ab260ac116b53b5fabe02ca1d02d640e351e4bc1641f7c9cee9a2e457"
+    },
+    "test/release202_ranking_tabs_test.dart": {
+      "size": 8186,
+      "sha256": "6d6146ad20c0a4a248b4a8ef9700f2eca7196352b7e62c545372615b3bff6144"
+    },
+    "test/release202_settings_badge_test.dart": {
+      "size": 9373,
+      "sha256": "60a2a5a9f0f076ac8fd0180b434ea35942605fc9ae68b8d53cd205c204012fc1"
     },
     "test/release_101_ui_test.dart": {
       "size": 17087,
@@ -5622,8 +5670,8 @@
       "sha256": "6f6c048a6afc45bec6b34074de24f78029e7ace3343a434679e72a85bdf53342"
     },
     "test/song_share_test.dart": {
-      "size": 5968,
-      "sha256": "90212de8226e621f2bc5dc3efd377c58ae462c0d0981649ef5d707e12119b5ad"
+      "size": 6698,
+      "sha256": "34b5ad58ace2f5c31de22add05c00553d8586ad7fff71b79de8b304c4c70754c"
     },
     "test/source187_identity_test.dart": {
       "size": 5101,
@@ -5718,8 +5766,8 @@
       "sha256": "fb44aea52274dbdaf0d07db6fb501308056b92ec5a6273ad659e4cdf53b21b34"
     },
     "test/support/ui_fix_capture.dart": {
-      "size": 3377,
-      "sha256": "391cbb67fb5827924cb035019acf0efc4d7e53c00869cc6b994c88a760d72818"
+      "size": 3652,
+      "sha256": "bb73206b9e25468448bf48f34b8e3aece7f6b6051631039eaa4ad8dbad446f6c"
     },
     "test/tab186_continuity_test.dart": {
       "size": 4139,

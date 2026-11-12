@@ -10,6 +10,9 @@ const betaMenuCloseDuration = Duration(milliseconds: 240);
 const double betaMenuAnchorGap = 8;
 const double _menuSeparationProgress = .72;
 
+/// Form selectors can reserve room below their trigger before opening.
+enum BetaMenuPlacement { automatic, below }
+
 /// Motion is selected by the surface that owns the menu. Text editing keeps its
 /// established timings and geometry; the player's tall menu needs a quicker
 /// reveal and a dismissal that begins moving immediately instead of reversing
@@ -544,6 +547,7 @@ Future<T?> showBetaGlassPopover<T>({
   String label = '关闭菜单',
   bool fromInnerEdge = false,
   bool requestFocus = true,
+  BetaMenuPlacement placement = BetaMenuPlacement.automatic,
   BetaMenuMotion motion = BetaMenuMotion.standard,
   // The caller may lease this exact installed route for cancellation/cleanup.
   // It must not infer the owner from a nested page's Navigator or visible text.
@@ -556,6 +560,7 @@ Future<T?> showBetaGlassPopover<T>({
     media: media,
     width: width,
     fromInnerEdge: fromInnerEdge,
+    placement: placement,
   );
   final route = _BetaGlassPopoverRoute<T>(
     requestFocus: requestFocus,
@@ -611,12 +616,14 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
     this.gap = betaMenuAnchorGap,
     this.fromInnerEdge = false,
     this.viewportOrigin = Offset.zero,
+    this.placement = BetaMenuPlacement.automatic,
   });
   final Rect anchor;
   final MediaQueryData media;
   final double width;
   final double gap;
   final bool fromInnerEdge;
+  final BetaMenuPlacement placement;
 
   /// Text-selection toolbars live under a moving CompositedTransformFollower.
   /// Their visible screen rectangle can start outside that follower's origin.
@@ -654,8 +661,11 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
       media.size.height -
       math.max(media.viewInsets.bottom, media.padding.bottom) -
       12;
+  double get availableBelow => math.max(0.0, bottom - anchor.bottom - gap);
+
   bool get above =>
-      anchor.top - top >= bottom - anchor.bottom || anchor.top - top > 260;
+      placement == BetaMenuPlacement.automatic &&
+      (anchor.top - top >= bottom - anchor.bottom || anchor.top - top > 260);
 
   /// Match the real trigger even when the menu is clamped against screen edges.
   Alignment get motionOrigin {
@@ -678,10 +688,9 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
           0,
           math.min(
             math.max(0, bottom - top),
-            math.max(
-              48,
-              above ? anchor.top - top - gap : bottom - anchor.bottom - gap,
-            ),
+            placement == BetaMenuPlacement.below
+                ? availableBelow
+                : math.max(48, above ? anchor.top - top - gap : availableBelow),
           ),
         ),
       );
@@ -703,5 +712,6 @@ class BetaMenuLayout extends SingleChildLayoutDelegate {
       width != old.width ||
       gap != old.gap ||
       fromInnerEdge != old.fromInnerEdge ||
+      placement != old.placement ||
       viewportOrigin != old.viewportOrigin;
 }

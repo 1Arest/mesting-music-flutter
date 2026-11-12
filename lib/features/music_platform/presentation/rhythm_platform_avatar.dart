@@ -8,12 +8,18 @@ import 'platform_avatar.dart';
 /// Discovery/Functions use the same saved audio-ring choice as My. The outer
 /// canvas owns the decoration only; the original account button owns taps.
 class RhythmPlatformAvatar extends ConsumerWidget {
-  const RhythmPlatformAvatar({required this.url, this.size = 42, super.key});
+  const RhythmPlatformAvatar({
+    required this.url,
+    this.size = 42,
+    this.personal = false,
+    super.key,
+  });
   final String url;
   final double size;
+  final bool personal;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final avatar = PlatformAvatar(url: url, size: size);
+    final avatar = PlatformAvatar(url: url, size: size, personal: personal);
     if (ref.watch(profileEffectProvider) != ProfileEffectStyle.rhythm) {
       return avatar;
     }

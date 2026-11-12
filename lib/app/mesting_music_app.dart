@@ -48,6 +48,7 @@ import '../features/recommendation/recommendation_providers.dart';
 import '../features/search/search_providers.dart';
 import 'router/app_router.dart';
 import 'system_back_coordinator.dart';
+import '../features/themes/personal_style.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 /// Fire on first mount as well as switches; a guest may never emit a login
@@ -226,7 +227,10 @@ class MestingMusicApp extends ConsumerWidget {
       scrollBehavior: DistributionChannel.isBeta
           ? const BetaScrollBehavior()
           : null,
-      theme: buildMestingTheme(musicTheme),
+      theme: applyPersonalPalette(
+        buildMestingTheme(musicTheme),
+        ref.watch(personalStyleProvider),
+      ),
       routerConfig: appRouter,
       builder: (context, child) => MusicApplicationTheme(
         data: Theme.of(context),

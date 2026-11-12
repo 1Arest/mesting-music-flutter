@@ -205,7 +205,7 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
     ),
     subtitle: Text(subtitle),
     trailing: count > 0
-        ? _UnreadBadge(count)
+        ? NeteaseUnreadBadge(count)
         : const Icon(CupertinoIcons.chevron_right, size: 16),
     onTap: () async {
       await _open<void>(context, NeteaseNoticesPage(initial: kind));
@@ -353,7 +353,7 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
                     ),
                     if (conversation.unread > 0) ...[
                       const SizedBox(height: 5),
-                      _UnreadBadge(conversation.unread),
+                      NeteaseUnreadBadge(conversation.unread),
                     ],
                   ],
                 ),
@@ -384,26 +384,6 @@ class _NeteaseMessagesPageState extends _MessageState<NeteaseMessagesPage> {
       ),
     );
   }
-}
-
-class _UnreadBadge extends StatelessWidget {
-  const _UnreadBadge(this.count);
-  final int count;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-    decoration: BoxDecoration(
-      color: NeteaseUnreadColors.background,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Text(
-      count > 99 ? '99+' : '$count',
-      style: const TextStyle(
-        color: NeteaseUnreadColors.foreground,
-        fontSize: MusicTypography.captionSize,
-      ),
-    ),
-  );
 }
 
 class _MessageFeedback extends StatelessWidget {

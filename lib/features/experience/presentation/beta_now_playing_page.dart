@@ -7,7 +7,9 @@ import '../../music_platform/music_platform_providers.dart';
 import '../../downloads/audio_downloads_page.dart';
 import '../../auth/presentation/beta_login_navigation.dart';
 import 'player_queue_panel.dart';
+import 'player_surface_theme.dart';
 import 'dart:ui';
+import '../../themes/listening_atmosphere.dart';
 import 'dart:async';
 import '../../../shared/models/track.dart';
 import '../../music_platform/netease/together/netease_together_panel.dart';
@@ -207,7 +209,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
     final page = BetaMusicChromeCover(
       player: true,
       child: Theme(
-        data: darkTheme,
+        data: readablePlayerSurfaceTheme(darkTheme),
         child: Builder(
           builder: (context) => PlayerPullToDismiss(
             onDismiss: _dismissPlayer,
@@ -243,6 +245,7 @@ class _BetaNowPlayingPageState extends ConsumerState<BetaNowPlayingPage> {
                               ),
                             ),
                     ),
+                    const Positioned.fill(child: ListeningAtmosphereLayer()),
                     if (style != PlayerVisualStyle.cover && !classic && !detail)
                       Positioned.fill(
                         child: PlayerStyleAtmosphere(style: style),

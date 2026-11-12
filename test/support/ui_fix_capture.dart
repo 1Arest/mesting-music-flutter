@@ -46,7 +46,11 @@ Future<void> initializeUiFixCapture() async {
       .load();
 }
 
-Future<void> captureUiFix(WidgetTester tester, String name) async {
+Future<void> captureUiFix(
+  WidgetTester tester,
+  String name, {
+  bool settleAnimations = true,
+}) async {
   if (uiFixCaptureDirectory.isEmpty) return;
   // Image decode runs on real I/O; pumpAndSettle alone can finish before
   // transparent portraits have painted their first frame in a widget test.
@@ -69,7 +73,13 @@ Future<void> captureUiFix(WidgetTester tester, String name) async {
   }
   expect(decoded, true, reason: 'preview assets finish decoding');
   await pending;
-  await tester.pumpAndSettle();
+  // A page with an intentional continuous marquee cannot become idle. Its
+  // caller can advance finite transitions first and capture the current frame.
+  if (settleAnimations) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(uiFixCaptureKey),
   );

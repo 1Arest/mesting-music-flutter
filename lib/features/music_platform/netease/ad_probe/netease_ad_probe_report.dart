@@ -156,7 +156,7 @@ class NeteaseAdProbeReport {
   Map<String, Object?> _envelope({bool compact = false}) => {
     'schema': 2,
     'feature': 'neteaseAdConfiguration',
-    'appVersion': '1.0.94',
+    'appVersion': '1.0.95',
     'appVersionCode': 114,
     'outcome': outcome.name,
     'stage': stage.name,

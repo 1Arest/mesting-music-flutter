@@ -112,13 +112,25 @@ class NeteaseUnreadBadge extends StatelessWidget {
               color: NeteaseUnreadColors.background,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Text(
-              count > 99 ? '99+' : '$count',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: NeteaseUnreadColors.foreground,
-                fontSize: MusicTypography.captionSize,
-                fontWeight: MusicTypography.bodyWeight,
+            // Keep the line box centered when the minimum badge height is
+            // taller than a single digit, and allow it to grow with text size.
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: Text(
+                count > 99 ? '99+' : '$count',
+                textAlign: TextAlign.center,
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                  leadingDistribution: TextLeadingDistribution.even,
+                ),
+                style: const TextStyle(
+                  color: NeteaseUnreadColors.foreground,
+                  fontSize: MusicTypography.captionSize,
+                  fontWeight: MusicTypography.bodyWeight,
+                  height: 1,
+                ),
               ),
             ),
           ),

@@ -20,17 +20,26 @@ class MusicRhythmArtwork extends StatelessWidget {
   Widget build(BuildContext context) => RepaintBoundary(
     child: LayoutBuilder(
       builder: (context, constraints) {
-        final side = constraints.biggest.shortestSide;
-        final inset = side.isFinite ? (side * .147).clamp(13.0, 44.0) : 42.0;
+        final available = constraints.biggest.shortestSide;
+        final side = available.isFinite ? available : 320.0;
+        if (side <= 0) return const SizedBox.shrink();
+        final inset = (side * .147).clamp(13.0, 44.0);
         final artwork = Padding(
           padding: EdgeInsets.all(inset),
           child: ClipOval(
             child: TrackArtwork(track: track, width: 640, height: 640),
           ),
         );
-        Widget draw(MusicRhythmFrame frame) => CustomPaint(
-          painter: _RhythmRingPainter(frame, inset),
-          child: artwork,
+        // A Polaroid frame leaves more padding at the bottom. Keep the cover
+        // and its spectrum on one square inside the available rectangle.
+        Widget draw(MusicRhythmFrame frame) => Center(
+          child: SizedBox.square(
+            dimension: side,
+            child: CustomPaint(
+              painter: _RhythmRingPainter(frame, inset),
+              child: artwork,
+            ),
+          ),
         );
         // Gallery cards show a static illustration. The player only consumes
         // a frame from its running decoder, even when that means a quiet ring.

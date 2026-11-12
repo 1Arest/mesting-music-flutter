@@ -163,10 +163,12 @@ class EditorialHeader extends ConsumerWidget {
                 onPressed: () => context.go('/profile'),
                 icon: (title == '发现' || title == '功能')
                     ? RhythmPlatformAvatar(
+                        personal: true,
                         url: profile?.avatarUrl ?? platform?.avatarUrl ?? '',
                         size: 42,
                       )
                     : PlatformAvatar(
+                        personal: true,
                         url: profile?.avatarUrl ?? platform?.avatarUrl ?? '',
                         size: 42,
                       ),
