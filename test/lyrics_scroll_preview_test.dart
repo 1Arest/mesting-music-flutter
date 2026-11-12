@@ -372,6 +372,122 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('清晰歌词居中高亮，前后句变暗但没有模糊，选句仍可播放', (tester) async {
+    final positions = StreamController<Duration>.broadcast();
+    addTearDown(positions.close);
+    var returns = 0;
+    final player = await _mount(
+      tester,
+      ImmersiveLyrics(referenceDesign: true, onReturnToCover: () => returns++),
+      positions: positions.stream,
+      style: const PersonalStyle(lyricPresentation: LyricPresentation.clear),
+    );
+    positions.add(_lines[8].time);
+    await tester.pumpAndSettle();
+    final sung = find.text(_lines[8].text);
+    final list = find.byType(ListView);
+    expect(tester.getCenter(sung).dy, closeTo(tester.getCenter(list).dy, 1));
+    expect(tester.getCenter(sung).dx, closeTo(tester.getCenter(list).dx, 1));
+    expect(tester.widget<Text>(sung).style!.fontSize, 20);
+    expect(
+      tester
+          .widgetList<ImageFiltered>(find.byType(ImageFiltered))
+          .any((x) => x.enabled),
+      false,
+    );
+    final opacity = find.ancestor(of: sung, matching: find.byType(Opacity));
+    expect(tester.widget<Opacity>(opacity.first).opacity, 1);
+    final previous = find.text(_lines[7].text);
+    final dim = find.ancestor(of: previous, matching: find.byType(Opacity));
+    expect(tester.widget<Opacity>(dim.first).opacity, lessThan(.5));
+    await captureUiFix(tester, 'clear-lyrics');
+    await tester.tap(sung);
+    expect(returns, 1);
+    expect(player.seeks, isEmpty);
+    await _dragLyrics(tester);
+    final preview = find.byType(LyricSeekRow);
+    final time = tester.widget<LyricSeekRow>(preview).time;
+    await tester.tap(
+      find.descendant(of: preview, matching: find.byType(IconButton)),
+    );
+    await tester.pumpAndSettle();
+    expect(player.seeks, [time]);
+    expect(player.plays, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('播放中切换三种歌词样式不重启播放，清晰样式重新居中', (tester) async {
+    final positions = StreamController<Duration>.broadcast();
+    addTearDown(positions.close);
+    final player = await _mount(
+      tester,
+      const ImmersiveLyrics(referenceDesign: true),
+      positions: positions.stream,
+    );
+    positions.add(_lines[8].time);
+    await tester.pumpAndSettle();
+    final control = ProviderScope.containerOf(
+      tester.element(find.byType(ImmersiveLyrics)),
+      listen: false,
+    ).read(personalStyleProvider.notifier);
+    for (final mode in [
+      LyricPresentation.clear,
+      LyricPresentation.focus,
+      LyricPresentation.clear,
+    ]) {
+      await control.change({'lyricPresentation': mode.name});
+      await tester.pumpAndSettle();
+      final sung = find.text(_lines[8].text);
+      expect(
+        tester.getCenter(sung).dy,
+        closeTo(tester.getCenter(find.byType(ListView)).dy, 1),
+      );
+      expect(
+        tester
+            .widgetList<ImageFiltered>(find.byType(ImageFiltered))
+            .any((x) => x.enabled),
+        mode == LyricPresentation.focus,
+      );
+      expect(player.seeks, isEmpty);
+      expect(player.plays, 0);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets('清晰歌词使用自定义字号和行高，长句大字不截断', (tester) async {
+    final positions = StreamController<Duration>.broadcast();
+    addTearDown(positions.close);
+    await _mount(
+      tester,
+      const ImmersiveLyrics(referenceDesign: true),
+      positions: positions.stream,
+      scale: 1.4,
+      style: const PersonalStyle(
+        lyricPresentation: LyricPresentation.clear,
+        lyricSize: 32,
+        lineHeight: 1.7,
+      ),
+    );
+    positions.add(_lines[7].time);
+    await tester.pumpAndSettle();
+    final sung = find.text(_lines[7].text);
+    final text = tester.widget<Text>(sung);
+    expect(text.style!.fontSize, 32);
+    expect(text.style!.height, 1.7);
+    expect(text.maxLines, isNull);
+    expect(
+      tester.getCenter(sung).dy,
+      closeTo(tester.getCenter(find.byType(ListView)).dy, 1),
+    );
+    expect(
+      tester
+          .widgetList<ImageFiltered>(find.byType(ImageFiltered))
+          .any((x) => x.enabled),
+      false,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('没有时间戳的歌词可滚动但不提供定位按钮', (tester) async {
     final player = await _mount(
       tester,

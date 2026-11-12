@@ -48,7 +48,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
   TextStyle? _measuredStyle;
   TextDirection? _measuredDirection;
   final _offsets = <double>[];
-  bool _focused = false;
+  LyricPresentation? _presentation;
   @override
   void dispose() {
     _preview.clear(notify: false);
@@ -61,8 +61,9 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
     final track = ref.watch(currentTrackProvider);
     final personal = ref.watch(personalStyleProvider);
     final focused = personal.lyricPresentation == LyricPresentation.focus;
-    if (_focused != focused) {
-      _focused = focused;
+    final clear = personal.lyricPresentation == LyricPresentation.clear;
+    if (_presentation != personal.lyricPresentation) {
+      _presentation = personal.lyricPresentation;
       _active = -2;
       _preview.clear(notify: false);
     }
@@ -99,6 +100,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
             }
             final active = ref.watch(activeLyricIndexProvider(document));
             final focusLines = focused && document.isSynced;
+            final centeredLines = (focused || clear) && document.isSynced;
             return LayoutBuilder(
               builder: (context, constraints) {
                 final style = Theme.of(context).textTheme.headlineLarge!
@@ -106,6 +108,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       fontFamily: personal.serif ? 'serif' : null,
                       fontSize: personal.lyricSize > 0
                           ? personal.lyricSize
+                          : clear
+                          ? MusicTypography.headingSize
                           : widget.referenceDesign
                           ? MusicTypography.largeTitleSize
                           : MusicTypography.sectionTitleSize,
@@ -114,6 +118,8 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                           : MusicTypography.titleWeight,
                       height: personal.lineHeight > 0
                           ? personal.lineHeight
+                          : clear
+                          ? 1.4
                           : widget.referenceDesign
                           ? 1.3
                           : 1.4,
@@ -160,7 +166,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                   final index = active.clamp(0, document.lines.length - 1);
                   // The focus layout pads the viewport to its center. Add
                   // half the measured row so even wrapped lyrics center exactly.
-                  final target = focusLines
+                  final target = centeredLines
                       ? (_offsets[index] + _offsets[index + 1]) / 2
                       : _offsets[index];
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -188,7 +194,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                   });
                 }
                 final topPadding =
-                    constraints.maxHeight * (focusLines ? .5 : .2);
+                    constraints.maxHeight * (centeredLines ? .5 : .2);
                 final lyrics = ShaderMask(
                   shaderCallback: (rect) => const LinearGradient(
                     begin: Alignment.topCenter,
@@ -209,7 +215,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       24,
                       topPadding,
                       24,
-                      constraints.maxHeight * (focusLines ? .5 : .7),
+                      constraints.maxHeight * (centeredLines ? .5 : .7),
                     ),
                     physics: const ArtworkFrontierPhysics(
                       parent: BouncingScrollPhysics(),
@@ -223,7 +229,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                       final line = document.lines[index];
                       final text = Text(
                         line.text,
-                        textAlign: focusLines
+                        textAlign: centeredLines
                             ? TextAlign.center
                             : TextAlign.start,
                         style: style.copyWith(
@@ -249,7 +255,7 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                           child: LyricSeekRow(
                             time: line.time,
                             foreground: Colors.white,
-                            alignment: focusLines
+                            alignment: centeredLines
                                 ? Alignment.center
                                 : Alignment.centerLeft,
                             onPlay: play,
@@ -296,19 +302,25 @@ class _ImmersiveLyricsState extends ConsumerState<ImmersiveLyrics> {
                                         ),
                                         enabled:
                                             widget.referenceDesign &&
+                                            !clear &&
                                             distance > .01,
                                         child: Opacity(
                                           opacity:
                                               1 -
                                               distance *
-                                                  (widget.referenceDesign
+                                                  (clear
+                                                      ? .62
+                                                      : widget.referenceDesign
                                                       ? .55
                                                       : .35),
                                           child: Transform.scale(
-                                            scale: widget.referenceDesign
+                                            scale:
+                                                widget.referenceDesign && !clear
                                                 ? 1 - distance * .035
                                                 : 1,
-                                            alignment: Alignment.centerLeft,
+                                            alignment: centeredLines
+                                                ? Alignment.center
+                                                : Alignment.centerLeft,
                                             child: child,
                                           ),
                                         ),

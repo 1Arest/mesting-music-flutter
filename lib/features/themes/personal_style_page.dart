@@ -1,5 +1,6 @@
 import '../../shared/widgets/beta_selection_controls.dart';
 import 'lyric_presentation_picker.dart';
+import 'music_typography.dart';
 import 'style_option_grid.dart';
 import 'personal_style_previews.dart';
 import '../music_platform/presentation/platform_design.dart';
@@ -170,12 +171,15 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                       if (s.atmosphere != ListeningAtmosphere.off)
                         _slider('氛围强度', 'strength', s.strength, 0, 1),
                       const Text('用于全屏播放器。随播放轻微变化，暂停后静止；这是播放氛围动画，不代表实时节拍分析。'),
-                      BetaSwitchTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('发现页音符微光'),
-                        subtitle: const Text('招呼语结束后出现一次，约2秒淡出'),
-                        value: s.discoveryNotes,
-                        onChanged: (v) => _change({'discoveryNotes': v}),
+                      Material(
+                        type: MaterialType.transparency,
+                        child: BetaSwitchTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('发现页音符微光'),
+                          subtitle: const Text('招呼语结束后出现一次，约2秒淡出'),
+                          value: s.discoveryNotes,
+                          onChanged: (v) => _change({'discoveryNotes': v}),
+                        ),
                       ),
                     ],
                     if (index == 1) ...[
@@ -201,7 +205,12 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontFamily: s.serif ? 'serif' : null,
-                                fontSize: s.lyricSize == 0 ? 28 : s.lyricSize,
+                                fontSize: s.lyricSize == 0
+                                    ? s.lyricPresentation ==
+                                              LyricPresentation.clear
+                                          ? MusicTypography.headingSize
+                                          : 28
+                                    : s.lyricSize,
                                 height: s.lineHeight == 0 ? 1.4 : s.lineHeight,
                                 fontWeight: s.lyricWeight == 1
                                     ? FontWeight.w400
@@ -266,16 +275,23 @@ class _PersonalStylePageState extends ConsumerState<PersonalStylePage> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      BetaSwitchTile(
-                        title: const Text('系统衬线字体'),
-                        subtitle: const Text('使用设备提供的字体，不下载字体文件'),
-                        value: s.serif,
-                        onChanged: (v) => _change({'serif': v}),
+                      Material(
+                        type: MaterialType.transparency,
+                        child: BetaSwitchTile(
+                          title: const Text('系统衬线字体'),
+                          subtitle: const Text('使用设备提供的字体，不下载字体文件'),
+                          value: s.serif,
+                          onChanged: (v) => _change({'serif': v}),
+                        ),
                       ),
                       _slider(
                         '字号',
                         'lyricSize',
-                        s.lyricSize == 0 ? 28 : s.lyricSize,
+                        s.lyricSize == 0
+                            ? s.lyricPresentation == LyricPresentation.clear
+                                  ? MusicTypography.headingSize
+                                  : 28
+                            : s.lyricSize,
                         20,
                         40,
                       ),

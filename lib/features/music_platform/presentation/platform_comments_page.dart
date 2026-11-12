@@ -1,4 +1,5 @@
 import 'source_comments_page.dart';
+import 'song_comments_route.dart';
 import '../../../shared/widgets/beta_page_motion.dart';
 import 'platform_lazy_list.dart';
 import '../../../shared/widgets/music_refresh_indicator.dart';
@@ -34,11 +35,16 @@ import '../../themes/music_typography.dart';
 Future<void> openPlatformSongComments(
   BuildContext context,
   WidgetRef ref,
-  Track track,
-) async {
+  Track track, {
+  bool fromPlayer = false,
+}) async {
   if (!ref.read(showPlatformFeaturesProvider)) return;
   await Navigator.of(context, rootNavigator: true).push(
-    MestingPageRoute<void>(builder: (_) => SourceCommentsPage(track: track)),
+    songCommentsRoute<void>(
+      context,
+      fromPlayer: fromPlayer,
+      builder: (_) => SourceCommentsPage(track: track),
+    ),
   );
 }
 

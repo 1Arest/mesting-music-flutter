@@ -18,7 +18,7 @@ enum ListeningAtmosphere { off, glow, stars, record }
 
 /// Presentation is independent of lyric typography and palette. Existing
 /// preference documents keep their current player until explicitly changed.
-enum LyricPresentation { current, focus }
+enum LyricPresentation { current, focus, clear }
 
 const personalPalettes = <String, Color>{
   '默认': Color(0xFF0A84FF),
