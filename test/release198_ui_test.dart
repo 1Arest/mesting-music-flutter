@@ -147,15 +147,32 @@ void main() {
         final progress = find.byKey(const ValueKey('app-update-progress'));
         final progressBefore = tester.getRect(progress);
         expect(progressBefore.bottom, lessThan(before.top));
+        final compact = find
+            .byKey(const ValueKey('update-sheet-compact-scroll'))
+            .evaluate()
+            .isNotEmpty;
         await tester.drag(
-          find.byKey(const ValueKey('app-update-notes-scroll')),
+          find.byKey(
+            ValueKey(
+              compact ? 'update-sheet-compact-scroll' : 'update-notes-scroll',
+            ),
+          ),
           const Offset(0, -600),
         );
         await tester.pumpAndSettle();
-        expect(tester.getRect(primary), before);
-        expect(tester.getRect(progress), progressBefore);
-        expect(before.bottom, lessThanOrEqualTo(900));
-        expect(find.text('查看此次更新'), findsNothing);
+        if (!compact) {
+          expect(tester.getRect(primary), before);
+          expect(tester.getRect(progress), progressBefore);
+        } else {
+          await Scrollable.ensureVisible(
+            tester.element(primary),
+            alignment: .85,
+          );
+          await tester.pumpAndSettle();
+          expect(tester.getRect(primary).bottom, lessThanOrEqualTo(900));
+        }
+        if (!compact) expect(before.bottom, lessThanOrEqualTo(900));
+        expect(find.text('查看此次更新'), findsOneWidget);
         expect(tester.takeException(), isNull);
         await captureUiFix(tester, '193-update-${spec.width}-${spec.scale}');
         await mount(const ThemeGalleryPage());

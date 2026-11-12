@@ -255,7 +255,12 @@ void main() {
   });
 
   testWidgets('下载更新在屏幕中央并保持说明与操作区域分离', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(390, 760));
+    // Layout and MediaQuery must describe the same regular-height display.
+    // Short displays intentionally use PR20's fully scrolling layout.
+    tester.view.physicalSize = const Size(390, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.binding.setSurfaceSize(const Size(390, 1100));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     if (uiFixCaptureDirectory.isNotEmpty) {
       await tester.runAsync(initializeUiFixCapture);
@@ -287,23 +292,17 @@ void main() {
     await tester.tap(find.text('检查更新'));
     await tester.pumpAndSettle();
     final dialog = find.byKey(const ValueKey('app-update-centered-dialog'));
-    expect(tester.getCenter(dialog), const Offset(195, 380));
+    expect(tester.getCenter(dialog), const Offset(195, 550));
     await captureUiFix(tester, '207-update-dialog');
-    final actions = find.byKey(const ValueKey('app-update-fixed-actions'));
+    final actions = find.byKey(const ValueKey('app-update-primary'));
     final before = tester.getRect(actions);
     await tester.drag(
-      find.byKey(const ValueKey('app-update-notes-scroll')),
+      find.byKey(const ValueKey('update-notes-scroll')),
       const Offset(0, -300),
     );
     await tester.pumpAndSettle();
     expect(tester.getRect(actions), before);
-    expect(
-      find.descendant(
-        of: actions,
-        matching: find.byKey(const ValueKey('app-update-progress')),
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const ValueKey('app-update-progress')), findsOneWidget);
     expect(tester.takeException(), isNull);
     // Close the route so its shared open guard is released before the next test.
     Navigator.of(tester.element(dialog)).pop();

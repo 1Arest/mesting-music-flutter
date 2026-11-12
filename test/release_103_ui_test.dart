@@ -491,7 +491,9 @@ void main() {
       );
       expect(find.text('已是最新版本'), findsOneWidget);
       await capture(tester, 'update-current-$mode');
-      expect(find.byKey(const ValueKey('app-update-view-notes')), findsNothing);
+      expect(find.byKey(const ValueKey('app-update-view-notes')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('app-update-view-notes')));
+      await tester.pumpAndSettle();
       for (final note in notesForMusicVersion('1.0.3')) {
         expect(find.text(note), findsOneWidget);
       }

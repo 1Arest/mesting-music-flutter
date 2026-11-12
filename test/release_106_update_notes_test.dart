@@ -212,9 +212,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('app-update-view-notes')), findsNothing);
+    expect(find.byKey(const ValueKey('app-update-view-notes')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('app-update-fixed-actions')),
+      find.byKey(const ValueKey('app-update-primary')),
       findsOneWidget,
     );
     expect(find.text('未来版本的在线更新内容'), findsWidgets);
